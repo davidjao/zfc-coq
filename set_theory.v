@@ -1,5 +1,5 @@
 Require Export Utf8 IndefiniteDescription ClassicalDescription.
-
+ 
 Parameter set : Type.
 Parameter In : set → set → Prop.
 Delimit Scope set_scope with set.
@@ -375,15 +375,15 @@ Proof.
       Pairwise_union_classification in *; pose proof (H z); tauto.
 Qed.
 
-Definition N : set.
+Definition ω : set.
 Proof.
   destruct (constructive_indefinite_description _ Infinity) as [X].
   exact (⋂ {x in P X | ∅ ∈ x ∧ Inductive x}).
 Defined.
 
-Theorem N_is_inductive : Inductive N.
+Theorem ω_is_inductive : Inductive ω.
 Proof.
-  unfold N, intersection, union, specify.
+  unfold ω, intersection, union, specify.
   repeat destruct constructive_indefinite_description.
   intros y H.
   apply i in H as [H H0].
@@ -401,9 +401,9 @@ Proof.
     eauto.
 Qed.
 
-Theorem N_has_zero : ∅ ∈ N.
+Theorem ω_has_zero : ∅ ∈ ω.
 Proof.
-  unfold empty_set, N, intersection, union, specify.
+  unfold empty_set, ω, intersection, union, specify.
   repeat destruct constructive_indefinite_description.
   destruct a as [H H0].
   replace x0 with ∅.
@@ -419,12 +419,12 @@ Proof.
     + now apply i in H1.
 Qed.
 
-Theorem N_is_minimal_1 : ∀ w, w ⊂ N → ∅ ∈ w → Inductive w → N ⊂ w.
+Theorem ω_is_minimal_1 : ∀ s, s ⊂ ω → ∅ ∈ s → Inductive s → ω ⊂ s.
 Proof.
-  intros w H H0 H1.
-  unfold N, specify in *.
+  intros s H H0 H1.
+  unfold ω, specify in *.
   repeat destruct constructive_indefinite_description.
-  assert (w ∈ x0) as H2.
+  assert (s ∈ x0) as H2.
   { apply i.
     split; auto.
     apply Powerset_classification.
@@ -439,9 +439,9 @@ Proof.
     try rewrite Nonempty_classification; eauto.
 Qed.
 
-Theorem N_is_minimal_2 : ∀ w, w ⊂ N → ∅ ∈ w → Inductive w → w = N.
+Theorem ω_is_minimal_2 : ∀ s, s ⊂ ω → ∅ ∈ s → Inductive s → s = ω.
 Proof.
-  auto using Subset_equality, N_is_minimal_1.
+  auto using Subset_equality, ω_is_minimal_1.
 Qed.
 
 Definition complement : set → set → set.
@@ -795,11 +795,12 @@ Record function : Type :=
            graph : set;
            func_hyp : is_function graph domain range }.
 
+
 Definition eval f x := eval_rel (graph f) (domain f) (range f) x.
 
-Notation " f [ x ] " := (eval f x) (at level 60, format "f [ x ]") : set_scope.
+Coercion eval : function >-> Funclass.
 
-Theorem function_maps_domain_to_range : ∀ f x, x ∈ domain f → f[x] ∈ range f.
+Theorem function_maps_domain_to_range : ∀ f x, x ∈ domain f → f x ∈ range f.
 Proof.
   intros f x H.
   pose proof func_hyp f as H0.
@@ -807,7 +808,7 @@ Proof.
 Qed.
 
 Theorem function_maps_domain_to_graph :
-  ∀ f x y, x ∈ domain f → y ∈ range f → (x,y) ∈ graph f ↔ f[x] = y.
+  ∀ f x y, x ∈ domain f → y ∈ range f → (x,y) ∈ graph f ↔ f x = y.
 Proof.
   intros f x y H H0.
   split; intros H1; unfold eval, eval_rel in *;
@@ -818,14 +819,14 @@ Proof.
 Qed.
 
 Definition injective f :=
-  ∀ x1 x2, x1 ∈ domain f → x2 ∈ domain f → f[x1] = f[x2] → x1 = x2.
+  ∀ x1 x2, x1 ∈ domain f → x2 ∈ domain f → f x1 = f x2 → x1 = x2.
 
 Definition surjective f :=
-  ∀ y, y ∈ range f → ∃ x, x ∈ domain f ∧ f[x] = y.
+  ∀ y, y ∈ range f → ∃ x, x ∈ domain f ∧ f x = y.
 
 (*
 Theorem function_definition : ∀ A B p,
-    (∃ f, (domain f = A ∧ range f = B ∧ ∀ a, a ∈ A → f[a] = (p a)))
+    (∃ f, (domain f = A ∧ range f = B ∧ ∀ a, a ∈ A → f a = p a))
       ↔ ∀ a, a ∈ A → p a ∈ B.
 Proof.
   intros A B p.
@@ -857,7 +858,7 @@ Qed.
 
 Theorem function_construction : ∀ A B p,
     (∀ a, a ∈ A → p a ∈ B) →
-    (∃ f, (domain f = A ∧ range f = B ∧ ∀ a, a ∈ A → f[a] = (p a))).
+    (∃ f, (domain f = A ∧ range f = B ∧ ∀ a, a ∈ A → f a = p a)).
 Proof.
   intros A B p H.
   assert (∀ a, a ∈ A → (a, p a) ∈ A × B) as H0.
@@ -903,7 +904,7 @@ Section Choice.
       try destruct constructive_indefinite_description; intuition.
   Qed.
 
-  Theorem Choice : ∃ f, domain f = X ∧ range f = ⋃ X  ∧ ∀ x, x ∈ X → f[x] ∈ x.
+  Theorem Choice : ∃ f, domain f = X ∧ range f = ⋃ X  ∧ ∀ x, x ∈ X → f x ∈ x.
   Proof.
     destruct (function_construction X (⋃ X) choice_function) as [f [H0 [H1 H2]]].
     { intros a H0.
@@ -936,7 +937,7 @@ Qed.
 (*
 Theorem right_inverse_iff_surjective :
   ∀ f, surjective f ↔ ∃ g, domain g = range f ∧ range g = domain f ∧
-                           ∀ y, y ∈ range f → f[g[y]] = y.
+                           ∀ y, y ∈ range f → f (g y) = y.
 Proof.
   intros f.
   split; intros H.
@@ -999,7 +1000,7 @@ Section inverse_functions.
     rewrite function_empty_domain in H.
     apply Nonempty_classification in H.
     destruct (constructive_indefinite_description _ H) as [x Hx].
-    destruct (excluded_middle_informative (∃ a, a ∈ A ∧ f[a] = b)) as [e | n].
+    destruct (excluded_middle_informative (∃ a, a ∈ A ∧ f a = b)) as [e | n].
     - destruct (constructive_indefinite_description _ e) as [a e0].
       exact a.
     - exact x.
@@ -1007,7 +1008,7 @@ Section inverse_functions.
 
   Theorem left_inverse_iff_injective :
     injective f ↔ ∃ g, domain g = range f ∧ range g = domain f ∧
-                       ∀ x, x ∈ domain f → g[f[x]] = x.
+                       ∀ x, x ∈ domain f → g (f x) = x.
   Proof.
     split; intros H0.
     - destruct (function_construction B A partial_left_inverse) as [g Hg].
@@ -1032,7 +1033,7 @@ Section inverse_functions.
 
   Theorem right_inverse_iff_surjective_nonempty :
     surjective f ↔ ∃ g, domain g = range f ∧ range g = domain f ∧
-                        ∀ y, y ∈ range f → f[g[y]] = y.
+                        ∀ y, y ∈ range f → f (g y) = y.
   Proof.
     split; intros H0.
     - destruct (function_construction B A partial_left_inverse) as [g Hg].
@@ -1049,7 +1050,7 @@ Section inverse_functions.
         repeat destruct constructive_indefinite_description; now subst.
     - destruct H0 as [g [H0 [H1 H2]]].
       intros b H3.
-      exists (g[b]).
+      exists (g b).
       rewrite <-H0, <-H1 in *.
       split; eauto using function_maps_domain_to_range.
   Qed.
@@ -1058,7 +1059,7 @@ End inverse_functions.
 
 Theorem right_inverse_iff_surjective :
   ∀ f, surjective f ↔ ∃ g, domain g = range f ∧ range g = domain f ∧
-                           ∀ y, y ∈ range f → f[g[y]] = y.
+                           ∀ y, y ∈ range f → f (g y) = y.
 Proof.
   intros f.
   destruct (classic (graph f ≠ ∅)) as [H | H];
@@ -1083,7 +1084,7 @@ Proof.
     intros y H3.
     rewrite <-H0, <-H1 in *.
     apply function_maps_domain_to_range in H3.
-    contradiction (Empty_set_classification (g[y])).
+    contradiction (Empty_set_classification (g y)).
     congruence.
 Qed.
 
@@ -1101,7 +1102,7 @@ Definition composition : function → function → function.
 Proof.
   intros f g.
   destruct (excluded_middle_informative (domain f = range g)).
-  - assert (∀ x, x ∈ domain g → (λ x : set, f[g[x]]) x ∈ range f) as H.
+  - assert (∀ x, x ∈ domain g → (λ x, f (g x)) x ∈ range f) as H.
     { intros x H.
       apply function_maps_domain_to_range in H.
       rewrite <-e in H.
@@ -1117,7 +1118,7 @@ Infix "∘" := composition (at level 60) : set_scope.
 Theorem Composition_classification :
   ∀ f g, domain f = range g →
          domain (f ∘ g) = domain g ∧ range (f ∘ g) = range f ∧
-         ∀ x, x ∈ domain g → (f ∘ g)[x] = f[g[x]].
+         ∀ x, x ∈ domain g → (f ∘ g) x = f (g x).
 Proof.
   intros f g H.
   unfold composition.
