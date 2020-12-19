@@ -1,8 +1,73 @@
 Require Export set_theory.
 
-Notation PA1_ω := ω_has_zero.
-Notation PA2_ω := ω_is_inductive.
-Notation PA3_ω := ω_is_minimal_2.
+Definition ω : set.
+Proof.
+  destruct (constructive_indefinite_description _ Infinity) as [X].
+  exact (⋂ {x in P X | ∅ ∈ x ∧ Inductive x}).
+Defined.
+
+Theorem PA1_ω : ∅ ∈ ω.
+Proof.
+  unfold empty_set, ω, intersection, union, specify.
+  repeat destruct constructive_indefinite_description.
+  destruct a as [H H0].
+  replace x0 with ∅.
+  - apply i0.
+    split.
+    + apply i3.
+      split; [ eapply i1; split; try exact H | exists x1; intuition ];
+        apply i2; eauto using Set_in_powerset.
+    + intros z H1.
+      now apply i2 in H1.
+  - apply Extensionality; split; intros H1.
+    + now apply Empty_set_classification in H1.
+    + now apply i in H1.
+Qed.
+
+Theorem PA2_ω : Inductive ω.
+Proof.
+  unfold ω, intersection, union, specify.
+  repeat destruct constructive_indefinite_description.
+  intros y H.
+  apply i in H as [H H0].
+  apply i.
+  split.
+  - apply i2 in H as [H1 [z [H2 H3]]].
+    pose proof H3 as H4.
+    apply i1 in H4 as [H4 [H5 H6]].
+    apply i2.
+    split; eauto.
+  - intros z H1.
+    pose proof H1 as H2.
+    apply H0 in H1.
+    apply i1 in H2 as [H2 [H3 H4]].
+    eauto.
+Qed.
+
+Theorem ω_is_minimal : ∀ s, s ⊂ ω → ∅ ∈ s → Inductive s → ω ⊂ s.
+Proof.
+  intros s H H0 H1.
+  unfold ω, specify in *.
+  repeat destruct constructive_indefinite_description.
+  assert (s ∈ x0) as H2.
+  { apply i.
+    split; auto.
+    apply Powerset_classification.
+    intros z H2.
+    assert (x ∈ x0) as H3.
+    { apply i.
+      split; auto; apply Powerset_classification, Set_is_subset. }
+    eapply Intersection_classification;
+      try rewrite Nonempty_classification; eauto. }
+  intros z H4.
+  eapply Intersection_classification; eauto;
+    try rewrite Nonempty_classification; eauto.
+Qed.
+
+Theorem PA3_ω : ∀ s, s ⊂ ω → ∅ ∈ s → Inductive s → s = ω.
+Proof.
+  auto using Subset_equality, ω_is_minimal.
+Qed.
 
 Theorem PA4_ω : ∀ n, n ∈ ω → succ n ≠ ∅.
 Proof.
@@ -262,10 +327,11 @@ Defined.
 
 Infix "*" := mult.
 
-Theorem Induction : ∀ P, P 0 ∧ (∀ n : N, P n → P (S n)) → ∀ n : N, P n.
+Theorem Induction : ∀ P : N → Prop,
+    P 0 → (∀ n : N, P n → P (S n)) → ∀ n : N, P n.
 Proof.
-  intros P [H H0] n.
-  assert (∀ x y, x ∈ ω ∧ value y = x → P y) as H1.
+  intros P H H0 n.
+  assert (∀ x y, x ∈ ω → value y = x → P y) as H1.
   { induction x using Induction_ω; intuition.
     - replace y with 0; auto using naturals_are_unique.
     - set (m := mkNat x H1).
@@ -346,3 +412,12 @@ Proof.
   apply function_maps_domain_to_range.
   now rewrite e2.
 Qed.
+
+Theorem add_comm : ∀ a b, a + b = b + a.
+Proof.
+  induction a using Induction; induction b using Induction; auto.
+  - now rewrite Addition_1, Addition_2, IHb in *.
+  - now rewrite Addition_1, Addition_2, <-IHa, Addition_1.
+  - now rewrite ? Addition_2, IHb, <-? IHa, ? Addition_2, IHa.
+Qed.
+
