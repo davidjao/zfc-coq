@@ -242,7 +242,6 @@ Theorem Union_subset : ∀ A B, A ⊂ B ↔ A ∪ B = B.
 Proof.
   intros A B.
   rewrite <-Subset_equality_iff.
-  unfold subset.
   split; intros H; repeat split; intros x H0;
     try rewrite Pairwise_union_classification in *;
     firstorder; firstorder using Pairwise_union_classification.
@@ -333,7 +332,6 @@ Theorem Intersection_subset : ∀ A B, A ⊂ B ↔ A ∩ B = A.
 Proof.
   intros A B.
   rewrite <-Subset_equality_iff.
-  unfold subset.
   split; intros H; repeat split; intros x H0;
     try rewrite Pairwise_intersection_classification in *; eauto; try tauto.
   destruct H as [H H1].
@@ -421,7 +419,7 @@ Proof.
     + now apply i in H1.
 Qed.
 
-Theorem N_is_minimal : ∀ w, w ⊂ N → ∅ ∈ w → Inductive w → N ⊂ w.
+Theorem N_is_minimal_1 : ∀ w, w ⊂ N → ∅ ∈ w → Inductive w → N ⊂ w.
 Proof.
   intros w H H0 H1.
   unfold N, specify in *.
@@ -441,9 +439,9 @@ Proof.
     try rewrite Nonempty_classification; eauto.
 Qed.
 
-Theorem Induction : ∀ w, w ⊂ N → ∅ ∈ w → Inductive w → N = w.
-Proof.  
-  auto using Subset_equality, N_is_minimal.
+Theorem N_is_minimal_2 : ∀ w, w ⊂ N → ∅ ∈ w → Inductive w → w = N.
+Proof.
+  auto using Subset_equality, N_is_minimal_1.
 Qed.
 
 Definition complement : set → set → set.
@@ -465,7 +463,6 @@ Qed.
 Theorem Complement_subset : ∀ A B, A ⊂ B ↔ A \ B = ∅.
 Proof.
   intros A B.
-  unfold subset.
   split; intros H.
   - apply Extensionality; split; intros;
       rewrite Complement_classification in *;
@@ -709,7 +706,6 @@ Theorem Equivalence_classes_are_partitions : ∀ X R,
     is_equivalence X R → is_partition X (X/R).
 Proof.
   intros X R [H [H0 H1]].
-  unfold reflexive, symmetric, transitive in *.
   repeat split.
   - apply Extensionality.
     split; intros H2.
@@ -775,20 +771,19 @@ Definition inclusion A B := {x in A × B | ∃ a, a ∈ A ∧ x = (a,a)}.
 Theorem Inclusion_is_function : ∀ A B, A ⊂ B → is_function (inclusion A B) A B.
 Proof.
   intros A B H.
-  unfold inclusion, is_function.
   split.
   - intros x H0.
-    now rewrite Specify_classification in *.
+    now apply Specify_classification in H0.
   - intros a H0.
     exists a.
     repeat split; try now apply H.
-    + rewrite Specify_classification in *.
+    + apply Specify_classification.
       split; try now (exists a).
       rewrite Product_classification.
       exists a, a.
       intuition.
     + intros x' [H1 H2].
-      rewrite Specify_classification in *.
+      apply Specify_classification in H2.
       destruct H2 as [H2 [z [H3 H4]]].
       rewrite Ordered_pair_iff in H4.
       intuition; congruence.
@@ -809,6 +804,17 @@ Proof.
   intros f x H.
   pose proof func_hyp f as H0.
   eapply Function_classification in H as [[H H1] H2]; eauto.
+Qed.
+
+Theorem function_maps_domain_to_graph :
+  ∀ f x y, x ∈ domain f → y ∈ range f → (x,y) ∈ graph f ↔ f[x] = y.
+Proof.
+  intros f x y H H0.
+  split; intros H1; unfold eval, eval_rel in *;
+    repeat destruct excluded_middle_informative; intuition;
+      try contradiction (func_hyp f);
+      try destruct i0, constructive_indefinite_description;
+      destruct a as [[H2 H3] H4]; auto; congruence.
 Qed.
 
 Definition injective f :=
