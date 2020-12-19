@@ -1,5 +1,5 @@
-Require Export Utf8 IndefiniteDescription ClassicalDescription.
- 
+Require Export logic_axioms.
+
 Parameter set : Type.
 Parameter In : set → set → Prop.
 Delimit Scope set_scope with set.
@@ -482,7 +482,8 @@ Proof.
   intros A B.
   apply Extensionality.
   split; intros H; rewrite Pairwise_intersection_classification in *;
-    repeat rewrite Complement_classification in *; tauto.
+    repeat rewrite Complement_classification in *;
+    pose proof (classic (z ∈ B)); tauto.
 Qed.
 
 Theorem Intersection_complement : ∀ A B C, A ∩ (B \ C) = (A ∩ B) \ (A ∩ C).
