@@ -241,88 +241,89 @@ Proof.
       now apply function_maps_domain_to_range.
 Qed.
 
-Record N : Type := mkNat { value : set; in_n : value ∈ ω }.
+Definition N := elts ω.
 
 Definition S : N → N.
 Proof.
   intros [n H].
-  exact (mkNat (succ n) (PA2_ω n H)).
+  exact (mkSet ω (succ n) (PA2_ω n H)).
 Defined.
 
-Theorem S_is_succ : ∀ n, value (S n) = succ (value n).
+Theorem S_is_succ : ∀ n : N, (value ω (S n)) = succ (value ω n).
 Proof.
   now intros [n H].
 Qed.
 
-Notation "0" := (mkNat ∅ PA1_ω).
-(*Notation "1" := (succ 0).
-Notation "2" := (succ 1).*)
+Notation "0" := (mkSet ω ∅ PA1_ω).
+Notation "1" := (S 0).
+Notation "2" := (S 1).
 
-Theorem naturals_are_unique : ∀ n m : N, value n = value m → n = m.
+Theorem set_proj_injective : ∀ X n m, (value X n) = (value X m) → n = m.
 Proof.
-  intros n m H.
+  intros S n m H.
   destruct n, m; simpl in *.
   subst.
-  assert (in_n0 = in_n1) by apply proof_irrelevance.
+  assert (in_set = in_set0) by apply proof_irrelevance.
   now subst.
 Qed.
 
 Definition add : N → N → N.
 Proof.
   intros a b.
-  pose proof in_n a as A.
-  pose proof in_n b as B.
+  pose proof in_set ω a as A.
+  pose proof in_set ω b as B.
   pose proof PA2_ω.
   destruct (constructive_indefinite_description
               _ (function_construction ω ω succ PA2_ω)) as [S [H0 [H1 H2]]].
   destruct (constructive_indefinite_description
-              _ (recursion S ω (value a) A H0 H1)) as [u_a [H3 [H4 [H5 H6]]]].
-  assert (u_a (value b) ∈ ω) as H7.
+              _ (recursion S ω (value ω a) A H0 H1)) as [u_a [H3 [H4 [H5 H6]]]].
+  assert (u_a (value ω b) ∈ ω) as H7.
   { rewrite <-H4.
     apply function_maps_domain_to_range.
     now rewrite H3. }
-  exact (mkNat (u_a (value b)) H7).
+  exact (mkSet ω (u_a (value ω b)) H7).
 Defined.
 
 Definition add_right : N → set → set.
 Proof.
   intros a x.
   destruct (excluded_middle_informative (x ∈ ω)).
-  - exact (value (add (mkNat x i) a)).
+  - exact (value ω (add (mkSet ω x i) a)).
   - exact ∅.
 Defined.
 
 Infix "+" := add.
 
-Theorem add_right_lemma : ∀ a b, add_right a (value b) = (value (b + a)).
+Theorem add_right_lemma : ∀ a b, add_right a (value ω b) = (value ω (b + a)).
 Proof.
   intros a b.
   unfold add_right.
   destruct excluded_middle_informative.
-  - replace {| value := value b; in_n := i |} with b;
-      auto using naturals_are_unique.
-  - contradiction (in_n b).
+  - replace {| value := value ω b; in_set := i |} with b;
+      auto using set_proj_injective.
+  - contradiction (in_set ω b).
 Qed.
 
 Definition mult : N → N → N.
 Proof.
   intros a b.
-  pose proof in_n a as A.
-  pose proof in_n b as B.
+  pose proof in_set ω a as A.
+  pose proof in_set ω b as B.
   assert (∀ x : set, x ∈ ω → add_right a x ∈ ω) as H.
   { intros x H.
     unfold add_right.
     destruct excluded_middle_informative; intuition.
-    exact (in_n (add {| value := x; in_n := i |} a)). }
+    exact (in_set ω ({| value := x; in_set := i |} + a)). }
   destruct (constructive_indefinite_description
-              _ (function_construction ω ω (add_right a) H)) as [add_a [H0 [H1 H2]]].
+              _ (function_construction ω ω (add_right a) H))
+    as [add_a [H0 [H1 H2]]].
   destruct (constructive_indefinite_description
               _ (recursion add_a ω ∅ PA1_ω H0 H1)) as [mul_b [H3 [H4 [H5 H6]]]].
-  assert (mul_b (value b) ∈ ω) as H7.
+  assert (mul_b (value ω b) ∈ ω) as H7.
   { rewrite <-H4.
     apply function_maps_domain_to_range.
     now rewrite H3. }
-  exact (mkNat (mul_b (value b)) H7).
+  exact (mkSet ω (mul_b (value ω b)) H7).
 Defined.
 
 Infix "*" := mult.
@@ -331,11 +332,11 @@ Theorem Induction : ∀ P : N → Prop,
     P 0 → (∀ n : N, P n → P (S n)) → ∀ n : N, P n.
 Proof.
   intros P H H0 n.
-  assert (∀ x y, x ∈ ω → value y = x → P y) as H1.
+  assert (∀ x y, x ∈ ω → value ω y = x → P y) as H1.
   { induction x using Induction_ω; intuition.
-    - replace y with 0; auto using naturals_are_unique.
-    - set (m := mkNat x H1).
-      replace y with (S m); auto using naturals_are_unique. }
+    - replace y with 0; auto using set_proj_injective.
+    - set (m := mkSet ω x H1).
+      replace y with (S m); try apply set_proj_injective; auto. }
   destruct n; eauto.
 Qed.
 
@@ -344,20 +345,20 @@ Definition PA3 := Induction.
 Theorem PA4 : ∀ n : N, 0 ≠ S n.
 Proof.
   intros n H.
-  assert (value (S n) = value 0) by congruence.
+  assert (value ω (S n) = value ω 0) by congruence.
   destruct n; simpl in *.
-  contradiction (PA4_ω value0).
+  contradiction (PA4_ω value).
 Qed.
 
 Theorem PA5 : ∀ n m, S n = S m → n = m.
 Proof.
   intros [n A] [m B] H.
-  apply naturals_are_unique; auto.
+  apply set_proj_injective; auto.
   simpl in *.
   apply PA5_ω; congruence.
 Qed.
 
-Theorem Addition_1 : ∀ x, x + 0 = x.
+Theorem add_zero_r : ∀ x, x + 0 = x.
 Proof.
   intros x.
   unfold add.
@@ -365,10 +366,10 @@ Proof.
   repeat destruct a.
   repeat destruct constructive_indefinite_description.
   repeat destruct a.
-  now apply naturals_are_unique.
+  now apply set_proj_injective.
 Qed.
 
-Theorem Addition_2 : ∀ x y, x + S y = S (x + y).
+Theorem add_succ_r : ∀ x y, x + S y = S (x + y).
 Proof.
   intros x y.
   unfold add.
@@ -376,7 +377,7 @@ Proof.
   repeat destruct a.
   repeat destruct constructive_indefinite_description.
   repeat destruct a.
-  apply naturals_are_unique.
+  apply set_proj_injective.
   destruct y.
   simpl.
   rewrite e5, e1; auto.
@@ -385,7 +386,7 @@ Proof.
   now rewrite e2.
 Qed.
 
-Theorem Multiplication_1 : ∀ x, x * 0 = 0.
+Theorem mul_zero_r : ∀ x, x * 0 = 0.
 Proof.
   intros x.
   unfold mult.
@@ -393,10 +394,10 @@ Proof.
   repeat destruct a.
   repeat destruct constructive_indefinite_description.
   repeat destruct a.
-  now apply naturals_are_unique.
+  now apply set_proj_injective.
 Qed.
 
-Theorem Multiplication_2 : ∀ x y, x * (S y) = x * y + x.
+Theorem mul_succ_r : ∀ x y, x * (S y) = x * y + x.
 Proof.
   intros x y.
   unfold mult.
@@ -404,9 +405,9 @@ Proof.
   repeat destruct a.
   repeat destruct constructive_indefinite_description.
   repeat destruct a.
-  apply naturals_are_unique.
+  apply set_proj_injective.
   simpl.
-  pose proof (in_n y) as H.
+  pose proof (in_set ω y) as H.
   rewrite S_is_succ, e5, e1, <-add_right_lemma; auto.
   rewrite <-e3.
   apply function_maps_domain_to_range.
@@ -416,8 +417,50 @@ Qed.
 Theorem add_comm : ∀ a b, a + b = b + a.
 Proof.
   induction a using Induction; induction b using Induction; auto.
-  - now rewrite Addition_1, Addition_2, IHb in *.
-  - now rewrite Addition_1, Addition_2, <-IHa, Addition_1.
-  - now rewrite ? Addition_2, IHb, <-? IHa, ? Addition_2, IHa.
+  - now rewrite add_zero_r, add_succ_r, IHb in *.
+  - now rewrite add_zero_r, add_succ_r, <-IHa, add_zero_r.
+  - now rewrite ? add_succ_r, IHb, <-? IHa, ? add_succ_r, IHa.
 Qed.
 
+Theorem add_assoc : ∀ a b c, a + (b + c) = (a + b) + c.
+Proof.
+  induction c using Induction.
+  - now rewrite ? add_zero_r.
+  - now rewrite ? add_succ_r, IHc.
+Qed.
+
+Theorem mul_1_r : ∀ a, a * 1 = a.
+Proof.
+  intros a.
+  now rewrite mul_succ_r, mul_zero_r, add_comm, add_zero_r.
+Qed.
+
+Theorem mul_distr_r : ∀ a b c, (a + b) * c = a * c + b * c.
+Proof.
+  induction c using Induction.
+  - now rewrite ? mul_zero_r, add_zero_r.
+  - now rewrite ? (mul_succ_r), IHc, ? add_assoc,
+    <-(add_assoc (a*c)), (add_comm _ a), ? add_assoc.
+Qed.
+
+Theorem mul_comm : ∀ a b, a * b = b * a.
+Proof.
+  induction a using Induction; induction b using Induction; auto.
+  - now rewrite mul_succ_r, IHb, ? mul_zero_r, add_zero_r.
+  - now rewrite mul_succ_r, <-IHa, ? mul_zero_r, add_zero_r.
+  - now rewrite ? mul_succ_r, ? IHb, <-? IHa, ? mul_succ_r,
+    <-? add_assoc, ? add_succ_r, IHa, (add_comm a).
+Qed.
+
+Theorem mul_distr_l : ∀ a b c, a * (b + c) = a * b + a * c.
+Proof.
+  intros a b c.
+  now rewrite mul_comm, mul_distr_r, ? (mul_comm a).
+Qed.
+
+Theorem mul_assoc : ∀ a b c, a * (b * c) = (a * b) * c.
+Proof.
+  induction c using Induction.
+  - now rewrite ? mul_zero_r.
+  - now rewrite ? (mul_succ_r), mul_distr_l, IHc.
+Qed.

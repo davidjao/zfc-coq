@@ -670,6 +670,15 @@ Qed.
 Definition is_function f A B :=
   (f ⊂ A × B) ∧ (∀ a, a ∈ A → exists ! b, b ∈ B ∧ (a,b) ∈ f).
 
+(* Coqification of sets *)
+Record elts (S : set) : Type := mkSet { value : set; in_set : value ∈ S }.
+
+Record function : Type :=
+  mkFunc { domain : set;
+           range : set;
+           graph : set;
+           func_hyp : is_function graph domain range }.
+
 Definition eval_rel : set → set → set → set → set.
 Proof.
   intros f A B x.
@@ -681,6 +690,10 @@ Proof.
     + exact B.
   - exact B.
 Defined.
+
+Definition eval f x := eval_rel (graph f) (domain f) (range f) x.
+
+Coercion eval : function >-> Funclass.
 
 Definition power X Y := {f in P (X × Y) | is_function f X Y}.
 
@@ -720,17 +733,6 @@ Proof.
       rewrite Ordered_pair_iff in H4.
       intuition; congruence.
 Qed.
-
-Record function : Type :=
-  mkFunc { domain : set;
-           range : set;
-           graph : set;
-           func_hyp : is_function graph domain range }.
-
-
-Definition eval f x := eval_rel (graph f) (domain f) (range f) x.
-
-Coercion eval : function >-> Funclass.
 
 Theorem function_maps_domain_to_range : ∀ f x, x ∈ domain f → f x ∈ range f.
 Proof.
