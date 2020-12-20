@@ -94,8 +94,6 @@ Proof.
   split; intros H; auto; rewrite Pairing_classification in *; tauto.
 Qed.
 
-(* Check ({ ∅, { ∅, ∅ }}). *)
-
 Axiom Union : ∀ F, ∃ A, ∀ x y, (x ∈ y ∧ y ∈ F) → x ∈ A.
 
 Definition union : set → set.
@@ -679,6 +677,15 @@ Record function : Type :=
            graph : set;
            func_hyp : is_function graph domain range }.
 
+Theorem set_proj_injective : ∀ X n m, (value X n) = (value X m) → n = m.
+Proof.
+  intros S n m H.
+  destruct n, m; simpl in *.
+  subst.
+  assert (in_set0 = in_set1) by apply proof_irrelevance.
+  now subst.
+Qed.
+
 Definition eval_rel : set → set → set → set → set.
 Proof.
   intros f A B x.
@@ -695,10 +702,6 @@ Definition eval f x := eval_rel (graph f) (domain f) (range f) x.
 
 Coercion eval : function >-> Funclass.
 
-Definition power X Y := {f in P (X × Y) | is_function f X Y}.
-
-Infix "^" := power : set_scope.
-
 Theorem Function_classification : ∀ f A B a,
     a ∈ A → is_function f A B →
     unique (λ b : set, b ∈ B ∧ (a, b) ∈ f) (eval_rel f A B a).
@@ -710,6 +713,106 @@ Proof.
   destruct i0.
   repeat destruct constructive_indefinite_description; repeat split; tauto.
 Qed.
+
+Theorem function_maps_domain_to_range :
+  ∀ f x, x ∈ domain f → f x ∈ range f.
+Proof.
+  intros f x H.
+  pose proof func_hyp f as H0.
+  eapply Function_classification in H as [[H H1] H2]; eauto.
+Qed.
+
+Theorem function_construction : ∀ A B p,
+    (∀ a, a ∈ A → p a ∈ B) →
+    (∃ f, (domain f = A ∧ range f = B ∧ ∀ a, a ∈ A → f a = p a)).
+Proof.
+  intros A B p H.
+  assert (∀ a, a ∈ A → (a, p a) ∈ A × B) as H0.
+  { intros a H0.
+    rewrite Product_classification.
+    exists a, (p a); intuition; congruence. }
+  assert (is_function {z in A × B | proj2 A B z = p (proj1 A B z)} A B) as H1.
+  { split; intros x H1; try now rewrite Specify_classification in *.
+    exists (p x).
+    repeat split; try congruence; try intros x' [H4 H5]; auto;
+      rewrite Specify_classification, proj1_eval, proj2_eval in *;
+      intuition. }
+  exists (mkFunc A B {z in A × B | proj2 A B z = p (proj1 A B z)} H1).
+  repeat split; auto.
+  intros a H2.
+  pose proof Function_classification _ _ _ _ H2 H1 as [[H3 H4] H5].
+  destruct (H5 (p a)); split; simpl; intuition.
+  rewrite Specify_classification, proj1_eval, proj2_eval; auto.
+Qed.
+
+Theorem functionify_construction : ∀ A B (p : elts A → elts B),
+  ∃ f, domain f = A ∧ range f = B ∧
+       ∀ a : elts A, f (value A a) = (value B (p a)).
+Proof.
+  intros A B p.
+  assert (∀ a : elts A, ((value A a), (value B (p a))) ∈ A × B) as H.
+  { intros.
+    rewrite Product_classification.
+    exists (value A a), (value B (p a)).
+    repeat split; auto using in_set. }
+  assert (is_function {z in A × B | ∃ a : elts A,
+                         z = ((value A a), (value B (p a)))} A B) as H0.
+  { split; intros a H0; try now rewrite Specify_classification in *.
+    exists (value B (p (mkSet A a H0))).
+    repeat split; intros; auto using in_set.
+    - rewrite Specify_classification in *.
+      split.
+      + apply Product_classification.
+        exists a, (value B (p {| value := a; in_set := H0 |})).
+        auto using in_set.
+      + exists (mkSet A a H0).
+        now simpl.
+    - destruct H1 as [H1 H2].
+      apply Specify_classification in H2 as [H2 [[a' H3] H4]].
+      simpl in *.
+      apply Ordered_pair_iff in H4 as [H4 H5].
+      subst.
+      repeat apply f_equal.
+      apply proof_irrelevance. }
+  exists (mkFunc A B {z in A × B | ∃ a : elts A,
+                        z = ((value A a), (value B (p a)))} H0).
+  repeat split; auto.
+  intros a.
+  pose proof Function_classification _ _ _ _ (in_set A a) H0 as [[H1 H2] H3].
+  destruct (H3 (value B (p a))); split; simpl; intuition; try apply in_set.
+  rewrite Specify_classification.
+  split; try now (exists a).
+  rewrite Product_classification.
+  exists (value A a), (value B (p a)); auto using in_set.
+Qed.
+
+Section Function_evaluation.
+
+  Variable f : function.
+  Variable A B : set.
+
+  Definition lambdaify : elts (domain f) → elts (range f).
+  Proof.
+    intros [x H].
+    assert (f x ∈ range f) by auto using function_maps_domain_to_range.
+    exact (mkSet (range f) (f x) H0).
+  Defined.
+
+  Definition functionify : (elts A → elts B) → function.
+  Proof.
+    intros p.
+    destruct (constructive_indefinite_description
+                _ (functionify_construction _ _ p)) as [g].
+    exact g.
+  Defined.
+
+End Function_evaluation.
+
+Notation "f [ x ] " := ((lambdaify f) x) (at level 60, format "f [ x ]").
+
+Definition power X Y := {f in P (X × Y) | is_function f X Y}.
+
+Infix "^" := power : set_scope.
 
 Definition inclusion A B := {x in A × B | ∃ a, a ∈ A ∧ x = (a,a)}.
 
@@ -734,13 +837,6 @@ Proof.
       intuition; congruence.
 Qed.
 
-Theorem function_maps_domain_to_range : ∀ f x, x ∈ domain f → f x ∈ range f.
-Proof.
-  intros f x H.
-  pose proof func_hyp f as H0.
-  eapply Function_classification in H as [[H H1] H2]; eauto.
-Qed.
-
 Theorem function_maps_domain_to_graph :
   ∀ f x y, x ∈ domain f → y ∈ range f → (x,y) ∈ graph f ↔ f x = y.
 Proof.
@@ -752,66 +848,9 @@ Proof.
       destruct a as [[H2 H3] H4]; auto; congruence.
 Qed.
 
-Definition injective f :=
-  ∀ x1 x2, x1 ∈ domain f → x2 ∈ domain f → f x1 = f x2 → x1 = x2.
+Definition injective f := ∀ x1 x2 : elts (domain f), f[x1] = f[x2] → x1 = x2.
 
-Definition surjective f :=
-  ∀ y, y ∈ range f → ∃ x, x ∈ domain f ∧ f x = y.
-
-(*
-Theorem function_definition : ∀ A B p,
-    (∃ f, (domain f = A ∧ range f = B ∧ ∀ a, a ∈ A → f a = p a))
-      ↔ ∀ a, a ∈ A → p a ∈ B.
-Proof.
-  intros A B p.
-  split; intros H.
-  - destruct H as [f [H [H0 H1]]].
-    intros a H2.
-    pose proof H1 _ H2 as H3.
-    rewrite <-H3, <-H0.
-    eapply function_maps_domain_to_range.
-    congruence.
-  - assert (∀ a, a ∈ A → (a, p a) ∈ A × B) as H0.
-    { intros a H0.
-      rewrite Product_classification.
-      exists a, (p a); intuition; congruence. }
-    assert (is_function {z in A × B | proj2 A B z = p (proj1 A B z)} A B) as H1.
-    { split; intros x H1; try now rewrite Specify_classification in *.
-      exists (p x).
-      repeat split; try congruence; try intros x' [H4 H5]; auto;
-        rewrite Specify_classification, proj1_eval, proj2_eval in *;
-        intuition. }
-    exists (mkFunc A B {z in A × B | proj2 A B z = p (proj1 A B z)} H1).
-    repeat split; auto.
-    intros a H2.
-    pose proof Function_classification _ _ _ _ H2 H1 as [[H3 H4] H5].
-    destruct (H5 (p a)); split; simpl; intuition.
-    rewrite Specify_classification, proj1_eval, proj2_eval; auto.
-Qed.
- *)
-
-Theorem function_construction : ∀ A B p,
-    (∀ a, a ∈ A → p a ∈ B) →
-    (∃ f, (domain f = A ∧ range f = B ∧ ∀ a, a ∈ A → f a = p a)).
-Proof.
-  intros A B p H.
-  assert (∀ a, a ∈ A → (a, p a) ∈ A × B) as H0.
-  { intros a H0.
-    rewrite Product_classification.
-    exists a, (p a); intuition; congruence. }
-  assert (is_function {z in A × B | proj2 A B z = p (proj1 A B z)} A B) as H1.
-  { split; intros x H1; try now rewrite Specify_classification in *.
-    exists (p x).
-    repeat split; try congruence; try intros x' [H4 H5]; auto;
-      rewrite Specify_classification, proj1_eval, proj2_eval in *;
-      intuition. }
-  exists (mkFunc A B {z in A × B | proj2 A B z = p (proj1 A B z)} H1).
-  repeat split; auto.
-  intros a H2.
-  pose proof Function_classification _ _ _ _ H2 H1 as [[H3 H4] H5].
-  destruct (H5 (p a)); split; simpl; intuition.
-  rewrite Specify_classification, proj1_eval, proj2_eval; auto.
-Qed.
+Definition surjective f := ∀ y : elts (range f), ∃ x, f[x] = y.
 
 Section Choice.
 
@@ -868,58 +907,6 @@ Proof.
     exists a; tauto.
 Qed.
 
-(*
-Theorem right_inverse_iff_surjective :
-  ∀ f, surjective f ↔ ∃ g, domain g = range f ∧ range g = domain f ∧
-                           ∀ y, y ∈ range f → f (g y) = y.
-Proof.
-  intros f.
-  split; intros H.
-  unfold surjective in *.
-  set (A := domain f).
-  set (B := range f).
-  - destruct (Replacement (range f) (λ b S, {a in A | f[a] = b} = S))
-      as [X0 HX0].
-    { intros b H0.
-      exists {a in A | f[a] = b}.
-      split; auto. }
-    set (X := {s in X0 | ∃ x, x ∈ B ∧ {a in A | f[a] = x} = s}).
-    destruct (Choice X) as [g [Hg [Hg0 Hg1]]].
-    { unfold not, X.
-      rewrite Specify_classification.
-      intros [H0 [x [H1 H2]]].
-      contradict H2.
-      rewrite Nonempty_classification.
-      apply H in H1 as [a [H1 H2]].
-      exists a.
-      now rewrite Specify_classification. }
-    assert (∀ b, b ∈ B → g[{a in A | f[a] = b}] ∈ {a in A | f[a] = b}) as H0.
-    { intros b H0.
-      apply Hg1.
-      unfold X.
-      rewrite Specify_classification.
-      split; destruct (HX0 b) as [x [H1 H2]]; eauto; congruence. }
-    destruct (function_construction B A (λ b, g[{a in A | f[a] = b}]))
-      as [finv [H1 [H2 H3]]].
-    { intros b H1.
-      now apply H0, Specify_classification in H1. }
-    exists finv.
-    repeat split; auto.
-    intros b H4.
-    pose proof (H3 _ H4) as H5.
-    pose proof (H0 _ H4) as H6.
-    apply Specify_classification in H6 as [H6 H7].
-    congruence.
-  - destruct H as [g [H [H0 H1]]].
-    intros y H2.
-    exists (g[y]).
-    split; auto.
-    rewrite <-H0.
-    apply function_maps_domain_to_range.
-    congruence.
-Qed.
- *)
-
 Section inverse_functions.
 
   Variable f : function.
@@ -956,13 +943,24 @@ Section inverse_functions.
       unfold partial_left_inverse in H5.
       repeat destruct excluded_middle_informative;
         repeat destruct constructive_indefinite_description.
-      + subst.
-        apply H0; intuition.
+      + destruct a as [H6 H7].
+        rewrite H5.
+        assert ((mkSet A x1 H6) = (mkSet A x H2)) by
+            now apply H0, set_proj_injective.
+        congruence.
       + contradiction n.
         now (exists x).
     - destruct H0 as [g [H0 [H1 H2]]].
-      intros a1 a2 H3 H4 H5.
-      rewrite <-(H2 a1), <-(H2 a2); auto; congruence.
+      intros x1 x2 H3.
+      unfold lambdaify in H3.
+      destruct x1, x2.
+      assert (value0 = value1).
+      { rewrite <-H2; rewrite <-H2 at 1; try rewrite <-H1; try congruence.
+        apply function_maps_domain_to_range.
+        rewrite H0.
+        now apply function_maps_domain_to_range. }
+      subst.
+      now apply set_proj_injective.
   Qed.
 
   Theorem right_inverse_iff_surjective_nonempty :
@@ -977,16 +975,24 @@ Section inverse_functions.
           repeat destruct constructive_indefinite_description; intuition. }
       exists g; intuition.
       pose proof H2 as H5.
-      apply H0 in H2.
       apply H4 in H5.
+      destruct (H0 (mkSet B y H2)) as [[x H6] H7].
+      simpl in *.
       unfold partial_left_inverse in H5.
       repeat destruct excluded_middle_informative;
-        repeat destruct constructive_indefinite_description; now subst.
+        repeat destruct constructive_indefinite_description; subst; try tauto.
+      contradiction n.
+      exists x; split; auto.
+      congruence.      
     - destruct H0 as [g [H0 [H1 H2]]].
-      intros b H3.
-      exists (g b).
-      rewrite <-H0, <-H1 in *.
-      split; eauto using function_maps_domain_to_range.
+      intros [b H3].
+      assert (g b ∈ A).
+      { rewrite <-H1.
+        apply function_maps_domain_to_range.
+        congruence. }
+      exists (mkSet A (g b) H4).
+      simpl.
+      now apply set_proj_injective, H2.
   Qed.
 
 End inverse_functions.
@@ -1004,7 +1010,7 @@ Proof.
     { apply NNPP.
       intros H1.
       apply Nonempty_classification in H1 as [y H1].
-      apply H0 in H1 as [x [H1 H2]].
+      destruct (H0 (mkSet (range f) y H1)) as [[x H2] H3].
       contradiction (Empty_set_classification x).
       congruence. }
     destruct (function_construction (range f) (domain f) (λ x, x)) as [g Hg].
@@ -1015,10 +1021,11 @@ Proof.
     contradiction (Empty_set_classification y).
     congruence.
   - destruct H0 as [g [H0 [H1 H2]]].
-    intros y H3.
-    rewrite <-H0, <-H1 in *.
-    apply function_maps_domain_to_range in H3.
+    intros [y H3].
+    exfalso.
     contradiction (Empty_set_classification (g y)).
+    rewrite <-H, <-H1.
+    apply function_maps_domain_to_range.
     congruence.
 Qed.
 

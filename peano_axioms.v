@@ -258,29 +258,20 @@ Notation "0" := (mkSet ω ∅ PA1_ω).
 Notation "1" := (S 0).
 Notation "2" := (S 1).
 
-Theorem set_proj_injective : ∀ X n m, (value X n) = (value X m) → n = m.
-Proof.
-  intros S n m H.
-  destruct n, m; simpl in *.
-  subst.
-  assert (in_set = in_set0) by apply proof_irrelevance.
-  now subst.
-Qed.
-
 Definition add : N → N → N.
 Proof.
   intros a b.
-  pose proof in_set ω a as A.
-  pose proof in_set ω b as B.
   pose proof PA2_ω.
   destruct (constructive_indefinite_description
               _ (function_construction ω ω succ PA2_ω)) as [S [H0 [H1 H2]]].
   destruct (constructive_indefinite_description
-              _ (recursion S ω (value ω a) A H0 H1)) as [u_a [H3 [H4 [H5 H6]]]].
+              _ (recursion S ω (value ω a) (in_set ω a) H0 H1))
+    as [u_a [H3 [H4 [H5 H6]]]].
   assert (u_a (value ω b) ∈ ω) as H7.
   { rewrite <-H4.
     apply function_maps_domain_to_range.
-    now rewrite H3. }
+    rewrite H3.
+    apply in_set. }
   exact (mkSet ω (u_a (value ω b)) H7).
 Defined.
 
@@ -307,8 +298,6 @@ Qed.
 Definition mult : N → N → N.
 Proof.
   intros a b.
-  pose proof in_set ω a as A.
-  pose proof in_set ω b as B.
   assert (∀ x : set, x ∈ ω → add_right a x ∈ ω) as H.
   { intros x H.
     unfold add_right.
@@ -322,7 +311,8 @@ Proof.
   assert (mul_b (value ω b) ∈ ω) as H7.
   { rewrite <-H4.
     apply function_maps_domain_to_range.
-    now rewrite H3. }
+    rewrite H3.
+    apply in_set. }
   exact (mkSet ω (mul_b (value ω b)) H7).
 Defined.
 
@@ -407,11 +397,11 @@ Proof.
   repeat destruct a.
   apply set_proj_injective.
   simpl.
-  pose proof (in_set ω y) as H.
-  rewrite S_is_succ, e5, e1, <-add_right_lemma; auto.
+  rewrite S_is_succ, e5, e1, <-add_right_lemma; auto using in_set.
   rewrite <-e3.
   apply function_maps_domain_to_range.
-  now rewrite e2.
+  rewrite e2.
+  apply in_set.
 Qed.
 
 Theorem add_comm : ∀ a b, a + b = b + a.
