@@ -740,12 +740,12 @@ Qed.
 Definition le a b := ∃ c, a + c = b.
 
 Infix "≤" := le : N_scope.
-Notation "a ≥ b" := (b ≤ a) (only parsing).
+Notation "a ≥ b" := (b ≤ a) (only parsing) : N_scope.
 
 Definition lt a b := a ≤ b ∧ a ≠ b.
 
 Infix "<" := lt : N_scope.
-Notation "a > b" := (b < a) (only parsing).
+Notation "a > b" := (b < a) (only parsing) : N_scope.
 
 Theorem le_is_subset : ∀ a b, a ≤ b ↔ (value ω a) ⊂ (value ω b).
 Proof.
