@@ -4,7 +4,7 @@ Parameter set : Type.
 Parameter In : set → set → Prop.
 Delimit Scope set_scope with set.
 Open Scope set_scope.
-Bind Scope set with set.
+Bind Scope set_scope with set.
 
 Infix "∈" := In (at level 75) : set_scope.
 Notation "a ∉ b" := (¬ a ∈ b) (at level 75) : set_scope.
@@ -127,6 +127,12 @@ Proof.
   destruct (constructive_indefinite_description _ (Powerset x)) as [y].
   exact {s in y | s ⊂ x}.
 Defined.
+
+Theorem Subset_transitive : ∀ X Y Z, X ⊂ Y → Y ⊂ Z → X ⊂ Z.
+Proof.
+  intros X Y Z H H0 x H1.
+  eauto.
+Qed.
 
 Theorem Empty_set_is_subset : ∀ X, ∅ ⊂ X.
 Proof.
@@ -808,7 +814,8 @@ Section Function_evaluation.
 
 End Function_evaluation.
 
-Notation "f [ x ] " := ((lambdaify f) x) (at level 60, format "f [ x ]").
+Notation "f [ x ] " :=
+  ((lambdaify f) x) (at level 60, format "f [ x ]") : set_scope.
 
 Definition power X Y := {f in P (X × Y) | is_function f X Y}.
 
@@ -848,9 +855,9 @@ Proof.
       destruct a as [[H2 H3] H4]; auto; congruence.
 Qed.
 
-Definition injective f := ∀ x1 x2 : elts (domain f), f[x1] = f[x2] → x1 = x2.
+Definition injective f := ∀ x1 x2, f[x1] = f[x2] → x1 = x2.
 
-Definition surjective f := ∀ y : elts (range f), ∃ x, f[x] = y.
+Definition surjective f := ∀ y, ∃ x, f[x] = y.
 
 Section Choice.
 

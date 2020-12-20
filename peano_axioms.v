@@ -124,6 +124,68 @@ Proof.
       congruence.
 Qed.
 
+Lemma ω_is_transitive : ∀ x y z,
+    x ∈ ω → y ∈ ω → z ∈ ω → x ∈ y → y ∈ z → x ∈ z.
+Proof.
+  intros x y z H H0 H1 H2 H3.
+  apply elements_of_naturals_are_subsets in H3; auto.
+Qed.
+
+Lemma subsets_of_naturals_are_elements :
+  ∀ n m, n ∈ ω → m ∈ ω → m ⊂ n → m ≠ n → m ∈ n.
+Proof.
+  induction n using Induction_ω; intuition.
+  - apply Nonempty_classification in H2 as [x H2].
+    apply H1 in H2.
+    contradiction (Empty_set_classification x).
+  - destruct (classic (m = n)) as [H4 | H4].
+    + now apply Pairwise_union_classification,
+      or_intror, Singleton_classification.
+    + eapply elements_of_naturals_are_subsets; auto.
+      * now apply Pairwise_union_classification, or_intror,
+        Singleton_classification.
+      * apply IHn; auto.
+        intros x H5.
+        pose proof H2 _ H5 as H6.
+        apply Pairwise_union_classification in H6 as [H6 | H6]; auto.
+        apply Singleton_classification in H6.
+        subst.
+        contradict H3.
+        apply Subset_equality_iff.
+        split; auto.
+        intros x H6.
+        apply Pairwise_union_classification in H6 as [H6 | H6].
+        -- eapply elements_of_naturals_are_subsets; eauto.
+        -- apply Singleton_classification in H6.
+           congruence.
+Qed.
+
+Lemma ω_trichotomy : ∀ n m, n ∈ ω → m ∈ ω → m ⊂ n ∨ n ⊂ m.
+Proof.
+  intros n m H H0.
+  induction n using Induction_ω; intuition.
+  - apply or_intror, Empty_set_is_subset.
+  - left.
+    intros x H2.
+    apply Pairwise_union_classification.
+    left.
+    now apply H3.
+  - destruct (classic (n = m)); [ left | right ]; intros x H4.
+    + apply Pairwise_union_classification, or_introl.
+      congruence.
+    + apply subsets_of_naturals_are_elements in H2; auto.
+      apply Pairwise_union_classification in H4 as [H4 | H4]; auto.
+      apply Singleton_classification in H4.
+      congruence.
+Qed.
+
+Lemma ω_irreflexive : ∀ n m, n ∈ ω → m ∈ ω → ¬ (n ∈ m ∧ m ∈ n).
+Proof.
+  intros n m H H0 [H1 H2].
+  apply elements_of_naturals_are_subsets in H1; auto.
+  eapply pigeonhole_precursor; eauto using Set_is_subset.
+Qed.
+
 Theorem PA5_ω : ∀ n m, n ∈ ω → m ∈ ω → succ n = succ m → n = m.
 Proof.
   intros n m H H0 H1.
@@ -135,6 +197,54 @@ Proof.
   destruct H2, H3; auto.
   exfalso; eapply pigeonhole_precursor;
     eauto using elements_of_naturals_are_subsets.
+Qed.
+
+Theorem ω_WOP : ∀ X, X ≠ ∅ → X ⊂ ω → ∃ x, x ∈ X ∧ ∀ y, y ∈ X → x ⊂ y.
+Proof.
+  intros X H H0.
+  apply Nonempty_classification in H as [x H].
+  assert (x ∈ ω) as H1 by now apply H0.
+  revert x X H0 H1 H.
+  induction x using Induction_ω; intuition.
+  - exists ∅.
+    split; auto using Empty_set_is_subset.
+  - destruct (IHx (X ∪ {x,x})) as [y [H3 H4]]; auto;
+      try now apply Pairwise_union_classification,
+      or_intror, Singleton_classification.
+    { intros y H3.
+      apply Pairwise_union_classification in H3 as [H3 | H3]; eauto.
+      apply Singleton_classification in H3.
+      now subst. }
+    destruct (classic (x ∈ X)) as [H5 | H5].
+    + assert (X ∪ {x,x} = X).
+      { apply Extensionality.
+        split; intros H6.
+        - apply Pairwise_union_classification in H6 as [H6 | H6]; auto.
+          apply Singleton_classification in H6.
+          congruence.
+        - now apply Pairwise_union_classification, or_introl. }
+      rewrite H6 in *.
+      exists y.
+      tauto.
+    + apply Pairwise_union_classification in H3 as [H3 | H3].
+      * exists y.
+        split; auto.
+        intros y0 H7.
+        now apply H4, Pairwise_union_classification, or_introl.
+      * rewrite Singleton_classification in H3.
+        subst.
+        exists (succ x).
+        split; auto.
+        intros y H3 z H6.
+        apply Pairwise_union_classification in H6 as [H6 | H6].
+        -- apply H4; auto.
+           now apply Pairwise_union_classification, or_introl.
+        -- apply Singleton_classification in H6.
+           subst.
+           apply subsets_of_naturals_are_elements; auto.
+           ++ now apply H4, Pairwise_union_classification, or_introl.
+           ++ intros H6.
+              congruence.
 Qed.
 
 Theorem recursion : ∀ f X a,
@@ -243,29 +353,36 @@ Qed.
 
 Definition N := elts ω.
 
-Definition S : N → N.
+Delimit Scope N_scope with N.
+Open Scope N_scope.
+Bind Scope N_scope with N.
+
+Definition PA1 := (mkSet ω ∅ PA1_ω). (* Zero is a natural. *)
+
+Definition PA2 : N → N. (* PA2 : The successor of a natural is a natural. *)
 Proof.
   intros [n H].
   exact (mkSet ω (succ n) (PA2_ω n H)).
 Defined.
+
+Notation "0" := PA1 : N_scope.
+Notation "'S'" := PA2 (at level 5, format "'S'") : N_scope.
+Notation "1" := (S 0) : N_scope.
+Notation "2" := (S 1) : N_scope.
 
 Theorem S_is_succ : ∀ n : N, (value ω (S n)) = succ (value ω n).
 Proof.
   now intros [n H].
 Qed.
 
-Notation "0" := (mkSet ω ∅ PA1_ω).
-Notation "1" := (S 0).
-Notation "2" := (S 1).
-
 Definition add : N → N → N.
 Proof.
   intros a b.
   pose proof PA2_ω.
   destruct (constructive_indefinite_description
-              _ (function_construction ω ω succ PA2_ω)) as [S [H0 [H1 H2]]].
+              _ (function_construction ω ω succ PA2_ω)) as [X [H0 [H1 H2]]].
   destruct (constructive_indefinite_description
-              _ (recursion S ω (value ω a) (in_set ω a) H0 H1))
+              _ (recursion X ω (value ω a) (in_set ω a) H0 H1))
     as [u_a [H3 [H4 [H5 H6]]]].
   assert (u_a (value ω b) ∈ ω) as H7.
   { rewrite <-H4.
@@ -275,6 +392,8 @@ Proof.
   exact (mkSet ω (u_a (value ω b)) H7).
 Defined.
 
+Infix "+" := add : N_scope.
+
 Definition add_right : N → set → set.
 Proof.
   intros a x.
@@ -282,8 +401,6 @@ Proof.
   - exact (value ω (add (mkSet ω x i) a)).
   - exact ∅.
 Defined.
-
-Infix "+" := add.
 
 Theorem add_right_lemma : ∀ a b, add_right a (value ω b) = (value ω (b + a)).
 Proof.
@@ -295,14 +412,14 @@ Proof.
   - contradiction (in_set ω b).
 Qed.
 
-Definition mult : N → N → N.
+Definition mul : N → N → N.
 Proof.
   intros a b.
   assert (∀ x : set, x ∈ ω → add_right a x ∈ ω) as H.
   { intros x H.
     unfold add_right.
     destruct excluded_middle_informative; intuition.
-    exact (in_set ω ({| value := x; in_set := i |} + a)). }
+    apply in_set. }
   destruct (constructive_indefinite_description
               _ (function_construction ω ω (add_right a) H))
     as [add_a [H0 [H1 H2]]].
@@ -316,28 +433,38 @@ Proof.
   exact (mkSet ω (mul_b (value ω b)) H7).
 Defined.
 
-Infix "*" := mult.
+Infix "*" := mul : N_scope.
 
 Theorem Induction : ∀ P : N → Prop,
     P 0 → (∀ n : N, P n → P (S n)) → ∀ n : N, P n.
 Proof.
-  intros P H H0 n.
-  assert (∀ x y, x ∈ ω → value ω y = x → P y) as H1.
-  { induction x using Induction_ω; intuition.
-    - replace y with 0; auto using set_proj_injective.
-    - set (m := mkSet ω x H1).
-      replace y with (S m); try apply set_proj_injective; auto. }
-  destruct n; eauto.
+  intros P H H0 [n H1].
+  induction n using Induction_ω; intuition.
+  - rewrite <-(set_proj_injective ω 0); auto using set_proj_injective.
+  - replace {| value := succ n; in_set := H1 |} with
+        (S {| value := n; in_set := H2 |}); try apply set_proj_injective; auto.
 Qed.
 
 Definition PA3 := Induction.
 
-Theorem PA4 : ∀ n : N, 0 ≠ S n.
+Theorem PA4 : ∀ n, 0 ≠ S n.
 Proof.
   intros n H.
   assert (value ω (S n) = value ω 0) by congruence.
   destruct n; simpl in *.
   contradiction (PA4_ω value).
+Qed.
+
+Theorem succ_0 : ∀ n : N, n ≠ 0 ↔ ∃ m, n = S m.
+Proof.
+  intros n.
+  induction n using Induction; split; intros H.
+  - now contradict H.
+  - destruct H as [m H].
+    contradiction (PA4 m).
+  - now (exists n).
+  - intros H0.
+    now contradiction (PA4 n).
 Qed.
 
 Theorem PA5 : ∀ n m, S n = S m → n = m.
@@ -348,7 +475,14 @@ Proof.
   apply PA5_ω; congruence.
 Qed.
 
-Theorem add_zero_r : ∀ x, x + 0 = x.
+Theorem neq_succ : ∀ n, n ≠ S n.
+Proof.
+  induction n using Induction; intros H.
+  - eapply PA4; eauto.
+  - eauto using PA5.
+Qed.
+
+Theorem add_0_r : ∀ x, x + 0 = x.
 Proof.
   intros x.
   unfold add.
@@ -376,10 +510,10 @@ Proof.
   now rewrite e2.
 Qed.
 
-Theorem mul_zero_r : ∀ x, x * 0 = 0.
+Theorem mul_0_r : ∀ x, x * 0 = 0.
 Proof.
   intros x.
-  unfold mult.
+  unfold mul.
   repeat destruct constructive_indefinite_description.
   repeat destruct a.
   repeat destruct constructive_indefinite_description.
@@ -390,7 +524,7 @@ Qed.
 Theorem mul_succ_r : ∀ x y, x * (S y) = x * y + x.
 Proof.
   intros x y.
-  unfold mult.
+  unfold mul.
   repeat destruct constructive_indefinite_description.
   repeat destruct a.
   repeat destruct constructive_indefinite_description.
@@ -404,31 +538,59 @@ Proof.
   apply in_set.
 Qed.
 
+Theorem add_1_r : ∀ a, a + 1 = S a.
+Proof.
+  intros a.
+  now rewrite add_succ_r, add_0_r.
+Qed.
+
 Theorem add_comm : ∀ a b, a + b = b + a.
 Proof.
   induction a using Induction; induction b using Induction; auto.
-  - now rewrite add_zero_r, add_succ_r, IHb in *.
-  - now rewrite add_zero_r, add_succ_r, <-IHa, add_zero_r.
+  - now rewrite add_0_r, add_succ_r, IHb in *.
+  - now rewrite add_0_r, add_succ_r, <-IHa, add_0_r.
   - now rewrite ? add_succ_r, IHb, <-? IHa, ? add_succ_r, IHa.
 Qed.
 
 Theorem add_assoc : ∀ a b c, a + (b + c) = (a + b) + c.
 Proof.
   induction c using Induction.
-  - now rewrite ? add_zero_r.
+  - now rewrite ? add_0_r.
   - now rewrite ? add_succ_r, IHc.
+Qed.
+
+Theorem cancellation_0 : ∀ a b, a + b = a → b = 0.
+Proof.
+  induction a using Induction; intros b H.
+  - now rewrite add_comm, add_0_r in H.
+  - apply IHa, PA5.
+    now rewrite add_comm, <-add_succ_r, add_comm.
+Qed.
+
+Theorem cancellation_add : ∀ a b c, a + c = b + c → a = b.
+Proof.
+  induction c using Induction; intros H.
+  - now rewrite ? add_0_r in *.
+  - apply IHc, PA5.
+    now rewrite <-? add_succ_r.
 Qed.
 
 Theorem mul_1_r : ∀ a, a * 1 = a.
 Proof.
   intros a.
-  now rewrite mul_succ_r, mul_zero_r, add_comm, add_zero_r.
+  now rewrite mul_succ_r, mul_0_r, add_comm, add_0_r.
+Qed.
+
+Theorem mul_2_r : ∀ x, x * 2 = x + x.
+Proof.
+  intros x.
+  now rewrite mul_succ_r, mul_1_r.
 Qed.
 
 Theorem mul_distr_r : ∀ a b c, (a + b) * c = a * c + b * c.
 Proof.
   induction c using Induction.
-  - now rewrite ? mul_zero_r, add_zero_r.
+  - now rewrite ? mul_0_r, add_0_r.
   - now rewrite ? (mul_succ_r), IHc, ? add_assoc,
     <-(add_assoc (a*c)), (add_comm _ a), ? add_assoc.
 Qed.
@@ -436,8 +598,8 @@ Qed.
 Theorem mul_comm : ∀ a b, a * b = b * a.
 Proof.
   induction a using Induction; induction b using Induction; auto.
-  - now rewrite mul_succ_r, IHb, ? mul_zero_r, add_zero_r.
-  - now rewrite mul_succ_r, <-IHa, ? mul_zero_r, add_zero_r.
+  - now rewrite mul_succ_r, IHb, ? mul_0_r, add_0_r.
+  - now rewrite mul_succ_r, <-IHa, ? mul_0_r, add_0_r.
   - now rewrite ? mul_succ_r, ? IHb, <-? IHa, ? mul_succ_r,
     <-? add_assoc, ? add_succ_r, IHa, (add_comm a).
 Qed.
@@ -451,6 +613,295 @@ Qed.
 Theorem mul_assoc : ∀ a b c, a * (b * c) = (a * b) * c.
 Proof.
   induction c using Induction.
-  - now rewrite ? mul_zero_r.
+  - now rewrite ? mul_0_r.
   - now rewrite ? (mul_succ_r), mul_distr_l, IHc.
+Qed.
+
+Definition mul_right : N → set → set.
+Proof.
+  intros a x.
+  destruct (excluded_middle_informative (x ∈ ω)).
+  - exact (value ω (mul (mkSet ω x i) a)).
+  - exact ∅.
+Defined.
+
+Theorem mul_right_lemma : ∀ a b, mul_right a (value ω b) = (value ω (b * a)).
+Proof.
+  intros a b.
+  unfold mul_right.
+  destruct excluded_middle_informative.
+  - replace {| value := value ω b; in_set := i |} with b;
+      auto using set_proj_injective.
+  - contradiction (in_set ω b).
+Qed.
+
+Definition pow : N → N → N.
+Proof.
+  intros a b.
+  assert (∀ x : set, x ∈ ω → mul_right a x ∈ ω) as H.
+  { intros x H.
+    unfold mul_right.
+    destruct excluded_middle_informative; intuition.
+    apply in_set. }
+  destruct (constructive_indefinite_description
+              _ (function_construction ω ω (mul_right a) H))
+    as [add_a [H0 [H1 H2]]].
+  destruct (constructive_indefinite_description
+              _ (recursion add_a ω (value ω 1) (in_set ω 1) H0 H1))
+    as [pow_b [H3 [H4 [H5 H6]]]].
+  assert (pow_b (value ω b) ∈ ω) as H7.
+  { rewrite <-H4.
+    apply function_maps_domain_to_range.
+    rewrite H3.
+    apply in_set. }
+  exact (mkSet ω (pow_b (value ω b)) H7).
+Defined.
+
+Infix "^" := pow : N_scope.
+
+Theorem pow_0_r : ∀ x, x^0 = 1.
+Proof.
+  intros x.
+  unfold pow.
+  repeat destruct constructive_indefinite_description.
+  repeat destruct a.
+  repeat destruct constructive_indefinite_description.
+  repeat destruct a.
+  now apply set_proj_injective.
+Qed.
+
+Theorem pow_succ_r : ∀ x y, x^(S y) = x^y * x.
+Proof.
+  intros x y.
+  unfold pow.
+  repeat destruct constructive_indefinite_description.
+  repeat destruct a.
+  repeat destruct constructive_indefinite_description.
+  repeat destruct a.
+  apply set_proj_injective.
+  simpl.
+  rewrite S_is_succ, e5, e1, <-mul_right_lemma; auto using in_set.
+  rewrite <-e3.
+  apply function_maps_domain_to_range.
+  rewrite e2.
+  apply in_set.
+Qed.
+
+Theorem pow_1_r : ∀ x, x^1 = x.
+Proof.
+  intros x.
+  now rewrite pow_succ_r, pow_0_r, mul_comm, mul_1_r.
+Qed.
+
+Theorem pow_0_l : ∀ x, x ≠ 0 → 0^x = 0.
+Proof.
+  intros x H.
+  rewrite succ_0 in *.
+  destruct H as [m H].
+  subst.
+  now rewrite pow_succ_r, mul_0_r.
+Qed.
+
+Theorem pow_1_l : ∀ x, 1^x = 1.
+Proof.
+  induction x using Induction.
+  - now rewrite pow_0_r.
+  - now rewrite pow_succ_r, mul_1_r.
+Qed.
+
+Theorem pow_2_r : ∀ x, x^2 = x*x.
+Proof.
+  intros x.
+  now rewrite pow_succ_r, pow_1_r.
+Qed.
+
+Theorem pow_add_r : ∀ a b c, a^(b+c) = a^b * a^c.
+Proof.
+  induction c using Induction.
+  - now rewrite add_0_r, pow_0_r, mul_1_r.
+  - now rewrite add_succ_r, ? pow_succ_r, IHc, mul_assoc.
+Qed.
+
+Theorem pow_mul_l : ∀ a b c, (a*b)^c = a^c * b^c.
+Proof.
+  induction c using Induction.
+  - now rewrite ? pow_0_r, mul_1_r.
+  - now rewrite ? pow_succ_r, <-? mul_assoc,
+    (mul_assoc a), (mul_comm _ (b^c)), IHc, ? mul_assoc.
+Qed.
+
+Theorem pow_mul_r : ∀ a b c, a^(b*c) = (a^b)^c.
+Proof.
+  induction c using Induction.
+  - now rewrite mul_0_r, ? pow_0_r.
+  - now rewrite mul_succ_r, pow_succ_r, pow_add_r, IHc.
+Qed.
+
+Definition le a b := ∃ c, a + c = b.
+
+Infix "≤" := le : N_scope.
+Notation "a ≥ b" := (b ≤ a) (only parsing).
+
+Definition lt a b := a ≤ b ∧ a ≠ b.
+
+Infix "<" := lt : N_scope.
+Notation "a > b" := (b < a) (only parsing).
+
+Theorem le_is_subset : ∀ a b, a ≤ b ↔ (value ω a) ⊂ (value ω b).
+Proof.
+  intros a b.
+  split; intros H.
+  - destruct H as [c H].
+    revert b H.
+    induction c using Induction; intros b H; rewrite <-H.
+    + rewrite add_0_r.
+      auto using Set_is_subset.
+    + eapply Subset_transitive; eauto.
+      rewrite add_succ_r, S_is_succ.
+      intros x H0.
+      now apply Pairwise_union_classification, or_introl.
+  - induction b using Induction.
+    + exists 0.
+      rewrite add_0_r.
+      apply set_proj_injective, NNPP.
+      intros H0.
+      apply Nonempty_classification in H0 as [x H0].
+      contradiction (Empty_set_classification x).
+      auto.
+    + destruct (classic (value ω b ∈ value ω a)).
+      * assert (value ω a = value ω (S b)).
+        { apply Subset_equality_iff.
+          split; auto.
+          intros x H1.
+          rewrite S_is_succ in H1.
+          apply Pairwise_union_classification in H1 as [H1 | H1].
+          - eapply elements_of_naturals_are_subsets; eauto using in_set.
+          - apply Singleton_classification in H1.
+            now subst. }
+        exists 0.
+        rewrite add_0_r.
+        now apply set_proj_injective.
+      * destruct IHb.
+        { intros x H1.
+          pose proof H _ H1 as H2.
+          rewrite S_is_succ in H2.
+          apply Pairwise_union_classification in H2 as [H2 | H2]; auto.
+          apply Singleton_classification in H2.
+          now subst. }
+        exists (S x).
+        now rewrite add_succ_r, H1.
+Qed.
+
+Theorem lt_is_in : ∀ a b, a < b ↔ (value ω a) ∈ (value ω b).
+  intros a b.
+  split; intros H; unfold lt in *; rewrite le_is_subset in *.
+  - destruct H as [H H0].
+    eapply subsets_of_naturals_are_elements; auto using in_set.
+    contradict H0.
+    now apply set_proj_injective.
+  - split.
+    + apply elements_of_naturals_are_subsets; auto using in_set.
+    + apply pigeonhole_precursor in H; auto using in_set.
+      contradict H.
+      subst.
+      auto using Set_is_subset.
+Qed.
+
+Theorem le_trichotomy : ∀ a b, a ≤ b ∨ b ≤ a.
+Proof.
+  intros a b.
+  rewrite ? le_is_subset.
+  auto using ω_trichotomy, in_set.
+Qed.
+
+Theorem lt_trichotomy : ∀ a b, a < b ∨ a = b ∨ a > b.
+Proof.
+  intros a b.
+  pose proof le_trichotomy a b.
+  pose proof (classic (a = b)).
+  unfold lt.
+  intuition.
+Qed.
+
+Theorem le_antisymm : ∀ a b, a ≤ b ∧ b ≤ a → a = b.
+Proof.
+  intros a b H.
+  rewrite ? le_is_subset in *.
+  now apply set_proj_injective, Subset_equality_iff.
+Qed.
+
+Theorem lt_antisym : ∀ a b, a < b → ¬ b < a.
+Proof.
+  intros a b H H0.
+  rewrite ? lt_is_in in *.
+  eapply ω_irreflexive; eauto using in_set.
+Qed.
+
+Theorem lt_irrefl : ∀ a, ¬ a < a.
+Proof.
+  intros a.
+  unfold lt.
+  tauto.
+Qed.
+
+Theorem le_refl : ∀ a, a ≤ a.
+Proof.
+  intros a.
+  exists 0.
+  now rewrite add_0_r.
+Qed.
+
+Theorem lt_def : ∀ a b, a < b ↔ ∃ c : N, c ≠ 0 ∧ a + c = b.
+Proof.
+  unfold lt; split; intros [x H].
+  - destruct x as [c H0].
+    exists c.
+    split; auto.
+    contradict H.
+    subst.
+    now rewrite add_0_r.
+  - destruct H as [H H0].
+    split.
+    + now (exists x).
+    + contradict H.
+      subst.
+      eauto using cancellation_0.
+Qed.
+
+Theorem cancellation : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
+Proof.
+  induction a using Induction; induction b using Induction; auto.
+  intros H.
+  rewrite mul_succ_r, add_succ_r in H.
+  exfalso.
+  symmetry in H.
+  eapply PA4; eauto.
+Qed.
+
+Theorem mul_lt_r : ∀ a b c, c ≠ 0 → a < b → a * c < b * c.
+Proof.
+  intros a b c H H0.
+  rewrite lt_def in *.
+  destruct H0 as [n [H0 H1]].
+  exists (n*c).
+  split.
+  - contradict H.
+    apply cancellation in H.
+    tauto.
+  - now rewrite <-mul_distr_r, H1.
+Qed.
+
+Theorem mul_le_r : ∀ a b c, a ≤ b → a * c ≤ b * c.
+Proof.
+  intros a b c [n H].
+  exists (n*c).
+  now rewrite <-mul_distr_r, H.
+Qed.
+
+Theorem cancellation_mul : ∀ a b c : N, c ≠ 0 → a * c = b * c → a = b.
+Proof.
+  intros a b c H H0.
+  destruct (lt_trichotomy a b) as [H1 | [H1 | H1]]; auto;
+    eapply mul_lt_r in H1; eauto; rewrite H0 in H1;
+      exfalso; eapply lt_irrefl; eauto.
 Qed.
