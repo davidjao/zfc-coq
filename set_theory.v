@@ -1074,6 +1074,64 @@ Proof.
     repeat destruct constructive_indefinite_description; intuition.
 Qed.
 
+Section Quotient_maps.
+
+  Variable X R : set.
+
+  Definition quotient_map : elts X → elts (X/R).
+  Proof.
+    intros [x H].
+    assert ({z in X | (x,z) ∈ R} ∈ X/R).
+    { apply quotient_classification.
+      split.
+      - intros y H0.
+        now rewrite Specify_classification in *.
+      - exists x.
+        repeat split; auto; rewrite Specify_classification in *; intuition. }
+    exact (mkSet (X/R) {z in X | (x,z) ∈ R} H0).
+  Defined.
+
+End Quotient_maps.
+
+Theorem quotient_lift : ∀ (X R : set) (y : elts (X/R)),
+  ∃ x : elts X, quotient_map X R x = y.
+Proof.
+  intros X R y.
+  unfold quotient in *.
+  pose proof in_set (X/R) y as H.
+  apply quotient_classification in H as [H [x [H0 H1]]].
+  exists (mkSet X x H0).
+  destruct y as [y Y].
+  apply set_proj_injective.
+  simpl in *.
+  apply Extensionality; split; intros H2.
+  - now apply Specify_classification, H1 in H2.
+  - now apply Specify_classification, H1.
+Qed.
+
+Theorem quotient_wf : ∀ X R x y,
+    is_equivalence X R →
+    quotient_map X R x = quotient_map X R y ↔ ((value X x), (value X y)) ∈ R.
+Proof.
+  intros X R [x A] [y B] [H [H0 H1]].
+  split; intros H2.
+  - assert ({z in X | (x, z) ∈ R} = {z in X | (y, z) ∈ R}) as H3 by
+          (unfold quotient_map in H2; congruence).
+    simpl.
+    apply Subset_equality_iff in H3 as [H4 H5].
+    pose proof (H5 y) as H6.
+    rewrite ? Specify_classification in H6.
+    apply H6.
+    auto.
+  - apply set_proj_injective.
+    simpl in *.
+    apply Extensionality.
+    split; intros H3; rewrite Specify_classification in *.
+    + split; try tauto.
+      apply (H1 y x z); intuition.
+    + split; try tauto.
+      apply (H1 x y z); intuition.
+Qed.
 
 Record relation : Type := mkrel
                            { R1 : set;

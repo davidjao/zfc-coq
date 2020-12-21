@@ -357,16 +357,15 @@ Delimit Scope N_scope with N.
 Open Scope N_scope.
 Bind Scope N_scope with N.
 
-Definition PA1 := (mkSet ω ∅ PA1_ω). (* Zero is a natural. *)
+Definition zero := (mkSet ω ∅ PA1_ω). (* PA1 : Zero is a natural. *)
 
-Definition PA2 : N → N. (* PA2 : The successor of a natural is a natural. *)
+Definition S : N → N. (* PA2 : The successor of a natural is a natural. *)
 Proof.
   intros [n H].
   exact (mkSet ω (succ n) (PA2_ω n H)).
 Defined.
 
-Notation "0" := PA1 : N_scope.
-Notation "'S'" := PA2 (at level 5, format "'S'") : N_scope.
+Notation "0" := zero : N_scope.
 Notation "1" := (S 0) : N_scope.
 Notation "2" := (S 1) : N_scope.
 
