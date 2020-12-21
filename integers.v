@@ -85,7 +85,7 @@ Infix "~" := Zequiv (at level 60).
 
 Definition INZ : N → Z.
 Proof.
-  intros [a H].
+  intros [_ a H].
   assert ((a,∅) ∈ ω × ω) as H0 by
         (apply Product_classification; eauto using PA1_ω).
   exact (quotient_map (ω × ω) integer_relation (mkSet (ω × ω) (a,∅) H0)).
@@ -95,7 +95,7 @@ Coercion INZ : N >-> Z.
 
 Definition proto_add : proto_Z → proto_Z → proto_Z.
 Proof.
-  intros [a A] [b B].
+  intros [_ a A] [_ b B].
   apply Product_classification in A.
   apply Product_classification in B.
   destruct (constructive_indefinite_description _ A) as [a1 A1].
@@ -117,7 +117,7 @@ Infix "(+)" := proto_add (at level 50).
 
 Theorem proto_add_comm : ∀ a b, a (+) b = b (+) a.
 Proof.
-  intros [a A] [b B].
+  intros [_ a A] [_ b B].
   unfold proto_Z, proto_add, Zset in *.
   repeat destruct constructive_indefinite_description.
   destruct a0 as [H [H0 H1]].
@@ -134,7 +134,7 @@ Qed.
 
 Theorem proto_add_assoc : ∀ a b c, a (+) (b (+) c) = (a (+) b) (+) c.
 Proof.
-  intros [a A] [b B] [c C].
+  intros [_ a A] [_ b B] [_ c C].
   unfold proto_Z, proto_add, Zset in *.
   repeat destruct constructive_indefinite_description.
   destruct a0 as [H [H0 H1]].
@@ -196,7 +196,7 @@ Theorem add_wf_lr : ∀ a b c,
     value (Zset / integer_relation) (cl (a (+) c)) ⊂
     value (Zset / integer_relation) (cl (b (+) c)).
 Proof.
-  intros [a A] [b B] [c C] H.
+  intros [_ a A] [_ b B] [_ c C] H.
   unfold proto_Z, proto_add, Zset in *.
   repeat destruct constructive_indefinite_description.
   destruct a0 as [H0 [H1 H2]].

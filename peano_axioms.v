@@ -361,7 +361,7 @@ Definition zero := (mkSet ω ∅ PA1_ω). (* PA1 : Zero is a natural. *)
 
 Definition S : N → N. (* PA2 : The successor of a natural is a natural. *)
 Proof.
-  intros [n H].
+  intros [_ n H].
   exact (mkSet ω (succ n) (PA2_ω n H)).
 Defined.
 
@@ -437,7 +437,7 @@ Infix "*" := mul : N_scope.
 Theorem Induction : ∀ P : N → Prop,
     P 0 → (∀ n : N, P n → P (S n)) → ∀ n : N, P n.
 Proof.
-  intros P H H0 [n H1].
+  intros P H H0 [_ n H1].
   induction n using Induction_ω; intuition.
   - rewrite <-(set_proj_injective ω 0); auto using set_proj_injective.
   - replace {| value := succ n; in_set := H1 |} with

@@ -675,7 +675,9 @@ Definition is_function f A B :=
   (f ⊂ A × B) ∧ (∀ a, a ∈ A → exists ! b, b ∈ B ∧ (a,b) ∈ f).
 
 (* Coqification of sets *)
-Record elts (S : set) : Type := mkSet { value : set; in_set : value ∈ S }.
+Record elts (S : set) : Type := mkSet { set_of := S;
+                                        value : set;
+                                        in_set : value ∈ S }.
 
 Record function : Type :=
   mkFunc { domain : set;
@@ -799,8 +801,9 @@ Section Function_evaluation.
 
   Definition lambdaify : elts (domain f) → elts (range f).
   Proof.
-    intros [x H].
-    assert (f x ∈ range f) by auto using function_maps_domain_to_range.
+    intros [_ x H].
+    assert (f x ∈ range f)
+      by auto using function_maps_domain_to_range.
     exact (mkSet (range f) (f x) H0).
   Defined.
 
@@ -983,7 +986,7 @@ Section inverse_functions.
       exists g; intuition.
       pose proof H2 as H5.
       apply H4 in H5.
-      destruct (H0 (mkSet B y H2)) as [[x H6] H7].
+      destruct (H0 (mkSet B y H2)) as [[_ x H6] H7].
       simpl in *.
       unfold partial_left_inverse in H5.
       repeat destruct excluded_middle_informative;
@@ -992,7 +995,7 @@ Section inverse_functions.
       exists x; split; auto.
       congruence.      
     - destruct H0 as [g [H0 [H1 H2]]].
-      intros [b H3].
+      intros [_ b H3].
       assert (g b ∈ A).
       { rewrite <-H1.
         apply function_maps_domain_to_range.
@@ -1017,7 +1020,7 @@ Proof.
     { apply NNPP.
       intros H1.
       apply Nonempty_classification in H1 as [y H1].
-      destruct (H0 (mkSet (range f) y H1)) as [[x H2] H3].
+      destruct (H0 (mkSet (range f) y H1)) as [[_ x H2] H3].
       contradiction (Empty_set_classification x).
       congruence. }
     destruct (function_construction (range f) (domain f) (λ x, x)) as [g Hg].
@@ -1028,7 +1031,7 @@ Proof.
     contradiction (Empty_set_classification y).
     congruence.
   - destruct H0 as [g [H0 [H1 H2]]].
-    intros [y H3].
+    intros [_ y H3].
     exfalso.
     contradiction (Empty_set_classification (g y)).
     rewrite <-H, <-H1.
@@ -1080,7 +1083,7 @@ Section Quotient_maps.
 
   Definition quotient_map : elts X → elts (X/R).
   Proof.
-    intros [x H].
+    intros [_ x H].
     assert ({z in X | (x,z) ∈ R} ∈ X/R).
     { apply quotient_classification.
       split.
@@ -1113,7 +1116,7 @@ Theorem quotient_wf : ∀ X R x y,
     is_equivalence X R →
     quotient_map X R x = quotient_map X R y ↔ ((value X x), (value X y)) ∈ R.
 Proof.
-  intros X R [x A] [y B] [H [H0 H1]].
+  intros X R [_ x A] [_ y B] [H [H0 H1]].
   split; intros H2.
   - assert ({z in X | (x, z) ∈ R} = {z in X | (y, z) ∈ R}) as H3 by
           (unfold quotient_map in H2; congruence).
