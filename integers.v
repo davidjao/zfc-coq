@@ -1,24 +1,27 @@
 Require Export peano_axioms.
-
+  
 Record ring := mkRing {
                    set_R : set;
-                   add_R : elts set_R → elts set_R → elts set_R;
-                   mul_R : elts set_R → elts set_R → elts set_R;
-                   A1_R : ∀ a b, add_R a b = add_R b a;
-                   A2_R : ∀ a b c, add_R a (add_R b c) = add_R (add_R a b) c;
-                   A3_R : ∃ zero_R, ∀ a, add_R a zero_R = a;
-                   A4_R : ∀ a,
-                       ∃ b, add_R a b =
-                            (let s :=
-                                 (constructive_indefinite_description
-                                    (λ a : elts set_R, ∀ x, add_R x a = x) A3_R)
-                             in let (z, _) := s in z);
-                   M1_R : ∀ a b, mul_R a b = mul_R b a;
-                   M2_R : ∀ a b c, mul_R a (mul_R b c) = mul_R (mul_R a b) c;
-                   M3_R : ∃ one_R, ∀ a, mul_R a one_R = a;
-                   D1_R : ∀ a b c, mul_R a (add_R b c) = add_R (mul_R a c) (mul_R b c);
+                   add_R : elts set_R → elts set_R → elts set_R
+                   where "a + b" := (add_R a b);
+                   mul_R : elts set_R → elts set_R → elts set_R
+                   where "a * b" := (mul_R a b);
+                   A1_R : ∀ a b, a + b = b + a;
+                   A2_R : ∀ a b c, a + (b + c) = (a + b) + c;
+                   A3_R : ∃ z, ∀ a, a + z = a
+                   where "0" := (proj1_sig (constructive_indefinite_description
+                                              (λ x, ∀a, a + x = a) A3_R));
+                   A4_R : ∀ a, ∃ b, a + b = 0
+                   where "- a" := (proj1_sig (constructive_indefinite_description
+                                                (λ b, a + b = 0) (A4_R a)));
+                   M1_R : ∀ a b, a * b = b * a;
+                   M2_R : ∀ a b c, a * (b * c) = (a * b) * c;
+                   M3_R : ∃ i, ∀ a, a * i = a
+                   where "1" := (proj1_sig (constructive_indefinite_description
+                                              (λ x, ∀ a, a * x = a) M3_R));
+                   D1_R : ∀ a b c, a * (b + c) = a * b + a * c;
                  }.
-
+  
 Definition integer_relation :=
   {z in (ω × ω) × (ω × ω) | ∃ a b c d : N,
      z = ((value ω a, value ω b), (value ω c, value ω d)) ∧
