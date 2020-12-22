@@ -1,27 +1,23 @@
 Require Export peano_axioms.
   
-Record ring := mkRing {
-                   set_R : set;
-                   add_R : elts set_R → elts set_R → elts set_R
-                   where "a + b" := (add_R a b);
-                   mul_R : elts set_R → elts set_R → elts set_R
-                   where "a * b" := (mul_R a b);
-                   A1_R : ∀ a b, a + b = b + a;
-                   A2_R : ∀ a b c, a + (b + c) = (a + b) + c;
-                   A3_R : ∃ z, ∀ a, a + z = a
-                   where "0" := (proj1_sig (constructive_indefinite_description
-                                              (λ x, ∀a, a + x = a) A3_R));
-                   A4_R : ∀ a, ∃ b, a + b = 0
-                   where "- a" := (proj1_sig (constructive_indefinite_description
-                                                (λ b, a + b = 0) (A4_R a)));
-                   M1_R : ∀ a b, a * b = b * a;
-                   M2_R : ∀ a b c, a * (b * c) = (a * b) * c;
-                   M3_R : ∃ i, ∀ a, a * i = a
-                   where "1" := (proj1_sig (constructive_indefinite_description
-                                              (λ x, ∀ a, a * x = a) M3_R));
-                   D1_R : ∀ a b c, a * (b + c) = a * b + a * c;
-                 }.
-  
+Record ring :=
+  mkRing {
+      set_R : set;
+      add_R : elts set_R → elts set_R → elts set_R where "a + b" := (add_R a b);
+      mul_R : elts set_R → elts set_R → elts set_R where "a * b" := (mul_R a b);
+      zero_R : elts set_R (*where "0" := zero_R*);
+      one_R : elts set_R (*where "1" := one_R*);
+      neg_R : elts set_R → elts set_R where "- a" := (neg_R a);
+      A1_R : ∀ a b, a + b = b + a;
+      A2_R : ∀ a b c, a + (b + c) = (a + b) + c;
+      A3_R : ∀ a, a + zero_R = a;
+      A4_R : ∀ a, a + (-a) = zero_R;
+      M1_R : ∀ a b, a * b = b * a;
+      M2_R : ∀ a b c, a * (b * c) = (a * b) * c;
+      M3_R : ∀ a, a * one_R = a;
+      D1_R : ∀ a b c, a * (b + c) = a * b + a * c;
+    }.
+
 Definition integer_relation :=
   {z in (ω × ω) × (ω × ω) | ∃ a b c d : N,
      z = ((value ω a, value ω b), (value ω c, value ω d)) ∧
@@ -55,211 +51,122 @@ Proof.
   - intros x y z H H0 H1 H2 H3.
     unfold integer_relation in *.
     rewrite Specify_classification in *.
-    destruct H2 as [H2 [a [b [c [d [H4 H5]]]]]].
-    destruct H3 as [H3 [e [f [g [h [H6 H7]]]]]].
+    destruct H2 as [H2 [a [b [c [d [H4 H5]]]]]],
+                   H3 as [H3 [e [f [g [h [H6 H7]]]]]].
     split.
     + apply Product_classification.
       now exists x, z.
     + exists a, b, g, h.
       split; rewrite Ordered_pair_iff in *; intuition.
-      assert ((value ω c, value ω d) = (value ω e, value ω f)) by congruence.
-      apply Ordered_pair_iff in H6 as [H6 H11].
-      assert (c = e) as H12 by now apply set_proj_injective.
-      assert (d = f) as H13 by now apply set_proj_injective.
-      rewrite H12, H13 in H5.
-      assert (a + f + g = b + e + g) as H14 by congruence.
-      rewrite <-? add_assoc, <-H7, ? (add_comm e), ? add_assoc in H14.
-      now apply cancellation_add in H14.
+      subst.
+      apply Ordered_pair_iff in H4 as [H4 H6].
+      replace c with e in *; try now apply set_proj_injective.
+      replace d with f in *; try now apply set_proj_injective.
+      apply (cancellation_add _ _ e).
+      now rewrite <-? add_assoc, (add_comm h),
+      H7, (add_comm g), ? add_assoc, H5.
 Qed.
 
-Definition Zset := ω × ω.
+Definition Z := elts ((ω × ω) / integer_relation).
 
-Definition proto_Z := elts Zset.
-
-Definition Z := elts (Zset / integer_relation).
-
-Definition cl : proto_Z → Z := (quotient_map Zset integer_relation).
-
-Coercion cl : proto_Z >-> Z.
-
-Definition Zequiv a b := cl a = cl b.
-
-Infix "~" := Zequiv (at level 60).
-
-Definition INZ : N → Z.
+Definition embed : N → N → Z.
 Proof.
-  intros [_ a H].
-  assert ((a,∅) ∈ ω × ω) as H0 by
-        (apply Product_classification; eauto using PA1_ω).
-  exact (quotient_map (ω × ω) integer_relation (mkSet (ω × ω) (a,∅) H0)).
+  intros [_ a A] [_ b B].
+  assert ((a, b) ∈ ω × ω).
+  { apply Product_classification.
+    exists a, b.
+    auto. }
+  exact (quotient_map (ω × ω) integer_relation (mkSet (ω × ω) (a,b) H)).
 Defined.
+
+Theorem embed_surj : ∀ z, ∃ a b, embed a b = z.
+Proof.
+  intros z.
+  destruct (quotient_lift _ _ z) as [y H].
+  destruct (unique_set_element _ y) as [x [[H0 H1] H2]].
+  apply Product_classification in H0 as [a [b [H3 [H4 H5]]]].
+  exists (mkSet _ _ H3), (mkSet _ _ H4).
+  apply set_proj_injective.
+  simpl in *.
+  rewrite <-H, <-H5, <-H1.
+  auto using quotient_image. (* alternative direct proof: now destruct y. *)
+Qed.
+
+Theorem embed_kernel : ∀ a b c d, embed a b = embed c d ↔ a+d = b+c.
+Proof.
+  intros [_ a A] [_ b B] [_ c C] [_ d D].
+  split; intros H; unfold embed in *.
+  - apply quotient_wf in H; auto using integer_equivalence.
+    simpl in *.
+    apply Specify_classification in H as [H [a0 [b0 [c0 [d0 [H0 H1]]]]]].
+    rewrite ? Ordered_pair_iff in *; intuition; subst.
+    replace {| value := value ω a0; in_set := A |} with a0;
+    replace {| value := value ω b0; in_set := B |} with b0;
+    replace {| value := value ω c0; in_set := C |} with c0;
+    replace {| value := value ω d0; in_set := D |} with d0;
+    auto; now apply set_proj_injective.
+  - apply quotient_wf; auto using integer_equivalence.
+    simpl.
+    apply Specify_classification; split.
+    + apply Product_classification.
+      exists (a,b), (c,d).
+      repeat split; auto; apply Product_classification;
+        [ exists a, b | exists c, d ]; auto.
+    + exists {| value := a; in_set := A |}, {| value := b; in_set := B |},
+      {| value := c; in_set := C |}, {| value := d; in_set := D |}.
+      split; auto.
+Qed.
+
+Definition INZ a := embed a 0.
 
 Coercion INZ : N >-> Z.
 
-Definition proto_add : proto_Z → proto_Z → proto_Z.
-Proof.
-  intros [_ a A] [_ b B].
-  apply Product_classification in A.
-  apply Product_classification in B.
-  destruct (constructive_indefinite_description _ A) as [a1 A1].
-  destruct (constructive_indefinite_description _ A1) as [a2 [A2 [A3 A4]]].
-  destruct (constructive_indefinite_description _ B) as [b1 B1].
-  destruct (constructive_indefinite_description _ B1) as [b2 [B2 [B3 B4]]].
-  set (c1 := mkSet ω a1 A2).
-  set (c2 := mkSet ω a2 A3).
-  set (d1 := mkSet ω b1 B2).
-  set (d2 := mkSet ω b2 B3).
-  assert ((value ω (c1+d1), value ω (c2+d2)) ∈ ω × ω) as H.
-  { apply Product_classification.
-    exists (value ω (c1 + d1)), (value ω (c2 + d2)).
-    auto using in_set. }
-  exact (mkSet (ω × ω) (value ω (c1+d1), value ω (c2+d2)) H).
-Defined.
-
-Infix "(+)" := proto_add (at level 50).
-
-Theorem proto_add_comm : ∀ a b, a (+) b = b (+) a.
-Proof.
-  intros [_ a A] [_ b B].
-  unfold proto_Z, proto_add, Zset in *.
-  repeat destruct constructive_indefinite_description.
-  destruct a0 as [H [H0 H1]].
-  destruct a1 as [H2 [H3 H4]].
-  destruct e as [y [H5 [H6 H7]]].
-  destruct e0 as [z [H8 [H9 H10]]].
-  rewrite Product_classification in *.
-  destruct A as [a1 [a2 [H11 [H12 H13]]]].
-  destruct B as [b1 [b2 [H14 [H15 H16]]]].
-  apply set_proj_injective.
-  simpl.
-  now rewrite add_comm, (add_comm {| value := x0; in_set := H0 |}).
-Qed.
-
-Theorem proto_add_assoc : ∀ a b c, a (+) (b (+) c) = (a (+) b) (+) c.
-Proof.
-  intros [_ a A] [_ b B] [_ c C].
-  unfold proto_Z, proto_add, Zset in *.
-  repeat destruct constructive_indefinite_description.
-  destruct a0 as [H [H0 H1]].
-  destruct a1 as [H2 [H3 H4]].
-  destruct a2 as [H5 [H6 H7]].
-  destruct e as [d [H8 [H9 H10]]].
-  destruct e0 as [e [H11 [H12 H13]]].
-  destruct e1 as [f [H14 [H15 H16]]].
-  rewrite Product_classification in *.
-  destruct A as [a1 [a2 [H17 [H18 H19]]]].
-  destruct B as [b1 [b2 [H20 [H21 H22]]]].
-  repeat destruct constructive_indefinite_description.
-  destruct e0 as [g [H23 [H24 H25]]].
-  destruct a0 as [H26 [H27 H28]].
-  destruct e1 as [h [H29 [H30 H31]]].
-  destruct a3 as [H32 [H33 H34]].
-  destruct e2 as [i [H35 [H36 H37]]].
-  destruct a4 as [H38 [H39 H40]].
-  rewrite Product_classification in *.
-  destruct C as [c1 [c2 [H41 [H42 H43]]]].
-  apply set_proj_injective.
-  simpl.
-  assert ((x1, e) = (x9, i)) by congruence.
-  assert ((x1, x2) = (x9, x10)) by congruence.
-  rewrite Ordered_pair_iff in *.
-  set (X := {| value := x; in_set := H |}) in *.
-  set (X0 := {| value := x0; in_set := H0 |}) in *.
-  set (X1 := {| value := x1; in_set := H2 |}) in *.
-  set (X2 := {| value := x2; in_set := H3 |}) in *.
-  set (X3 := {| value := x3; in_set := H5 |}) in *.
-  set (X4 := {| value := x4; in_set := H6 |}) in *.
-  set (X5 := {| value := x5; in_set := H26 |}) in *.
-  set (X6 := {| value := x6; in_set := H27 |}) in *.
-  set (X7 := {| value := x7; in_set := H32 |}) in *.
-  set (X8 := {| value := x8; in_set := H33 |}) in *.
-  set (X9 := {| value := x9; in_set := H38 |}) in *.
-  set (X10 := {| value := x10; in_set := H39 |}) in *.
-  intuition.
-  - replace X5 with (X + X1)%N; replace X7 with (X3 + X)%N;
-      replace X9 with X1; try now apply set_proj_injective.
-    now rewrite add_assoc.
-  - replace X6 with (X0 + X2)%N; replace X8 with (X4 + X0)%N;
-      replace X10 with X2; try now apply set_proj_injective.
-    now rewrite add_assoc.
-Qed.
-
 Definition add : Z → Z → Z.
 Proof.
-  intros a b.
-  destruct (constructive_indefinite_description _ (quotient_lift _ _ a)) as [x].
-  destruct (constructive_indefinite_description _ (quotient_lift _ _ b)) as [y].
-  exact (quotient_map _ _ (x (+) y)).
+  intros x y.
+  destruct (constructive_indefinite_description _ (embed_surj x)) as [a H].
+  destruct (constructive_indefinite_description _ H) as [b H0].
+  destruct (constructive_indefinite_description _ (embed_surj y)) as [c H1].
+  destruct (constructive_indefinite_description _ H1) as [d H2].
+  exact (embed (a+c) (b+d)).
 Defined.
 
+Definition mul : Z → Z → Z.
+Proof.
+  intros x y.
+  destruct (constructive_indefinite_description _ (embed_surj x)) as [m H].
+  destruct (constructive_indefinite_description _ H) as [n H0].
+  destruct (constructive_indefinite_description _ (embed_surj y)) as [p H1].
+  destruct (constructive_indefinite_description _ H1) as [q H2].
+  exact (embed (m*p+n*q) (n*p+m*q)).
+Defined.
+
+Definition neg : Z → Z.
+Proof.
+  intros x.
+  destruct (constructive_indefinite_description _ (embed_surj x)) as [a H].
+  destruct (constructive_indefinite_description _ H) as [b H0].
+  exact (embed b a).
+Defined.
+
+Definition zero := INZ 0.
+Definition one := INZ 1.
+
+Notation "0" := zero.
+Notation "1" := one.
 Infix "+" := add.
+Infix "*" := mul.
+Notation "- a" := (neg a).
 
-Theorem add_wf_lr : ∀ a b c,
-    cl a = cl b →
-    value (Zset / integer_relation) (cl (a (+) c)) ⊂
-    value (Zset / integer_relation) (cl (b (+) c)).
+Theorem add_Z_wf : ∀ a b c d, (embed a b) + (embed c d) = embed (a+c) (b+d).
 Proof.
-  intros [_ a A] [_ b B] [_ c C] H.
-  unfold proto_Z, proto_add, Zset in *.
+  intros a b c d.
+  unfold add.
   repeat destruct constructive_indefinite_description.
-  destruct a0 as [H0 [H1 H2]].
-  destruct a1 as [H3 [H4 H5]].
-  destruct a2 as [H6 [H7 H8]].
-  destruct e as [d [H9 [H10 H11]]].
-  destruct e0 as [e [H12 [H13 H14]]].
-  destruct e1 as [f [H15 [H16 H17]]].
-  simpl.
-  apply quotient_wf in H; auto using integer_equivalence.
-  assert (d = x0).
-  { eapply Ordered_pair_iff; eauto; eapply eq_trans; symmetry; eauto. }
-  assert (e = x2).
-  { eapply Ordered_pair_iff; eauto; eapply eq_trans; symmetry; eauto. }
-  assert (f = x4).
-  { eapply Ordered_pair_iff; eauto; eapply eq_trans; symmetry; eauto. }
-  subst.
-  set (X := {| value := x; in_set := H0 |}) in *.
-  set (X0 := {| value := x0; in_set := H1 |}) in *.
-  set (X1 := {| value := x1; in_set := H3 |}) in *.
-  set (X2 := {| value := x2; in_set := H4 |}) in *.
-  set (X3 := {| value := x3; in_set := H6 |}) in *.
-  set (X4 := {| value := x4; in_set := H7 |}) in *.
-  intros z H11; rewrite Specify_classification in *;
-    unfold Zset, integer_relation in *; split; try tauto; destruct H11;
-      rewrite Specify_classification in *.
-  destruct H14 as [H14 [a [b [c [d [H17 H18]]]]]].
-  split; auto.
-  destruct H as [H [a0 [b0 [c0 [d0 [H21 H22]]]]]].
-  simpl in *.
-  - apply Product_classification.
-    exists ((value ω (X3 + X1)), (value ω (X4 + X2)))%N, z.
-    repeat split; auto.
-    apply Product_classification.
-    eauto using in_set.
-  - apply Product_classification in H11 as [z1 [z2 [H11 [H19 H20]]]].
-    destruct H as [H [a0 [b0 [c0 [d0 [H21 H22]]]]]].
-    subst.
-    simpl in *.
-    exists (X3+X1)%N, (X4+X2)%N, c, d.
-    repeat rewrite Ordered_pair_iff in H17, H21.
-    destruct H17 as [[H20 H23] [H24 H25]].
-    destruct H21 as [[H26 H27] [H28 H29]].
-    replace a with (X + X1)%N in *; replace b with (X0 + X2)%N in *;
-      replace a0 with X in *; replace b0 with X0 in *;
-        replace c0 with X3 in *; replace d0 with X4 in *;
-          try now apply set_proj_injective.
-    split; try congruence.
-    eapply (cancellation_add _ _ (X+X4)%N).
-    rewrite H22 at 2.
-    now rewrite ? add_assoc, <-2 (add_assoc X3), (add_comm _ X), (add_assoc X),
-    H18, 2 (add_assoc X3), <-2 (add_assoc (X3 + X0)), (add_comm (X3 + X0)),
-    (add_comm X3), (add_comm _ X4), ? add_assoc.
-Qed.
-
-Theorem add_wf : ∀ a b c, cl a = cl b → cl (a (+) c) = cl (b (+) c).
-Proof.
-  intros a b c H.
-  apply set_proj_injective, Subset_equality_iff.
-  eauto using add_wf_lr.
+  rewrite embed_kernel in *.
+  now rewrite (add_comm b), ? add_assoc, <-(add_assoc x), e2, (add_comm x),
+  <-? add_assoc, e0, 2 (add_comm x0), (add_assoc c), (add_comm c),
+  ? add_assoc.
 Qed.
 
 Theorem A1 : ∀ a b, a + b = b + a.
@@ -267,7 +174,7 @@ Proof.
   intros a b.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  now rewrite proto_add_comm.
+  now rewrite embed_kernel, (add_comm (x+x1)), (add_comm x2), (add_comm x).
 Qed.
 
 Theorem A2 : ∀ a b c, a + (b + c) = (a + b) + c.
@@ -275,43 +182,117 @@ Proof.
   intros a b c.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  rewrite proto_add_comm, (add_wf x3 (x (+) x1)), (add_wf x0 (x1 (+) x2)),
-  proto_add_comm, proto_add_assoc; auto.
+  rewrite embed_kernel in *.
+  rewrite add_assoc, (add_comm x6) in e6.
+  rewrite (add_comm x7), (add_comm x8) in e8.
+  apply (cancellation_add _ _ x2).
+  now rewrite (add_comm _ x2), 3 add_assoc, (add_comm _ x8), ? add_assoc,
+  (add_comm _ x), (add_comm x8), ? add_assoc, <-e8, (add_comm _ x2),
+  ? add_assoc, (add_comm _ x4), ? add_assoc, (add_comm x4), (add_comm _ x6),
+  ? add_assoc, <-(add_assoc x6), (add_comm x6), <-e6, (add_comm _ x1),
+  <-? (add_assoc), (add_comm _ x5), (add_assoc x3), (add_comm x0),
+  <-? add_assoc, (add_comm x7).
 Qed.
 
-Theorem proto_zero : ∃ z, ∀ a, a (+) z = a.
+Theorem A3 : ∀ a, a + 0 = a.
 Proof.
-  assert ((∅, ∅) ∈ ω × ω).
-  { apply Product_classification.
-    exists ∅, ∅.
-    split; auto using PA1_ω. }
-  exists (mkSet (ω × ω) (∅, ∅) H).
-  intros [a A].
-  unfold proto_Z, proto_add, Zset in *.
-  repeat destruct constructive_indefinite_description.
-  destruct e as [b [H0 [H1 H2]]].
-  destruct e0 as [c [H3 [H4 H5]]].
-  destruct a0 as [H6 [H7 H8]].
-  destruct a1 as [H9 [H10 H11]].
-  apply set_proj_injective.
-  simpl.
-  set (X := {| value := x; in_set := H6 |}) in *.
-  set (X0 := {| value := x0; in_set := H7 |}) in *.
-  set (X1 := {| value := x1; in_set := H9 |}) in *.
-  set (X2 := {| value := x2; in_set := H10 |}) in *.
-  rewrite Ordered_pair_iff in *; intuition.
-  replace X1 with 0; replace X2 with 0;
-    try now apply set_proj_injective.
-  now rewrite ? add_0_r.
-Qed.
-
-Theorem A3 : ∃ z, ∀ a, a + z = a.
-Proof.
-  destruct proto_zero as [z H].
-  exists (quotient_map (ω × ω) integer_relation z).
   intros a.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  rewrite proto_add_comm, (add_wf _ z); auto.
-  now rewrite proto_add_comm, H.
+  unfold zero, INZ in e2.
+  now rewrite <-e0, embed_kernel, ? add_0_r, e2,
+  add_comm, (add_comm x), add_assoc in *.
 Qed.
+
+Theorem neg_Z_wf : ∀ a b, - embed a b = embed b a.
+Proof.
+  intros a b.
+  unfold neg.
+  repeat destruct constructive_indefinite_description.
+  now rewrite embed_kernel in *.
+Qed.
+
+Theorem A4 : ∀ a, a + -a = 0.
+Proof.
+  intros a.
+  unfold add, neg.
+  repeat destruct constructive_indefinite_description.
+  unfold zero, INZ.
+  now rewrite embed_kernel, ? add_0_r, (add_comm x), (add_comm x0) in *.
+Qed.
+
+Theorem M1 : ∀ a b, a * b = b * a.
+Proof.
+  intros a b.
+  unfold mul.
+  repeat destruct constructive_indefinite_description.
+  now rewrite embed_kernel, add_comm, (add_comm (x0*x1)),
+  (mul_comm x), (mul_comm x0), (mul_comm x1), (mul_comm x2).
+Qed.
+
+Theorem mul_Z_wf : ∀ a b c d,
+    (embed a b) * (embed c d) = embed (a*c+b*d) (b*c+a*d).
+Proof.
+  intros a b c d.
+  unfold mul.
+  repeat destruct constructive_indefinite_description.
+  rewrite embed_kernel in *.
+  apply (cancellation_add _ _ (b*x1)), (cancellation_add _ _ (b*x2)).
+  rewrite <-? add_assoc, (add_comm (b*x1)), ? add_assoc,
+  (add_comm _ (b*x1)), (add_comm (x0 * x1 + x * x2 + a * c + b * d + b * x1)),
+  (add_comm _ (x*x2)), ? add_assoc, <-? mul_distr_r at 1.
+  rewrite (add_comm b), e0.
+  replace ((x0 + a) * x1 + x0 * x2 + b * c + a * d + b * x2)%N
+    with (a * (x1 + d) + b * (x2 + c) + x0 * (x1 + x2))%N.
+  - now rewrite e2, (add_comm (a*(x2+c))), <-e2, ? mul_distr_l, ? mul_distr_r,
+    (add_comm _ (b*x1)), (add_comm (x0*x2 + a*x2 + x0*x1 + a*c)),
+    (add_comm (x0*x2)), <-? add_assoc, (add_assoc (x0*x2)), (add_comm _ (a*c)),
+    (add_comm (x0*x2)) at 1.
+  - now rewrite ? mul_distr_l, ? mul_distr_r, (add_comm _ (a*x1)), <-add_assoc,
+    (add_comm _ (x0*x1 + x0*x2)), <-? add_assoc, (add_assoc (x0*x1)),
+    (add_assoc (a*d)), (add_comm (a*d)), (add_comm (b*c)), ? add_assoc.
+Qed.
+
+Theorem M2 : ∀ a b c, a * (b * c) = (a * b) * c.
+Proof.
+  intros a b c.
+  unfold mul.
+  repeat destruct constructive_indefinite_description.
+  rewrite <-? mul_Z_wf, e6, e8, ? mul_Z_wf.
+  rewrite embed_kernel, ? mul_distr_r, ? mul_distr_l, ? add_assoc, ? mul_assoc,
+  (add_comm (x*x2*x4)), ? add_assoc, (add_comm _ (x*x3*x5)), <-? add_assoc.
+  apply f_equal.
+  rewrite ? add_assoc, <-(add_assoc (x*x2*x4)), (add_comm (x*x2*x4)),
+  (add_comm (x0*x3*x4)), (add_comm _ (x0*x2*x5)), ? add_assoc,
+  (add_comm _ (x0*x3*x4)), ? add_assoc, (add_comm _ (x0*x3*x4)), <-? add_assoc.
+  repeat apply f_equal.
+  now rewrite ? add_assoc, (add_comm _ (x*x2*x4)), <-? add_assoc,
+  (add_comm (x0*x3*x5)), ? add_assoc.
+Qed.
+
+Theorem M3 : ∀ a, a * 1 = a.
+Proof.
+  intros a.
+  unfold mul.
+  repeat destruct constructive_indefinite_description.
+  replace 1 with (embed 1 0) in *; auto.
+  rewrite <-e0, embed_kernel in *.
+  rewrite add_0_r in e2.
+  subst.
+  now rewrite ? mul_distr_l, ? mul_1_r, <-add_assoc,
+  (add_comm (x*x2+x)), ? add_assoc.
+Qed.
+
+Theorem D1 : ∀ a b c, a * (b + c) = a * b + a * c.
+Proof.
+  intros a b c.
+  unfold mul, add.
+  repeat destruct constructive_indefinite_description.
+  now rewrite <-mul_Z_wf, <-add_Z_wf, e6, e8, e10, ? mul_Z_wf, ? add_Z_wf,
+  ? mul_Z_wf, embed_kernel, ? mul_distr_l, ? add_assoc, <-3 add_assoc,
+  add_comm, (add_assoc (x*x3)), (add_comm (x*x3)), <-(add_assoc (x*x2)),
+  (add_comm (x*x4)), ? add_assoc.
+Qed.
+
+Definition integers := mkRing _ add mul zero one neg A1 A2 A3 A4 M1 M2 M3 D1.
+

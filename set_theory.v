@@ -679,6 +679,14 @@ Record elts (S : set) : Type := mkSet { set_of := S;
                                         value : set;
                                         in_set : value ∈ S }.
 
+Theorem unique_set_element : ∀ X x, exists ! y, y ∈ X ∧ value X x = y.
+Proof.
+  intros X [_ x H].
+  exists x.
+  repeat split; auto.
+  now intros x' [H0 H1].
+Qed.
+
 Record function : Type :=
   mkFunc { domain : set;
            range : set;
@@ -1136,6 +1144,12 @@ Proof.
       apply (H1 x y z); intuition.
 Qed.
 
+Theorem quotient_image : ∀ X R x,
+    value (X / R) (quotient_map X R x) = {z in X | ((value X x),z) ∈ R}.
+Proof.
+  now intros X R [_ x H].
+Qed.
+  
 Record relation : Type := mkrel
                            { R1 : set;
                              R2 : set;
