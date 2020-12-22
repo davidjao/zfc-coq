@@ -485,10 +485,7 @@ Theorem add_0_r : ∀ x, x + 0 = x.
 Proof.
   intros x.
   unfold add.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
+  repeat (destruct constructive_indefinite_description; repeat destruct a).
   now apply set_proj_injective.
 Qed.
 
@@ -496,10 +493,7 @@ Theorem add_succ_r : ∀ x y, x + S y = S (x + y).
 Proof.
   intros x y.
   unfold add.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
+  repeat (destruct constructive_indefinite_description; repeat destruct a).
   apply set_proj_injective.
   destruct y.
   simpl.
@@ -513,10 +507,7 @@ Theorem mul_0_r : ∀ x, x * 0 = 0.
 Proof.
   intros x.
   unfold mul.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
+  repeat (destruct constructive_indefinite_description; repeat destruct a).
   now apply set_proj_injective.
 Qed.
 
@@ -524,10 +515,7 @@ Theorem mul_succ_r : ∀ x y, x * (S y) = x * y + x.
 Proof.
   intros x y.
   unfold mul.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
+  repeat (destruct constructive_indefinite_description; repeat destruct a).
   apply set_proj_injective.
   simpl.
   rewrite S_is_succ, e5, e1, <-add_right_lemma; auto using in_set.
@@ -631,7 +619,7 @@ Proof.
   destruct excluded_middle_informative.
   - replace {| value := value ω b; in_set := i |} with b;
       auto using set_proj_injective.
-  - contradiction (in_set ω b).
+  - now destruct b.
 Qed.
 
 Definition pow : N → N → N.
@@ -662,10 +650,7 @@ Theorem pow_0_r : ∀ x, x^0 = 1.
 Proof.
   intros x.
   unfold pow.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
+  repeat (destruct constructive_indefinite_description; repeat destruct a).
   now apply set_proj_injective.
 Qed.
 
@@ -673,10 +658,7 @@ Theorem pow_succ_r : ∀ x y, x^(S y) = x^y * x.
 Proof.
   intros x y.
   unfold pow.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
-  repeat destruct constructive_indefinite_description.
-  repeat destruct a.
+  repeat (destruct constructive_indefinite_description; repeat destruct a).
   apply set_proj_injective.
   simpl.
   rewrite S_is_succ, e5, e1, <-mul_right_lemma; auto using in_set.
@@ -768,19 +750,16 @@ Proof.
       contradiction (Empty_set_classification x).
       auto.
     + destruct (classic (value ω b ∈ value ω a)).
-      * assert (value ω a = value ω (S b)).
-        { apply Subset_equality_iff.
-          split; auto.
-          intros x H1.
-          rewrite S_is_succ in H1.
-          apply Pairwise_union_classification in H1 as [H1 | H1].
-          - eapply elements_of_naturals_are_subsets; eauto using in_set.
-          - apply Singleton_classification in H1.
-            now subst. }
-        exists 0.
+      * exists 0.
         rewrite add_0_r.
-        now apply set_proj_injective.
-      * destruct IHb.
+        apply set_proj_injective, Subset_equality_iff.
+        split; auto.
+        intros x H1.
+        rewrite S_is_succ in H1.
+        apply Pairwise_union_classification in H1 as [H1 | H1];
+          try now (rewrite Singleton_classification in *; subst).
+        now (eapply elements_of_naturals_are_subsets; eauto using in_set).
+      * destruct IHb as [x H1].
         { intros x H1.
           pose proof H _ H1 as H2.
           rewrite S_is_succ in H2.
