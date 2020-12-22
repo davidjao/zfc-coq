@@ -546,10 +546,16 @@ Proof.
   - now rewrite ? add_succ_r, IHc.
 Qed.
 
+Theorem add_0_l : ∀ x, 0 + x = x.
+Proof.
+  intros x.
+  now rewrite add_comm, add_0_r.
+Qed.
+
 Theorem cancellation_0 : ∀ a b, a + b = a → b = 0.
 Proof.
   induction a using Induction; intros b H.
-  - now rewrite add_comm, add_0_r in H.
+  - now rewrite add_0_l in H.
   - apply IHa, PA5.
     now rewrite add_comm, <-add_succ_r, add_comm.
 Qed.
@@ -565,7 +571,7 @@ Qed.
 Theorem mul_1_r : ∀ a, a * 1 = a.
 Proof.
   intros a.
-  now rewrite mul_succ_r, mul_0_r, add_comm, add_0_r.
+  now rewrite mul_succ_r, mul_0_r, add_0_l.
 Qed.
 
 Theorem mul_2_r : ∀ x, x * 2 = x + x.
@@ -727,6 +733,7 @@ Definition lt a b := a ≤ b ∧ a ≠ b.
 
 Infix "<" := lt : N_scope.
 Notation "a > b" := (b < a) (only parsing) : N_scope.
+Notation "a < b < c" := (a < b ∧ b < c) : N_scope.
 
 Theorem le_is_subset : ∀ a b, a ≤ b ↔ (value ω a) ⊂ (value ω b).
 Proof.
@@ -829,7 +836,7 @@ Proof.
   now rewrite add_0_r.
 Qed.
 
-Theorem lt_def : ∀ a b, a < b ↔ ∃ c : N, c ≠ 0 ∧ a + c = b.
+Theorem lt_def : ∀ a b, a < b ↔ ∃ c : N, 0 ≠ c ∧ a + c = b.
 Proof.
   unfold lt; split; intros [x H].
   - destruct x as [c H0].
@@ -843,10 +850,29 @@ Proof.
     + now (exists x).
     + contradict H.
       subst.
-      eauto using cancellation_0.
+      eauto using eq_sym, cancellation_0.
 Qed.
 
-Theorem cancellation : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
+Theorem cancellation_0_add : ∀ a b, a + b = 0 → a = 0 ∧ b = 0.
+Proof.
+  intros a b H.
+  induction a using Induction; induction b using Induction;
+    rewrite ? add_0_l, ? add_0_r in *; try tauto.
+  rewrite add_succ_r in *.
+  now contradiction (PA4 (S a + b)).
+Qed.
+
+Theorem cancellation_1_add : ∀ a b, a + b = 1 → a = 0 ∨ b = 0.
+Proof.
+  intros a b H.
+  induction a using Induction; induction b using Induction; auto.
+  rewrite add_succ_r in H.
+  apply PA5 in H.
+  rewrite add_comm, add_succ_r in H.
+  now contradiction (PA4 (b+a)).
+Qed.
+
+Theorem cancellation_0_mul : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
 Proof.
   induction a using Induction; induction b using Induction; auto.
   intros H.
@@ -864,8 +890,7 @@ Proof.
   exists (n*c).
   split.
   - contradict H.
-    apply cancellation in H.
-    tauto.
+    apply eq_sym, cancellation_0_mul in H as [H | H]; congruence.
   - now rewrite <-mul_distr_r, H1.
 Qed.
 
@@ -882,4 +907,75 @@ Proof.
   destruct (lt_trichotomy a b) as [H1 | [H1 | H1]]; auto;
     eapply mul_lt_r in H1; eauto; rewrite H0 in H1;
       exfalso; eapply lt_irrefl; eauto.
+Qed.
+
+Theorem trichotomy : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ (a > b)) ∨
+                            (¬ (a < b) ∧ a = b ∧ ¬ (a > b)) ∨
+                            (¬ (a < b) ∧ a ≠ b ∧ a > b).
+Proof.
+  intros a b.
+  destruct (lt_trichotomy a b) as [H | [H | H]], (classic (a = b));
+    try subst; auto using lt_antisym, lt_irrefl; congruence.
+Qed.
+
+Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
+Proof.
+  intros a b c H H0.
+  rewrite lt_def in *.
+  destruct H as [x [H H1]], H0 as [y [H0 H2]].
+  exists (x+y).
+  split.
+  - intros H3.
+    apply eq_sym, cancellation_0_add in H3 as [H3 H4].
+    now subst.
+  - subst.
+    auto using add_assoc.
+Qed.
+
+Theorem O1 : ∀ a b c, a < b → a + c < b + c.
+Proof.
+  intros a b c H.
+  rewrite lt_def in *.
+  destruct H as [x [H H0]].
+  exists x.
+  split; auto.
+  subst.
+  now rewrite <-add_assoc, (add_comm c), add_assoc.
+Qed.
+
+Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
+Proof.
+  intros a b H H0.
+  rewrite lt_def in *.
+  destruct H as [x [H H1]], H0 as [y [H0 H2]].
+  exists (x*y).
+  rewrite add_0_l in *.
+  subst.
+  split; auto.
+  intros H1.
+  apply eq_sym, cancellation_0_mul in H1 as [H1 | H1]; congruence.
+Qed.
+
+Theorem O3 : ∀ a b c, a < b → 0 < c → a * c < b * c.
+Proof.
+  intros a b c H H0.
+  rewrite lt_def in *.
+  destruct H as [x [H H1]], H0 as [y [H0 H2]].
+  rewrite add_0_l in *.
+  subst.
+  exists (x*c).
+  split; auto using mul_distr_r.
+  intros H1.
+  apply eq_sym, cancellation_0_mul in H1 as [H1 | H1]; congruence.
+Qed.
+
+Theorem lt_0_1 : ∀ a, ¬ 0 < a < 1.
+Proof.
+  induction a using Induction; intros [H H0].
+  - eapply lt_irrefl; eauto.
+  - rewrite lt_def in *.
+    destruct H0 as [c [H0 H1]].
+    rewrite add_comm, add_succ_r in H1.
+    apply PA5, cancellation_0_add in H1.
+    intuition.
 Qed.

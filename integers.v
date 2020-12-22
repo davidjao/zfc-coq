@@ -158,6 +158,34 @@ Infix "+" := add.
 Infix "*" := mul.
 Notation "- a" := (neg a).
 
+Theorem INZ_add : ∀ a b : N, a+b = (a+b)%N.
+Proof.
+  intros a b.
+  unfold add, INZ.
+  repeat destruct constructive_indefinite_description.
+  now rewrite embed_kernel, add_0_r, e0, e2, add_assoc,
+  <-(add_assoc x0), (add_comm a), ? add_assoc in *.
+Qed.
+
+Theorem INZ_mul : ∀ a b : N, a*b = (a*b)%N.
+Proof.
+  intros a b.
+  unfold mul, INZ.
+  repeat destruct constructive_indefinite_description.
+  rewrite embed_kernel, add_0_r, e0, e2 in *.
+  rewrite ? mul_distr_r, <-? add_assoc.
+  apply f_equal.
+  now rewrite ? mul_distr_l, add_comm.
+Qed.
+
+Theorem INZ_inj : ∀ a b : N, INZ a = INZ b ↔ a = b.
+Proof.
+  intros a b.
+  split; intros H; try now subst.
+  apply embed_kernel in H.
+  now rewrite ? add_0_l, ? add_0_r in H.
+Qed.
+
 Theorem add_Z_wf : ∀ a b c d, (embed a b) + (embed c d) = embed (a+c) (b+d).
 Proof.
   intros a b c d.
@@ -294,5 +322,206 @@ Proof.
   (add_comm (x*x4)), ? add_assoc.
 Qed.
 
-Definition integers := mkRing _ add mul zero one neg A1 A2 A3 A4 M1 M2 M3 D1.
+Definition lt : Z → Z → Prop.
+Proof.
+  intros x y.
+  destruct (constructive_indefinite_description _ (embed_surj x)) as [a H].
+  destruct (constructive_indefinite_description _ H) as [b H0].
+  destruct (constructive_indefinite_description _ (embed_surj y)) as [c H1].
+  destruct (constructive_indefinite_description _ H1) as [d H2].
+  exact (a+d < b+c).
+Defined.
 
+Infix "<" := lt.
+Notation "a > b" := (b < a) (only parsing).
+Notation "x < y < z" := (x < y ∧ y < z).
+
+Theorem T : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ (a > b)) ∨
+                   (¬ (a < b) ∧ a = b ∧ ¬ (a > b)) ∨
+                   (¬ (a < b) ∧ a ≠ b ∧ a > b).
+Proof.
+  intros a b.
+  unfold lt.
+  repeat destruct constructive_indefinite_description.
+  subst.
+  unfold not.
+  rewrite embed_kernel, ? (add_comm x1), ? (add_comm x2).
+  eauto using trichotomy.
+Qed.
+
+Theorem lt_def : ∀ a b, a < b ↔ ∃ c : N, 0 ≠ c ∧ b = a + c.
+Proof.
+  intros a b.
+  split; intros H; unfold lt, INZ in *;
+    repeat destruct constructive_indefinite_description; rewrite lt_def in *;
+      replace 0 with (embed 0 0) in *; auto.
+  - destruct H as [z [H H0]].
+    exists z.
+    subst.
+    split.
+    + contradict H.
+      now rewrite embed_kernel, ? add_0_r, ? add_0_l in H.
+    + now rewrite add_Z_wf, embed_kernel, add_0_r,
+      add_comm, add_assoc, (add_comm x2).
+  - destruct H as [c [H H0]].
+    exists c.
+    split.
+    + contradict H.
+      now subst.
+    + subst.
+      rewrite add_Z_wf, embed_kernel, add_0_r in e2.
+      now rewrite (add_comm x0), e2, ? add_assoc, (add_comm x).
+Qed.
+
+Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
+Proof.
+  intros a b c H H0.
+  rewrite lt_def in *.
+  destruct H as [x [H H1]], H0 as [y [H0 H2]].
+  exists (x+y)%N.
+  split.
+  - intros H3.
+    apply INZ_inj, eq_sym, cancellation_0_add in H3 as [H3 H4]; subst; auto.
+  - subst.
+    now rewrite <-A2, INZ_add.
+Qed.
+
+Theorem O1 : ∀ a b c, a < b → a + c < b + c.
+Proof.
+  intros a b c H.
+  rewrite lt_def in *.
+  destruct H as [x [H H0]].
+  exists x.
+  split; auto.
+  now rewrite H0, <-A2, (A1 _ c), A2.
+Qed.
+
+Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
+Proof.
+  intros a b H H0.
+  rewrite lt_def in *.
+  destruct H as [x [H H1]], H0 as [y [H0 H2]].
+  exists (x*y)%N.
+  split.
+  - intros H3.
+    unfold lt in *.
+    repeat destruct constructive_indefinite_description.
+    subst.
+    apply INZ_inj, eq_sym, cancellation_0_mul in H3 as [H3 | H3]; subst; auto.
+  - subst.
+    now rewrite ? (A1 0), ? A3, INZ_mul.
+Qed.
+
+Theorem O3 : ∀ a b c, a < b → 0 < c → a * c < b * c.
+Proof.
+  intros a b c H H0.
+  rewrite lt_def in *.
+  destruct H as [x [H H1]], H0 as [y [H0 H2]].
+  rewrite (A1 0), A3 in *.
+  subst.
+  exists (x*y)%N.
+  split.
+  - intros H1.
+    apply INZ_inj, eq_sym, cancellation_0_mul in H1 as [H1 | H1]; subst; auto.
+  - now rewrite M1, D1, ? (M1 y), INZ_mul.
+Qed.
+
+Theorem INZ_lt : ∀ a b : N, INZ a < INZ b ↔ (a < b)%N.
+Proof.
+  intros a b.
+  Set Printing Coercions.
+  split; intros H; rewrite lt_def, peano_axioms.lt_def in *;
+    destruct H as [c [H H0]]; exists c; split.
+  - contradict H.
+    now subst.
+  - now rewrite INZ_add, INZ_inj in H0.
+  - contradict H.
+    now apply INZ_inj in H.
+  - subst.
+    now rewrite INZ_add.
+Qed.
+
+Theorem lt_0_1 : ∀ a, ¬ (0 < a < 1).
+Proof.
+  intros a [H H0].
+  rewrite lt_def in *.
+  destruct H as [x [H H1]], H0 as [y [H0 H2]].
+  contradiction (peano_axioms.lt_0_1 x).
+  split; rewrite peano_axioms.lt_def.
+  - exists x; rewrite (A1 0), A3, add_0_l in *; subst.
+    split; auto.
+    contradict H.
+    now subst.
+  - exists y.
+    split.
+    + contradict H0.
+      now subst.
+    + rewrite (A1 0), A3 in *.
+      subst.
+      now rewrite <-INZ_inj, <-INZ_add.
+Qed.
+
+Theorem lt_n_Sn : ∀ x n, 0 < x < S n → x < n ∨ x = n.
+Proof.
+  intros x n H.
+  destruct (T x n); intuition; try tauto.
+  rewrite lt_def in *.
+  destruct H1 as [a [H1 H3]], H2 as [b [H2 H5]], H4 as [c [H4 H6]].
+  subst.
+  rewrite ? (A1 0), ? A3 in *.
+  rewrite H6, <-add_1_r, ? INZ_add, INZ_inj, <-? add_assoc,
+  ? (add_comm n) in H5.
+  apply cancellation_add, eq_sym, cancellation_1_add in H5 as [H5 | H5];
+    subst; [ contradiction H4 | contradiction H2 ]; auto.
+Qed.
+
+Theorem strong_induction : ∀ P : Z → Prop,
+    (∀ x : Z, (∀ y : Z, 0 < y < x → P y) → P x) → ∀ a : Z, P a.
+Proof.
+  intros P H x.
+  destruct (T x 0) as [[H0 [H1 H2]] | [[H0 [H1 H2]] | [H0 [H1 H2]]]];
+    try now (apply H; intros y [H3 H4]; contradict H2; eauto using lt_trans).
+  rewrite lt_def in H2.
+  destruct H2 as [c [H2 H3]].
+  subst.
+  rewrite (A1 0), A3 in *.
+  apply (Induction (λ x : N, P x ∧ ∀ y : N, 0 < y ∧ y < x → P y))%N.
+  - split.
+    + apply H.
+      intros y [H3 H4].
+      contradiction (lt_irrefl 0).
+      eapply INZ_lt, lt_trans; eauto.
+    + intros y [H3 H4].
+      contradiction (lt_irrefl 0).
+      eapply peano_axioms.lt_trans; eauto.
+  - intros n [H3 H4].
+    split.
+    + apply H.
+      intros y [H5 H6].
+      pose proof lt_n_Sn _ _ (conj H5 H6) as [H7 | H7].
+      * apply H.
+        intros z [H8 H9].
+        rewrite lt_def in H8.
+        destruct H8 as [d [H8 H10]].
+        rewrite H10, A1, A3 in *.
+        subst.
+        apply H4.
+        split.
+        -- split.
+           ++ exists d.
+              now rewrite add_0_l.
+           ++ contradict H8.
+              now subst.
+        -- apply INZ_lt.
+           eauto using lt_trans.
+      * now subst.
+    + intros y H5.
+      assert (0 < y < S n) as H6 by (split; apply INZ_lt; intuition).
+      apply lt_n_Sn in H6 as [H6 | H6].
+      * apply H4.
+        split; intuition.
+        now apply INZ_lt.
+      * now rewrite H6.
+Qed.
+
+Definition integers := mkRing _ add mul zero one neg A1 A2 A3 A4 M1 M2 M3 D1.
