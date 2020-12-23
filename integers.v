@@ -1,4 +1,5 @@
 Require Export peano_axioms.
+Set Warnings "-notation-overridden".
 
 Record ring :=
   mkRing {
@@ -25,46 +26,39 @@ Definition integer_relation :=
 
 Theorem integer_equivalence : is_equivalence (ω × ω) integer_relation.
 Proof.
-  repeat split.
+  repeat split; unfold integer_relation in *.
   - intros a H.
     apply Specify_classification.
     split.
-    + apply Product_classification.
-      now exists a, a.
+    + apply Product_classification; eauto.
     + apply Product_classification in H as [x [y [H [H0 H1]]]].
       exists (mkSet ω x H), (mkSet ω y H0), (mkSet ω x H), (mkSet ω y H0).
-      split; simpl.
-      * congruence.
-      * now rewrite add_comm.
+      split; simpl; try congruence; ring.
   - intros x y H H0 H1.
-    unfold integer_relation in *.
     rewrite Specify_classification in *.
     destruct H1 as [H1 [a [b [c [d [H2 H3]]]]]].
     split.
-    + apply Product_classification.
-      now exists y, x.
+    + apply Product_classification; eauto.
     + exists c, d, a, b.
-      split.
-      * rewrite Ordered_pair_iff in *.
-        intuition.
-      * now rewrite add_comm, (add_comm d).
+      split; try now ring_simplify [H3].
+      now rewrite Ordered_pair_iff in *.
   - intros x y z H H0 H1 H2 H3.
-    unfold integer_relation in *.
     rewrite Specify_classification in *.
     destruct H2 as [H2 [a [b [c [d [H4 H5]]]]]],
                    H3 as [H3 [e [f [g [h [H6 H7]]]]]].
     split.
-    + apply Product_classification.
-      now exists x, z.
+    + apply Product_classification; eauto.
     + exists a, b, g, h.
       split; rewrite Ordered_pair_iff in *; intuition.
       subst.
-      apply Ordered_pair_iff in H4 as [H4 H6].
-      replace c with e in *; try now apply set_proj_injective.
-      replace d with f in *; try now apply set_proj_injective.
+      rewrite Ordered_pair_iff in *; intuition.
+      apply set_proj_injective in H6.
+      apply set_proj_injective in H8.
+      subst.
       apply (cancellation_add _ _ e).
-      now rewrite <-? add_assoc, (add_comm h),
-      H7, (add_comm g), ? add_assoc, H5.
+      ring_simplify [H5 H7].
+      rewrite H7, add_comm, add_assoc, H5.
+      ring.
 Qed.
 
 Definition Z := elts ((ω × ω) / integer_relation).
@@ -100,21 +94,17 @@ Proof.
     simpl in *.
     apply Specify_classification in H as [H [a0 [b0 [c0 [d0 [H0 H1]]]]]].
     rewrite ? Ordered_pair_iff in *; intuition; subst.
-    replace {| value := value ω a0; in_set := A |} with a0;
-    replace {| value := value ω b0; in_set := B |} with b0;
-    replace {| value := value ω c0; in_set := C |} with c0;
-    replace {| value := value ω d0; in_set := D |} with d0;
+    replace {| in_set := A |} with a0; replace {| in_set := B |} with b0;
+    replace {| in_set := C |} with c0; replace {| in_set := D |} with d0;
     auto; now apply set_proj_injective.
   - apply quotient_wf; auto using integer_equivalence.
     simpl.
     apply Specify_classification; split.
     + apply Product_classification.
       exists (a,b), (c,d).
-      repeat split; auto; apply Product_classification;
-        [ exists a, b | exists c, d ]; auto.
-    + exists {| value := a; in_set := A |}, {| value := b; in_set := B |},
-      {| value := c; in_set := C |}, {| value := d; in_set := D |}.
-      split; auto.
+      repeat split; auto; apply Product_classification; eauto.
+    + now exists {| in_set := A |}, {| in_set := B |},
+    {| in_set := C |}, {| in_set := D |}.
 Qed.
 
 Definition INZ a := embed a 0.
@@ -260,13 +250,13 @@ Proof.
   unfold mul.
   repeat destruct constructive_indefinite_description.
   rewrite embed_kernel in *.
-  apply (cancellation_add _ _ (b*x2)), (cancellation_add _ _ (b*x1)).
-  rewrite ? add_assoc, (add_comm _ (b*x1)), ? add_assoc, <-mul_distr_r,
-  (add_comm b), e0, (add_comm x0), <-? add_assoc, (add_comm (a*d)),
-  ? add_assoc, (add_comm _ (a*d)), mul_distr_r, ? add_assoc, <-mul_distr_l,
-  (add_comm d), e2, (add_comm (x0*x1)), <-? add_assoc, (add_comm (b*x2)),
-  ? add_assoc, ? (add_comm _ (b*x2)), ? add_assoc, <-mul_distr_r, (add_comm b),
-  e0, <-? add_assoc, <-mul_distr_l, (add_comm d), e2.
+  apply (cancellation_add _ _ (b*x1)).
+  rewrite <-? add_assoc, (add_comm (x*x1)), <-? add_assoc, <-mul_distr_l,
+  <-mul_distr_r, (add_comm d), (add_comm b), e0, e2, (add_comm (b*c)),
+  (add_comm (x*x2)), (add_comm x0).
+  apply (cancellation_add _ _ (b*x2)).
+  rewrite <-? add_assoc, <-mul_distr_l, <-mul_distr_r, (add_comm c), e0,
+  <-e2, mul_distr_r, 2 (add_assoc (a*d)), <-mul_distr_l, (add_comm d), e2.
   ring.
 Qed.
 
@@ -342,6 +332,13 @@ Infix "<" := lt.
 Notation "a > b" := (b < a) (only parsing).
 Notation "x < y < z" := (x < y ∧ y < z).
 
+Definition le a b := a < b ∨ a = b.
+Infix "≤" := le.
+Notation "a ≥ b" := (b ≤ a) (only parsing).
+Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level).
+Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level).
+Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level).
+
 Theorem T : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ (a > b)) ∨
                    (¬ (a < b) ∧ a = b ∧ ¬ (a > b)) ∨
                    (¬ (a < b) ∧ a ≠ b ∧ a > b).
@@ -366,7 +363,8 @@ Proof.
     subst.
     split.
     + contradict H.
-      now rewrite embed_kernel, ? add_0_r, ? add_0_l in H.
+      rewrite embed_kernel in *.
+      now ring_simplify in H.
     + rewrite add_Z_wf, embed_kernel.
       now ring_simplify [H0].
   - destruct H as [c [H H0]].
@@ -438,7 +436,6 @@ Qed.
 Theorem INZ_lt : ∀ a b : N, INZ a < INZ b ↔ (a < b)%N.
 Proof.
   intros a b.
-  Set Printing Coercions.
   split; intros H; rewrite lt_def, peano_axioms.lt_def in *;
     destruct H as [c [H H0]]; exists c; split.
   - contradict H.
@@ -470,18 +467,16 @@ Proof.
       now rewrite <-INZ_inj, <-INZ_add.
 Qed.
 
-Theorem lt_n_Sn : ∀ x n, 0 < x < S n → x < n ∨ x = n.
+Theorem lt_n_Sn : ∀ x n, x < S n → x < n ∨ x = n.
 Proof.
   intros x n H.
   destruct (T x n); intuition; try tauto.
   rewrite lt_def in *.
-  destruct H1 as [a [H1 H3]], H2 as [b [H2 H5]], H4 as [c [H4 H6]].
+  destruct H as [a [H H2]], H3 as [b [H3 H4]].
   subst.
-  rewrite ? (A1 0), ? A3 in *.
-  rewrite H6, <-add_1_r, ? INZ_add, INZ_inj, <-? add_assoc,
-  ? (add_comm n) in H5.
-  apply cancellation_add, eq_sym, cancellation_1_add in H5 as [H5 | H5];
-    subst; [ contradiction H4 | contradiction H2 ]; auto.
+  rewrite ? INZ_add, INZ_inj, <-add_1_r, <-add_assoc, ? (add_comm n) in H2.
+  apply cancellation_add, eq_sym, cancellation_1_add in H2 as [H2 | H2];
+    subst; [ contradiction H3 | contradiction H ]; auto.
 Qed.
 
 Theorem strong_induction : ∀ P : Z → Prop,
@@ -490,10 +485,9 @@ Proof.
   intros P H x.
   destruct (T x 0) as [[H0 [H1 H2]] | [[H0 [H1 H2]] | [H0 [H1 H2]]]];
     try now (apply H; intros y [H3 H4]; contradict H2; eauto using lt_trans).
-  rewrite lt_def in H2.
-  destruct H2 as [c [H2 H3]].
+  apply lt_def in H2 as [c [H2 H3]].
   subst.
-  rewrite (A1 0), A3 in *.
+  rewrite A3_l in *.
   apply (Induction (λ x : N, P x ∧ ∀ y : N, 0 < y ∧ y < x → P y))%N.
   - split; [ apply H | ]; intros y [H3 H4]; contradiction (lt_irrefl 0);
       [ eapply INZ_lt, lt_trans | eapply peano_axioms.lt_trans ]; eauto.
@@ -501,22 +495,18 @@ Proof.
     split.
     + apply H.
       intros y [H5 H6].
-      pose proof lt_n_Sn _ _ (conj H5 H6) as [H7 | H7]; try now subst.
+      apply lt_n_Sn in H6 as [H6 | H6]; try congruence.
       apply H.
       intros z [H8 H9].
-      rewrite lt_def in H8.
-      destruct H8 as [d [H8 H10]].
-      rewrite H10, A1, A3 in *.
-      subst.
+      pose proof H8 as H10.
+      apply lt_def in H10 as [d [H10 H11]].
+      rewrite H11, A3_l in *.
       apply H4.
-      split; try now (apply INZ_lt; eauto using lt_trans).
-      split; [ exists d; now rewrite add_0_l | contradict H8; now subst ].
-    + intros y H5.
-      assert (0 < y < S n) as H6 by (split; apply INZ_lt; intuition).
-      apply lt_n_Sn in H6 as [H6 | H6]; try congruence.
-      apply H4.
-      split; intuition.
-      now apply INZ_lt.
+      split; apply INZ_lt; eauto using lt_trans.
+    + intros y [H5 H6].
+      apply INZ_lt, lt_n_Sn in H6 as [H6 | H6]; try congruence.
+      rewrite INZ_lt in H6.
+      auto.
 Qed.
 
 Definition integers := mkRing _ add mul zero one neg A1 A2 A3 A4 M1 M2 M3 D1.

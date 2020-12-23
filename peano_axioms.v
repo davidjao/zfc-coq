@@ -1,4 +1,4 @@
-Require Export set_theory ArithRing Ring.
+Require Export set_theory Ring.
 
 Definition ω : set.
 Proof.
@@ -848,7 +848,7 @@ Proof.
   now rewrite add_0_r.
 Qed.
 
-Add Ring nat_ring_ssr :
+Add Ring N_semiring :
   (mk_srt 0 1 add mul eq add_0_l add_comm add_assoc
           mul_1_l mul_0_l mul_comm mul_assoc mul_distr_r).
 
