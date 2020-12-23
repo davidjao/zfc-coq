@@ -1,4 +1,4 @@
-Require Export set_theory.
+Require Export set_theory ArithRing Ring.
 
 Definition ω : set.
 Proof.
@@ -357,7 +357,7 @@ Delimit Scope N_scope with N.
 Open Scope N_scope.
 Bind Scope N_scope with N.
 
-Definition zero := (mkSet ω ∅ PA1_ω). (* PA1 : Zero is a natural. *)
+Definition zero := (mkSet ω ∅ PA1_ω) : N. (* PA1 : Zero is a natural. *)
 
 Definition S : N → N. (* PA2 : The successor of a natural is a natural. *)
 Proof.
@@ -610,6 +610,18 @@ Proof.
   - now rewrite ? (mul_succ_r), mul_distr_l, IHc.
 Qed.
 
+Theorem mul_0_l : ∀ a, 0 * a = 0.
+Proof.
+  intros a.
+  now rewrite mul_comm, mul_0_r.
+Qed.
+
+Theorem mul_1_l : ∀ a, 1 * a = a.
+Proof.
+  intros a.
+  now rewrite mul_comm, mul_1_r.
+Qed.
+
 Definition mul_right : N → set → set.
 Proof.
   intros a x.
@@ -836,6 +848,10 @@ Proof.
   now rewrite add_0_r.
 Qed.
 
+Add Ring nat_ring_ssr :
+  (mk_srt 0 1 add mul eq add_0_l add_comm add_assoc
+          mul_1_l mul_0_l mul_comm mul_assoc mul_distr_r).
+
 Theorem lt_def : ∀ a b, a < b ↔ ∃ c : N, 0 ≠ c ∧ a + c = b.
 Proof.
   unfold lt; split; intros [x H].
@@ -844,7 +860,7 @@ Proof.
     split; auto.
     contradict H.
     subst.
-    now rewrite add_0_r.
+    ring.
   - destruct H as [H H0].
     split.
     + now (exists x).
@@ -891,14 +907,14 @@ Proof.
   split.
   - contradict H.
     apply eq_sym, cancellation_0_mul in H as [H | H]; congruence.
-  - now rewrite <-mul_distr_r, H1.
+  - subst; ring.
 Qed.
 
 Theorem mul_le_r : ∀ a b c, a ≤ b → a * c ≤ b * c.
 Proof.
   intros a b c [n H].
   exists (n*c).
-  now rewrite <-mul_distr_r, H.
+  subst; ring.
 Qed.
 
 Theorem cancellation_mul : ∀ a b c : N, c ≠ 0 → a * c = b * c → a = b.
@@ -928,8 +944,7 @@ Proof.
   - intros H3.
     apply eq_sym, cancellation_0_add in H3 as [H3 H4].
     now subst.
-  - subst.
-    auto using add_assoc.
+  - subst; ring.
 Qed.
 
 Theorem O1 : ∀ a b c, a < b → a + c < b + c.
@@ -939,8 +954,7 @@ Proof.
   destruct H as [x [H H0]].
   exists x.
   split; auto.
-  subst.
-  now rewrite <-add_assoc, (add_comm c), add_assoc.
+  subst; ring.
 Qed.
 
 Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
@@ -964,7 +978,7 @@ Proof.
   rewrite add_0_l in *.
   subst.
   exists (x*c).
-  split; auto using mul_distr_r.
+  split; try ring.
   intros H1.
   apply eq_sym, cancellation_0_mul in H1 as [H1 | H1]; congruence.
 Qed.

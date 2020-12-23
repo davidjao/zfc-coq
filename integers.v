@@ -1,5 +1,5 @@
 Require Export peano_axioms.
-  
+
 Record ring :=
   mkRing {
       set_R : set;
@@ -163,8 +163,8 @@ Proof.
   intros a b.
   unfold add, INZ.
   repeat destruct constructive_indefinite_description.
-  now rewrite embed_kernel, add_0_r, e0, e2, add_assoc,
-  <-(add_assoc x0), (add_comm a), ? add_assoc in *.
+  rewrite embed_kernel in *.
+  ring [e0 e2].
 Qed.
 
 Theorem INZ_mul : ∀ a b : N, a*b = (a*b)%N.
@@ -172,10 +172,8 @@ Proof.
   intros a b.
   unfold mul, INZ.
   repeat destruct constructive_indefinite_description.
-  rewrite embed_kernel, add_0_r, e0, e2 in *.
-  rewrite ? mul_distr_r, <-? add_assoc.
-  apply f_equal.
-  now rewrite ? mul_distr_l, add_comm.
+  rewrite embed_kernel in *.
+  ring [e0 e2].
 Qed.
 
 Theorem INZ_inj : ∀ a b : N, INZ a = INZ b ↔ a = b.
@@ -183,7 +181,7 @@ Proof.
   intros a b.
   split; intros H; try now subst.
   apply embed_kernel in H.
-  now rewrite ? add_0_l, ? add_0_r in H.
+  ring [H].
 Qed.
 
 Theorem add_Z_wf : ∀ a b c d, (embed a b) + (embed c d) = embed (a+c) (b+d).
@@ -192,9 +190,9 @@ Proof.
   unfold add.
   repeat destruct constructive_indefinite_description.
   rewrite embed_kernel in *.
-  now rewrite (add_comm b), ? add_assoc, <-(add_assoc x), e2, (add_comm x),
-  <-? add_assoc, e0, 2 (add_comm x0), (add_assoc c), (add_comm c),
-  ? add_assoc.
+  ring_simplify [e0 e2].
+  rewrite e2, <-add_assoc, e0.
+  ring.
 Qed.
 
 Theorem A1 : ∀ a b, a + b = b + a.
@@ -202,7 +200,8 @@ Proof.
   intros a b.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  now rewrite embed_kernel, (add_comm (x+x1)), (add_comm x2), (add_comm x).
+  rewrite embed_kernel.
+  ring.
 Qed.
 
 Theorem A2 : ∀ a b c, a + (b + c) = (a + b) + c.
@@ -211,15 +210,9 @@ Proof.
   unfold add.
   repeat destruct constructive_indefinite_description.
   rewrite embed_kernel in *.
-  rewrite add_assoc, (add_comm x6) in e6.
-  rewrite (add_comm x7), (add_comm x8) in e8.
   apply (cancellation_add _ _ x2).
-  now rewrite (add_comm _ x2), 3 add_assoc, (add_comm _ x8), ? add_assoc,
-  (add_comm _ x), (add_comm x8), ? add_assoc, <-e8, (add_comm _ x2),
-  ? add_assoc, (add_comm _ x4), ? add_assoc, (add_comm x4), (add_comm _ x6),
-  ? add_assoc, <-(add_assoc x6), (add_comm x6), <-e6, (add_comm _ x1),
-  <-? (add_assoc), (add_comm _ x5), (add_assoc x3), (add_comm x0),
-  <-? add_assoc, (add_comm x7).
+  ring_simplify [e6]; ring_simplify in e6; rewrite <-e6;
+    ring_simplify [e8]; ring_simplify in e8; rewrite e8; ring.
 Qed.
 
 Theorem A3 : ∀ a, a + 0 = a.
@@ -227,9 +220,10 @@ Proof.
   intros a.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  unfold zero, INZ in e2.
-  now rewrite <-e0, embed_kernel, ? add_0_r, e2,
-  add_comm, (add_comm x), add_assoc in *.
+  unfold zero, INZ in *.
+  subst.
+  rewrite embed_kernel in *.
+  ring [e2].
 Qed.
 
 Theorem neg_Z_wf : ∀ a b, - embed a b = embed b a.
@@ -246,7 +240,8 @@ Proof.
   unfold add, neg.
   repeat destruct constructive_indefinite_description.
   unfold zero, INZ.
-  now rewrite embed_kernel, ? add_0_r, (add_comm x), (add_comm x0) in *.
+  rewrite embed_kernel in *.
+  now ring_simplify [e2].
 Qed.
 
 Theorem M1 : ∀ a b, a * b = b * a.
@@ -254,8 +249,8 @@ Proof.
   intros a b.
   unfold mul.
   repeat destruct constructive_indefinite_description.
-  now rewrite embed_kernel, add_comm, (add_comm (x0*x1)),
-  (mul_comm x), (mul_comm x0), (mul_comm x1), (mul_comm x2).
+  rewrite embed_kernel.
+  ring.
 Qed.
 
 Theorem mul_Z_wf : ∀ a b c d,
@@ -265,20 +260,14 @@ Proof.
   unfold mul.
   repeat destruct constructive_indefinite_description.
   rewrite embed_kernel in *.
-  apply (cancellation_add _ _ (b*x1)), (cancellation_add _ _ (b*x2)).
-  rewrite <-? add_assoc, (add_comm (b*x1)), ? add_assoc,
-  (add_comm _ (b*x1)), (add_comm (x0 * x1 + x * x2 + a * c + b * d + b * x1)),
-  (add_comm _ (x*x2)), ? add_assoc, <-? mul_distr_r at 1.
-  rewrite (add_comm b), e0.
-  replace ((x0 + a) * x1 + x0 * x2 + b * c + a * d + b * x2)%N
-    with (a * (x1 + d) + b * (x2 + c) + x0 * (x1 + x2))%N.
-  - now rewrite e2, (add_comm (a*(x2+c))), <-e2, ? mul_distr_l, ? mul_distr_r,
-    (add_comm _ (b*x1)), (add_comm (x0*x2 + a*x2 + x0*x1 + a*c)),
-    (add_comm (x0*x2)), <-? add_assoc, (add_assoc (x0*x2)), (add_comm _ (a*c)),
-    (add_comm (x0*x2)) at 1.
-  - now rewrite ? mul_distr_l, ? mul_distr_r, (add_comm _ (a*x1)), <-add_assoc,
-    (add_comm _ (x0*x1 + x0*x2)), <-? add_assoc, (add_assoc (x0*x1)),
-    (add_assoc (a*d)), (add_comm (a*d)), (add_comm (b*c)), ? add_assoc.
+  apply (cancellation_add _ _ (b*x2)), (cancellation_add _ _ (b*x1)).
+  rewrite ? add_assoc, (add_comm _ (b*x1)), ? add_assoc, <-mul_distr_r,
+  (add_comm b), e0, (add_comm x0), <-? add_assoc, (add_comm (a*d)),
+  ? add_assoc, (add_comm _ (a*d)), mul_distr_r, ? add_assoc, <-mul_distr_l,
+  (add_comm d), e2, (add_comm (x0*x1)), <-? add_assoc, (add_comm (b*x2)),
+  ? add_assoc, ? (add_comm _ (b*x2)), ? add_assoc, <-mul_distr_r, (add_comm b),
+  e0, <-? add_assoc, <-mul_distr_l, (add_comm d), e2.
+  ring.
 Qed.
 
 Theorem M2 : ∀ a b c, a * (b * c) = (a * b) * c.
@@ -286,16 +275,8 @@ Proof.
   intros a b c.
   unfold mul.
   repeat destruct constructive_indefinite_description.
-  rewrite <-? mul_Z_wf, e6, e8, ? mul_Z_wf.
-  rewrite embed_kernel, ? mul_distr_r, ? mul_distr_l, ? add_assoc, ? mul_assoc,
-  (add_comm (x*x2*x4)), ? add_assoc, (add_comm _ (x*x3*x5)), <-? add_assoc.
-  apply f_equal.
-  rewrite ? add_assoc, <-(add_assoc (x*x2*x4)), (add_comm (x*x2*x4)),
-  (add_comm (x0*x3*x4)), (add_comm _ (x0*x2*x5)), ? add_assoc,
-  (add_comm _ (x0*x3*x4)), ? add_assoc, (add_comm _ (x0*x3*x4)), <-? add_assoc.
-  repeat apply f_equal.
-  now rewrite ? add_assoc, (add_comm _ (x*x2*x4)), <-? add_assoc,
-  (add_comm (x0*x3*x5)), ? add_assoc.
+  rewrite <-? mul_Z_wf, e6, e8, ? mul_Z_wf, embed_kernel.
+  ring.
 Qed.
 
 Theorem M3 : ∀ a, a * 1 = a.
@@ -304,11 +285,9 @@ Proof.
   unfold mul.
   repeat destruct constructive_indefinite_description.
   replace 1 with (embed 1 0) in *; auto.
-  rewrite <-e0, embed_kernel in *.
-  rewrite add_0_r in e2.
   subst.
-  now rewrite ? mul_distr_l, ? mul_1_r, <-add_assoc,
-  (add_comm (x*x2+x)), ? add_assoc.
+  rewrite embed_kernel in *.
+  ring [e2].
 Qed.
 
 Theorem D1 : ∀ a b c, a * (b + c) = a * b + a * c.
@@ -316,11 +295,38 @@ Proof.
   intros a b c.
   unfold mul, add.
   repeat destruct constructive_indefinite_description.
-  now rewrite <-mul_Z_wf, <-add_Z_wf, e6, e8, e10, ? mul_Z_wf, ? add_Z_wf,
-  ? mul_Z_wf, embed_kernel, ? mul_distr_l, ? add_assoc, <-3 add_assoc,
-  add_comm, (add_assoc (x*x3)), (add_comm (x*x3)), <-(add_assoc (x*x2)),
-  (add_comm (x*x4)), ? add_assoc.
+  rewrite <-mul_Z_wf, <-add_Z_wf, e6, e8, e10, add_Z_wf, mul_Z_wf, embed_kernel.
+  ring.
 Qed.
+
+Definition sub a b := (a + -b).
+Infix "-" := sub.
+
+Theorem A3_l : ∀ a, 0 + a = a.
+Proof.
+  intros a.
+  now rewrite A1, A3.
+Qed.
+
+Theorem M3_l : ∀ a, 1 * a = a.
+Proof.
+  intros a.
+  now rewrite M1, M3.
+Qed.
+
+Theorem D1_r : ∀ a b c, (a + b) * c = a * c + b * c.
+Proof.
+  intros a b c.
+  now rewrite ? (M1 _ c), D1.
+Qed.
+
+Theorem sub_neg : (∀ x y : Z, x - y = x + - y).
+Proof.
+  auto.
+Qed.
+
+Add Ring integer_ring :
+  (mk_rt 0 1 add mul sub neg eq A3_l A1 A2 M3_l M1 M2 D1_r sub_neg A4).
 
 Definition lt : Z → Z → Prop.
 Proof.
@@ -361,16 +367,16 @@ Proof.
     split.
     + contradict H.
       now rewrite embed_kernel, ? add_0_r, ? add_0_l in H.
-    + now rewrite add_Z_wf, embed_kernel, add_0_r,
-      add_comm, add_assoc, (add_comm x2).
+    + rewrite add_Z_wf, embed_kernel.
+      now ring_simplify [H0].
   - destruct H as [c [H H0]].
     exists c.
     split.
     + contradict H.
       now subst.
     + subst.
-      rewrite add_Z_wf, embed_kernel, add_0_r in e2.
-      now rewrite (add_comm x0), e2, ? add_assoc, (add_comm x).
+      rewrite add_Z_wf, embed_kernel in *.
+      now ring_simplify in e2; ring_simplify [e2].
 Qed.
 
 Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
@@ -383,7 +389,8 @@ Proof.
   - intros H3.
     apply INZ_inj, eq_sym, cancellation_0_add in H3 as [H3 H4]; subst; auto.
   - subst.
-    now rewrite <-A2, INZ_add.
+    rewrite <-INZ_add.
+    ring.
 Qed.
 
 Theorem O1 : ∀ a b c, a < b → a + c < b + c.
@@ -393,7 +400,7 @@ Proof.
   destruct H as [x [H H0]].
   exists x.
   split; auto.
-  now rewrite H0, <-A2, (A1 _ c), A2.
+  ring [H0].
 Qed.
 
 Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
@@ -409,7 +416,8 @@ Proof.
     subst.
     apply INZ_inj, eq_sym, cancellation_0_mul in H3 as [H3 | H3]; subst; auto.
   - subst.
-    now rewrite ? (A1 0), ? A3, INZ_mul.
+    ring_simplify.
+    auto using INZ_mul.
 Qed.
 
 Theorem O3 : ∀ a b c, a < b → 0 < c → a * c < b * c.
@@ -417,13 +425,14 @@ Proof.
   intros a b c H H0.
   rewrite lt_def in *.
   destruct H as [x [H H1]], H0 as [y [H0 H2]].
-  rewrite (A1 0), A3 in *.
+  ring_simplify in H2.
   subst.
   exists (x*y)%N.
   split.
   - intros H1.
     apply INZ_inj, eq_sym, cancellation_0_mul in H1 as [H1 | H1]; subst; auto.
-  - now rewrite M1, D1, ? (M1 y), INZ_mul.
+  - ring_simplify.
+    now rewrite INZ_mul.
 Qed.
 
 Theorem INZ_lt : ∀ a b : N, INZ a < INZ b ↔ (a < b)%N.
@@ -438,7 +447,7 @@ Proof.
   - contradict H.
     now apply INZ_inj in H.
   - subst.
-    now rewrite INZ_add.
+    auto using INZ_add.
 Qed.
 
 Theorem lt_0_1 : ∀ a, ¬ (0 < a < 1).
@@ -448,16 +457,16 @@ Proof.
   destruct H as [x [H H1]], H0 as [y [H0 H2]].
   contradiction (peano_axioms.lt_0_1 x).
   split; rewrite peano_axioms.lt_def.
-  - exists x; rewrite (A1 0), A3, add_0_l in *; subst.
-    split; auto.
+  - exists x.
+    split; try ring; subst.
     contradict H.
     now subst.
   - exists y.
     split.
     + contradict H0.
       now subst.
-    + rewrite (A1 0), A3 in *.
-      subst.
+    + subst.
+      ring_simplify in H2.
       now rewrite <-INZ_inj, <-INZ_add.
 Qed.
 
@@ -486,42 +495,28 @@ Proof.
   subst.
   rewrite (A1 0), A3 in *.
   apply (Induction (λ x : N, P x ∧ ∀ y : N, 0 < y ∧ y < x → P y))%N.
-  - split.
-    + apply H.
-      intros y [H3 H4].
-      contradiction (lt_irrefl 0).
-      eapply INZ_lt, lt_trans; eauto.
-    + intros y [H3 H4].
-      contradiction (lt_irrefl 0).
-      eapply peano_axioms.lt_trans; eauto.
+  - split; [ apply H | ]; intros y [H3 H4]; contradiction (lt_irrefl 0);
+      [ eapply INZ_lt, lt_trans | eapply peano_axioms.lt_trans ]; eauto.
   - intros n [H3 H4].
     split.
     + apply H.
       intros y [H5 H6].
-      pose proof lt_n_Sn _ _ (conj H5 H6) as [H7 | H7].
-      * apply H.
-        intros z [H8 H9].
-        rewrite lt_def in H8.
-        destruct H8 as [d [H8 H10]].
-        rewrite H10, A1, A3 in *.
-        subst.
-        apply H4.
-        split.
-        -- split.
-           ++ exists d.
-              now rewrite add_0_l.
-           ++ contradict H8.
-              now subst.
-        -- apply INZ_lt.
-           eauto using lt_trans.
-      * now subst.
+      pose proof lt_n_Sn _ _ (conj H5 H6) as [H7 | H7]; try now subst.
+      apply H.
+      intros z [H8 H9].
+      rewrite lt_def in H8.
+      destruct H8 as [d [H8 H10]].
+      rewrite H10, A1, A3 in *.
+      subst.
+      apply H4.
+      split; try now (apply INZ_lt; eauto using lt_trans).
+      split; [ exists d; now rewrite add_0_l | contradict H8; now subst ].
     + intros y H5.
       assert (0 < y < S n) as H6 by (split; apply INZ_lt; intuition).
-      apply lt_n_Sn in H6 as [H6 | H6].
-      * apply H4.
-        split; intuition.
-        now apply INZ_lt.
-      * now rewrite H6.
+      apply lt_n_Sn in H6 as [H6 | H6]; try congruence.
+      apply H4.
+      split; intuition.
+      now apply INZ_lt.
 Qed.
 
 Definition integers := mkRing _ add mul zero one neg A1 A2 A3 A4 M1 M2 M3 D1.
