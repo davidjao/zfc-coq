@@ -2,6 +2,7 @@
 
 logic_axioms.v
 set_theory.v
+russell.v
 peano_axioms.v
 integers.v
 arithmetic.v

@@ -1,4 +1,4 @@
-Require Export integers.
+Require Export integers List Permutation.
 
 Definition divide x y := exists z, y = z * x.
 
@@ -66,9 +66,33 @@ Proof.
   split; intros [x H]; exists (-x); ring [H].
 Qed.
 
+Theorem div_sign_neg_r : ∀ a b, a｜-b → a｜b.
+Proof.
+  intros a b H.
+  now rewrite div_sign_r.
+Qed.
+
+Theorem div_sign_r_neg : ∀ a b, a｜b → a｜-b.
+Proof.
+  intros a b H.
+  now rewrite <-div_sign_r.
+Qed.
+
 Theorem div_sign_l : ∀ a b, a｜b ↔ -a｜b.
 Proof.
   split; intros [x H]; exists (-x); ring [H].
+Qed.
+
+Theorem div_sign_neg_l : ∀ a b, -a｜b → a｜b.
+Proof.
+  intros a b H.
+  now rewrite div_sign_l.
+Qed.
+
+Theorem div_sign_l_neg : ∀ a b, a｜b → -a｜b.
+Proof.
+  intros a b H.
+  now rewrite <-div_sign_l.
 Qed.
 
 Definition mul_pos_pos := O2.
@@ -332,13 +356,13 @@ Qed.
 Theorem assoc_sign : ∀ a b, a ~ b → a ~ -b.
 Proof.
   intros a b [H H0].
-  split; now try rewrite <-div_sign_l; try rewrite <-div_sign_r.
+  split; auto using div_sign_l_neg, div_sign_r_neg.
 Qed.
 
 Theorem unit_sign : ∀ a, unit a → unit (-a).
 Proof.
   intros a H.
-  now apply div_sign_l in H.
+  now apply div_sign_l_neg.
 Qed.
 
 Theorem one_unit : unit 1.
@@ -392,4 +416,131 @@ Proof.
   - exists (q+1), r.
     split; auto.
     rewrite D1_l, <-A2, (A1 _ r), A2, H5; ring.
+Qed.
+
+Definition gcd a b d := d｜a ∧ d｜b ∧ ∀ x : Z, x｜a → x｜b → x｜d.
+
+Hint Unfold gcd.
+
+Notation "'gcd' ( a , b )  = d" := (gcd a b d) (at level 80).
+
+Theorem Euclidean_algorithm_N :
+  ∀ a b, 0 < a → 0 < b → gcd (a,b) = 1 → ∃ x y : Z, 1 = a * x + b * y.
+Proof.
+  intros a b H; revert b.
+  induction a as [a IHa] using strong_induction.
+  intros b H0 [H1 [H2 H3]].
+  destruct (division_algorithm b a) as [q [r [H4 [[H5 | H5] H6]]]]; subst; auto.
+  - destruct (IHa r (conj H5 H6) H5 a) as [x [y H4]]; repeat split;
+      auto using div_1_l, div_add, div_mul_r.
+    exists (y+-(q*x)), x.
+    rewrite H4.
+    ring.
+  - exists 1, 0.
+    ring_simplify.
+    apply assoc_pos; auto using zero_lt_1.
+    split; auto using zero_lt_1, div_refl, div_add, div_mul_r, div_0_r.
+Qed.
+
+Lemma gcd_zero_l : ∀ a d, gcd (0,a) = d → a ~ d.
+Proof.
+  intros a d [H [H0 H1]].
+  split; auto using div_0_r, div_refl.
+Qed.
+
+Lemma gcd_sym : ∀ a b d, gcd (a,b) = d → gcd(b,a) = d.
+Proof.
+  intros a b d [H [H0 H1]].
+  auto.
+Qed.
+
+Lemma gcd_zero_r : ∀ a d, gcd (a,0) = d → a ~ d.
+Proof.
+  intros a d H.
+  auto using gcd_zero_l, gcd_sym.
+Qed.
+
+Theorem Euclidean_algorithm :
+  ∀ a b : Z, gcd (a,b) = 1 → ∃ x y : Z, 1 = a * x + b * y.
+Proof.
+  intros a b H.
+  destruct (T a 0), (T b 0); intuition; subst;
+    try apply gcd_zero_l in H; try apply gcd_zero_r in H;
+    try (now (destruct H as [[x H]]; exists x, 0; rewrite H; ring));
+    try (now (destruct H as [[x H]]; exists 0, x; rewrite H; ring));
+    destruct H; intuition; rewrite lt_neg_0 in *;
+      [ set (c := -a) | set (c := -a) | set (c := a) | set (c := a) ];
+      [ set (d := -b) | set (d := b) | set (d := -b) | set (d := b) ];
+      destruct (Euclidean_algorithm_N c d) as [x [y Z]];
+      try split; auto using div_1_l, div_sign_neg_r; unfold c, d in *;
+        [ exists (-x), (-y) | exists (-x), y | exists x, (-y) | exists x, y ];
+        rewrite Z; ring.
+Qed.
+
+Theorem FTA : ∀ a b c, gcd (a,b) = 1 → a｜b * c → a｜c.
+Proof.
+  intros a b c H [d H0].
+  destruct (Euclidean_algorithm a b H) as [x [y H1]].
+  rewrite <-(M3 c), H1.
+  exists (c*x + d*y).
+  ring [H0].
+Qed.
+
+Definition prime (p : Z) :=
+  ¬ unit p ∧ ∀ d : Z, d｜p → unit d ∨ d ~ p.
+
+Fixpoint product L :=
+  match L with
+    | nil => 1
+    | p :: L => p * product L
+  end.
+
+Notation "∏ L" := (product L) (at level 50) : Z_scope.
+
+Lemma prod_lemma : ∀ (t1 t2 : list Z) (p : Z),
+    ∏ (t1 ++ p :: t2) = p * (∏ (t1 ++ t2)).
+
+Proof.
+  induction t1 as [| a t1 IHt1]; auto.
+  intros t2 p.
+  simpl.
+  rewrite IHt1.
+  ring.
+Qed.
+
+Theorem not_prime_divide :
+  ∀ p : Z, 1 < p → ¬ prime p → ∃ n, 1 < n < p ∧ n｜p.
+Proof.
+  intros p H H0.
+  pose proof (T p 1) as H1.
+  apply NNPP; contradict H0.
+  split; eauto.
+  - intros H2.
+    apply div_le in H2 as [H2 | H2]; auto using zero_lt_1; intuition.
+  - intros d H2.
+    apply NNPP; contradict H0;
+      destruct (T d 0) as [[H3 [H4 H5]] | [[H3 [H4 H5]] | [H5 [H4 H3]]]];
+      rewrite lt_neg_0 in *;
+      try (now (subst; apply div_0_l in H2; subst;
+                contradiction (lt_irrefl 0); eauto using lt_trans, zero_lt_1));
+      [ exists (-d) | exists d ]; repeat split; auto using div_sign_l_neg.
+    * apply lt_0_le_1 in H3 as [H3 | H3]; auto.
+      contradict H0.
+      apply or_introl, div_sign_neg_l.
+      rewrite <-H3.
+      apply div_refl.
+    * apply div_sign_l_neg, div_le in H2 as [H2 | H2];
+        eauto using lt_trans, zero_lt_1.
+      contradict H0.
+      rewrite <-H2.
+      auto using assoc_sign, assoc_refl.
+    * apply lt_0_le_1 in H3 as [H3 | H3]; auto.
+      contradict H0.
+      rewrite <-H3.
+      apply or_introl, div_refl.
+    * apply div_le in H2 as [H2 | H2];
+        eauto using lt_trans, zero_lt_1.
+      contradict H0.
+      rewrite H2.
+      eauto using assoc_refl.
 Qed.
