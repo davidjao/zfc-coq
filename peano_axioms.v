@@ -560,12 +560,12 @@ Proof.
     now rewrite add_comm, <-add_succ_r, add_comm.
 Qed.
 
-Theorem cancellation_add : ∀ a b c, a + c = b + c → a = b.
+Theorem cancellation_add : ∀ a b c, a + b = a + c → b = c.
 Proof.
-  induction c using Induction; intros H.
-  - now rewrite ? add_0_r in *.
-  - apply IHc, PA5.
-    now rewrite <-? add_succ_r.
+  induction a using Induction; intros b c H.
+  - now rewrite ? add_0_l in *.
+  - apply IHa, PA5.
+    now rewrite ? (add_comm a), <-? add_succ_r, ? (add_comm _ (S a)).
 Qed.
 
 Theorem mul_1_r : ∀ a, a * 1 = a.
@@ -898,15 +898,15 @@ Proof.
   eapply PA4; eauto.
 Qed.
 
-Theorem mul_lt_r : ∀ a b c, c ≠ 0 → a < b → a * c < b * c.
+Theorem mul_lt_r : ∀ a b c, a ≠ 0 → b < c → a * b < a * c.
 Proof.
   intros a b c H H0.
   rewrite lt_def in *.
   destruct H0 as [n [H0 H1]].
-  exists (n*c).
+  exists (a*n).
   split.
   - contradict H.
-    apply eq_sym, cancellation_0_mul in H as [H | H]; congruence.
+    apply eq_sym, cancellation_0_mul in H as [H | H]; auto; now contradict H0.
   - subst; ring.
 Qed.
 
@@ -921,7 +921,7 @@ Theorem cancellation_mul : ∀ a b c : N, c ≠ 0 → a * c = b * c → a = b.
 Proof.
   intros a b c H H0.
   destruct (lt_trichotomy a b) as [H1 | [H1 | H1]]; auto;
-    eapply mul_lt_r in H1; eauto; rewrite H0 in H1;
+    eapply mul_lt_r in H1; eauto; rewrite ? (mul_comm c), H0 in H1;
       exfalso; eapply lt_irrefl; eauto.
 Qed.
 

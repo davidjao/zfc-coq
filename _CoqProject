@@ -4,3 +4,5 @@ logic_axioms.v
 set_theory.v
 peano_axioms.v
 integers.v
+arithmetic.v
+ring.v
