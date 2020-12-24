@@ -96,7 +96,7 @@ Proof.
   rewrite neg_lt_0.
   now replace (- -a) with a by ring.
 Qed.
-  
+
 Theorem mul_pos_neg : ∀ a b, 0 < a → b < 0 → a * b < 0.
 Proof.
   intros a b H H0.
@@ -122,7 +122,7 @@ Qed.
 Theorem pos_mul : ∀ a b, 0 < a * b → (0 < a ∧ 0 < b) ∨ (a < 0 ∧ b < 0).
 Proof.
   intros a b H.
-  destruct (T (a*b) 0), (T a 0), (T b 0); intuition; subst; 
+  destruct (T (a*b) 0), (T a 0), (T b 0); intuition; subst;
     try replace (a*0) with 0 in * by ring;
     try replace (0*b) with 0 in * by ring;
     try replace (0*0) with 0 in * by ring; auto;
@@ -197,7 +197,7 @@ Lemma one_lt : ∀ a, 1 < a → 0 < a.
 Proof.
   eauto using lt_trans, zero_lt_1.
 Qed.
-  
+
 Lemma lt_succ : ∀ m, m < m + 1.
 Proof.
   intros m.
@@ -231,6 +231,15 @@ Proof.
   intros a b c H H0.
   rewrite ? (M1 _ c).
   now apply mul_le_l.
+Qed.
+
+Theorem neg_neg_lt : ∀ a b, a < b → -b < -a.
+Proof.
+  intros a b H.
+  rewrite lt_def in *.
+  destruct H as [c [H H0]].
+  exists c.
+  split; auto; ring [H0].
 Qed.
 
 Theorem N_ge_0 : ∀ a : N, 0 ≤ a.
@@ -361,4 +370,26 @@ Proof.
     [ assert (-a = -b → a = b) by (intro M; ring [M]) ; left |
       assert (-a = b → a = -b) by (intro M; ring [M]) ; right | right | left ];
     eauto 7 using assoc_pos, assoc_sign, assoc_sym, assoc_sign.
+Qed.
+
+Theorem unit_pm_1 : ∀ a, unit a → a = ± 1.
+Proof.
+  intros a H.
+  apply assoc_pm; split; auto using div_1_l.
+Qed.
+
+Theorem division_algorithm : ∀ a b,
+    0 < a → 0 < b → ∃ q r : Z, b * q + r = a ∧ 0 ≤ r < b.
+Proof.
+  intros a b H H0.
+  induction a as [a IHa] using strong_induction.
+  destruct (T a b); unfold le; intuition; [ exists 0, a | exists 1, 0 | ];
+    repeat split; auto; subst; try ring.
+  assert (0 < a + -b) as H3 by (rewrite <-(A4 a); eauto using O1, neg_neg_lt).
+  destruct (IHa (a + -b)) as [q [r [H5 H6]]]; repeat split; auto.
+  - rewrite <-(A3_r a) at 2.
+    now apply O1, neg_lt_0.
+  - exists (q+1), r.
+    split; auto.
+    rewrite D1_l, <-A2, (A1 _ r), A2, H5; ring.
 Qed.

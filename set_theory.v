@@ -83,7 +83,7 @@ Proof.
   intros x y z.
   unfold pair, specify.
   repeat destruct constructive_indefinite_description.
-  split; intros H.  
+  split; intros H.
   - apply i in H as [H [H0 | H0]]; auto.
   - destruct H as [H | H]; apply i; intuition; congruence.
 Qed.
@@ -204,7 +204,7 @@ Proof.
     try rewrite Pairing_classification in *; try destruct H; subst; auto;
   [ exists A | exists B ]; split; try rewrite Pairing_classification; tauto.
 Qed.
-  
+
 Theorem Singleton_union : ∀ A, ⋃ {A, A} = A.
 Proof.
   intros A.
@@ -291,7 +291,7 @@ Proof.
   - intros X H0.
     apply Pairing_classification in H0 as [H0 | H0]; subst; tauto.
 Qed.
-      
+
 Theorem Empty_intersection : (⋂ ∅ = ∅).
 Proof.
   unfold intersection, specify.
@@ -1001,7 +1001,7 @@ Section inverse_functions.
         repeat destruct constructive_indefinite_description; subst; try tauto.
       contradiction n.
       exists x; split; auto.
-      congruence.      
+      congruence.
     - destruct H0 as [g [H0 [H1 H2]]].
       intros [_ b H3].
       assert (g b ∈ A).
@@ -1149,7 +1149,7 @@ Theorem quotient_image : ∀ X R x,
 Proof.
   now intros X R [_ x H].
 Qed.
-  
+
 Record relation : Type := mkrel
                            { R1 : set;
                              R2 : set;
@@ -1162,7 +1162,7 @@ Admitted.
 Theorem Product_left_empty : ∀ A, ∅ × A = ∅.
 Proof.
   intros A.
-  apply Extensionality; split; intros H; 
+  apply Extensionality; split; intros H;
     try apply Product_classification in H as [a [b [H H0]]];
     now apply Empty_set_classification in H.
 Qed.
