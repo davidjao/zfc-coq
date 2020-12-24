@@ -497,6 +497,11 @@ Fixpoint product L :=
 
 Notation "∏ L" := (product L) (at level 50) : Z_scope.
 
+Definition prime_factorization (n : Z) (L : list Z) :=
+  n = ∏ L ∧ (∀ p : Z, List.In p L → 0 < p ∧ prime p).
+
+Notation "n = ∏' L" := (prime_factorization n L) (at level 50) : Z_scope.
+
 Lemma prod_lemma : ∀ (t1 t2 : list Z) (p : Z),
     ∏ (t1 ++ p :: t2) = p * (∏ (t1 ++ t2)).
 
@@ -543,4 +548,114 @@ Proof.
       contradict H0.
       rewrite H2.
       eauto using assoc_refl.
+Qed.
+
+Theorem exists_prime_divisor :
+  ∀ n : Z, 1 < n → ∃ p, 0 < p ∧ prime p ∧ p｜n.
+Proof.
+  intros n H.
+  induction n as [n H0] using strong_induction.
+  destruct (classic (prime n)) as [H1 | H1].
+  - exists n; split; eauto using div_refl, lt_trans, zero_lt_1.
+  - destruct (not_prime_divide n H H1) as [x [[H2 H3] H4]].
+    apply H0 in H2 as [p [H5 [H6 H7]]];
+      eauto using div_trans, lt_trans, zero_lt_1.
+Qed.
+
+Lemma prime_factors_in_interval :
+  ∀ p x, 0 < p → 0 < x → prime p → p｜x → ∃ k, k * p = x ∧ 0 < k < x.
+Proof.
+  intros p x H H0 [H1 H2] [k H3].
+  subst.
+  assert (0 < k) as H4 by eauto using pos_div_r.
+  exists k.
+  repeat split; auto.
+  assert (k ≤ k * p) as [H3 | H3]; eauto using div_le, div_mul_r, div_refl.
+  rewrite <-(M3_r k) in H3 at 1.
+  apply cancellation_mul_l in H3.
+  - contradict H1; subst; exists 1; ring.
+  - intro; subst; contradiction (lt_irrefl 0).
+Qed.
+
+Theorem exists_prime_factorization : ∀ n, 0 < n → ∃ L : list Z, n = ∏' L.
+Proof.
+  intros n H.
+  induction n as [n H0] using strong_induction.
+  destruct (T 1 n) as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]].
+  - apply exists_prime_divisor in H1 as [p [H4 [H5 H6]]].
+    apply prime_factors_in_interval in H6 as [k [H6 H7]]; auto.
+    apply H0 in H7 as [L [H7 H8]]; intuition.
+    exists (p::L).
+    split; auto; simpl.
+    + now rewrite <-H6, H7, M1.
+    + intros p0 [H1 | H1]; subst; auto.
+  - now (exists nil).
+  - contradiction (lt_0_1 n).
+Qed.
+
+Lemma prime_rel_prime : ∀ p a : Z, prime p → ¬ p｜a → gcd (p,a) = 1.
+Proof.
+  intros p a H H0.
+  repeat split; auto using div_1_l.
+  intros d H1 H2.
+  apply H in H1 as [H1 | [H1 H3]]; auto.
+  exfalso; eauto using div_trans.
+Qed.
+
+Theorem Euclid's_lemma : ∀ a b p : Z, prime p → p｜a * b → p｜a ∨ p｜b.
+Proof.
+  intros a b p H H0.
+  destruct (classic (p｜a)); eauto using prime_rel_prime, FTA.
+Qed.
+
+Theorem divisors_are_factors :
+  ∀ L p x, 0 < p → 0 < x → x = ∏' L → prime p → p｜x → In p L.
+Proof.
+  intro L.
+  induction L as [| a L IHL]; intros p x H H0 [H1 H2] [H3 H4] H5;
+    subst; try now contradict H3.
+  destruct (H2 a (in_eq a L)) as [H1 [H6 H7]].
+  destruct (Euclid's_lemma a (∏ L) p) as [H8 | H8]; repeat split; auto.
+  - apply H7 in H8 as [H8 | H8]; try contradiction.
+    apply assoc_pm in H8 as [H8 | H8]; subst; try now left.
+    rewrite <-lt_neg_0 in H.
+    contradiction (lt_antisym 0 a).
+  - assert (0 < (∏ L)) as H9 by eauto using pos_div_l.
+    apply in_cons.
+    eapply IHL; unfold prime; try split; eauto using in_cons.
+Qed.
+
+Lemma one_has_unique_factorization : ∀ L, 1 = ∏' L → L = nil.
+Proof.
+  intros L [H H0].
+  induction L as [| a L IHL]; auto.
+  destruct (H0 a) as [H1 [H2 H3]]; try now intuition.
+  contradict H2.
+  exists (∏ L).
+  now rewrite M1.
+Qed.
+
+Theorem prime_factorization_uniqueness :
+  ∀ x, 0 < x → ∀ L1 L2 : list Z, x = ∏' L1 → x = ∏' L2 → Permutation L1 L2.
+Proof.
+  intros x H.
+  induction x as [x H0] using strong_induction.
+  intros L1 L2 [H1 H2] [H3 H4].
+  induction L1 as [ | q L1 IHL1]; simpl in *.
+  - subst.
+    now rewrite (one_has_unique_factorization _ (conj H3 H4)).
+  - destruct (H2 q) as [H5 H6]; try apply in_eq.
+    assert (q｜x) as H7 by (subst; eauto using div_mul_r, div_refl).
+    eapply divisors_are_factors in H as H8; eauto; try (split; eauto).
+    apply in_split in H8 as [l1 [l2 H8]].
+    subst.
+    apply prime_factors_in_interval in H7 as [k [H8 H9]]; auto.
+    rewrite (M1 k), <-H8, prod_lemma in *.
+    apply cancellation_mul_l in H3; apply cancellation_mul_l in H8;
+      try now (intro; subst; contradiction (lt_irrefl 0)).
+    apply Permutation_cons_app, (H0 k); intuition; split; auto.
+    intros p H9.
+    apply H4.
+    rewrite in_app_iff in *.
+    intuition.
 Qed.
