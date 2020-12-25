@@ -129,14 +129,12 @@ Qed.
 Theorem Qequiv : ∀ a b c d, b ≠ 0 → d ≠ 0 → a / b = c / d ↔ a * d = b * c.
 Proof.
   intros [_ a A] [_ b B] [_ c C] [_ d D] H H0.
-  split; intros H1.
-  - unfold embed in H1.
-    destruct excluded_middle_informative; try now contradiction.
-    symmetry in H1.
-    destruct excluded_middle_informative; try now contradiction.
-    apply quotient_wf in H1; auto using rational_equivalence.
-    simpl in *.
-    apply Specify_classification in H1
+  split; intros H1; unfold embed in *; destruct excluded_middle_informative;
+    try (now contradiction); [symmetry in H1 | symmetry]; 
+      destruct excluded_middle_informative; try (now contradiction);
+        [apply quotient_wf in H1 | apply quotient_wf];
+        auto using rational_equivalence; simpl in *.
+  - apply Specify_classification in H1
       as [H1 [c' [d' [a' [b' [H2 [H3 [H4 H5]]]]]]]].
     repeat rewrite Ordered_pair_iff in *.
     intuition.
@@ -144,13 +142,7 @@ Proof.
     replace {| in_set := A |} with a'; replace {| in_set := B |} with b';
       replace {| in_set := C |} with c'; replace {| in_set := D |} with d';
         try (now apply set_proj_injective); ring [H5].
-  - unfold embed.
-    destruct excluded_middle_informative; try now contradiction.
-    symmetry.
-    destruct excluded_middle_informative; try now contradiction.
-    apply quotient_wf; auto using rational_equivalence.
-    simpl.
-    apply Specify_classification.
+  - apply Specify_classification.
     split.
     + apply Product_classification.
       exists (c, d), (a, b).
@@ -220,9 +212,12 @@ Defined.
 Infix "+" := add : Q_scope.
 Infix "*" := mul : Q_scope.
 Notation "- a" := (neg a) : Q_scope.
-Notation "/ a" := (inv a) : Q_scope.
+Notation "a '^-1' " := (inv a) (at level 35, format "a '^-1'") : Q_scope.
 
 Definition sub a b := a + -b.
+Definition div a b := a * b^-1.
+
+Infix "-" := sub : Q_scope.
 
 Check mk_rt 0 1 add mul sub neg eq.
 
@@ -232,10 +227,9 @@ Proof.
   intros a b c d H H0.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  destruct a0 as [H1 H2].
-  destruct a1 as [H3 H4].
-  rewrite Qequiv in *; auto; try ring [H2 H4];
-    intros H5; apply cancellation_0_mul in H5; tauto.
+  destruct a0, a1.
+  rewrite Qequiv in *; auto; try ring [e1 e2];
+    intros H1; apply cancellation_0_mul in H1; tauto.
 Qed.
 
 Theorem mul_wf : ∀ a b c d : Z,
@@ -244,10 +238,9 @@ Proof.
   intros a b c d H H0.
   unfold mul.
   repeat destruct constructive_indefinite_description.
-  destruct a0 as [H1 H2].
-  destruct a1 as [H3 H4].
-  rewrite Qequiv in *; auto; try ring [H2 H4];
-    intros H5; apply cancellation_0_mul in H5; tauto.
+  destruct a0, a1.
+  rewrite Qequiv in *; auto; try ring [e1 e2];
+    intros H1; apply cancellation_0_mul in H1; tauto.
 Qed.
 
 Theorem neg_wf : ∀ a b : Z, b ≠ 0%Z → -(a / b) = (-a) / b.
@@ -255,24 +248,24 @@ Proof.
   intros a b H.
   unfold neg.
   repeat destruct constructive_indefinite_description.
-  destruct a0 as [H1 H2].
+  destruct a0.
   rewrite Qequiv in *; auto.
-  ring [H2].
+  ring [e0].
 Qed.
 
-Theorem inv_wf : ∀ a b : Z, a ≠ 0%Z → b ≠ 0%Z → / (a / b) = b / a.
+Theorem inv_wf : ∀ a b : Z, a ≠ 0%Z → b ≠ 0%Z → (a / b)^-1 = b / a.
 Proof.
   intros a b H H0.
   unfold inv.
   repeat destruct constructive_indefinite_description.
-  destruct a0 as [H1 H2].
-  rewrite Qequiv in H2; auto.
+  destruct a0.
+  rewrite Qequiv in e0; auto.
   rewrite Qequiv; auto.
-  intros H3.
+  intros H1.
   subst.
   replace (0*b)%Z with (0%Z) in * by ring.
-  symmetry in H2.
-  apply cancellation_0_mul in H2.
+  symmetry in e0.
+  apply cancellation_0_mul in e0.
   tauto.
 Qed.
 
@@ -370,6 +363,58 @@ Proof.
   ring.
 Qed.
 
-Check mk_rt.
+Theorem sub_neg : ∀ a b, a - b = a + -b.
+Proof.
+  auto.
+Qed.
 
-Check mk_field.
+Theorem A4 : ∀ a, a + -a = 0.
+Proof.
+  intros [_ a A].
+  unfold add, neg.
+  repeat destruct constructive_indefinite_description.
+  destruct a0, a1.
+  unfold zero.
+  rewrite Qequiv in *; eauto using zero_ne_1;
+    try (intros Z; apply cancellation_0_mul in Z; tauto).
+  ring [e2].
+Qed.
+
+Theorem one_ne_0 : 1 ≠ 0.
+Proof.
+  intros H.
+  unfold zero, one, mul in *;
+    rewrite Qequiv, ? integers.M3 in H;
+    now eapply zero_ne_1.
+Qed.
+
+Theorem div_inv : ∀ a b, div a b = a * b^-1.
+Proof.
+  auto.
+Qed.
+
+Theorem inv_l : ∀ a, a ≠ 0 → a^-1 * a = 1.
+Proof.
+  intros a H.
+  unfold inv, mul.
+  repeat destruct constructive_indefinite_description.
+  destruct a0, a1.
+  unfold one.
+  rewrite Qequiv in *; auto.
+  - ring [e2].
+  - intros H0.
+    subst.
+    contradict H.
+    unfold zero.
+    rewrite Qequiv; auto; try ring.
+    apply zero_ne_1.
+  - intros H0.
+    apply cancellation_0_mul in H0.
+    tauto.
+  - apply zero_ne_1.
+Qed.
+
+Add Field rational_field :
+  (mk_field div inv
+            (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1 sub_neg A4)
+            one_ne_0 div_inv inv_l).
