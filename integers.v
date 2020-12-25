@@ -45,7 +45,7 @@ Qed.
 
 Definition ℤ := ((ω × ω) / integer_relation).
 
-Definition Z := elts ℤ.
+Definition Z := elts ((ω × ω) / integer_relation).
 
 Delimit Scope Z_scope with Z.
 Open Scope Z_scope.
@@ -164,7 +164,7 @@ Proof.
   ring [H].
 Qed.
 
-Theorem add_Z_wf : ∀ a b c d, (a - b) + (c - d) = (a+c) - (b+d).
+Theorem add_wf : ∀ a b c d, (a - b) + (c - d) = (a+c) - (b+d).
 Proof.
   intros a b c d.
   unfold add.
@@ -206,7 +206,7 @@ Proof.
   ring [e0].
 Qed.
 
-Theorem neg_Z_wf : ∀ a b, - (a - b) = b - a.
+Theorem neg_wf : ∀ a b, - (a - b) = b - a.
 Proof.
   intros a b.
   unfold neg.
@@ -233,7 +233,7 @@ Proof.
   ring.
 Qed.
 
-Theorem mul_Z_wf : ∀ a b c d,
+Theorem mul_wf : ∀ a b c d,
     (a - b) * (c - d) = (a*c+b*d) - (b*c+a*d).
 Proof.
   intros a b c d.
@@ -254,7 +254,7 @@ Proof.
   intros a b c.
   unfold mul.
   repeat destruct constructive_indefinite_description.
-  rewrite <-? mul_Z_wf, e6, e8, ? mul_Z_wf, Zequiv.
+  rewrite <-? mul_wf, e6, e8, ? mul_wf, Zequiv.
   ring.
 Qed.
 
@@ -274,7 +274,7 @@ Proof.
   intros a b c.
   unfold mul, add.
   repeat destruct constructive_indefinite_description.
-  rewrite <-mul_Z_wf, <-add_Z_wf, e4, e8, e10, add_Z_wf, mul_Z_wf, Zequiv.
+  rewrite <-mul_wf, <-add_wf, e4, e8, e10, add_wf, mul_wf, Zequiv.
   ring.
 Qed.
 
@@ -347,7 +347,7 @@ Proof.
   split; intros H; unfold lt, zero, INZ in *;
     repeat destruct constructive_indefinite_description; rewrite lt_def in *;
       destruct H as [z [H H0]]; exists z; split; subst;
-        try rewrite add_Z_wf, Zequiv in *.
+        try rewrite add_wf, Zequiv in *.
   - contradict H.
     rewrite Zequiv in *.
     now ring_simplify in H.

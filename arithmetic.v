@@ -163,20 +163,20 @@ Proof.
       exfalso; eauto using mul_neg_neg, mul_pos_pos.
 Qed.
 
-Theorem cancellation_Z_0_add : ∀ a b, a + b = 0 → b = -a.
+Theorem cancellation_0_add : ∀ a b, a + b = 0 → b = -a.
 Proof.
   intros a b H.
   now rewrite <-(A3 b), <-(A4 a), <-A2, (A1 (-a)), A2, H, A3.
 Qed.
 
-Theorem cancellation_Z_add : ∀ a b c, a + b = a + c → b = c.
+Theorem cancellation_add : ∀ a b c, a + b = a + c → b = c.
 Proof.
   intros a b c H.
   rewrite <-(A3 b), <-(A3 c), <-(A4 a), A1, A2, (A1 _ a), H.
   ring.
 Qed.
 
-Theorem cancellation_Z_0_mul : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
+Theorem cancellation_0_mul : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
 Proof.
   intros a b H.
   destruct (T (a*b) 0), (T a 0), (T b 0); intuition;
@@ -188,8 +188,8 @@ Theorem cancellation_mul_l : ∀ a b c, a ≠ 0 → a * b = a * c → b = c.
 Proof.
   intros a b c H H0.
   assert (a * (b - c) = 0) as H1 by ring [H0].
-  apply cancellation_Z_0_mul in H1 as [H1 | H1]; intuition.
-  apply cancellation_Z_0_add in H1.
+  apply cancellation_0_mul in H1 as [H1 | H1]; intuition.
+  apply cancellation_0_add in H1.
   ring [H1].
 Qed.
 
@@ -281,6 +281,14 @@ Theorem lt_irrefl : ∀ a, ¬ a < a.
 Proof.
   intros a.
   destruct (T a a); intuition.
+Qed.
+
+Theorem zero_ne_1 : 1 ≠ 0.
+Proof.
+  intros H.
+  contradiction (lt_irrefl 0).
+  rewrite <-H at 2.
+  exact zero_lt_1.
 Qed.
 
 Theorem lt_antisym : ∀ a b, a < b → ¬ b < a.
