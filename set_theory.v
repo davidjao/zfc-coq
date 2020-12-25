@@ -675,7 +675,7 @@ Definition is_function f A B :=
   (f ⊂ A × B) ∧ (∀ a, a ∈ A → exists ! b, b ∈ B ∧ (a,b) ∈ f).
 
 (* Coqification of sets *)
-Record elts (S : set) : Type := mkSet { set_of := S;
+Record elts (S : set) : Type := mkSet { ambient_set := S;
                                         value : set;
                                         in_set : value ∈ S }.
 

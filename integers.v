@@ -61,7 +61,7 @@ Defined.
 
 Infix "-" := embed : N_scope.
 
-Theorem embed_surj : ∀ z, ∃ a b, a - b = z.
+Theorem Zlift : ∀ z, ∃ a b, a - b = z.
 Proof.
   intros z.
   destruct (quotient_lift _ _ z) as [y H].
@@ -102,9 +102,9 @@ Coercion INZ : N >-> Z.
 Definition add : Z → Z → Z.
 Proof.
   intros x y.
-  destruct (constructive_indefinite_description _ (embed_surj x)) as [a H].
+  destruct (constructive_indefinite_description _ (Zlift x)) as [a H].
   destruct (constructive_indefinite_description _ H) as [b H0].
-  destruct (constructive_indefinite_description _ (embed_surj y)) as [c H1].
+  destruct (constructive_indefinite_description _ (Zlift y)) as [c H1].
   destruct (constructive_indefinite_description _ H1) as [d H2].
   exact ((a+c) - (b+d)).
 Defined.
@@ -112,9 +112,9 @@ Defined.
 Definition mul : Z → Z → Z.
 Proof.
   intros x y.
-  destruct (constructive_indefinite_description _ (embed_surj x)) as [m H].
+  destruct (constructive_indefinite_description _ (Zlift x)) as [m H].
   destruct (constructive_indefinite_description _ H) as [n H0].
-  destruct (constructive_indefinite_description _ (embed_surj y)) as [p H1].
+  destruct (constructive_indefinite_description _ (Zlift y)) as [p H1].
   destruct (constructive_indefinite_description _ H1) as [q H2].
   exact ((m*p+n*q) - (n*p+m*q)).
 Defined.
@@ -122,7 +122,7 @@ Defined.
 Definition neg : Z → Z.
 Proof.
   intros x.
-  destruct (constructive_indefinite_description _ (embed_surj x)) as [a H].
+  destruct (constructive_indefinite_description _ (Zlift x)) as [a H].
   destruct (constructive_indefinite_description _ H) as [b H0].
   exact (b - a).
 Defined.
@@ -308,9 +308,9 @@ Add Ring integer_ring :
 Definition lt : Z → Z → Prop.
 Proof.
   intros x y.
-  destruct (constructive_indefinite_description _ (embed_surj x)) as [a H].
+  destruct (constructive_indefinite_description _ (Zlift x)) as [a H].
   destruct (constructive_indefinite_description _ H) as [b H0].
-  destruct (constructive_indefinite_description _ (embed_surj y)) as [c H1].
+  destruct (constructive_indefinite_description _ (Zlift y)) as [c H1].
   destruct (constructive_indefinite_description _ H1) as [d H2].
   exact (a+d < b+c).
 Defined.

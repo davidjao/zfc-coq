@@ -74,9 +74,8 @@ Proof.
   intros n H.
   apply Nonempty_classification.
   exists n.
-  apply Pairwise_union_classification.
-  right.
-  apply Pairing_classification; auto.
+  now apply Pairwise_union_classification,
+  or_intror, Pairing_classification, or_intror.
 Qed.
 
 Theorem Induction_ω : ∀ P : set → Prop,
