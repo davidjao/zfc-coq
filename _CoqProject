@@ -6,4 +6,5 @@ russell.v
 peano_axioms.v
 integers.v
 arithmetic.v
+rationals.v
 ring.v
