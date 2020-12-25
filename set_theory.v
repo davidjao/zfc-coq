@@ -1085,6 +1085,44 @@ Proof.
     repeat destruct constructive_indefinite_description; intuition.
 Qed.
 
+Lemma func_ext_lemma : ∀ f g,
+    domain f = domain g → range f = range g → (∀ x, x ∈ domain f → f x = g x)
+    → graph f ⊂ graph g.
+Proof.
+  intros f g H H0 H1 z H2.
+  pose proof func_hyp f as H3.
+  pose proof func_hyp g as H4.
+  pose proof func_hyp f as [H5 H6].
+  apply H5 in H2 as H7.
+  apply Product_classification in H7 as [a [b [H7 [H8 H9]]]].
+  apply H1 in H7 as H10.
+  unfold eval in H10.
+  destruct H, H0.
+  subst.
+  pose proof Function_classification _ _ _ _ H7 H3 as [[H H0] H9].
+  pose proof H9 _ (conj H8 H2) as H11.
+  subst.
+  pose proof Function_classification _ _ _ _ H7 H4 as [[H11 H12] H13].
+  now rewrite H10.
+Qed.
+
+Theorem func_ext : ∀ f g, domain f = domain g → range f = range g
+                          → (∀ x, x ∈ domain f → f x = g x) → f = g.
+Proof.
+  intros f g H H0 H1.
+  assert (graph f = graph g).
+  { apply Subset_equality_iff.
+    split; apply func_ext_lemma; auto.
+    intros x H2.
+    destruct H.
+    now apply H1 in H2. }
+  destruct f, g.
+  simpl in *.
+  subst.
+  assert (func_hyp0 = func_hyp1) by apply proof_irrelevance.
+  now subst.
+Qed.
+
 Section Quotient_maps.
 
   Variable X R : set.
