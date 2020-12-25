@@ -1,12 +1,12 @@
 Require Export logic_axioms.
 
 Parameter set : Type.
-Parameter In : set → set → Prop.
+Parameter IN: set → set → Prop.
 Delimit Scope set_scope with set.
 Open Scope set_scope.
 Bind Scope set_scope with set.
 
-Infix "∈" := In (at level 75) : set_scope.
+Infix "∈" := IN (at level 75) : set_scope.
 Notation "a ∉ b" := (¬ a ∈ b) (at level 75) : set_scope.
 
 Axiom Nontriviality : ∃ w : set, True.

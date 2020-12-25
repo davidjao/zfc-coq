@@ -59,7 +59,9 @@ Proof.
   exact (quotient_map (ω × ω) integer_relation (mkSet (ω × ω) (a,b) H)).
 Defined.
 
-Theorem embed_surj : ∀ z, ∃ a b, embed a b = z.
+Infix "-" := embed : N_scope.
+
+Theorem embed_surj : ∀ z, ∃ a b, a - b = z.
 Proof.
   intros z.
   destruct (quotient_lift _ _ z) as [y H].
@@ -72,7 +74,7 @@ Proof.
   auto using quotient_image. (* alternative direct proof: now destruct y. *)
 Qed.
 
-Theorem embed_kernel : ∀ a b c d, embed a b = embed c d ↔ a+d = b+c.
+Theorem Zequiv : ∀ a b c d, a - b = c - d ↔ a+d = b+c.
 Proof.
   intros [_ a A] [_ b B] [_ c C] [_ d D].
   split; intros H; unfold embed in *.
@@ -93,7 +95,7 @@ Proof.
     {| in_set := C |}, {| in_set := D |}.
 Qed.
 
-Definition INZ a := embed a 0.
+Definition INZ a := a - 0.
 
 Coercion INZ : N >-> Z.
 
@@ -104,7 +106,7 @@ Proof.
   destruct (constructive_indefinite_description _ H) as [b H0].
   destruct (constructive_indefinite_description _ (embed_surj y)) as [c H1].
   destruct (constructive_indefinite_description _ H1) as [d H2].
-  exact (embed (a+c) (b+d)).
+  exact ((a+c) - (b+d)).
 Defined.
 
 Definition mul : Z → Z → Z.
@@ -114,7 +116,7 @@ Proof.
   destruct (constructive_indefinite_description _ H) as [n H0].
   destruct (constructive_indefinite_description _ (embed_surj y)) as [p H1].
   destruct (constructive_indefinite_description _ H1) as [q H2].
-  exact (embed (m*p+n*q) (n*p+m*q)).
+  exact ((m*p+n*q) - (n*p+m*q)).
 Defined.
 
 Definition neg : Z → Z.
@@ -122,11 +124,11 @@ Proof.
   intros x.
   destruct (constructive_indefinite_description _ (embed_surj x)) as [a H].
   destruct (constructive_indefinite_description _ H) as [b H0].
-  exact (embed b a).
+  exact (b - a).
 Defined.
 
-Definition zero := INZ 0.
-Definition one := INZ 1.
+Definition zero := 0 - 0.
+Definition one := 1 - 0.
 
 Notation "0" := zero : Z_scope.
 Notation "1" := one : Z_scope.
@@ -139,7 +141,7 @@ Proof.
   intros a b.
   unfold add, INZ.
   repeat destruct constructive_indefinite_description.
-  rewrite embed_kernel in *.
+  rewrite Zequiv in *.
   ring [e0 e2].
 Qed.
 
@@ -148,7 +150,7 @@ Proof.
   intros a b.
   unfold mul, INZ.
   repeat destruct constructive_indefinite_description.
-  rewrite embed_kernel in *.
+  rewrite Zequiv in *.
   ring [e0 e2].
 Qed.
 
@@ -156,16 +158,16 @@ Theorem INZ_inj : ∀ a b : N, INZ a = INZ b ↔ a = b.
 Proof.
   intros a b.
   split; intros H; try now subst.
-  apply embed_kernel in H.
+  apply Zequiv in H.
   ring [H].
 Qed.
 
-Theorem add_Z_wf : ∀ a b c d, (embed a b) + (embed c d) = embed (a+c) (b+d).
+Theorem add_Z_wf : ∀ a b c d, (a - b) + (c - d) = (a+c) - (b+d).
 Proof.
   intros a b c d.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  rewrite embed_kernel in *.
+  rewrite Zequiv in *.
   ring_simplify [e0 e2].
   rewrite e2, <-add_assoc, e0.
   ring.
@@ -176,7 +178,7 @@ Proof.
   intros a b.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  rewrite embed_kernel.
+  rewrite Zequiv.
   ring.
 Qed.
 
@@ -185,7 +187,7 @@ Proof.
   intros a b c.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  rewrite embed_kernel in *.
+  rewrite Zequiv in *.
   apply (cancellation_add x2).
   ring_simplify [e6]; ring_simplify in e6; rewrite <-e6;
     ring_simplify [e8]; ring_simplify in e8; rewrite e8; ring.
@@ -198,16 +200,16 @@ Proof.
   repeat destruct constructive_indefinite_description.
   unfold zero, INZ in *.
   subst.
-  rewrite embed_kernel in *.
+  rewrite Zequiv in *.
   ring [e0].
 Qed.
 
-Theorem neg_Z_wf : ∀ a b, - embed a b = embed b a.
+Theorem neg_Z_wf : ∀ a b, - (a - b) = b - a.
 Proof.
   intros a b.
   unfold neg.
   repeat destruct constructive_indefinite_description.
-  now rewrite embed_kernel in *.
+  now rewrite Zequiv in *.
 Qed.
 
 Theorem A4 : ∀ a, a + -a = 0.
@@ -216,7 +218,7 @@ Proof.
   unfold add, neg.
   repeat destruct constructive_indefinite_description.
   unfold zero, INZ.
-  rewrite embed_kernel in *.
+  rewrite Zequiv in *.
   now ring_simplify [e2].
 Qed.
 
@@ -225,17 +227,17 @@ Proof.
   intros a b.
   unfold mul.
   repeat destruct constructive_indefinite_description.
-  rewrite embed_kernel.
+  rewrite Zequiv.
   ring.
 Qed.
 
 Theorem mul_Z_wf : ∀ a b c d,
-    (embed a b) * (embed c d) = embed (a*c+b*d) (b*c+a*d).
+    (a - b) * (c - d) = (a*c+b*d) - (b*c+a*d).
 Proof.
   intros a b c d.
   unfold mul.
   repeat destruct constructive_indefinite_description.
-  rewrite embed_kernel in *.
+  rewrite Zequiv in *.
   apply (cancellation_add (b*x1)).
   rewrite ? add_assoc, <-mul_distr_r, (add_comm _ (b*d)), ? add_assoc,
   <-mul_distr_l, (add_comm b), (add_comm d), e0, e2, (add_comm x0),
@@ -250,7 +252,7 @@ Proof.
   intros a b c.
   unfold mul.
   repeat destruct constructive_indefinite_description.
-  rewrite <-? mul_Z_wf, e6, e8, ? mul_Z_wf, embed_kernel.
+  rewrite <-? mul_Z_wf, e6, e8, ? mul_Z_wf, Zequiv.
   ring.
 Qed.
 
@@ -261,7 +263,7 @@ Proof.
   repeat destruct constructive_indefinite_description.
   unfold one, INZ in *.
   destruct e2.
-  rewrite embed_kernel in *.
+  rewrite Zequiv in *.
   ring [e0].
 Qed.
 
@@ -270,12 +272,12 @@ Proof.
   intros a b c.
   unfold mul, add.
   repeat destruct constructive_indefinite_description.
-  rewrite <-mul_Z_wf, <-add_Z_wf, e4, e8, e10, add_Z_wf, mul_Z_wf, embed_kernel.
+  rewrite <-mul_Z_wf, <-add_Z_wf, e4, e8, e10, add_Z_wf, mul_Z_wf, Zequiv.
   ring.
 Qed.
 
 Definition sub a b := (a + -b).
-Infix "-" := sub.
+Infix "-" := sub : Z_scope.
 
 Theorem A3_r : ∀ a, a + 0 = a.
 Proof.
@@ -333,7 +335,7 @@ Proof.
   repeat destruct constructive_indefinite_description.
   subst.
   unfold not.
-  rewrite embed_kernel, ? (add_comm x1), ? (add_comm x2).
+  rewrite Zequiv, ? (add_comm x1), ? (add_comm x2).
   eauto using trichotomy.
 Qed.
 
@@ -343,9 +345,9 @@ Proof.
   split; intros H; unfold lt, zero, INZ in *;
     repeat destruct constructive_indefinite_description; rewrite lt_def in *;
       destruct H as [z [H H0]]; exists z; split; subst;
-        try rewrite add_Z_wf, embed_kernel in *.
+        try rewrite add_Z_wf, Zequiv in *.
   - contradict H.
-    rewrite embed_kernel in *.
+    rewrite Zequiv in *.
     now ring_simplify in H.
   - now ring_simplify [H0].
   - contradict H.

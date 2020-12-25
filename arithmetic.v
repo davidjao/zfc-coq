@@ -229,7 +229,7 @@ Proof.
   eauto using O1, zero_lt_1.
 Qed.
 
-Lemma succ_lt : ∀ n m : Z, n < m → n < m + 1.
+Lemma succ_lt : ∀ n m, n < m → n < m + 1.
 Proof.
   eauto using lt_succ, lt_trans.
 Qed.
@@ -331,7 +331,7 @@ Proof.
   split; eauto using div_refl.
 Qed.
 
-Theorem assoc_sym : ∀ a b : Z, a ~ b → b ~ a.
+Theorem assoc_sym : ∀ a b, a ~ b → b ~ a.
 Proof.
   now intros a b [H H0].
 Qed.
@@ -403,7 +403,7 @@ Proof.
 Qed.
 
 Theorem division_algorithm : ∀ a b,
-    0 < a → 0 < b → ∃ q r : Z, b * q + r = a ∧ 0 ≤ r < b.
+    0 < a → 0 < b → ∃ q r, b * q + r = a ∧ 0 ≤ r < b.
 Proof.
   intros a b H H0.
   induction a as [a IHa] using strong_induction.
@@ -418,14 +418,14 @@ Proof.
     rewrite D1_l, <-A2, (A1 _ r), A2, H5; ring.
 Qed.
 
-Definition gcd a b d := d｜a ∧ d｜b ∧ ∀ x : Z, x｜a → x｜b → x｜d.
+Definition gcd a b d := d｜a ∧ d｜b ∧ ∀ x, x｜a → x｜b → x｜d.
 
 Hint Unfold gcd.
 
 Notation "'gcd' ( a , b )  = d" := (gcd a b d) (at level 80).
 
 Theorem Euclidean_algorithm_N :
-  ∀ a b, 0 < a → 0 < b → gcd (a,b) = 1 → ∃ x y : Z, 1 = a * x + b * y.
+  ∀ a b, 0 < a → 0 < b → gcd (a,b) = 1 → ∃ x y, 1 = a * x + b * y.
 Proof.
   intros a b H; revert b.
   induction a as [a IHa] using strong_induction.
@@ -461,7 +461,7 @@ Proof.
 Qed.
 
 Theorem Euclidean_algorithm :
-  ∀ a b : Z, gcd (a,b) = 1 → ∃ x y : Z, 1 = a * x + b * y.
+  ∀ a b, gcd (a,b) = 1 → ∃ x y, 1 = a * x + b * y.
 Proof.
   intros a b H.
   destruct (T a 0), (T b 0); intuition; subst;
@@ -486,8 +486,7 @@ Proof.
   ring [H0].
 Qed.
 
-Definition prime (p : Z) :=
-  ¬ unit p ∧ ∀ d : Z, d｜p → unit d ∨ d ~ p.
+Definition prime p := ¬ unit p ∧ ∀ d : Z, d｜p → unit d ∨ d ~ p.
 
 Fixpoint product L :=
   match L with
@@ -497,12 +496,12 @@ Fixpoint product L :=
 
 Notation "∏ L" := (product L) (at level 50) : Z_scope.
 
-Definition prime_factorization (n : Z) (L : list Z) :=
-  n = ∏ L ∧ (∀ p : Z, List.In p L → 0 < p ∧ prime p).
+Definition prime_factorization n L :=
+  n = ∏ L ∧ (∀ p, List.In p L → 0 < p ∧ prime p).
 
 Notation "n = ∏' L" := (prime_factorization n L) (at level 50) : Z_scope.
 
-Lemma prod_lemma : ∀ (t1 t2 : list Z) (p : Z),
+Lemma prod_lemma : ∀ t1 t2 p,
     ∏ (t1 ++ p :: t2) = p * (∏ (t1 ++ t2)).
 
 Proof.
@@ -514,7 +513,7 @@ Proof.
 Qed.
 
 Theorem not_prime_divide :
-  ∀ p : Z, 1 < p → ¬ prime p → ∃ n, 1 < n < p ∧ n｜p.
+  ∀ p, 1 < p → ¬ prime p → ∃ n, 1 < n < p ∧ n｜p.
 Proof.
   intros p H H0.
   pose proof (T p 1) as H1.
@@ -531,9 +530,9 @@ Proof.
       [ exists (-d) | exists d ]; repeat split; auto using div_sign_l_neg.
     * apply lt_0_le_1 in H3 as [H3 | H3]; auto.
       contradict H0.
-      apply or_introl, div_sign_neg_l.
-      rewrite <-H3.
-      apply div_refl.
+      symmetry in H3.
+      replace d with (- (1)) by ring [H3].
+      eauto using unit_sign, one_unit.
     * apply div_sign_l_neg, div_le in H2 as [H2 | H2];
         eauto using lt_trans, zero_lt_1.
       contradict H0.
@@ -542,7 +541,7 @@ Proof.
     * apply lt_0_le_1 in H3 as [H3 | H3]; auto.
       contradict H0.
       rewrite <-H3.
-      apply or_introl, div_refl.
+      eauto using one_unit.
     * apply div_le in H2 as [H2 | H2];
         eauto using lt_trans, zero_lt_1.
       contradict H0.
@@ -551,7 +550,7 @@ Proof.
 Qed.
 
 Theorem exists_prime_divisor :
-  ∀ n : Z, 1 < n → ∃ p, 0 < p ∧ prime p ∧ p｜n.
+  ∀ n, 1 < n → ∃ p, 0 < p ∧ prime p ∧ p｜n.
 Proof.
   intros n H.
   induction n as [n H0] using strong_induction.
@@ -573,7 +572,7 @@ Proof.
   assert (k ≤ k * p) as [H3 | H3]; eauto using div_le, div_mul_r, div_refl.
   rewrite <-(M3_r k) in H3 at 1.
   apply cancellation_mul_l in H3.
-  - contradict H1; subst; exists 1; ring.
+  - contradict H1; subst; eauto using one_unit.
   - intro; subst; contradiction (lt_irrefl 0).
 Qed.
 
@@ -593,7 +592,7 @@ Proof.
   - contradiction (lt_0_1 n).
 Qed.
 
-Lemma prime_rel_prime : ∀ p a : Z, prime p → ¬ p｜a → gcd (p,a) = 1.
+Lemma prime_rel_prime : ∀ p a, prime p → ¬ p｜a → gcd (p,a) = 1.
 Proof.
   intros p a H H0.
   repeat split; auto using div_1_l.
@@ -602,7 +601,7 @@ Proof.
   exfalso; eauto using div_trans.
 Qed.
 
-Theorem Euclid's_lemma : ∀ a b p : Z, prime p → p｜a * b → p｜a ∨ p｜b.
+Theorem Euclid's_lemma : ∀ a b p, prime p → p｜a * b → p｜a ∨ p｜b.
 Proof.
   intros a b p H H0.
   destruct (classic (p｜a)); eauto using prime_rel_prime, FTA.
@@ -635,7 +634,7 @@ Proof.
   now rewrite M1.
 Qed.
 
-Theorem prime_factorization_uniqueness :
+Theorem unique_prime_factorization :
   ∀ x, 0 < x → ∀ L1 L2 : list Z, x = ∏' L1 → x = ∏' L2 → Permutation L1 L2.
 Proof.
   intros x H.
