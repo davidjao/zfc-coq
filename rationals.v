@@ -1,7 +1,5 @@
 Require Export arithmetic.
 
-Definition ℤ := (ambient_set _ 0).
-
 Definition ℤ0 := {z in ℤ × ℤ | (proj2 ℤ ℤ z) ≠ value ℤ 0}.
 
 Definition rational_relation :=
@@ -79,8 +77,7 @@ Proof.
           rewrite H2 at 2.
           apply zero_lt_1.
         * contradiction n.
-          apply Product_classification.
-          eauto using in_set. }
+          apply Product_classification; eauto using in_set. }
     exact (quotient_map ℤ0 rational_relation
                         (mkSet ℤ0 (value ℤ 0, value ℤ 1) H)).
   - destruct a as [_ a' A], b as [_ b' B].
@@ -122,7 +119,6 @@ Proof.
     - destruct a0 as [H5 [H6 H7]].
       apply Ordered_pair_iff in H7 as [H7 H8].
       subst.
-      unfold b' in H3.
       now rewrite <-H3.
     - contradict n.
       apply Product_classification; eauto. }
@@ -160,29 +156,20 @@ Proof.
     split.
     + apply Product_classification.
       exists (c, d), (a, b).
-      repeat split.
-      * apply Specify_classification.
-        split; try apply Product_classification; eauto.
-        unfold proj2.
-        destruct excluded_middle_informative;
-          try (contradict n1; apply Product_classification; eauto).
-        repeat destruct constructive_indefinite_description.
-        destruct a0 as [H2 [H3 H4]].
-        apply Ordered_pair_iff in H4 as [H4 H5].
-        contradict n0.
-        subst.
-        now apply set_proj_injective.
-      * apply Specify_classification.
-        split; try apply Product_classification; eauto.
-        unfold proj2.
-        destruct excluded_middle_informative;
-          try (contradict n1; apply Product_classification; eauto).
-        repeat destruct constructive_indefinite_description.
-        destruct a0 as [H2 [H3 H4]].
-        apply Ordered_pair_iff in H4 as [H4 H5].
-        contradict n.
-        subst.
-        now apply set_proj_injective.
+      assert (∀ e f (F : f ∈ ℤ), e ∈ ℤ → {| in_set := F |} ≠ 0 → (e, f) ∈ ℤ0);
+        eauto.
+      intros e f F E H2.
+      apply Specify_classification.
+      split; try apply Product_classification; eauto.
+      unfold proj2.
+      destruct excluded_middle_informative;
+        try (contradict n1; apply Product_classification; eauto).
+      repeat destruct constructive_indefinite_description.
+      destruct a0 as [H3 [H4 H5]].
+      apply Ordered_pair_iff in H5 as [H6 H7].
+      contradict H2.
+      subst.
+      now apply set_proj_injective.
     + exists {| in_set := C |}, {| in_set := D |},
       {| in_set := A |}, {| in_set := B |}.
       repeat split; auto.

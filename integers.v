@@ -43,7 +43,9 @@ Proof.
       ring.
 Qed.
 
-Definition Z := elts ((ω × ω) / integer_relation).
+Definition ℤ := ((ω × ω) / integer_relation).
+
+Definition Z := elts ℤ.
 
 Delimit Scope Z_scope with Z.
 Open Scope Z_scope.
