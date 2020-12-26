@@ -184,6 +184,20 @@ Proof.
       eauto using mul_neg_neg, mul_neg_pos, mul_pos_neg, mul_pos_pos.
 Qed.
 
+Lemma cancellation_ne0 : ∀ a b, a * b ≠ 0 → a ≠ 0 ∧ b ≠ 0.
+Proof.
+  intros a b H; split; contradict H; subst; ring.
+Qed.
+
+Lemma square_ne0 : ∀ a, a ≠ 0 → a*a > 0.
+Proof.
+  intros a H.
+  destruct (T a 0) as [[H0 [H1 H2]] | [[H0 [H1 H2]] | [H0 [H1 H2]]]].
+  - now apply mul_neg_neg.
+  - now subst.
+  - now apply mul_pos_pos.
+Qed.
+
 Theorem cancellation_mul_l : ∀ a b c, a ≠ 0 → a * b = a * c → b = c.
 Proof.
   intros a b c H H0.

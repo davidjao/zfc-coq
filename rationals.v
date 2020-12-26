@@ -219,8 +219,6 @@ Definition div a b := a * b^-1.
 
 Infix "-" := sub : Q_scope.
 
-Check mk_rt 0 1 add mul sub neg eq.
-
 Theorem add_wf : ∀ a b c d : Z,
     b ≠ 0%Z → d ≠ 0%Z → (a / b) + (c / d) = (a * d + c * b) / (b * d).
 Proof.
@@ -418,3 +416,92 @@ Add Field rational_field :
   (mk_field div inv
             (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1 sub_neg A4)
             one_ne_0 div_inv inv_l).
+
+Definition positive : Q → Prop.
+Proof.
+  intros x.
+  destruct (constructive_indefinite_description _ (Qlift x)) as [a e].
+  destruct (constructive_indefinite_description _ e) as [b [e0 e1]].
+  exact (a * b > 0).
+Defined.
+
+Lemma pos_wf : ∀ a b, b ≠ 0%Z → positive (a / b) ↔ a * b > 0.
+Proof.
+  assert (∀ x y z w,
+             y ≠ 0 → z ≠ 0 → x * y = z * w → 0 < x → 0 < z → 0 < w * y)%Z as L.
+  { intros x y z w H H0 H1 H2 H3.
+    destruct (T w 0), (T y 0); intuition; subst;
+      auto using mul_neg_neg, mul_pos_pos.
+    + assert (0 < x * y) by now apply mul_pos_pos.
+      assert (z * w < 0) by now apply mul_pos_neg.
+      rewrite H1 in *.
+      exfalso; eapply lt_antisym; eauto.
+    + replace (z*0)%Z with 0%Z in * by ring.
+      apply cancellation_0_mul in H1 as [H1 | H1]; subst;
+        exfalso; eauto using lt_irrefl.
+    +  assert (x * y < 0) by now apply mul_pos_neg.
+       assert (0 < z * w) by now apply mul_pos_pos.
+       rewrite H1 in *.
+       exfalso; eapply lt_antisym; eauto.
+    + replace (z*0)%Z with 0%Z in * by ring.
+      apply cancellation_0_mul in H1 as [H1 | H1]; subst;
+        exfalso; eauto using lt_irrefl. }
+  split; intros H0; unfold positive in *;
+    repeat destruct constructive_indefinite_description;
+    destruct a0; rewrite Qequiv in *; auto;
+      assert (a * x0 = b * x)%Z as e1 by ring [e0];
+      assert (-x * b = -x0 * a)%Z as e2 by ring [e0];
+      assert (-a * x0 = -b * x)%Z as e3 by ring [e0];
+      apply pos_mul in H0 as [[H0 H1] | [H0 H1]]; eauto.
+  - apply L in e2; rewrite lt_neg_0 in *; auto.
+    contradict n.
+    ring [n].
+  - apply L in e3; rewrite lt_neg_0 in *; auto.
+    contradict H.
+    ring [H].
+Qed.
+
+Theorem T_pos : ∀ x, positive x ∧ x ≠ 0 ∧ ¬ positive (-x) ∨
+                     ¬ positive x ∧ x = 0 ∧ ¬ positive (-x) ∨
+                     ¬ positive x ∧ x ≠ 0 ∧ positive (-x).
+Proof.
+  intros x.
+  destruct (Qlift x) as [a [b [H H0]]].
+  subst.
+  unfold zero, not.
+  rewrite neg_wf, ? pos_wf, Qequiv; auto using zero_ne_1.
+  replace (-a*b)%Z with (-(a*b))%Z by ring.
+  rewrite <-lt_neg_0.
+  assert (a * 1 = b * 0 ↔ a * b = 0)%Z as H0.
+  { replace (b*0)%Z with 0%Z by ring.
+    rewrite integers.M3_r.
+    split; intros H0; subst; try ring.
+    now apply cancellation_0_mul in H0 as [H0 | H0]. }
+  rewrite H0.  
+  destruct (T (a*b) 0); intuition.
+Qed.
+
+Definition lt : Q → Q → Prop.
+Proof.
+  intros x y.
+  exact (positive (y-x)).
+Defined.
+
+Infix "<" := lt : Q_scope.
+
+Notation "a > b" := (b < a) : Q_scope.
+
+Definition le a b := a < b ∨ a = b.
+Infix "≤" := le : Q_scope.
+Notation "a ≥ b" := (b ≤ a) (only parsing) : Q_scope.
+Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level): Q_scope.
+Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): Q_scope.
+Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): Q_scope.
+
+Theorem T : ∀ a b, a < b ∧ a ≠ b ∧ ¬ b < a
+                   ∨ ¬ a < b ∧ a = b ∧ b < a
+                   ∨ ¬ a < b ∧ a ≠ b ∧ b < a.
+Proof.
+  intros a b.
+Admitted.
+
