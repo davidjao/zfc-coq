@@ -67,16 +67,8 @@ Proof.
   intros a b.
   destruct (classic (a < b)), (classic (a = b)); try tauto.
   right; right.
-  assert (∃ p, p ∈ value ℝ a ∧ p ∉ value ℝ b) as [p [H1 H2]].
-  { apply NNPP.
-    contradict H.
-    split.
-    - intros z H1.
-      apply NNPP.
-      contradict H.
-      now (exists z).
-    - contradict H0.
-      now apply set_proj_injective. }
+  assert (∃ p, p ∈ value ℝ a ∧ p ∉ value ℝ b) as [p [H1 H2]]
+      by eauto using proper_subset_inhab, set_proj_injective.
   pose proof in_set ℝ a as H3.
   apply Specify_classification in H3 as [H3 [H4 [H5 H6]]].
   pose proof in_set ℝ b as H7.
@@ -172,16 +164,8 @@ Proof.
   - intros δ H3.
     unfold le.
     destruct (T γ δ) as [H4 | [H4 | [H4 [H5 H6]]]]; try tauto.
-    assert (∃ s, s ∈ value ℝ γ ∧ s ∉ value ℝ δ) as [s [H7 H8]].
-    { apply NNPP.
-      contradict H4.
-      split.
-      - intros z H7.
-        apply NNPP.
-        contradict H4.
-        now (exists z).
-      - contradict H5.
-        now apply set_proj_injective. }
+    assert (∃ s, s ∈ value ℝ γ ∧ s ∉ value ℝ δ) as [s [H7 H8]]
+        by eauto using proper_subset_inhab, set_proj_injective.
     simpl in *.
     apply Union_classification in H7 as [a [H7 H9]].
     apply H in H7 as H10.
@@ -209,6 +193,3 @@ Proof.
       rewrite H12 in H8.
       contradiction.
 Qed.
-      
-    
-                 

@@ -120,6 +120,18 @@ Infix "⊂" := subset (at level 70) : set_scope.
 Definition proper_subset a b := a ⊂ b ∧ a ≠ b.
 Infix "⊊" := proper_subset (at level 70) : set_scope.
 
+Lemma proper_subset_inhab : ∀ x y, ¬ x ⊊ y → x ≠ y → ∃ z, z ∈ x ∧ z ∉ y.
+Proof.
+  intros x y H H0.
+  apply NNPP.
+  contradict H.
+  split; try now contradict H0.
+  intros z H1.
+  apply NNPP.
+  contradict H.
+  now (exists z).
+Qed.
+
 Axiom Powerset : ∀ x, ∃ y, ∀ z, z ⊂ x → z ∈ y.
 
 Definition P : set → set.
