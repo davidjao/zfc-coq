@@ -116,8 +116,9 @@ Definition Inductive X := ∀ y, y ∈ X → succ y ∈ X.
 Axiom Infinity : ∃ X, (∅ ∈ X ∧ Inductive X).
 
 Definition subset a b := ∀ x, x ∈ a → x ∈ b.
-
 Infix "⊂" := subset (at level 70) : set_scope.
+Definition proper_subset a b := a ⊂ b ∧ a ≠ b.
+Infix "⊊" := proper_subset (at level 70) : set_scope.
 
 Axiom Powerset : ∀ x, ∃ y, ∀ z, z ⊂ x → z ∈ y.
 

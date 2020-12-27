@@ -50,7 +50,9 @@ Proof.
     ring [H7 H11].
 Qed.
 
-Definition Q := elts (ℤ0 / rational_relation).
+Definition ℚ := ℤ0 / rational_relation.
+
+Definition Q := elts ℚ.
 
 Delimit Scope Q_scope with Q.
 Open Scope Q_scope.
@@ -122,6 +124,7 @@ Proof.
       apply Product_classification; eauto. }
   split; auto.
   apply set_proj_injective.
+  unfold ℚ.
   rewrite quotient_image, H1.
   unfold embed; destruct excluded_middle_informative; simpl; intuition.
 Qed.
