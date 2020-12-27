@@ -468,17 +468,17 @@ Proof.
   intros x.
   destruct (Qlift x) as [a [b [H H0]]].
   subst.
-  unfold zero, not.
+  unfold zero.
   rewrite neg_wf, ? pos_wf, Qequiv; auto using zero_ne_1.
   replace (-a*b)%Z with (-(a*b))%Z by ring.
   rewrite <-lt_neg_0.
-  assert (a * 1 = b * 0 ↔ a * b = 0)%Z as H0.
-  { replace (b*0)%Z with 0%Z by ring.
+  replace (a * 1 = b * 0)%Z with (a * b = 0)%Z.
+  - destruct (T (a*b) 0); intuition.
+  - apply propositional_extensionality.
+    replace (b*0)%Z with 0%Z by ring.
     rewrite integers.M3_r.
     split; intros H0; subst; try ring.
-    now apply cancellation_0_mul in H0 as [H0 | H0]. }
-  rewrite H0.  
-  destruct (T (a*b) 0); intuition.
+    now apply cancellation_0_mul in H0 as [H0 | H0].
 Qed.
 
 Definition lt : Q → Q → Prop.
@@ -489,7 +489,7 @@ Defined.
 
 Infix "<" := lt : Q_scope.
 
-Notation "a > b" := (b < a) : Q_scope.
+Notation "a > b" := (b < a) (only parsing) : Q_scope.
 
 Definition le a b := a < b ∨ a = b.
 Infix "≤" := le : Q_scope.
@@ -499,9 +499,108 @@ Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): Q_
 Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): Q_scope.
 
 Theorem T : ∀ a b, a < b ∧ a ≠ b ∧ ¬ b < a
-                   ∨ ¬ a < b ∧ a = b ∧ b < a
+                   ∨ ¬ a < b ∧ a = b ∧ ¬ b < a
                    ∨ ¬ a < b ∧ a ≠ b ∧ b < a.
 Proof.
   intros a b.
-Admitted.
+  unfold lt.
+  replace (a-b) with (-(b-a)) by field.
+  replace (a=b) with (b-a=0); eauto using T_pos.
+  apply propositional_extensionality.
+  split; intros H; try ring [H].
+  replace b with (a+(b-a)) by field.
+  rewrite H.
+  field.
+Qed.
+
+Theorem O0 : ∀ a b, 0 < a → 0 < b → 0 < a + b.
+Proof.
+  intros x y H H0.
+  unfold lt, sub in *.
+  replace (-0) with 0 in * by ring.
+  rewrite A1, A3 in *.
+  destruct (Qlift x) as [a [b [H1 H2]]], (Qlift y) as [c [d [H3 H4]]].
+  rewrite <-H2, <-H4, add_wf, pos_wf in *; auto using ne0_cancellation.
+  apply pos_mul in H as [[H H5] | [H H5]];
+    apply pos_mul in H0 as [[H0 H6] | [H0 H6]];
+    try rewrite lt_neg_0 in *;
+    [ | replace ((a*d+c*b)*(b*d))%Z with ((a*-d+-c*b)*(b*-d))%Z by ring
+      | replace ((a*d+c*b)*(b*d))%Z with ((-a*d+c*-b)*(-b*d))%Z by ring
+      | replace ((a*d+c*b)*(b*d))%Z with ((-a*-d+-c*-b)*(-b*-d))%Z by ring ];
+    apply mul_pos_pos; try apply integers.O0; now apply mul_pos_pos.
+Qed.
+
+Theorem O1 : ∀ a b c, b < c → a + b < a + c.
+Proof.
+  intros a b c H.
+  unfold lt in *.
+  now replace (a + c - (a + b)) with (c - b) by ring.
+Qed.
+
+Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
+Proof.
+  intros x y H H0.
+  unfold lt, sub in *.
+  replace (-0) with 0 in * by ring.
+  rewrite A1, A3 in *.
+  destruct (Qlift x) as [a [b [H1 H2]]], (Qlift y) as [c [d [H3 H4]]].
+  subst.
+  rewrite mul_wf, pos_wf in *; auto using ne0_cancellation.
+  replace (a*c*(b*d))%Z with ((a*b)*(c*d))%Z by ring.
+  auto using mul_pos_pos.
+Qed.
+
+Theorem O3 : ∀ a b c, 0 < a → b < c → a * b < a * c.
+Proof.
+  intros a b c H H0.
+  unfold lt in *.
+  replace (a*c - a*b) with (a*(c-b) - 0) by ring.
+  apply O2; auto.
+  now replace (c-b) with (c-b-0) in H0 by ring.
+Qed.
+
+Theorem lt_irrefl : ∀ a, ¬ a < a.
+Proof.
+  intros a.
+  pose proof (T a a).
+  tauto.
+Qed.
+
+Theorem lt_antisym : ∀ a b, a < b → ¬ b < a.
+Proof.
+  intros a b H.
+  pose proof (T a b).
+  tauto.
+Qed.
+
+Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
+Proof.
+  intros a b c H H0.
+  unfold lt in *.
+  replace (c-a) with ((b-a)+(c-b)-0) by ring.
+  apply O0.
+  - now replace (b-a) with ((b-a)-0) in H by ring.
+  - now replace (c-b) with ((c-b)-0) in H0 by ring.
+Qed.
+
+Theorem lt_dense : ∀ a b, a < b → ∃ c, a < c ∧ c < b.
+Proof.
+  intros x y H.
+  destruct (Qlift x) as [a [b [H0 H1]]], (Qlift y) as [c [d [H2 H3]]].
+  exists ((b*c + a*d)/(2*b*d)).
+  subst.
+  assert (2 ≠ 0)%Z.
+  { intros H1.
+    contradiction (arithmetic.lt_irrefl 0).
+    rewrite <-H1 at 2.
+    eauto using integers.O0, zero_lt_1. }
+  split; unfold lt, sub in *; rewrite neg_wf, add_wf, pos_wf in *;
+    auto using ne0_cancellation.
+  - replace (((b*c+a*d)*b+-a*(2*b*d))*(2*b*d*b))%Z
+      with (2*(b*b)*((c*b+-a*d)*(d*b)))%Z by ring.
+    eauto using mul_pos_pos, integers.O0, zero_lt_1, square_ne0.
+  - replace ((c*(2*b*d)+-(b*c+a*d)*d)*(d*(2*b*d)))%Z
+      with (2*(d*d)*((c*b+-a*d)*(d*b)))%Z by ring.
+    eauto using mul_pos_pos, integers.O0, zero_lt_1, square_ne0.
+Qed.
 

@@ -189,6 +189,12 @@ Proof.
   intros a b H; split; contradict H; subst; ring.
 Qed.
 
+Lemma ne0_cancellation : ∀ a b, a ≠ 0 → b ≠ 0 → a * b ≠ 0.
+Proof.
+  intros a b H H0 H1.
+  now apply cancellation_0_mul in H1 as [H1 | H1].
+Qed.
+
 Lemma square_ne0 : ∀ a, a ≠ 0 → a*a > 0.
 Proof.
   intros a H.

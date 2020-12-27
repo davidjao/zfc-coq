@@ -132,11 +132,12 @@ Defined.
 Definition zero := 0 - 0.
 Definition one := 1 - 0.
 
-Notation "0" := zero : Z_scope.
-Notation "1" := one : Z_scope.
 Infix "+" := add : Z_scope.
 Infix "*" := mul : Z_scope.
 Notation "- a" := (neg a) : Z_scope.
+Notation "0" := zero : Z_scope.
+Notation "1" := one : Z_scope.
+Notation "2" := (1+1) : Z_scope.
 
 Theorem INZ_add : ∀ a b : N, a+b = (a+b)%N.
 Proof.
@@ -369,6 +370,19 @@ Proof.
   - subst.
     rewrite <-INZ_add.
     ring.
+Qed.
+
+Theorem O0 : ∀ a b, 0 < a → 0 < b → 0 < a + b.
+Proof.
+  intros a b H H0.
+  rewrite lt_def in *.
+  destruct H as [c [H H1]], H0 as [d [H2 H3]].
+  exists (c+d)%N.
+  split.
+  - intros H0.
+    apply INZ_inj, eq_sym, cancellation_0_add in H0 as [H0 H4].
+    now subst.
+  - now rewrite A3, H1, H3, INZ_add in *.
 Qed.
 
 Theorem O1 : ∀ a b c, b < c → a + b < a + c.
