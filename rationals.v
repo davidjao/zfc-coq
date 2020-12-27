@@ -173,6 +173,8 @@ Definition one := 1 / 1.
 Notation "0" := zero : Q_scope.
 Notation "1" := one : Q_scope.
 
+Coercion IZQ : Z >-> Q.
+
 Definition add : Q → Q → Q.
 Proof.
   intros x y.
@@ -604,3 +606,62 @@ Proof.
     eauto using mul_pos_pos, integers.O0, zero_lt_1, square_ne0.
 Qed.
 
+Theorem pos_denom : ∀ x, ∃ a b, (0 < b ∧ x = a / b)%Z.
+Proof.
+  intros x.
+  destruct (Qlift x) as [a [b [H H0]]].
+  destruct (integers.T b 0); intuition; eauto.
+  exists (-a)%Z, (-b)%Z.
+  rewrite <-lt_neg_0 in *.
+  split; auto.
+  subst.
+  rewrite Qequiv; auto; try ring.
+  contradict H1; ring [H1].
+Qed.
+
+Theorem reduced_form : ∀ x, ∃ a b, gcd (a,b) = 1 ∧ x = a / b ∧ b ≠ 0%Z.
+Proof.
+  intros x.
+  destruct (Qlift x) as [a [b [H H0]]], (common_factor a b)
+      as [d [H1 [[m H2] [[n H3] H4]]]]; auto.
+  exists m, n.
+  repeat split; auto using div_1_l; subst.
+  - intros z [k H5] [l H6].
+    subst.
+    assert (z*d｜d) as [e H0] by
+          (apply H4; rewrite <-integers.M2; auto using div_mul_l, div_refl).
+    rewrite integers.M2, <-(integers.M3 d) in H0 at 1.
+    apply cancellation_mul_r in H0; try now (exists e).
+    now apply cancellation_ne0 in H.
+  - rewrite Qequiv; auto; try ring.
+    now apply cancellation_ne0 in H.
+  - now apply cancellation_ne0 in H.
+Qed.
+
+Theorem Rudin_1_1 : ¬ ∃ p : Q, p * p = 2.
+Proof.
+  intros [p H].
+  unfold IZQ in H.
+  destruct (reduced_form p) as [m [n [H0 [H1 H2]]]].
+  subst.
+  rewrite mul_wf, Qequiv in H; auto using ne0_cancellation, zero_ne_1.
+  rewrite (integers.M1 _ 1), integers.M3, (integers.M1 _ 2) in H.
+  assert (2｜(m*m)) as H1 by (rewrite H; eauto using div_mul_r, div_refl).
+  apply Euclid's_lemma in H1; auto using two_is_prime.
+  assert (2｜m) as [k H3] by tauto.
+  subst.
+  replace (k*2*(k*2))%Z with (2*(2*k*k))%Z in H by ring.
+  apply cancellation_mul_l in H.
+  - assert (2｜(n*n)) as H3 by (rewrite <-H; eauto using div_mul_r, div_refl).
+    apply Euclid's_lemma in H3; auto using two_is_prime.
+    assert (2｜n) as [l H4] by tauto.
+    subst.
+    pose proof two_is_prime as [H4 H5].
+    contradiction H4.
+    destruct H0 as [H0 [H6 H7]].
+    apply H7; auto using div_mul_l, div_refl.
+  - intros H3.
+    unfold integers.zero, integers.one in *.
+    rewrite integers.add_wf, Zequiv, ? add_0_l, ? add_0_r, ? add_1_r in H3.
+    now apply eq_sym, PA4 in H3.
+Qed.

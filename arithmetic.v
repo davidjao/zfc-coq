@@ -387,10 +387,14 @@ Proof.
   split; auto using div_sign_l_neg, div_sign_r_neg.
 Qed.
 
-Theorem unit_sign : ∀ a, unit a → unit (-a).
+Theorem unit_sign : ∀ a, unit a ↔ unit (-a).
 Proof.
-  intros a H.
-  now apply div_sign_l_neg.
+  split; intros H; unfold unit in *; now rewrite <-div_sign_l in *.
+Qed.
+
+Theorem unit_sign_r : ∀ a, unit a → unit (-a).
+Proof.
+  intros a H; now apply div_sign_l_neg.
 Qed.
 
 Theorem one_unit : unit 1.
@@ -488,6 +492,20 @@ Proof.
   auto using gcd_zero_l, gcd_sym.
 Qed.
 
+Lemma gcd_neg : ∀ a b d, gcd (a,b) = d ↔ gcd(a,-b) = d.
+Proof.
+  intros a b d.
+  split; intros [H [H0 H1]].
+  - repeat split; try rewrite <-div_sign_r; auto.
+    intros x H2 H3.
+    rewrite <-div_sign_r in *.
+    auto.
+  - repeat split; try rewrite <-div_sign_r in H0; auto.
+    intros x H2 H3.
+    rewrite div_sign_r in H3.
+    auto.
+Qed.
+
 Theorem Euclidean_algorithm :
   ∀ a b, gcd (a,b) = 1 → ∃ x y, 1 = a * x + b * y.
 Proof.
@@ -560,7 +578,7 @@ Proof.
       contradict H0.
       symmetry in H3.
       replace d with (- (1)) by ring [H3].
-      eauto using unit_sign, one_unit.
+      eauto using unit_sign_r, one_unit.
     * apply div_sign_l_neg, div_le in H2 as [H2 | H2];
         eauto using lt_trans, zero_lt_1.
       contradict H0.
@@ -685,4 +703,147 @@ Proof.
     apply H4.
     rewrite in_app_iff in *.
     intuition.
+Qed.
+
+Definition max : Z → Z → Z.
+Proof.
+  intros a b.
+  destruct (excluded_middle_informative (a < b)).
+  - exact b.
+  - exact a.
+Defined.
+
+Theorem WOP : ∀ S : Z → Prop,
+    (∀ x, S x → 0 < x) → (∃ x, 0 < x ∧ S x) → ∃ s, S s ∧ ∀ t, S t → s ≤ t.
+Proof.
+  intros S H [s [H0 H1]].
+  apply NNPP.
+  intros H2.
+  revert s H0 H1.
+  induction s as [s IHs] using strong_induction.
+  intros H3 H4.
+  contradict H2.
+  exists s.
+  split; auto.
+  intros t H0.
+  unfold le.
+  destruct (T s t) as [H1 | [H1 | [H1 [H2 H5]]]]; try tauto.
+  contradiction (IHs t); auto.
+Qed.
+
+Theorem common_factor_N : ∀ a b, 0 < a → 0 < b → ∃ d, 0 < d ∧ gcd (a,b) = d.
+Proof.
+  intros a b H H0.
+  destruct (WOP (λ z, 0 < z ∧ ∃ x y, z = a*x + b*y))
+    as [d [[H1 [x [y H2]]] H3]]; try tauto.
+  - exists b.
+    repeat split; auto.
+    exists 0, 1.
+    ring.
+  - exists d.
+    repeat split; auto.
+    + destruct (division_algorithm a d) as [q [r [H4 [[H5 | H5] H6]]]]; auto.
+      replace a with (d*q + (a - d*q)) in H4 by ring.
+      apply cancellation_add in H4.
+      * destruct (H3 r); auto.
+        -- split; auto.
+           exists (1-x*q), (-y*q).
+           rewrite H2 in H4.
+           ring [H4].
+        -- contradiction (lt_antisym d r).
+        -- rewrite H7 in *.
+           contradiction (lt_irrefl r).
+      * rewrite <-H5 in *.
+        exists q.
+        ring [H4].
+    + destruct (division_algorithm b d) as [q [r [H4 [[H5 | H5] H6]]]]; auto.
+      replace b with (d*q + (b - d*q)) in H4 by ring.
+      apply cancellation_add in H4.
+      * destruct (H3 r); auto.
+        -- split; auto.
+           exists (-x*q), (1-y*q).
+           rewrite H2 in H4.
+           ring [H4].
+        -- contradiction (lt_antisym d r).
+        -- rewrite H7 in *.
+           contradiction (lt_irrefl r).
+      * rewrite <-H5 in *.
+        exists q.
+        ring [H4].
+    + intros z H4 H5.
+      subst.
+      auto using div_mul_add.
+Qed.
+
+Theorem common_factor : ∀ a b, b ≠ 0 → ∃ d, 0 < d ∧ gcd (a,b) = d.
+Proof.
+  intros a b H.
+  destruct (T a 0), (T b 0); intuition; rewrite lt_neg_0 in *.
+  - destruct (common_factor_N (-a) (-b)) as [d [D1 D2]]; auto.
+    exists d.
+    split; auto.
+    now apply gcd_neg, gcd_sym, gcd_neg, gcd_sym.
+  - destruct (common_factor_N (-a) b) as [d [D1 D2]]; auto.
+    exists d.
+    split; auto.
+    now apply gcd_sym, gcd_neg, gcd_sym.
+  - exists (-b).
+    repeat split; subst; auto using div_0_r.
+    + rewrite <-div_sign_l.
+      auto using div_refl.
+    + intros x H3 H5.
+      now rewrite <-div_sign_r.
+  - destruct (common_factor_N a (-b)) as [d [D1 D2]]; auto.
+    exists d.
+    split; auto.
+    now apply gcd_neg.
+  - exists b.
+    repeat split; subst; auto using div_0_r, div_refl.
+  - destruct (common_factor_N a b) as [d [D1 D2]]; eauto.
+Qed.
+
+Theorem two_is_prime : prime 2.
+Proof.
+  split.
+  - intros H.
+    apply div_le in H as [H | H]; auto using zero_lt_1.
+    + rewrite lt_def in H.
+      destruct H as [c [H H0]].
+      unfold INZ, one in H0.
+      rewrite A1, A2, ? add_wf, Zequiv, ? add_0_r, ? add_0_l, ? add_1_r in H0.
+      now apply PA5, PA4 in H0.
+    + Set Printing Coercions.
+      unfold INZ, one in H.
+      rewrite ? add_wf, Zequiv, ? add_0_r, add_0_l, add_1_r in H.
+      now apply PA5, eq_sym, PA4 in H.
+  - assert (∀ d : Z, 0 < d → d｜2 → unit d ∨ d ~ 2) as H.
+    { intros d H H0.
+      apply div_le in H0 as [H0 | H0].
+      - apply lt_0_le_1 in H as [H | H].
+        + contradiction (lt_0_1 (d+-(1))).
+          * rewrite <-(A4 1), ? (A1 _ (-(1))).
+            now apply O1.
+          * rewrite <-(A3_r 1) at 2.
+            rewrite <-(A4 1), A2, ? (A1 _ (-(1))).
+            now apply O1.
+        + subst.
+          left.
+          now apply div_refl.
+      - subst.
+        auto using assoc_refl.
+      - eapply lt_trans; try exact zero_lt_1.
+        rewrite <-(A3_r 1) at 1.
+        eauto using O1, zero_lt_1. }
+    intros d H0.
+    destruct (T d 0) as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]]; auto.
+    + destruct (H (-d)); auto using div_sign_l_neg.
+      * now rewrite <-lt_neg_0.
+      * now apply or_introl, unit_sign.
+      * replace d with (--d) by ring.
+        now apply or_intror, assoc_sym, assoc_sign, assoc_sym.
+    + subst.
+      apply div_0_l, eq_sym in H0.
+      unfold zero, one in *.
+      rewrite add_wf, Zequiv, ? add_0_l, add_1_r in H0.
+      now apply PA4 in H0.
 Qed.
