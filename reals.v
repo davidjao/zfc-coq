@@ -2,8 +2,8 @@ Require Export rationals.
 
 Definition ℝ := {α in P ℚ |
                   α ≠ ∅ ∧
-                  (∀ p q : Q, value ℚ p ∈ α → q < p → value ℚ q ∈ α) ∧
-                  (∀ p : Q, value ℚ p ∈ α → ∃ r : Q, p < r ∧ value ℚ r ∈ α)}.
+                  (∀ p q : Q, value _ p ∈ α → q < p → value _ q ∈ α) ∧
+                  (∀ p : Q, value _ p ∈ α → ∃ r : Q, p < r ∧ value _ r ∈ α)}.
 
 Theorem Dedekind_cut_1 : ∀ α, α ∈ ℝ → α ≠ ∅.
 Proof.
@@ -12,7 +12,7 @@ Proof.
 Qed.
 
 Theorem Dedekind_cut_2 : ∀ α,
-    α ∈ ℝ → ∀ p q : Q, value ℚ p ∈ α → value ℚ q ∉ α → p < q.
+    α ∈ ℝ → ∀ p q : Q, value _ p ∈ α → value _ q ∉ α → p < q.
 Proof.
   intros α H p q H0 H1.
   apply Specify_classification in H as [H [H2 [H3 H4]]].
@@ -22,7 +22,7 @@ Proof.
 Qed.
 
 Theorem Dedekind_cut_3 : ∀ α,
-    α ∈ ℝ → ∀ r s : Q, value ℚ r ∉ α → r < s → value ℚ s ∉ α.
+    α ∈ ℝ → ∀ r s : Q, value _ r ∉ α → r < s → value _ s ∉ α.
 Proof.
   intros α H r s H0 H1 H2.
   apply Specify_classification in H as [H [H3 [H4 H5]]].
@@ -43,6 +43,13 @@ Defined.
 
 Infix "<" := lt : R_scope.
 Notation "a > b" := (b < a) (only parsing) : R_scope.
+
+Definition le a b := a < b ∨ a = b.
+Infix "≤" := le : R_scope.
+Notation "a ≥ b" := (b ≤ a) (only parsing) : R_scope.
+Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level): R_scope.
+Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): R_scope.
+Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): R_scope.
 
 Theorem lt_trans : ∀ a b c : R, a < b → b < c → a < c.
 Proof.
@@ -104,3 +111,104 @@ Proof.
     destruct H0 as [H0 H1].
     now apply Subset_equality_iff.
 Qed.
+
+Theorem lub : ∀ A,
+    A ⊂ ℝ → A ≠ ∅ →
+    (∃ β : R, ∀ α : R, value _ α ∈ A → α ≤ β) →
+    ∃ γ : R, (∀ α : R, value _ α ∈ A → α ≤ γ) ∧
+             (∀ δ : R, (∀ α : R, value _ α ∈ A → α ≤ δ) → γ ≤ δ).
+Proof.
+  intros A H H0 [β H1].
+  set (g := ⋃ A).
+  assert (g ∈ ℝ).
+  { apply Specify_classification.
+    repeat split.
+    - apply Powerset_classification.
+      intros z H2.
+      apply Union_classification in H2 as [a [H2 H3]].
+      apply H in H2.
+      apply Specify_classification in H2 as [H2 [H4 [H5 H6]]].
+      apply Powerset_classification in H2.
+      now apply H2.
+    - apply Nonempty_classification.
+      apply Nonempty_classification in H0 as [z H0].
+      pose proof H0 as H2.
+      apply H, Specify_classification in H2 as [H2 [H3 [H4 H5]]].
+      apply Nonempty_classification in H3 as [y H3].
+      exists y.
+      apply Union_classification.
+      exists z.
+      split; auto.
+    - intros p q H2 H3.
+      apply Union_classification in H2 as [x [H2 H4]].
+      apply H in H2 as H5.
+      apply Specify_classification in H5 as [H5 [H6 [H7 H8]]].
+      apply H7 in H3; auto.
+      apply Union_classification.
+      now (exists x).
+    - intros p H2.
+      apply Union_classification in H2 as [x [H2 H3]].
+      apply H in H2 as H4.
+      apply Specify_classification in H4 as [H4 [H5 [H6 H7]]].
+      apply H7 in H3 as [r [H3 H8]].
+      exists r.
+      split; auto.
+      apply Union_classification.
+      now (exists x). }
+  set (γ := (mkSet _ _ H2)).
+  exists γ.
+  split.
+  - intros α H3.
+    unfold le.
+    destruct (classic (α = γ)); auto.
+    left.
+    split.
+    + intros z H5.
+      simpl.
+      apply Union_classification.
+      now (exists (value _ α)).
+    + contradict H4.
+      now apply set_proj_injective.
+  - intros δ H3.
+    unfold le.
+    destruct (T γ δ) as [H4 | [H4 | [H4 [H5 H6]]]]; try tauto.
+    assert (∃ s, s ∈ value ℝ γ ∧ s ∉ value ℝ δ) as [s [H7 H8]].
+    { apply NNPP.
+      contradict H4.
+      split.
+      - intros z H7.
+        apply NNPP.
+        contradict H4.
+        now (exists z).
+      - contradict H5.
+        now apply set_proj_injective. }
+    simpl in *.
+    apply Union_classification in H7 as [a [H7 H9]].
+    apply H in H7 as H10.
+    set (α := mkSet _ _ H10).
+    pose proof H7 as H11.
+    apply (H3 α) in H7.
+    unfold le in H7.
+    assert (¬ δ < α) as H12 by (pose proof (T α δ); tauto).
+    contradict H12.
+    split.
+    + intros z H12.
+      simpl.
+      apply H, Specify_classification in H11 as [H11 [H13 [H14 H15]]].
+      apply Powerset_classification in H11.
+      apply H11 in H9 as H16.
+      set (σ := mkSet _ _ H16).
+      pose proof in_set _ δ as H17.
+      apply Specify_classification in H17 as [H17 [H18 [H19 H20]]].
+      apply Powerset_classification in H17.
+      apply H17 in H12 as H21.
+      set (ζ := mkSet _ _ H21).
+      replace z with (value _ ζ); auto.
+      apply (H14 σ); eauto using Dedekind_cut_2, in_set.
+    + intros H12.
+      rewrite H12 in H8.
+      contradiction.
+Qed.
+      
+    
+                 
