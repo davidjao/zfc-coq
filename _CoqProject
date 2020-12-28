@@ -1,11 +1,10 @@
 -R . ZFC
 
 logic_axioms.v
-set_theory.v
+sets.v
 russell.v
-peano_axioms.v
+naturals.v
 integers.v
-arithmetic.v
 rationals.v
-ring.v
+rings.v
 reals.v

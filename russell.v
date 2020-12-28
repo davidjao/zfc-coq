@@ -1,4 +1,4 @@
-Require Export set_theory.
+Require Export sets.
 
 (* Short proof of Russell's paradox. *)
 

@@ -1,4 +1,4 @@
-Require Export set_theory Ring.
+Require Export sets Ring.
 
 Definition ω : set.
 Proof.

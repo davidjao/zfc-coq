@@ -1,4 +1,4 @@
-Require Export arithmetic Field.
+Require Export integers Field.
 
 Definition ℤ0 := {z in ℤ × ℤ | (proj2 ℤ ℤ z) ≠ value ℤ 0}.
 
@@ -596,7 +596,7 @@ Proof.
   subst.
   assert (2 ≠ 0)%Z.
   { intros H1.
-    contradiction (arithmetic.lt_irrefl 0).
+    contradiction (integers.lt_irrefl 0).
     rewrite <-H1 at 2.
     eauto using integers.O0, zero_lt_1. }
   split; unfold lt, sub in *; rewrite neg_wf, add_wf, pos_wf in *;
@@ -746,7 +746,7 @@ Proof.
         apply gcd_zero_l, assoc_pm in H0 as [H0 | H0]; auto.
         subst.
         rewrite <-IZQ_lt, <-lt_neg_0 in H3.
-        contradiction (arithmetic.lt_antisym 0 1); auto using zero_lt_1.
+        contradiction (integers.lt_antisym 0 1); auto using zero_lt_1.
     + intros x' [y [[H0 [H2 H3]] H4]].
       rewrite <-IZQ_lt in H3.
       destruct (integers.T y 0) as [H5 | [H5 | H5]]; try tauto.
@@ -788,7 +788,7 @@ Proof.
         rewrite Qequiv, integers.M1 in H7; try tauto.
         apply cancellation_mul_r in H7; auto.
         subst.
-        contradiction (arithmetic.lt_antisym 0 b).
+        contradiction (integers.lt_antisym 0 b).
     + exists a.
       split.
       * exists b.
@@ -814,7 +814,7 @@ Proof.
         apply cancellation_mul_r in H7; auto.
         -- subst.
            rewrite <-lt_neg_0 in H5.
-           contradiction (arithmetic.lt_antisym 0 y).
+           contradiction (integers.lt_antisym 0 y).
         -- contradict H2.
            ring [H2].
 Qed.
