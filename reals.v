@@ -193,3 +193,44 @@ Proof.
       rewrite H12 in H8.
       contradiction.
 Qed.
+
+Definition inz (q : Q) := {x in ℚ | ∃ ξ : Q, value _ ξ = x ∧ (ξ < q)%Q}.
+
+Theorem inz_in : ∀ q, inz q ∈ ℝ.
+Proof.
+  intros q.
+  apply Specify_classification.
+  repeat split.
+  - apply Powerset_classification.
+    intros z H.
+    now apply Specify_classification in H as [H H0].
+  - apply Nonempty_classification.
+    exists (value _ (q-1)).
+    apply Specify_classification.
+    split; auto using in_set.
+    exists (q-1).
+    split; auto.
+    unfold rationals.lt.
+    replace (q-(q-1)) with 1 by field.
+    unfold one.
+    rewrite pos_wf, integers.M3; auto using zero_ne_1, zero_lt_1.
+  - intros p x H H0.
+    apply Specify_classification in H as [H [ξ [H1 H2]]].
+    apply Specify_classification.
+    split; auto using in_set.
+    exists x.
+    replace ξ with p in *; eauto using set_proj_injective, rationals.lt_trans.
+  - intros p H.
+    apply Specify_classification in H as [H [ξ [H0 H1]]].
+    replace ξ with p in *; eauto using set_proj_injective.
+    destruct (lt_dense p q) as [r H2]; auto.
+    exists r.
+    split; try tauto.
+    apply Specify_classification.
+    split; eauto using in_set.
+    now exists r.
+Qed.
+
+Definition IQR (q : Q) := (mkSet _ _ (inz_in q)) : R.
+
+Coercion IQR : Q >-> R.

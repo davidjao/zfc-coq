@@ -668,3 +668,153 @@ Proof.
     rewrite integers.add_wf, Zequiv, ? add_0_l, ? add_0_r, ? add_1_r in H3.
     now apply eq_sym, PA4 in H3.
 Qed.
+
+Theorem IZQ_add : ∀ a b, (IZQ (a+b)) = a + b.
+Proof.
+  intros a b.
+  unfold IZQ.
+  rewrite add_wf, Qequiv; auto using zero_ne_1; try ring.
+  rewrite integers.M3.
+  auto using zero_ne_1.
+Qed.
+
+Theorem IZQ_mul : ∀ a b, (IZQ (a*b)) = a * b.
+Proof.
+  intros a b.
+  unfold IZQ.
+  rewrite mul_wf, Qequiv; auto using zero_ne_1; try ring.
+  rewrite integers.M3.
+  auto using zero_ne_1.
+Qed.
+
+Theorem IZQ_neg : ∀ a, (IZQ (-a)) = -a.
+Proof.
+  intros a.
+  unfold IZQ.
+  rewrite neg_wf, Qequiv; auto using zero_ne_1; ring.
+Qed.
+
+Theorem IZQ_lt : ∀ a b, (a < b)%Z ↔ a < b.
+Proof.
+  intros a b.
+  split; intros H; unfold lt, IZQ, sub in *;
+    rewrite neg_wf, add_wf, pos_wf in *; auto using zero_ne_1;
+      try (rewrite integers.M3 in *; auto using zero_ne_1);
+      replace ((b*1+-a*1)*1)%Z with (b+-a)%Z in * by ring.
+  - rewrite <-(integers.A4 a), ? (integers.A1 _ (-a)).
+    now apply integers.O1.
+  - apply (integers.O1 a) in H.
+    now ring_simplify in H.
+Qed.
+
+Lemma canonical_form_uniq : ∀ a b c d,
+    a / b = c / d → b ≠ 0%Z → d ≠ 0%Z →
+    gcd (a,b) = 1 → gcd (c,d) = 1 → a ~ c ∧ b ~ d.
+Proof.
+  intros a b c d H H0 H1.
+  rewrite Qequiv in H; auto.
+  repeat split.
+  - eapply FTA; eauto.
+    rewrite <-H.
+    auto using div_mul_r, div_refl.
+  - eapply FTA; eauto using gcd_sym.
+    rewrite integers.M1, H.
+    auto using div_mul_l, div_refl.
+  - eapply FTA; eauto using gcd_sym.
+    rewrite H.
+    auto using div_mul_r, div_refl.
+  - eapply FTA; eauto using gcd_sym.
+    rewrite integers.M1, <-H.
+    auto using div_mul_l, div_refl.
+Qed.
+
+Theorem canonical_form : ∀ x, exists ! a b, gcd (a,b) = 1 ∧ x = a / b ∧ b > 0%Z.
+Proof.
+  intros x.
+  destruct (reduced_form x) as [a [b [H [H0 H1]]]].
+  destruct (classic (a = 0)%Z) as [H2 | H2].
+  - subst.
+    exists 0%Z.
+    split.
+    + exists 1%Z.
+      split.
+      * repeat split; auto using zero_lt_1, div_0_r, div_refl.
+        -- rewrite Qequiv; auto using zero_ne_1.
+           ring.
+        -- apply IZQ_lt, zero_lt_1.
+      * intros x' [H0 [H2 H3]].
+        apply gcd_zero_l, assoc_pm in H0 as [H0 | H0]; auto.
+        subst.
+        rewrite <-IZQ_lt, <-lt_neg_0 in H3.
+        contradiction (arithmetic.lt_antisym 0 1); auto using zero_lt_1.
+    + intros x' [y [[H0 [H2 H3]] H4]].
+      rewrite <-IZQ_lt in H3.
+      destruct (integers.T y 0) as [H5 | [H5 | H5]]; try tauto.
+      rewrite Qequiv in H2; try tauto.
+      assert (0｜x') as H6.
+      { eapply FTA; eauto.
+        rewrite <-H2.
+        auto using div_mul_r, div_refl. }
+      now apply div_0_l in H6.
+  - destruct (integers.T b 0) as [[H3 [H4 H5]] | [[H3 [H4 H5]] | [H3 [H4 H5]]]];
+      try tauto.
+    + exists (-a)%Z.
+      split.
+      * exists (-b)%Z.
+        split.
+        -- split.
+           ++ rewrite <-gcd_neg.
+              apply gcd_sym.
+              rewrite <-gcd_neg.
+              now apply gcd_sym.
+           ++ split; try now rewrite <-IZQ_lt, <-lt_neg_0.
+              subst.
+              rewrite Qequiv; try ring; contradict H1; ring [H1].
+        -- intros x' [H6 [H7 H8]].
+           subst.
+           rewrite <-IZQ_lt in H8.
+           destruct (integers.T x' 0) as [H9 | [H9 | H9]]; try tauto.
+           rewrite Qequiv in H7; try tauto.
+           replace (b*-a)%Z with (a*-b)%Z in * by ring.
+           apply cancellation_mul_l in H7; auto.
+      * intros x' [y [[H6 [H7 H8]] H9]].
+        subst.
+        rewrite <-IZQ_lt in H8.
+        destruct (integers.T y 0) as [H10 | [H10 | H10]]; try tauto.
+        pose proof H7 as H11.
+        apply canonical_form_uniq in H11 as [H11 H12]; try tauto.
+        apply assoc_pm in H11 as [H11 | H11]; try ring [H11].
+        subst.
+        rewrite Qequiv, integers.M1 in H7; try tauto.
+        apply cancellation_mul_r in H7; auto.
+        subst.
+        contradiction (arithmetic.lt_antisym 0 b).
+    + exists a.
+      split.
+      * exists b.
+        split.
+        -- repeat (split; auto).
+           now rewrite <-IZQ_lt.
+        -- intros x' [H6 [H7 H8]].
+           subst.
+           rewrite <-IZQ_lt in H8.
+           destruct (integers.T x' 0) as [H9 | [H9 | H9]]; try tauto.
+           rewrite Qequiv, integers.M1 in H7; try tauto.
+           apply cancellation_mul_r in H7; auto.
+      * intros x' [y [[H6 [H7 H8]] H9]].
+        subst.
+        rewrite <-IZQ_lt in H8.
+        destruct (integers.T y 0) as [H10 | [H10 | H10]]; try tauto.
+        pose proof H7 as H11.
+        apply canonical_form_uniq in H11 as [H11 H12]; try tauto.
+        apply assoc_pm in H11 as [H11 | H11]; try ring [H11].
+        subst.
+        rewrite Qequiv in H7; try tauto.
+        replace (-x'*y)%Z with (-y*x')%Z in * by ring.
+        apply cancellation_mul_r in H7; auto.
+        -- subst.
+           rewrite <-lt_neg_0 in H5.
+           contradiction (arithmetic.lt_antisym 0 y).
+        -- contradict H2.
+           ring [H2].
+Qed.
