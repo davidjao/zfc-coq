@@ -452,3 +452,91 @@ Proof.
       rewrite <-(A4 r), ? (rationals.A1 _ (-r)).
       now apply O1.
 Qed.
+
+Definition neg_set : R → set.
+Proof.
+  intros α.
+  exact {p in ℚ |
+          ∃ ρ r : Q,
+           value ℚ ρ = p ∧ (0 < r)%Q ∧ value ℚ (-ρ-r)%Q ∉ value ℝ α}.
+Defined.
+
+Theorem neg_in : ∀ a, neg_set a ∈ ℝ.
+Proof.
+  intros α.
+  apply Specify_classification.
+  repeat split.
+  - apply Powerset_classification.
+    intros z H.
+    now apply Specify_classification in H.
+  - apply Nonempty_classification.
+    pose proof in_set _ α as H.
+    apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
+    apply Powerset_classification in H.
+    destruct (proper_subset_inhab ℚ (value ℝ α)) as [s [H4 H5]]; auto.
+    { intros [H4 H5].
+      contradict H1.
+      now apply Subset_equality_iff. }
+    set (σ := mkSet _ _ H4 : Q).
+    exists (value _ (-σ-1)).
+    apply Specify_classification.
+    split; auto using in_set.
+    exists (-σ-1), 1.
+    repeat split; try apply IZQ_lt; auto using zero_lt_1.
+    now replace (-(-σ-1)-1)%Q with σ by ring.
+  - pose proof in_set _ α as H.
+    apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
+    apply Powerset_classification in H.
+    apply Nonempty_classification in H0 as [s H0].
+    assert (s ∈ ℚ) as H4 by auto.
+    set (q := (mkSet _ _ H4) : Q).
+    intros H5.
+    pose proof (in_set _ (-q)) as H6.
+    rewrite <-H5 in H6.
+    pose proof H6 as H7.
+    apply Specify_classification in H7 as [H7 [p [r [H8 [H9 H10]]]]].
+    apply set_proj_injective in H8.
+    contradict H10.
+    apply (H2 q); auto.
+    subst.
+    apply (O1 (q-r)) in H9.
+    ring_simplify in H9.
+    now ring_simplify.
+  - intros p q H H0.
+    apply Specify_classification in H as [H [ρ [r [H1 [H2 H3]]]]].
+    apply set_proj_injective in H1.
+    subst.
+    apply Specify_classification.
+    split; auto using in_set.
+    exists q, r.
+    repeat split; auto.
+    contradict H3.
+    pose proof in_set _ α as H4.
+    apply Specify_classification in H4 as [H4 [H5 [H6 [H7 H8]]]].
+    eapply H7; eauto.
+    apply (rationals.O1 (-p-q-r)%Q) in H0.
+    now ring_simplify in H0.
+  - intros p H.
+    apply Specify_classification in H as [H [ρ [r [H1 [H2 H3]]]]].
+    apply set_proj_injective in H1.
+    subst.
+    assert (p+0 < p+r)%Q as H0 by now apply O1.
+    ring_simplify in H0.
+    apply lt_dense in H0 as [t [H0 H1]].
+    exists t.
+    split; auto.
+    apply Specify_classification.
+    split; auto using in_set.
+    exists t, (p+r-t).
+    repeat split; auto.
+    + apply (O1 (-t)) in H1.
+      now rewrite ? (rationals.A1 (-t)), rationals.A4 in H1.
+    + now replace (-t-(p+r-t)) with (-p-r) by ring.
+Qed.
+
+Definition neg : R → R.
+Proof.
+  intros a.
+  exact (mkSet _ _ (neg_in a)).
+Defined.
+
