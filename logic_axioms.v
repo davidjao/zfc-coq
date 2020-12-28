@@ -18,15 +18,14 @@ Qed.
 Lemma classic : ∀ (P : Prop), P ∨ ¬ P.
 Proof.
   intros P.
-  assert (∃ b, b = true ∨ P) as H1 by (exists true; auto).
-  assert (∃ b, b = false ∨ P) as H2 by (exists false; auto).
+  assert (∃ b, b = true ∨ P) as H1 by eauto.
+  assert (∃ b, b = false ∨ P) as H2 by eauto.
   destruct (proj2_sig (constructive_indefinite_description _ H1)),
   (proj2_sig (constructive_indefinite_description _ H2)); auto.
   right.
   intros HP.
-  assert ((λ b, b = true ∨ P) = (λ b, b = false ∨ P)) as EB.
-  { apply Extensionality_Ensembles.
-    firstorder. }
+  assert ((λ b, b = true ∨ P) = (λ b, b = false ∨ P)) as EB
+      by firstorder using Extensionality_Ensembles.
   destruct EB.
   rewrite (proof_irrelevance _ H1 H2) in *.
   congruence.
