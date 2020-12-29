@@ -171,13 +171,12 @@ Proof.
 Qed.
 
 Definition IZQ a := a / 1.
+Coercion IZQ : Z >-> Q.
+
 Definition zero := 0 / 1.
 Definition one := 1 / 1.
-
 Notation "0" := zero : Q_scope.
 Notation "1" := one : Q_scope.
-
-Coercion IZQ : Z >-> Q.
 
 Definition add : Q → Q → Q.
 Proof.
@@ -670,7 +669,7 @@ Proof.
     now apply eq_sym, PA4 in H3.
 Qed.
 
-Theorem IZQ_add : ∀ a b, (IZQ (a+b)) = a + b.
+Theorem IZQ_add : ∀ a b : Z, a + b = (a + b)%Z.
 Proof.
   intros a b.
   unfold IZQ.
@@ -679,7 +678,7 @@ Proof.
   auto using zero_ne_1.
 Qed.
 
-Theorem IZQ_mul : ∀ a b, (IZQ (a*b)) = a * b.
+Theorem IZQ_mul : ∀ a b : Z, a * b = (a * b)%Z.
 Proof.
   intros a b.
   unfold IZQ.
@@ -688,7 +687,7 @@ Proof.
   auto using zero_ne_1.
 Qed.
 
-Theorem IZQ_neg : ∀ a, (IZQ (-a)) = -a.
+Theorem IZQ_neg : ∀ a : Z, -a = (-a)%Z.
 Proof.
   intros a.
   unfold IZQ.
@@ -706,6 +705,15 @@ Proof.
     now apply integers.O1.
   - apply (integers.O1 a) in H.
     now ring_simplify in H.
+Qed.
+
+Theorem IZQ_eq : ∀ a b : Z, (a : Q) = (b : Q) ↔ a = b.
+Proof.
+  intros a b.
+  split; intros H; try now subst.
+  unfold IZQ in *.
+  rewrite Qequiv in *; auto using zero_ne_1.
+  ring [H].
 Qed.
 
 Lemma canonical_form_uniq : ∀ a b c d,
@@ -824,16 +832,13 @@ Theorem O4 : ∀ a, 0 < a → 0 < a^-1.
 Proof.
   intros x H.
   destruct (pos_denom x) as [a [b [H0 H1]]].
-  assert (b ≠ 0%Z) as H2.
-  { intros H2.
-    subst.
-    contradiction (integers.lt_irrefl 0). }
+  assert (b ≠ 0%Z) as H2 by (pose proof (integers.T b 0); tauto).
   assert (a ≠ 0%Z) as H3.
   { intros H3.
     subst.
     unfold zero, lt, sub in H.
     rewrite neg_wf, add_wf, pos_wf in H; auto using zero_ne_1.
-    - replace ((0 * 1 + - 0 * b) * (b * 1))%Z with 0%Z in * by ring.
+    - replace ((0*1+-0*b)*(b*1))%Z with 0%Z in * by ring.
       contradiction (integers.lt_irrefl 0).
     - contradict H2.
       ring [H2]. }
@@ -842,8 +847,7 @@ Proof.
   unfold zero, lt, sub in *.
   rewrite neg_wf, add_wf, pos_wf in *; auto using zero_ne_1;
     try (contradict H2; ring [H2]); try (contradict H3; ring [H3]).
-  replace ((a * 1 + - 0 * b) * (b * 1))%Z with (a*b)%Z in * by ring.
-  now replace ((b * 1 + - 0 * a) * (a * 1))%Z with (a*b)%Z in * by ring.
+  now replace ((b*1+-0*a)*(a*1))%Z with ((a*1+-0*b)*(b*1))%Z by ring.
 Qed.
 
 Theorem inv_div : ∀ a b : Z, b ≠ 0%Z → a / b = a * b^-1.
@@ -861,32 +865,28 @@ Proof.
   intros x.
   destruct (pos_denom x) as [a [b [H H0]]].
   destruct (division_algorithm a b) as [q [r [H1 [H2 H3]]]]; auto.
-  assert (b ≠ 0%Z) as H4.
-  { intros H4.
-    subst.
-    contradiction (integers.lt_irrefl 0). }
+  assert (b ≠ 0%Z) as H4 by (pose proof (integers.T b 0); tauto).
   exists q.
   subst.
   split.
   - destruct H2 as [H2 | H2].
     + left.
       unfold lt, sub, IZQ.
-      rewrite neg_wf, add_wf, pos_wf; auto using zero_ne_1.
-      replace (((b*q+r)*1+-q*b)*(b*1))%Z with (b*r)%Z in * by ring.
-      auto using mul_pos_pos.
-      contradict H4.
-      ring [H4].
+      rewrite neg_wf, add_wf, pos_wf, ? integers.M3_r; auto using zero_ne_1.
+      * replace ((b*q+r+-q*b)*b)%Z with (b*r)%Z in * by ring.
+        auto using mul_pos_pos.
+      * contradict H4.
+        ring [H4].
     + right.
       subst.
-      rewrite integers.A3_r, inv_div, M1, IZQ_mul, M2, inv_l, M3; auto.
+      rewrite integers.A3_r, inv_div, M1, <-IZQ_mul, M2, inv_l, M3; auto.
       contradict H4.
       unfold IZQ, zero in *.
       rewrite Qequiv in H4; auto using zero_ne_1.
       ring [H4].
   - unfold IZQ, lt, sub, one.
-    rewrite neg_wf, ? add_wf, pos_wf; auto using zero_ne_1.
-    + replace (((q*1+1*1)*b+-(b*q+r)*(1*1))*(1*1*b))%Z with (b*(b+-r))%Z
-        by ring.
+    rewrite neg_wf, ? add_wf, pos_wf, ? integers.M3_r; auto using zero_ne_1.
+    + replace (((q+1)*b+-(b*q+r))*(1*b))%Z with (b*(b+-r))%Z by ring.
       apply mul_pos_pos; auto.
       rewrite <-(integers.A4 r), ? (integers.A1 _ (-r)).
       now apply integers.O1.
@@ -895,4 +895,17 @@ Proof.
     + intros H5.
       contradiction zero_ne_1.
       ring [H5].
+Qed.
+
+Theorem Q_archimedean : ∀ x b, 0 < b → ∃ n : Z, n * b ≤ x < (n + 1) * b.
+Proof.
+  intros x b H.
+  assert (b ≠ 0) as H0 by (pose proof (T b 0); tauto).
+  destruct (Z_archimedean (x*b^-1)) as [n [[H1 | H1] H2]]; exists n;
+    repeat split; try (rewrite <-(M3 x), <-(inv_l b) at 1; auto;
+                       rewrite ? (M1 _ b), <-M2, (M1 _ x); now apply O3).
+  - left.
+    rewrite <-(M3 x), <-(inv_l b), ? (M1 _ b), <-M2, (M1 _ x); auto using O3.
+  - right.
+    now rewrite H1, <-M2, inv_l, M1, M3.
 Qed.

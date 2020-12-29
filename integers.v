@@ -99,7 +99,6 @@ Proof.
 Qed.
 
 Definition INZ a := a - 0.
-
 Coercion INZ : N >-> Z.
 
 Definition add : Z → Z → Z.
@@ -140,7 +139,7 @@ Notation "0" := zero : Z_scope.
 Notation "1" := one : Z_scope.
 Notation "2" := (1+1) : Z_scope.
 
-Theorem INZ_add : ∀ a b : N, a+b = (a+b)%N.
+Theorem INZ_add : ∀ a b : N, a + b = (a + b)%N.
 Proof.
   intros a b.
   unfold add, INZ.
@@ -149,7 +148,7 @@ Proof.
   ring [e0 e2].
 Qed.
 
-Theorem INZ_mul : ∀ a b : N, a*b = (a*b)%N.
+Theorem INZ_mul : ∀ a b : N, a * b = (a * b)%N.
 Proof.
   intros a b.
   unfold mul, INZ.
@@ -158,7 +157,7 @@ Proof.
   ring [e0 e2].
 Qed.
 
-Theorem INZ_inj : ∀ a b : N, INZ a = INZ b ↔ a = b.
+Theorem INZ_eq : ∀ a b : N, (a : Z) = (b : Z) ↔ a = b.
 Proof.
   intros a b.
   split; intros H; try now subst.
@@ -367,7 +366,7 @@ Proof.
   exists (x+y)%N.
   split.
   - intros H3.
-    apply INZ_inj, eq_sym, cancellation_0_add in H3 as [H3 H4]; subst; auto.
+    apply INZ_eq, eq_sym, cancellation_0_add in H3 as [H3 H4]; subst; auto.
   - subst.
     rewrite <-INZ_add.
     ring.
@@ -381,7 +380,7 @@ Proof.
   exists (c+d)%N.
   split.
   - intros H0.
-    apply INZ_inj, eq_sym, cancellation_0_add in H0 as [H0 H4].
+    apply INZ_eq, eq_sym, cancellation_0_add in H0 as [H0 H4].
     now subst.
   - now rewrite A3, H1, H3, INZ_add in *.
 Qed.
@@ -407,7 +406,7 @@ Proof.
     unfold lt in *.
     repeat destruct constructive_indefinite_description.
     subst.
-    apply INZ_inj, eq_sym, cancellation_0_mul in H3 as [H3 | H3]; subst; auto.
+    apply INZ_eq, eq_sym, cancellation_0_mul in H3 as [H3 | H3]; subst; auto.
   - subst.
     ring_simplify.
     auto using INZ_mul.
@@ -423,7 +422,7 @@ Proof.
   exists (x*y)%N.
   split.
   - intros H1.
-    apply INZ_inj, eq_sym, cancellation_0_mul in H1 as [H1 | H1]; subst; auto.
+    apply INZ_eq, eq_sym, cancellation_0_mul in H1 as [H1 | H1]; subst; auto.
   - ring_simplify.
     now rewrite INZ_mul.
 Qed.
@@ -435,9 +434,9 @@ Proof.
     destruct H as [c [H H0]]; exists c; split.
   - contradict H.
     now subst.
-  - now rewrite INZ_add, INZ_inj in H0.
+  - now rewrite INZ_add, INZ_eq in H0.
   - contradict H.
-    now apply INZ_inj in H.
+    now apply INZ_eq in H.
   - subst.
     auto using INZ_add.
 Qed.
@@ -459,7 +458,7 @@ Proof.
       now subst.
     + subst.
       ring_simplify in H2.
-      now rewrite <-INZ_inj, <-INZ_add.
+      now rewrite <-INZ_eq, <-INZ_add.
 Qed.
 
 Theorem lt_n_Sn : ∀ x n, x < S n → x < n ∨ x = n.
@@ -469,7 +468,7 @@ Proof.
   rewrite lt_def in *.
   destruct H as [a [H H2]], H3 as [b [H3 H4]].
   subst.
-  rewrite ? INZ_add, INZ_inj, <-add_1_r, <-add_assoc in H2.
+  rewrite ? INZ_add, INZ_eq, <-add_1_r, <-add_assoc in H2.
   apply cancellation_add, eq_sym, cancellation_1_add in H2 as [H2 | H2];
     subst; [ contradiction H3 | contradiction H ]; auto.
 Qed.
@@ -481,7 +480,7 @@ Proof.
   split.
   - intros H.
     replace 0 with (INZ 0) in *; auto.
-    now apply INZ_inj, PA4 in H.
+    now apply INZ_eq, PA4 in H.
   - now ring_simplify.
 Qed.
 
@@ -853,7 +852,7 @@ Notation " a = ± b " := (pm a b) (at level 60) : Z_scope.
 
 Theorem assoc_N : ∀ a b : N, a ~ b → a = b.
 Proof.
-  intros a b [H H0]; apply INZ_inj.
+  intros a b [H H0]; apply INZ_eq.
   destruct (N_ge_0 a), (N_ge_0 b); try rewrite <-H1 in *;
     try rewrite <-H2 in *; try rewrite div_0_l in *; try congruence.
   eauto using div_le, le_antisymm.
@@ -866,7 +865,7 @@ Proof.
   destruct H as [c [H H2]], H0 as [d [H0 H3]].
   subst.
   rewrite ? A3 in *.
-  now apply INZ_inj, assoc_N.
+  now apply INZ_eq, assoc_N.
 Qed.
 
 Theorem assoc_refl : ∀ a, a ~ a.
