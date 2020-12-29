@@ -42,9 +42,9 @@ Proof.
       ring.
 Qed.
 
-Definition ℤ := ((ω × ω) / integer_relation).
+Definition ℤ := (ω × ω) / integer_relation.
 
-Definition Z := elts ((ω × ω) / integer_relation).
+Definition Z := elts ℤ.
 
 Definition IZS (a : Z) := value ℤ a : set.
 Coercion IZS : Z >-> set.
@@ -74,8 +74,7 @@ Proof.
   exists (mkSet _ _ H3), (mkSet _ _ H4).
   apply set_proj_injective.
   simpl in *.
-  rewrite <-H, <-H5, <-H1.
-  auto using quotient_image. (* alternative direct proof: now destruct y. *)
+  now rewrite <-H, <-H5, <-H1, <-quotient_image. (* or use "destruct y." *)
 Qed.
 
 Theorem Zequiv : ∀ a b c d, a - b = c - d ↔ a+d = b+c.
@@ -950,7 +949,7 @@ Proof.
   apply assoc_pm; split; auto using div_1_l.
 Qed.
 
-Theorem division_algorithm : ∀ a b,
+Theorem division_algorithm_N : ∀ a b,
     0 < a → 0 < b → ∃ q r, b * q + r = a ∧ 0 ≤ r < b.
 Proof.
   intros a b H H0.
@@ -964,6 +963,29 @@ Proof.
   - exists (q+1), r.
     split; auto.
     rewrite D1_l, <-A2, (A1 _ r), A2, H5; ring.
+Qed.
+
+Theorem division_algorithm : ∀ a b, 0 < b → ∃ q r, b * q + r = a ∧ 0 ≤ r < b.
+Proof.
+  intros a b H.
+  destruct (T a 0) as [[H0 [H1 H2]] | [[H0 [H1 H2]] | [H0 [H1 H2]]]];
+    auto using division_algorithm_N.
+  - rewrite lt_neg_0 in H0.
+    destruct (division_algorithm_N (-a) b) as [q [r [H3 [[H4 | H4] H5]]]]; auto.
+    + exists (-q-1), (b+-r).
+      repeat split.
+      * replace a with (--a); try ring; rewrite <-H3; ring.
+      * rewrite <-(A4 r), ? (A1 _ (-r)).
+        now apply or_introl, O1.
+      * rewrite A1, <-(A3_r b), A1, <-A2.
+        apply O1.
+        now rewrite A3, <-neg_lt_0.
+    + exists (-q), 0.
+      subst.
+      repeat split; unfold le; auto.
+      replace a with (--a); try ring; rewrite <-H3; ring.
+  - exists 0, 0.
+    subst; repeat split; unfold le; auto; ring.
 Qed.
 
 Definition gcd a b d := d｜a ∧ d｜b ∧ ∀ x, x｜a → x｜b → x｜d.

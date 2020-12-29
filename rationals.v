@@ -445,10 +445,10 @@ Proof.
     + replace (z*0)%Z with 0%Z in * by ring.
       apply cancellation_0_mul in H1 as [H1 | H1]; subst;
         exfalso; eauto using lt_irrefl.
-    +  assert (x * y < 0) by now apply mul_pos_neg.
-       assert (0 < z * w) by now apply mul_pos_pos.
-       rewrite H1 in *.
-       exfalso; eapply lt_antisym; eauto.
+    + assert (x * y < 0) by now apply mul_pos_neg.
+      assert (0 < z * w) by now apply mul_pos_pos.
+      rewrite H1 in *.
+      exfalso; eapply lt_antisym; eauto.
     + replace (z*0)%Z with 0%Z in * by ring.
       apply cancellation_0_mul in H1 as [H1 | H1]; subst;
         exfalso; eauto using lt_irrefl. }
@@ -818,4 +818,81 @@ Proof.
            contradiction (integers.lt_antisym 0 y).
         -- contradict H2.
            ring [H2].
+Qed.
+
+Theorem O4 : ∀ a, 0 < a → 0 < a^-1.
+Proof.
+  intros x H.
+  destruct (pos_denom x) as [a [b [H0 H1]]].
+  assert (b ≠ 0%Z) as H2.
+  { intros H2.
+    subst.
+    contradiction (integers.lt_irrefl 0). }
+  assert (a ≠ 0%Z) as H3.
+  { intros H3.
+    subst.
+    unfold zero, lt, sub in H.
+    rewrite neg_wf, add_wf, pos_wf in H; auto using zero_ne_1.
+    - replace ((0 * 1 + - 0 * b) * (b * 1))%Z with 0%Z in * by ring.
+      contradiction (integers.lt_irrefl 0).
+    - contradict H2.
+      ring [H2]. }
+  subst.
+  rewrite inv_wf; auto.
+  unfold zero, lt, sub in *.
+  rewrite neg_wf, add_wf, pos_wf in *; auto using zero_ne_1;
+    try (contradict H2; ring [H2]); try (contradict H3; ring [H3]).
+  replace ((a * 1 + - 0 * b) * (b * 1))%Z with (a*b)%Z in * by ring.
+  now replace ((b * 1 + - 0 * a) * (a * 1))%Z with (a*b)%Z in * by ring.
+Qed.
+
+Theorem inv_div : ∀ a b : Z, b ≠ 0%Z → a / b = a * b^-1.
+Proof.
+  intros a b H.
+  unfold IZQ.
+  rewrite inv_wf, mul_wf, Qequiv; auto using zero_ne_1.
+  - ring.
+  - contradict H.
+    ring [H].
+Qed.
+
+Theorem Z_archimedean : ∀ x, ∃ z : Z, z ≤ x < z+1.
+Proof.
+  intros x.
+  destruct (pos_denom x) as [a [b [H H0]]].
+  destruct (division_algorithm a b) as [q [r [H1 [H2 H3]]]]; auto.
+  assert (b ≠ 0%Z) as H4.
+  { intros H4.
+    subst.
+    contradiction (integers.lt_irrefl 0). }
+  exists q.
+  subst.
+  split.
+  - destruct H2 as [H2 | H2].
+    + left.
+      unfold lt, sub, IZQ.
+      rewrite neg_wf, add_wf, pos_wf; auto using zero_ne_1.
+      replace (((b*q+r)*1+-q*b)*(b*1))%Z with (b*r)%Z in * by ring.
+      auto using mul_pos_pos.
+      contradict H4.
+      ring [H4].
+    + right.
+      subst.
+      rewrite integers.A3_r, inv_div, M1, IZQ_mul, M2, inv_l, M3; auto.
+      contradict H4.
+      unfold IZQ, zero in *.
+      rewrite Qequiv in H4; auto using zero_ne_1.
+      ring [H4].
+  - unfold IZQ, lt, sub, one.
+    rewrite neg_wf, ? add_wf, pos_wf; auto using zero_ne_1.
+    + replace (((q*1+1*1)*b+-(b*q+r)*(1*1))*(1*1*b))%Z with (b*(b+-r))%Z
+        by ring.
+      apply mul_pos_pos; auto.
+      rewrite <-(integers.A4 r), ? (integers.A1 _ (-r)).
+      now apply integers.O1.
+    + contradict H4.
+      ring [H4].
+    + intros H5.
+      contradiction zero_ne_1.
+      ring [H5].
 Qed.
