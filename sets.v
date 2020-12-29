@@ -1171,7 +1171,7 @@ Proof.
   - now apply Specify_classification, H1.
 Qed.
 
-Theorem quotient_wf : ∀ X R x y,
+Theorem quotient_equiv : ∀ X R x y,
     is_equivalence X R →
     quotient_map X R x = quotient_map X R y ↔ ((value X x), (value X y)) ∈ R.
 Proof.

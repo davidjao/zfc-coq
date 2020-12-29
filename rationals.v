@@ -1,11 +1,10 @@
 Require Export integers Field.
 
-Definition ℤ0 := {z in ℤ × ℤ | (proj2 ℤ ℤ z) ≠ value ℤ 0}.
+Definition ℤ0 := {z in ℤ × ℤ | (proj2 ℤ ℤ z) ≠ 0}.
 
 Definition rational_relation :=
-  {z in ℤ0 × ℤ0 | ∃ a b c d : Z,
-     b ≠ 0 ∧ d ≠ 0 ∧ z = ((value ℤ a, value ℤ b), (value ℤ c, value ℤ d)) ∧ 
-     a * d = b * c}.
+  {z in ℤ0 × ℤ0 |
+    ∃ a b c d : Z, b ≠ 0 ∧ d ≠ 0 ∧ z = ((a, b), (c, d)) ∧ a * d = b * c}.
 
 Theorem rational_equivalence : is_equivalence ℤ0 rational_relation.
 Proof.
@@ -54,6 +53,9 @@ Definition ℚ := ℤ0 / rational_relation.
 
 Definition Q := elts ℚ.
 
+Definition IQS (a : Q) := value ℚ a : set.
+Coercion IQS : Q >-> set.
+
 Delimit Scope Q_scope with Q.
 Open Scope Q_scope.
 Bind Scope Q_scope with Q.
@@ -62,7 +64,7 @@ Definition embed : Z → Z → Q.
 Proof.
   intros a b.
   destruct (excluded_middle_informative (b = 0)).
-  - assert (((value ℤ 0), (value ℤ 1)) ∈ ℤ0) as H.
+  - assert ((0, 1) ∈ ℤ0) as H.
     { apply Specify_classification.
       split.
       + apply Product_classification.
@@ -78,8 +80,7 @@ Proof.
           now apply set_proj_injective.
         * contradiction n.
           apply Product_classification; eauto using in_set. }
-    exact (quotient_map ℤ0 rational_relation
-                        (mkSet ℤ0 (value ℤ 0, value ℤ 1) H)).
+    exact (quotient_map ℤ0 rational_relation (mkSet _ (0, 1) H)).
   - destruct a as [_ a' A], b as [_ b' B].
     assert ((a', b') ∈ ℤ0) as H.
     { apply Specify_classification.
@@ -95,7 +96,7 @@ Proof.
           now apply set_proj_injective.
         * contradict n0.
           apply Product_classification; eauto. }
-    exact (quotient_map ℤ0 rational_relation (mkSet ℤ0 (a', b') H)).
+    exact (quotient_map ℤ0 rational_relation (mkSet _ (a', b') H)).
 Defined.
 
 Infix "/" := embed : Q_scope.
@@ -135,7 +136,7 @@ Proof.
   split; intros H1; unfold embed in *; destruct excluded_middle_informative;
     try (now contradiction); [symmetry in H1 | symmetry]; 
       destruct excluded_middle_informative; try (now contradiction);
-        [apply quotient_wf in H1 | apply quotient_wf];
+        [apply quotient_equiv in H1 | apply quotient_equiv];
         auto using rational_equivalence; simpl in *.
   - apply Specify_classification in H1
       as [H1 [c' [d' [a' [b' [H2 [H3 [H4 H5]]]]]]]].

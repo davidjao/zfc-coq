@@ -2,9 +2,8 @@ Require Export naturals List Permutation.
 Set Warnings "-notation-overridden".
 
 Definition integer_relation :=
-  {z in (ω × ω) × (ω × ω) | ∃ a b c d : N,
-     z = ((value ω a, value ω b), (value ω c, value ω d)) ∧
-     a + d = b + c}.
+  {z in (ω × ω) × (ω × ω) |
+    ∃ a b c d : N, z = ((a, b), (c, d)) ∧ a + d = b + c}.
 
 Theorem integer_equivalence : is_equivalence (ω × ω) integer_relation.
 Proof.
@@ -47,6 +46,9 @@ Definition ℤ := ((ω × ω) / integer_relation).
 
 Definition Z := elts ((ω × ω) / integer_relation).
 
+Definition IZS (a : Z) := value ℤ a : set.
+Coercion IZS : Z >-> set.
+
 Delimit Scope Z_scope with Z.
 Open Scope Z_scope.
 Bind Scope Z_scope with Z.
@@ -80,14 +82,14 @@ Theorem Zequiv : ∀ a b c d, a - b = c - d ↔ a+d = b+c.
 Proof.
   intros [_ a A] [_ b B] [_ c C] [_ d D].
   split; intros H; unfold embed in *.
-  - apply quotient_wf in H; auto using integer_equivalence.
+  - apply quotient_equiv in H; auto using integer_equivalence.
     simpl in *.
     apply Specify_classification in H as [H [a0 [b0 [c0 [d0 [H0 H1]]]]]].
     rewrite ? Ordered_pair_iff in *; intuition; subst.
     replace {| in_set := A |} with a0; replace {| in_set := B |} with b0;
     replace {| in_set := C |} with c0; replace {| in_set := D |} with d0;
     auto; now apply set_proj_injective.
-  - apply quotient_wf; auto using integer_equivalence.
+  - apply quotient_equiv; auto using integer_equivalence.
     simpl.
     apply Specify_classification; split.
     + apply Product_classification.
