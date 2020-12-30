@@ -588,6 +588,12 @@ Proof.
   - now replace (c-b) with ((c-b)-0) in H0 by ring.
 Qed.
 
+Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
+Proof.
+  unfold le in *.
+  intros a b c [H | H] [H0 | H0]; pose proof lt_trans a b c; subst; tauto.
+Qed.
+
 Theorem lt_dense : ∀ a b, a < b → ∃ c, a < c ∧ c < b.
 Proof.
   intros x y H.
@@ -908,4 +914,20 @@ Proof.
     rewrite <-(M3 x), <-(inv_l b), ? (M1 _ b), <-M2, (M1 _ x); auto using O3.
   - right.
     now rewrite H1, <-M2, inv_l, M1, M3.
+Qed.
+
+Theorem neg_lt_0 : ∀ a, 0 < a ↔ -a < 0.
+Proof.
+  split; intros H.
+  - eapply (O1 (-a)) in H.
+    now rewrite A1, A3, A1, A4 in H.
+  - eapply (O1 a) in H.
+    now rewrite A4, A1, A3 in H.
+Qed.
+
+Theorem lt_neg_0 : ∀ a, a < 0 ↔ 0 < -a.
+Proof.
+  intros a.
+  rewrite neg_lt_0.
+  now replace (- -a) with a by ring.
 Qed.

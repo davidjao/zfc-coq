@@ -527,3 +527,155 @@ Proof.
   exact (mkSet _ _ (neg_in a)).
 Defined.
 
+Notation "- a" := (neg a) : R_scope.
+
+Theorem cut_archimedean : ∀ (α : R) (b : Q),
+    (0 < b)%Q → ∃ n : Z, n * b ∈ α ∧ (n + 1) * b ∉ α.
+Proof.
+  intros α b H.
+  pose proof (in_set _ α) as H0.
+  apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
+  apply Nonempty_classification in H1 as [x H1].
+  apply Powerset_classification in H0.
+  assert (x ∈ ℚ) as H5 by eauto.
+  set (ξ := mkSet _ _ H5 : Q).
+  destruct (Q_archimedean ξ b) as [k [H6 H7]]; auto.
+  destruct (WOP (λ m, (k + m)%Z * b ∉ α)) as [n [H8 H9]].
+  - intros m H8.
+    apply NNPP.
+    contradict H8.
+    assert (m ≤ 0)%Z as [H9 | H9] by
+          (unfold integers.le; pose proof (integers.T m 0); tauto).
+    + apply (H3 ξ); auto.
+      destruct H6 as [H6 | H6]; rewrite <-IZQ_add; ring_simplify.
+      * apply (rationals.lt_trans _ (k*b)); auto.
+        rewrite <-(rationals.A3 (k*b)) at 2.
+        rewrite (rationals.A1 0).
+        apply rationals.O1.
+        replace 0%Q with (0*b)%Q by ring.
+        rewrite ? (rationals.M1 _ b).
+        now apply O3, IZQ_lt.
+      * rewrite <-(rationals.A3 ξ), <-H6, (rationals.A1 0).
+        apply O1.
+        replace 0%Q with (0*b)%Q by ring.
+        rewrite ? (rationals.M1 _ b).
+        now apply O3, IZQ_lt.
+    + subst.
+      rewrite integers.A3_r.
+      destruct H6 as [H6 | H6].
+      * apply (H3 ξ); auto.
+      * rewrite H6; auto.
+  - destruct (proper_subset_inhab ℚ α) as [z [H8 H9]]; auto.
+    { intros [H8 H9].
+      contradict H9.
+      now apply Subset_equality_iff. }
+    set (ζ := mkSet _ _ H8 : Q).
+    destruct (Q_archimedean ζ b) as [m [H10 H11]]; auto.
+    exists (m - k + 1)%Z.
+    split.
+    + unfold integers.sub.
+      rewrite  <-(integers.A4 k), (integers.A1 m), (integers.A1 k),
+      <-integers.A2.
+      apply integers.O1.
+      destruct (integers.T k (m+1)) as [H12 | [H12 | H12]]; intuition;
+        contradict H9; replace z with (value _ ζ); try apply (H3 ξ); auto.
+      * rewrite H12, <-IZQ_add in H6.
+        destruct H6 as [H6 | H6]; eauto using rationals.lt_trans.
+        now rewrite <-H6.
+      * apply IZQ_lt, (O3 b) in H15; auto.
+        rewrite ? (M1 b) in H15.
+        rewrite <-IZQ_add in H15.
+        assert (ζ < k * b)%Q as H9 by eauto using rationals.lt_trans.
+        destruct H6 as [H6 | H6]; eauto using rationals.lt_trans.
+        now rewrite <-H6.
+    + unfold integers.sub.
+      rewrite ? IZQ_add.
+      replace (k + (m + - k + 1))%Z with (m+1)%Z by ring.
+      eapply Dedekind_cut_3; eauto using in_set.
+      * replace z with (value _ ζ) in * by auto.
+        exact H9.
+      * now rewrite <-IZQ_add.
+  - exists (k+(n+-(1)))%Z.
+    rewrite ? IZQ_add.
+    split.
+    + apply NNPP.
+      intros H10.
+      assert (n + (-(1)) < n)%Z.
+      { rewrite <-(integers.A3_r n), <-integers.A2.
+        apply integers.O1.
+        rewrite integers.A3, <-integers.neg_lt_0.
+        exact zero_lt_1. }
+      pose proof (integers.T (n+(-(1))) n).
+      eapply H9 in H10 as [H10 | H10]; try tauto.
+      symmetry in H10.
+      tauto.
+    + replace (1) with (IZQ 1) by auto.
+      now rewrite IZQ_add, <-? integers.A2, (integers.A1 _ 1), integers.A4,
+      integers.A3_r.
+Qed.
+      
+Theorem A4 : ∀ a, a + -a = 0.
+Proof.
+  intros α.
+  unfold neg, add, zero, add_set.
+  apply set_proj_injective.
+  simpl.
+  unfold inz_set.
+  apply Extensionality.
+  split; intros H; apply Specify_classification in H as [H H0].
+  - destruct H0 as [r [p [H0 [H1 H2]]]].
+    apply Specify_classification in H2 as [H2 [s [q [H3 [H4 H5]]]]].
+    apply set_proj_injective in H3.
+    subst.
+    assert (-s ∉ α)%Q as H0.
+    { eapply Dedekind_cut_3; eauto using in_set.
+      unfold sub in *.
+      rewrite <-(rationals.A3 (-s)) at 2.
+      rewrite <-(rationals.A4 q), <-rationals.A2, <-(rationals.A1 (-q)),
+      <-(rationals.A3 (-q+-s)), ? (rationals.A1 _ (-q+-s)) at 1.
+      now apply rationals.O1. }
+    eapply Dedekind_cut_2 in H0; eauto using in_set.
+    apply Specify_classification.
+    split; eauto using in_set.
+    exists (r+s)%Q.
+    split; auto.
+    rewrite <-(rationals.A4 s), (rationals.A1 _ s).
+    now apply O1.
+  - destruct H0 as [v [H0 H1]].
+    subst.
+    set (w := (-v * 2^-1)%Q).
+    assert (0 < 2)%Z as H0.
+    { eapply integers.lt_trans; try now apply zero_lt_1.
+      rewrite <-(integers.A3_r 1) at 1.
+      apply integers.O1, zero_lt_1. }
+    assert (0 < w)%Q as H2.
+    { unfold w.
+      apply rationals.O2; try now apply lt_neg_0.
+      now apply O4, IZQ_lt. }
+    destruct (cut_archimedean α w) as [n [H3 H4]]; auto.
+    apply Specify_classification.
+    split; auto.
+    exists (n*w)%Q, (-(n+2)*w)%Q.
+    repeat split; auto.
+    + apply f_equal.
+      unfold w.
+      ring_simplify.
+      rewrite <-M2, inv_l; try ring.
+      intros H5.
+      apply IZQ_eq in H5.
+      subst.
+      rewrite H5 in H0.
+      contradiction (integers.lt_irrefl 0).
+    + apply Specify_classification.
+      split; eauto using in_set.
+      exists (-(n+2)*w), w.
+      repeat split; auto.
+      replace ((-(-(n+2)*w)-w))%Q with ((n+2)*w+-w)%Q by ring.
+      rewrite ? D1.
+      replace (IZQ 2) with (1/1+1/1)%Q.
+      * rewrite D1, M3, <-? rationals.A2, A4, (rationals.A1 w), rationals.A3.
+        rewrite <-(M3 w) at 2.
+        now rewrite <-D1.
+      * unfold IZQ; rewrite add_wf, Qequiv; try rewrite integers.M3;
+          auto using zero_ne_1; ring.
+Qed.
