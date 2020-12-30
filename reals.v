@@ -4,32 +4,75 @@ Definition ℝ := {α in P ℚ | α ≠ ∅ ∧ α ≠ ℚ ∧
                             (∀ p q : Q, p ∈ α → q < p → q ∈ α) ∧
                             (∀ p : Q, p ∈ α → ∃ r : Q, p < r ∧ r ∈ α)}.
 
-Theorem Dedekind_cut_1 : ∀ α, α ∈ ℝ → α ≠ ∅.
+Definition R := elts ℝ.
+
+Definition IRS (a : R) := value ℝ a : set.
+Coercion IRS : R >-> set.
+
+Lemma Dedekind_cut_0 : ∀ (α : R) (p : set), p ∈ α → p ∈ ℚ.
 Proof.
-  intros α H.
-  now apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
+  intros α p H.
+  pose proof in_set _ α as H0.
+  apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
+  apply Powerset_classification in H0.
+  eauto.
 Qed.
 
-Theorem Dedekind_cut_2 : ∀ α, α ∈ ℝ → ∀ p q : Q, p ∈ α → q ∉ α → p < q.
+Lemma Dedekind_cut_1 : ∀ α : R, ∅ ≠ α.
 Proof.
-  intros α H p q H0 H1.
-  apply Specify_classification in H as [H [H2 [H3 [H4 H5]]]].
+  intros α H.
+  pose proof in_set _ α as H0.
+  apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
+  now contradict H1.
+Qed.
+
+Lemma Dedekind_cut_2 : ∀ (α : R) (p q : Q), p ∈ α → q < p → q ∈ α.
+Proof.
+  intros α p q H H0.
+  pose proof in_set _ α as H1.
+  apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
+  eauto.
+Qed.
+
+Lemma Dedekind_cut_3 : ∀ (α : R) (p : Q), p ∈ α → ∃ r : Q, p < r ∧ r ∈ α.
+Proof.
+  intros α p H.
+  pose proof (in_set _ α).
+  apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
+  eauto.
+Qed.
+
+Lemma Dedekind_cut_4 : ∀ α : R, ∀ p q : Q, p ∈ α → q ∉ α → p < q.
+Proof.
+  intros α p q H H0.
+  pose proof in_set _ α as H1.
+  apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
   destruct (T p q) as [[H6 [H7 H8]] | [[H6 [H7 H8]] | [H6 [H7 H8]]]]; subst;
     try tauto.
   exfalso; eauto.
 Qed.
 
-Theorem Dedekind_cut_3 : ∀ α, α ∈ ℝ → ∀ r s : Q, r ∉ α → r < s → s ∉ α.
+Lemma Dedekind_cut_5 : ∀ α : R, ∀ r s : Q, r ∉ α → r < s → s ∉ α.
 Proof.
-  intros α H r s H0 H1 H2.
-  apply Specify_classification in H as [H [H3 [H4 [H5 H6]]]].
+  intros α r s H H0 H1.
+  pose proof in_set _ α as H2.
+  apply Specify_classification in H2 as [H2 [H3 [H4 [H5 H6]]]].
   eauto.
 Qed.
 
-Definition R := elts ℝ.
-
-Definition IRS (a : R) := value ℝ a : set.
-Coercion IRS : R >-> set.
+Lemma Dedekind_cut_6 : ∀ a : R, ∃ q : Q, q ∉ a.
+Proof.
+  intros a.
+  pose proof (in_set _ a) as H.
+  apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
+  apply Powerset_classification in H.
+  assert (ℚ ≠ a) as H4 by (now contradict H1).
+  apply not_proper_subset_inhab in H4 as [z [H4 H5]].
+  - exists (mkSet _ _ H4); auto.
+  - contradict H4.
+    destruct H4 as [H4 H5].
+    now apply Subset_equality_iff.
+Qed.
 
 Delimit Scope R_scope with R.
 Open Scope R_scope.
@@ -83,7 +126,7 @@ Proof.
   - intros q H14.
     assert (q ∈ ℚ) as H15 by (apply Powerset_classification in H8; eauto).
     assert (mkSet _ _ H15 < mkSet _ _ H13)%Q as H16
-        by eauto using Dedekind_cut_2, in_set.
+        by eauto using Dedekind_cut_4, in_set.
     apply H6 in H16; auto.
   - contradict H0.
     now apply set_proj_injective.
@@ -206,7 +249,7 @@ Proof.
       apply H18 in H12 as H23.
       set (ζ := mkSet _ _ H23).
       replace z with (value _ ζ); auto.
-      apply (H15 σ); eauto using Dedekind_cut_2, in_set.
+      apply (H15 σ); eauto using Dedekind_cut_4, in_set.
     + intros H12.
       rewrite H12 in H8.
       contradiction.
@@ -317,8 +360,8 @@ Proof.
     set (σ := mkSet _ _ H1).
     pose proof (in_set _ (ρ + σ)) as H5.
     apply H4, Specify_classification in H5 as [H5 [r [s [H6 [H7 H8]]]]].
-    assert (r < ρ)%Q as H9 by eauto using Dedekind_cut_2, in_set.
-    assert (s < σ)%Q as H10 by eauto using Dedekind_cut_2, in_set.
+    assert (r < ρ)%Q as H9 by eauto using Dedekind_cut_4, in_set.
+    assert (s < σ)%Q as H10 by eauto using Dedekind_cut_4, in_set.
     assert (r + s < ρ + σ)%Q.
     { eapply rationals.lt_trans.
       eapply O1 in H10; eauto.
@@ -591,7 +634,7 @@ Proof.
     + unfold integers.sub.
       rewrite ? IZQ_add.
       replace (k + (m + - k + 1))%Z with (m+1)%Z by ring.
-      eapply Dedekind_cut_3; eauto using in_set.
+      eapply Dedekind_cut_5; eauto using in_set.
       * replace z with (value _ ζ) in * by auto.
         exact H9.
       * now rewrite <-IZQ_add.
@@ -628,13 +671,13 @@ Proof.
     apply set_proj_injective in H3.
     subst.
     assert (-s ∉ α)%Q as H0.
-    { eapply Dedekind_cut_3; eauto using in_set.
+    { eapply Dedekind_cut_5; eauto using in_set.
       unfold sub in *.
       rewrite <-(rationals.A3 (-s)) at 2.
       rewrite <-(rationals.A4 q), <-rationals.A2, <-(rationals.A1 (-q)),
       <-(rationals.A3 (-q+-s)), ? (rationals.A1 _ (-q+-s)) at 1.
       now apply rationals.O1. }
-    eapply Dedekind_cut_2 in H0; eauto using in_set.
+    eapply Dedekind_cut_4 in H0; eauto using in_set.
     apply Specify_classification.
     split; eauto using in_set.
     exists (r+s)%Q.
@@ -680,8 +723,28 @@ Proof.
           auto using zero_ne_1; ring.
 Qed.
 
+Theorem O1 : ∀ a b c, b < c → a + b < a + c.
+Proof.
+  intros a b c H.
+  unfold lt in *.
+  destruct H as [H H0].
+  split.
+  - intros z H1.
+    unfold add in *.
+    apply Specify_classification in H1 as [H1 [r [s [H2 [H3 H4]]]]].
+    apply Specify_classification.
+    split; auto.
+    exists r, s.
+    split; auto.
+  - contradict H0.
+    apply f_equal.
+    apply set_proj_injective in H0.
+    assert (-a+(a+b) = -a+(a+c)) by congruence.
+    now rewrite ? A2, ? (A1 (-a)), ? A4, ? (A1 0), ? A3 in H1.
+Qed.
+
 Definition mul_pos_set (a b : R) :=
-  {x in ℚ | (∃ r s ξ : Q, x = ξ ∧ r ∈ a ∧ s ∈ b ∧ 0 < r ∧ 0 < s ∧ ξ < r * s)%Q}.
+  {x in ℚ | (∃ r s ξ : Q, x = ξ ∧ r ∈ a ∧ s ∈ b ∧ 0 < r ∧ 0 < s ∧ ξ ≤ r * s)%Q}.
 
 Definition one : R := IQR 1.
 Notation "1" := one : R_scope.
@@ -711,20 +774,6 @@ Proof.
   split; auto; congruence.
 Qed.
 
-Lemma Dedekind_cut_4 : ∀ a : R, ∃ q : Q, q ∉ a.
-Proof.
-  intros a.
-  pose proof (in_set _ a) as H.
-  apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
-  apply Powerset_classification in H.
-  assert (ℚ ≠ a) as H4 by (now contradict H1).
-  apply not_proper_subset_inhab in H4 as [z [H4 H5]].
-  - exists (mkSet _ _ H4); auto.
-  - contradict H4.
-    destruct H4 as [H4 H5].
-    now apply Subset_equality_iff.
-Qed.
-
 Theorem mul_pos_in : ∀ a b, 0 < a → 0 < b → mul_pos_set a b ∈ ℝ.
 Proof.
   intros a b H H0.
@@ -745,23 +794,23 @@ Proof.
     split; unfold IQS; auto using in_set.
     exists c, d, (c*d - 1).
     repeat split; auto.
+    left.
     apply lt_sub_pos, IZQ_lt, zero_lt_1.
-  - destruct (Dedekind_cut_4 a) as [c H1], (Dedekind_cut_4 b) as [d H2].
+  - destruct (Dedekind_cut_6 a) as [c H1], (Dedekind_cut_6 b) as [d H2].
     intros H3.
     apply Subset_equality_iff in H3 as [H3 H4].
     assert (c*d ∈ mul_pos_set a b) as H5 by eauto using in_set.
     apply Specify_classification in H5
       as [H5 [r [s [ξ [H6 [H7 [H8 [H9 [H10 H11]]]]]]]]].
-    assert (r < c)%Q as H12 by eauto using Dedekind_cut_2, in_set.
-    assert (s < d)%Q as H13 by eauto using Dedekind_cut_2, in_set.
+    assert (r < c)%Q as H12 by eauto using Dedekind_cut_4, in_set.
+    assert (s < d)%Q as H13 by eauto using Dedekind_cut_4, in_set.
     assert (0 < c)%Q as H14 by eauto using rationals.lt_trans.
     apply set_proj_injective in H6.
     subst.
-    contradiction (lt_antisym (c*d) (r*s)).
-    apply (O3 s) in H12; auto.
-    apply (O3 c) in H13; auto.
-    rewrite ? (M1 s) in H12.
-    eauto using rationals.lt_trans.
+    assert (r*s < c*d)%Q by auto using lt_cross_mul.
+    unfold rationals.le in H11.
+    pose proof (rationals.T (c*d) (r*s)).
+    tauto.
   - intros p q H1 H2.
     apply Specify_classification in H1
       as [H1 [r [s [ξ [H3 [H4 [H5 [H6 [H7 H8]]]]]]]]].
@@ -770,20 +819,28 @@ Proof.
     exists r, s, q.
     apply set_proj_injective in H3.
     subst.
-    repeat split; eauto using rationals.lt_trans.
+    repeat split; auto.
+    destruct H8 as [H8 | H8]; left; eauto using rationals.lt_trans.
+    congruence.      
   - intros p H1.
     apply Specify_classification in H1
       as [H1 [r [s [ξ [H3 [H4 [H5 [H6 [H7 H8]]]]]]]]].
-    apply lt_dense in H8 as [c [H8 H9]].
-    exists c.
+    apply Dedekind_cut_3 in H4 as [ρ [H4 H9]].
+    apply Dedekind_cut_3 in H5 as [σ [H5 H10]].
+    exists (ρ * σ)%Q.
     apply set_proj_injective in H3.
-    subst.
-    split; auto.
-    apply Specify_classification.
-    split; unfold IQS; auto using in_set.
-    now exists r, s, c.
+    assert (r*s < ρ*σ)%Q as H2 by auto using lt_cross_mul.
+    split.
+    + rewrite H3.
+      destruct H8 as [H8 | H8]; eauto using rationals.lt_trans.
+      congruence.
+    + apply Specify_classification.
+      split; eauto using in_set.
+      exists ρ, σ, (ρ * σ).
+      repeat split; eauto using rationals.lt_trans.
+      now right.
 Qed.
-    
+
 Definition mul_pos : R → R → R.
 Proof.
   intros a b.
@@ -799,15 +856,214 @@ Infix "*" := mul_pos : R_scope.
 
 Theorem M1_pos : ∀ a b, 0 < a → 0 < b → a * b = b * a.
 Proof.
-Admitted.
+  intros a b H H0.
+  unfold mul_pos, mul_pos_set.
+  repeat destruct excluded_middle_informative; auto.
+  apply set_proj_injective.
+  simpl.
+  apply Extensionality.
+  split; intros H1; apply Specify_classification in H1
+    as [H1 [r [s [ξ [H2 [H3 [H4 [H5 [H6 H7]]]]]]]]];
+  apply Specify_classification; split; auto; exists s, r, ξ;
+    rewrite M1; split; auto.
+Qed.
+
+Theorem O2_pos : ∀ a b, 0 < a → 0 < b → 0 < a * b.
+Proof.
+  intros a b H H0.
+  unfold mul_pos.
+  repeat destruct excluded_middle_informative; try tauto.
+  split.
+  - intros z H1.
+    unfold zero, IQR in H1.
+    apply Specify_classification in H1 as [H1 [ξ [H2 H3]]].
+    subst.
+    apply Specify_classification.
+    split; auto.
+    apply pos_nonempty in H as [c [H H2]].
+    apply pos_nonempty in H0 as [d [H0 H4]].
+    exists c, d, ξ.
+    repeat split; auto.
+    left.
+    eauto using O2, rationals.lt_trans.
+  - intros H1.
+    apply pos_nonempty in H as [c [H H2]].
+    apply pos_nonempty in H0 as [d [H0 H3]].
+    apply lt_dense in H as [e [H H4]].
+    apply lt_dense in H0 as [f [H0 H5]].
+    assert ((e * f)%Q ∈ 0).
+    { rewrite H1.
+      apply Specify_classification.
+      split; eauto using in_set.
+      exists c, d, (e*f)%Q.
+      repeat split; eauto using rationals.lt_trans.
+      left.
+      auto using lt_cross_mul. }
+    unfold IRS, zero, IQR in H6.
+    apply Specify_classification in H6 as [H6 [ξ [H7 H8]]].
+    apply set_proj_injective in H7.
+    rewrite <-H7 in H8.
+    assert (0 < e*f)%Q by eauto using O2.
+    pose proof (rationals.T (e*f) 0).
+    tauto.
+Qed.
 
 Theorem M2_pos : ∀ a b c, 0 < a → 0 < b → 0 < c → a * (b * c) = (a * b) * c.
 Proof.
-Admitted.
+  intros a b c H H0 H1.
+  assert (0 < a * b) as H2 by auto using O2_pos.
+  assert (0 < b * c) as H3 by auto using O2_pos.
+  unfold mul_pos.
+  repeat destruct excluded_middle_informative; try tauto;
+    try (contradict n; unfold mul_pos in *;
+         repeat destruct excluded_middle_informative; tauto).
+  apply set_proj_injective.
+  simpl.
+  apply Extensionality.
+  split; intros H4; apply Specify_classification in H4
+    as [H4 [ρ [τ [ξ [H5 [H6 [H7 [H8 [H9 H10]]]]]]]]];
+  apply Specify_classification; split; auto.
+  - apply Specify_classification in H7
+      as [H7 [s [t [ζ [H11 [H12 [H13 [H14 [H15 H16]]]]]]]]].
+    apply set_proj_injective in H11.
+    subst.
+    exists (ρ*s)%Q, t, ξ.
+    repeat split; auto using O2.
+    + apply Specify_classification.
+      split; eauto using in_set.
+      exists ρ, s, (ρ*s)%Q.
+      repeat split; auto.
+      now right.
+    + destruct H16 as [H16 | H16], H10 as [H10 | H10].
+      * apply (O3 ρ) in H16; auto.
+        rewrite M2 in H16.
+        left.
+        eauto using rationals.lt_trans.
+      * subst.
+        left.
+        apply (O3 ρ) in H16; auto.
+        now rewrite M2 in H16.
+      * left.
+        subst.
+        now rewrite M2 in H10.
+      * right.
+        subst.
+        now rewrite M2.
+  - apply Specify_classification in H6
+      as [H6 [r [s [ζ [H11 [H12 [H13 [H14 [H15 H16]]]]]]]]].
+    apply set_proj_injective in H11.
+    subst.
+    exists r, (s*τ)%Q, ξ.
+    repeat split; auto using O2.
+    + apply Specify_classification.
+      split; eauto using in_set.
+      exists s, τ, (s*τ)%Q.
+      repeat split; auto.
+      now right.
+    + destruct H16 as [H16 | H16], H10 as [H10 | H10].
+      * apply (O3 τ) in H16; auto.
+        rewrite ? (M1 τ), <-M2 in H16.
+        left.
+        eauto using rationals.lt_trans.
+      * subst.
+        left.
+        apply (O3 τ) in H16; auto.
+        now rewrite ? (M1 τ), <-M2 in H16.
+      * left.
+        subst.
+        now rewrite <-M2 in H10.
+      * right.
+        subst.
+        now rewrite M2.
+Qed.
+
+Theorem M5 : 1 ≠ 0.
+Proof.
+  intros H.
+  unfold zero, one, IQR, iqr_set in H.
+  inversion H as [H0].
+  apply Subset_equality_iff in H0 as [H0 H1].
+  assert (0 < 1)%Q as H2 by apply IZQ_lt, zero_lt_1.
+  apply lt_dense in H2 as [c [H2 H3]].
+  contradiction (lt_antisym c 0).
+  pose proof (H0 c) as H4.
+  rewrite ? Specify_classification in H4.
+  destruct H4 as [H4 [ξ [H5 H6]]]; try split; eauto using in_set.
+  apply set_proj_injective in H5.
+  now subst.
+Qed.
+
+Theorem zero_lt_1 : 0 < 1.
+Proof.
+  unfold lt.
+  split.
+  - intros z H.
+    unfold zero, one, IQR, iqr_set in *.
+    apply Specify_classification in H as [H [ξ [H0 H1]]].
+    apply Specify_classification.
+    assert (0 < 1)%Q as H2 by apply IZQ_lt, zero_lt_1.
+    split; eauto using rationals.lt_trans.
+  - intros H.
+    apply set_proj_injective in H.
+    now contradiction M5.
+Qed.
 
 Theorem M3_pos : ∀ a, 0 < a → 1 * a = a.
 Proof.
-Admitted.
+  intros a H.
+  unfold mul_pos.
+  repeat destruct excluded_middle_informative; try tauto.
+  - apply set_proj_injective.
+    simpl.
+    apply Extensionality.
+    split; intros H0.
+    + apply Specify_classification in H0
+        as [H0 [r [s [ξ [H1 [H2 [H3 [H4 [H5 H6]]]]]]]]].
+      subst.
+      eapply Dedekind_cut_2; eauto.
+      unfold one, IQR, iqr_set in H2.
+      apply Specify_classification in H2 as [H2 [ρ [H7 H8]]].
+      apply set_proj_injective in H7.
+      subst.
+      apply (O3 s) in H8; auto.
+      rewrite ? (M1 s), M3 in H8.
+      destruct H6 as [H6 | H6]; eauto using rationals.lt_trans.
+      now subst.
+    + apply Specify_classification.
+      split; eauto using Dedekind_cut_0.
+      apply Dedekind_cut_0 in H0 as H1.
+      set (ζ := mkSet _ _ H1 : Q).
+      replace z with (value _ ζ) in * by auto.
+      destruct (classic (0 < ζ)%Q) as [H2 | H2].
+      * apply Dedekind_cut_3 in H0 as [t [H0 H3]].
+        exists (ζ * t^-1)%Q, t, ζ.
+        assert (t ≠ 0)%Q as H4.
+           { intros H4.
+             subst.
+             contradiction (lt_antisym 0 ζ). }
+        repeat split; eauto using O2, inv_lt, rationals.lt_trans.
+        -- unfold one, IQR, iqr_set.
+           apply Specify_classification.
+           split; eauto using in_set.
+           exists (ζ * t^-1)%Q.
+           split; auto.
+           rewrite <-(inv_l t), (M1 ζ); auto.
+           eauto using O3, inv_lt, rationals.lt_trans.
+        -- rewrite <-M2, inv_l, M1, M3; auto.
+           now right.
+      * apply pos_nonempty in l as [c [H3 H4]].
+        apply pos_nonempty in l0 as [d [H5 H6]].
+        exists c, d, ζ.
+        repeat split; auto.
+        left.
+        destruct (rationals.T 0 ζ)
+          as [[H7 [H8 H9]] | [[H7 [H8 H9]] | [H7 [H8 H9]]]]; try tauto;
+          eauto using rationals.lt_trans, O2.
+        rewrite <-H8.
+        now apply O2.
+  - contradiction n.
+    now apply zero_lt_1.
+Qed.
 
 Definition inv_pos_set (a : R) :=
   {x in ℚ | (∃ r ξ : Q, x = ξ ∧ r ∈ a ∧ 0 < r ∧ ξ < r^-1)%Q}.
@@ -827,10 +1083,6 @@ Defined.
 Notation "a '^-1' " := (inv_pos a) (at level 35, format "a '^-1'") : R_scope.
 
 Theorem M4_pos : ∀ a, 0 < a → a^-1 * a = 1.
-Proof.
-Admitted.
-
-Theorem M5 : 1 ≠ 0.
 Proof.
 Admitted.
 

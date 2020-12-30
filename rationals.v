@@ -856,6 +856,8 @@ Proof.
   now replace ((b*1+-0*a)*(a*1))%Z with ((a*1+-0*b)*(b*1))%Z by ring.
 Qed.
 
+Definition inv_lt := O4.
+
 Theorem inv_div : ∀ a b : Z, b ≠ 0%Z → a / b = a * b^-1.
 Proof.
   intros a b H.
@@ -939,5 +941,15 @@ Proof.
   rewrite <-(A3 a) at 2.
   rewrite <-(A4 b), <-A2, (A1 _ a), (A1 b), <-(A3 (a+-b)), (A1 0) at 1.
   now apply O1.
+Qed.
+  
+Theorem lt_cross_mul : ∀ a b c d,
+    0 < a → 0 < c → a < b → c < d → a * c < b * d.
+Proof.
+  intros a b c d H H0 H1 H2.
+  apply (O3 c) in H1 as H3; auto.
+  apply (O3 b) in H2; eauto using lt_trans.
+  rewrite ? (M1 c) in H3.
+  eauto using lt_trans.
 Qed.
   
