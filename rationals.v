@@ -931,3 +931,13 @@ Proof.
   rewrite neg_lt_0.
   now replace (- -a) with a by ring.
 Qed.
+
+Theorem lt_sub_pos : ∀ a b, 0 < b → a - b < a.
+Proof.
+  intros.
+  unfold sub.
+  rewrite <-(A3 a) at 2.
+  rewrite <-(A4 b), <-A2, (A1 _ a), (A1 b), <-(A3 (a+-b)), (A1 0) at 1.
+  now apply O1.
+Qed.
+  

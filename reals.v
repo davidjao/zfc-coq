@@ -73,7 +73,7 @@ Proof.
   destruct (classic (a < b)), (classic (a = b)); try tauto.
   right; right.
   assert (∃ p, p ∈ a ∧ p ∉ b) as [p [H1 H2]]
-      by eauto using proper_subset_inhab, set_proj_injective.
+      by eauto using not_proper_subset_inhab, set_proj_injective.
   pose proof in_set ℝ a as H3.
   apply Specify_classification in H3 as [H3 [H4 [H5 [H6 H7]]]].
   pose proof in_set ℝ b as H8.
@@ -183,7 +183,7 @@ Proof.
     unfold le.
     destruct (T γ δ) as [H4 | [H4 | [H4 [H5 H6]]]]; try tauto.
     assert (∃ s, s ∈ γ ∧ s ∉ δ) as [s [H7 H8]]
-        by eauto using proper_subset_inhab, set_proj_injective.
+        by eauto using not_proper_subset_inhab, set_proj_injective.
     simpl in *.
     apply Union_classification in H7 as [a [H7 H9]].
     apply H in H7 as H10.
@@ -212,9 +212,9 @@ Proof.
       contradiction.
 Qed.
 
-Definition inz_set (q : Q) := {x in ℚ | ∃ ξ : Q, x = ξ ∧ (ξ < q)%Q}.
+Definition iqr_set (q : Q) := {x in ℚ | ∃ ξ : Q, x = ξ ∧ (ξ < q)%Q}.
 
-Theorem inz_in : ∀ q, inz_set q ∈ ℝ.
+Theorem iqr_in : ∀ q, iqr_set q ∈ ℝ.
 Proof.
   intros q.
   apply Specify_classification.
@@ -257,7 +257,7 @@ Proof.
     now exists r.
 Qed.
 
-Definition IQR (q : Q) := (mkSet _ _ (inz_in q)) : R.
+Definition IQR (q : Q) := (mkSet _ _ (iqr_in q)) : R.
 Definition zero := IQR 0.
 
 Coercion IQR : Q >-> R.
@@ -308,8 +308,8 @@ Proof.
     exists (mkSet _ _ H9 + mkSet _ _ H10).
     apply Specify_classification.
     split; eauto using in_set.
-  - destruct (proper_subset_inhab ℚ α)
-      as [r' [H H0]], (proper_subset_inhab ℚ β) as [s' [H1 H2]];
+  - destruct (not_proper_subset_inhab ℚ α)
+      as [r' [H H0]], (not_proper_subset_inhab ℚ β) as [s' [H1 H2]];
     auto using not_Q_subset, not_Q_eq.
     intros H3.
     apply Subset_equality_iff in H3 as [H3 H4].
@@ -460,7 +460,7 @@ Proof.
     pose proof in_set _ α as H.
     apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
     apply Powerset_classification in H.
-    destruct (proper_subset_inhab ℚ α) as [s [H4 H5]]; auto.
+    destruct (not_proper_subset_inhab ℚ α) as [s [H4 H5]]; auto.
     { intros [H4 H5].
       contradict H1.
       now apply Subset_equality_iff. }
@@ -565,7 +565,7 @@ Proof.
       destruct H6 as [H6 | H6].
       * apply (H3 ξ); auto.
       * rewrite H6; auto.
-  - destruct (proper_subset_inhab ℚ α) as [z [H8 H9]]; auto.
+  - destruct (not_proper_subset_inhab ℚ α) as [z [H8 H9]]; auto.
     { intros [H8 H9].
       contradict H9.
       now apply Subset_equality_iff. }
@@ -620,7 +620,7 @@ Proof.
   unfold neg, add, zero, add_set.
   apply set_proj_injective.
   simpl.
-  unfold inz_set.
+  unfold iqr_set.
   apply Extensionality.
   split; intros H; apply Specify_classification in H as [H H0].
   - destruct H0 as [r [p [H0 [H1 H2]]]].
@@ -679,3 +679,161 @@ Proof.
       * unfold IZQ; rewrite add_wf, Qequiv; try rewrite integers.M3;
           auto using zero_ne_1; ring.
 Qed.
+
+Definition mul_pos_set (a b : R) :=
+  {x in ℚ | (∃ r s ξ : Q, x = ξ ∧ r ∈ a ∧ s ∈ b ∧ 0 < r ∧ 0 < s ∧ ξ < r * s)%Q}.
+
+Definition one : R := IQR 1.
+Notation "1" := one : R_scope.
+
+Theorem pos_nonempty : ∀ a, 0 < a → ∃ c : Q, (0 < c)%Q ∧ c ∈ a.
+Proof.
+  intros a H.
+  apply proper_subset_inhab in H as [c [H H0]].
+  assert (c ∈ ℚ) as H1.
+  { pose proof (in_set _ a) as H1.
+    apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
+    apply Powerset_classification in H1.
+    now apply H1. }
+  set (γ := mkSet _ _ H1 : Q).
+  assert (¬ γ < 0)%Q as H2.
+  { contradict H0.
+    unfold zero, IQR, iqr_set.
+    apply Specify_classification.
+    split; auto.
+    now exists γ. }
+  destruct (rationals.T γ 0) as [[H3 [H4 H5]] | [[H3 [H4 H5]] | [H3 [H4 H5]]]];
+    try tauto; try now (exists γ).
+  pose proof in_set _ a as H6.
+  apply Specify_classification in H6 as [H6 [H7 [H8 [H9 H10]]]].
+  destruct (H10 γ H) as [x [H11 H12]].
+  exists x.
+  split; auto; congruence.
+Qed.
+
+Lemma Dedekind_cut_4 : ∀ a : R, ∃ q : Q, q ∉ a.
+Proof.
+  intros a.
+  pose proof (in_set _ a) as H.
+  apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
+  apply Powerset_classification in H.
+  assert (ℚ ≠ a) as H4 by (now contradict H1).
+  apply not_proper_subset_inhab in H4 as [z [H4 H5]].
+  - exists (mkSet _ _ H4); auto.
+  - contradict H4.
+    destruct H4 as [H4 H5].
+    now apply Subset_equality_iff.
+Qed.
+
+Theorem mul_pos_in : ∀ a b, 0 < a → 0 < b → mul_pos_set a b ∈ ℝ.
+Proof.
+  intros a b H H0.
+  apply Specify_classification.
+  repeat split.
+  - apply Powerset_classification.
+    intros x H1.
+    apply Specify_classification in H1
+      as [H1 [r [s [ξ [H2 [H3 [H4 [H5 [H6 H7]]]]]]]]].
+    subst.
+    apply in_set.
+  - apply Nonempty_classification.
+    apply pos_nonempty in H as [c [H H1]].
+    apply pos_nonempty in H0 as [d [H0 H2]].
+    exists (c*d - 1).
+    apply Specify_classification.
+    simpl.
+    split; unfold IQS; auto using in_set.
+    exists c, d, (c*d - 1).
+    repeat split; auto.
+    apply lt_sub_pos, IZQ_lt, zero_lt_1.
+  - destruct (Dedekind_cut_4 a) as [c H1], (Dedekind_cut_4 b) as [d H2].
+    intros H3.
+    apply Subset_equality_iff in H3 as [H3 H4].
+    assert (c*d ∈ mul_pos_set a b) as H5 by eauto using in_set.
+    apply Specify_classification in H5
+      as [H5 [r [s [ξ [H6 [H7 [H8 [H9 [H10 H11]]]]]]]]].
+    assert (r < c)%Q as H12 by eauto using Dedekind_cut_2, in_set.
+    assert (s < d)%Q as H13 by eauto using Dedekind_cut_2, in_set.
+    assert (0 < c)%Q as H14 by eauto using rationals.lt_trans.
+    apply set_proj_injective in H6.
+    subst.
+    contradiction (lt_antisym (c*d) (r*s)).
+    apply (O3 s) in H12; auto.
+    apply (O3 c) in H13; auto.
+    rewrite ? (M1 s) in H12.
+    eauto using rationals.lt_trans.
+  - intros p q H1 H2.
+    apply Specify_classification in H1
+      as [H1 [r [s [ξ [H3 [H4 [H5 [H6 [H7 H8]]]]]]]]].
+    apply Specify_classification.
+    split; unfold IQS; auto using in_set.
+    exists r, s, q.
+    apply set_proj_injective in H3.
+    subst.
+    repeat split; eauto using rationals.lt_trans.
+  - intros p H1.
+    apply Specify_classification in H1
+      as [H1 [r [s [ξ [H3 [H4 [H5 [H6 [H7 H8]]]]]]]]].
+    apply lt_dense in H8 as [c [H8 H9]].
+    exists c.
+    apply set_proj_injective in H3.
+    subst.
+    split; auto.
+    apply Specify_classification.
+    split; unfold IQS; auto using in_set.
+    now exists r, s, c.
+Qed.
+    
+Definition mul_pos : R → R → R.
+Proof.
+  intros a b.
+  destruct (excluded_middle_informative (0 < a)),
+  (excluded_middle_informative (0 < b)).
+  - exact (mkSet _ _ (mul_pos_in a b l l0)).
+  - exact 0.
+  - exact 0.
+  - exact 0.
+Defined.
+
+Infix "*" := mul_pos : R_scope.
+
+Theorem M1_pos : ∀ a b, 0 < a → 0 < b → a * b = b * a.
+Proof.
+Admitted.
+
+Theorem M2_pos : ∀ a b c, 0 < a → 0 < b → 0 < c → a * (b * c) = (a * b) * c.
+Proof.
+Admitted.
+
+Theorem M3_pos : ∀ a, 0 < a → 1 * a = a.
+Proof.
+Admitted.
+
+Definition inv_pos_set (a : R) :=
+  {x in ℚ | (∃ r ξ : Q, x = ξ ∧ r ∈ a ∧ 0 < r ∧ ξ < r^-1)%Q}.
+
+Theorem inv_pos_in : ∀ a, 0 < a → inv_pos_set a ∈ ℝ.
+Proof.
+Admitted.
+
+Definition inv_pos : R → R.
+Proof.
+  intros a.
+  destruct (excluded_middle_informative (0 < a)).
+  - exact (mkSet _ _ (inv_pos_in _ l)).
+  - exact 0.
+Defined.
+
+Notation "a '^-1' " := (inv_pos a) (at level 35, format "a '^-1'") : R_scope.
+
+Theorem M4_pos : ∀ a, 0 < a → a^-1 * a = 1.
+Proof.
+Admitted.
+
+Theorem M5 : 1 ≠ 0.
+Proof.
+Admitted.
+
+Theorem D1 : ∀ a b c, 0 < a → 0 < b → 0 < c → (a + b) * c = a * c + b * c.
+Proof.
+Admitted.

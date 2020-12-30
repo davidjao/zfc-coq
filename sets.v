@@ -120,7 +120,7 @@ Infix "⊂" := subset (at level 70) : set_scope.
 Definition proper_subset a b := a ⊂ b ∧ a ≠ b.
 Infix "⊊" := proper_subset (at level 70) : set_scope.
 
-Lemma proper_subset_inhab : ∀ x y, ¬ x ⊊ y → x ≠ y → ∃ z, z ∈ x ∧ z ∉ y.
+Lemma not_proper_subset_inhab : ∀ x y, ¬ x ⊊ y → x ≠ y → ∃ z, z ∈ x ∧ z ∉ y.
 Proof.
   intros x y H H0.
   apply NNPP.
@@ -171,6 +171,19 @@ Proof.
   - apply Subset_equality; tauto.
   - rewrite H.
     split; apply Set_is_subset.
+Qed.
+
+Lemma proper_subset_inhab : ∀ x y, x ⊊ y → ∃ z, z ∈ y ∧ z ∉ x.
+Proof.
+  intros x y [H H0].
+  apply NNPP.
+  contradict H0.
+  apply Subset_equality_iff.
+  split; auto.
+  intros z H1.
+  apply NNPP.
+  contradict H0.
+  eauto.
 Qed.
 
 Theorem Powerset_classification : ∀ X x, x ∈ P X ↔ x ⊂ X.
