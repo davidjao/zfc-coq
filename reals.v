@@ -1065,12 +1065,162 @@ Proof.
     now apply zero_lt_1.
 Qed.
 
-Definition inv_pos_set (a : R) :=
-  {x in ℚ | (∃ r ξ : Q, x = ξ ∧ r ∈ a ∧ 0 < r ∧ ξ < r^-1)%Q}.
+Definition inv_pos_set (α : R) :=
+  {p in ℚ | ∃ ρ r : Q,
+     p = ρ ∧ (1 < r)%Q ∧ ((ρ ≤ 0)%Q ∨ ((0 < ρ)%Q ∧ (ρ*r)^-1 ∉ α))}.
 
 Theorem inv_pos_in : ∀ a, 0 < a → inv_pos_set a ∈ ℝ.
 Proof.
-Admitted.
+  intros a H.
+  apply Specify_classification.
+  repeat split.
+  - apply Powerset_classification.
+    intros x H0.
+    apply Specify_classification in H0.
+    tauto.
+  - apply Nonempty_classification.
+    exists 0%Q.
+    apply Specify_classification.
+    split; eauto using in_set.
+    exists 0%Q, 2.
+    repeat split; auto.
+    unfold IZQ, rationals.one, rationals.lt, sub.
+    rewrite neg_wf, add_wf, pos_wf; auto using zero_ne_1.
+    + replace ((2 * 1 + - (1) * 1) * (1 * 1))%Z with 1%Z by ring.
+      auto using integers.zero_lt_1.
+    + rewrite integers.M3.
+      apply zero_ne_1.
+    + now left; right.
+  - pose proof H as H0.
+    apply pos_nonempty in H0 as [c [H0 H1]].
+    intros H2.
+    assert (c^-1 ∈ ℚ) by eauto using in_set.
+    rewrite <-H2 in H3.
+    apply Specify_classification in H3
+      as [H3 [p [r [H4 [H5 [[H6 | H6] | [H6 H7]]]]]]];
+      apply set_proj_injective in H4; subst.
+    + apply inv_lt in H0.
+      pose proof (rationals.T (c^-1) 0).
+      tauto.
+    + unfold inv in H6.
+      repeat destruct constructive_indefinite_description.
+      destruct a0.
+      unfold rationals.zero, IZQ in H6.
+      apply Qequiv in H6; eauto using zero_ne_1.
+      * replace (x*0)%Z with 0%Z in * by ring.
+        rewrite integers.M3_r in H6.
+        contradiction.
+      * intros H7.
+        subst.
+        unfold rationals.zero, IZQ in H0.
+        unfold rationals.lt, rationals.sub in H0.
+        rewrite neg_wf, add_wf, pos_wf in H0; auto using zero_ne_1.
+        -- replace ((0 * 1 + - 0 * x0) * (x0 * 1))%Z with 0%Z in H0 by ring.
+           contradiction (integers.lt_irrefl 0).
+        -- now rewrite integers.M3_r.
+    + contradict H7.
+      eapply Dedekind_cut_2; eauto.
+      rename H6 into H4.
+      assert (0 < r)%Q as H6.
+      { eapply (rationals.lt_trans _ 1); auto.
+        apply IZQ_lt, integers.zero_lt_1. }
+      rewrite <-(rationals.M3 c) at 2.
+      rewrite <-(inv_l (c^-1 * r)), <-rationals.M2.
+      * rewrite <-(rationals.M3 ((c^-1 * r)^-1)), (rationals.M1 1) at 1.
+        apply rationals.O3; eauto using inv_lt, O2.
+        rewrite M1, M2, (M1 c), inv_l, M3; auto.
+        intros H7.
+        subst.
+        contradiction (lt_irrefl 0).
+      * intros H7.
+        symmetry in H7.
+        assert (0 < c^-1 * r)%Q by eauto using O2.
+        pose proof (rationals.T 0 (c^-1*r)).
+        tauto.
+  - intros p q H0 H1.
+    apply Specify_classification in H0 as [H0 [ρ [r [H2 [H3 [H4 | [H4 H5]]]]]]];
+      apply set_proj_injective in H2; subst; apply Specify_classification;
+        split; eauto using in_set; exists q, r; repeat split; auto.
+    + left.
+      destruct H4 as [H4 | H4]; left; eauto using rationals.lt_trans.
+      congruence.
+    + destruct (classic (q ≤ 0)%Q) as [H2 | H2]; try tauto; right.
+      assert (0 < q)%Q as H6.
+      { pose proof (rationals.T q 0).
+        unfold rationals.le in H2.
+        tauto. }
+      assert (0 < r)%Q as H7.
+      { eapply (rationals.lt_trans _ 1); eauto.
+        apply IZQ_lt, integers.zero_lt_1. }
+      split; auto.
+      eapply Dedekind_cut_5; eauto.
+      rewrite <-lt_cross_inv; eauto using O2, rationals.lt_trans.
+      rewrite ? (M1 _ r).
+      eauto using O3.
+  - intros p H0.
+    apply Specify_classification in H0
+      as [H0 [ρ [r [H1 [H2 [[H3 | H3] | [H3 H4]]]]]]];
+      apply set_proj_injective in H1; subst.
+    + exists 0%Q.
+      split; auto.
+      apply Specify_classification.
+      split; eauto using in_set.
+      exists 0%Q, 2%Q.
+      repeat split; auto.
+      unfold IZQ, rationals.one, rationals.lt, sub.
+      rewrite neg_wf, add_wf, pos_wf; auto using zero_ne_1.
+      * replace ((2 * 1 + - (1) * 1) * (1 * 1))%Z with 1%Z by ring.
+        auto using integers.zero_lt_1.
+      * rewrite integers.M3.
+        apply zero_ne_1.
+      * now left; right.
+    + destruct (Dedekind_cut_6 a) as [c H1].
+      exists (c^-1 * r^-1 * r^-1)%Q.
+      assert (0 < r)%Q as H4.
+      { eapply (rationals.lt_trans _ 1); eauto.
+        apply IZQ_lt, integers.zero_lt_1. }
+      assert (0 < c)%Q as H3.
+      { eapply Dedekind_cut_4; eauto.
+        apply pos_nonempty in H as [d [H H3]].
+        eauto using Dedekind_cut_2. }
+      assert (c ≠ 0%Q) as H5 by eauto using lt_neq.
+      assert (r ≠ 0%Q) as H6 by eauto using lt_neq.
+      split; eauto 6 using O2, inv_lt.
+      apply Specify_classification.
+      split; eauto using in_set.
+      exists (c^-1 * r^-1 * r^-1)%Q, r.
+      repeat split; auto.
+      right.
+      split; eauto 6 using O2, inv_lt.
+      eapply Dedekind_cut_5; eauto.
+      rewrite <-M2, inv_l, (M1 _ 1), M3, inv_mul, inv_inv; auto.
+      * rewrite <-(M3 c), ? (M1 _ c) at 1.
+        now apply O3.
+      * intros H7.
+        apply cancellation_mul_0 in H7.
+        tauto.
+    + apply lt_dense in H2 as [c [H2 H5]].
+      exists (ρ * r * c^-1)%Q.
+      assert (0 < c)%Q as H6.
+      { apply (rationals.lt_trans _ 1); auto.
+        apply IZQ_lt, integers.zero_lt_1. }
+      split.
+      * apply lt_div in H5; auto.
+        apply (O3 ρ) in H5; auto.
+        now rewrite M1, M3, M2 in H5.
+      * apply Specify_classification.
+        split; eauto using in_set.
+        exists (ρ * r * c^-1)%Q, c.
+        repeat split; auto.
+        right.
+        rewrite <-? M2, inv_l, (M1 _ 1), M3; auto using lt_neq.
+        split; auto.
+        assert (0 < r)%Q.
+        { apply (rationals.lt_trans _ 1); eauto.
+          apply IZQ_lt, integers.zero_lt_1.
+          eauto using rationals.lt_trans. }
+        eauto using O2, inv_lt.
+Qed.
 
 Definition inv_pos : R → R.
 Proof.

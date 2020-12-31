@@ -952,4 +952,87 @@ Proof.
   rewrite ? (M1 c) in H3.
   eauto using lt_trans.
 Qed.
-  
+
+Theorem lt_neq : ∀ a b, a < b → b ≠ a.
+Proof.
+  intros a b H H0.
+  subst.
+  contradiction (lt_irrefl a).
+Qed.
+
+Theorem lt_cross_inv : ∀ a b, 0 < a → 0 < b → a < b ↔ b^-1 < a^-1.
+Proof.
+  intros a b H H0.
+  split; intros H1.
+  - apply (O3 (a^-1 * b^-1)) in H1; auto using inv_lt, O2.
+    rewrite <-? M2, inv_l, (M1 _ 1), M3, M1, <-M2, (M1 a), inv_l, M1, M3 in H1;
+      auto using lt_neq.
+  - apply (O3 (a*b)) in H1; auto using O2.
+    rewrite <-M2, (M1 b), inv_l, M1, M3, M1, M2, inv_l, M3 in H1;
+      auto using lt_neq.
+Qed.
+
+Theorem inv_unique : ∀ a, a ≠ 0 → (∀ b, a * b = 1 → b = a^-1).
+Proof.
+  intros a H b H0.
+  rewrite <-(inv_l a), (M1 _ a) in H0; auto.
+  assert (a^-1 * (a*b) = a^-1 * (a*a^-1)) as H1 by congruence.
+  now rewrite ? M2, inv_l, ? M3 in H1.
+Qed.
+
+Theorem inv_neg : ∀ a, a ≠ 0 → -a^-1 = (-a)^-1.
+Proof.
+  intros a H.
+  apply inv_unique.
+  - contradict H.
+    ring [H].
+  - replace (- a * - a^-1) with (a^-1 * a) by ring.
+    now rewrite inv_l.
+Qed.
+
+Theorem inv_ne_0 : ∀ a, a ≠ 0 → a^-1 ≠ 0.
+Proof.
+  intros a H.
+  contradict H.
+  destruct (T a 0) as [[H0 [H1 H2]] | [[H0 [H1 H2]] | [H0 [H1 H2]]]]; try tauto.
+  - apply (O1 (-a)) in H0.
+    rewrite A1, A4, A1, A3 in H0.
+    apply inv_lt in H0.
+    rewrite <-inv_neg in H0; auto.
+    apply (O1 (a^-1)) in H0.
+    rewrite A4, A1, A3 in H0.
+    pose proof (T (a^-1) 0); tauto.
+  - apply inv_lt in H2.
+    pose proof (T (a^-1) 0); tauto.
+Qed.
+
+Theorem inv_inv : ∀ a, a ≠ 0 → a^-1^-1 = a.
+Proof.
+  intros a H.
+  assert (a * a^-1 * a = a * a^-1 * a^-1^-1) as H0.
+  { rewrite <-? M2, inv_l, (M1 (a^-1)), inv_l; auto using inv_ne_0. }
+  now rewrite ? (M1 a), inv_l, ? M3 in H0.
+Qed.
+
+Theorem inv_mul : ∀ a b, a ≠ 0 → b ≠ 0 → a^-1 * b^-1 = (a*b)^-1.
+Proof.
+  intros a b H H0.
+  now field.
+Qed.
+
+Theorem cancellation_mul_0 : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
+Proof.
+  intros a b H.
+  destruct (classic (a = 0)) as [H0 | H0]; try tauto.
+  assert (a^-1 * (a * b) = a^-1 * 0) by congruence.
+  rewrite M2, inv_l, M3 in H1; auto.
+  right.
+  ring [H1].
+Qed.
+
+Theorem lt_div : ∀ a b, 0 < a → a < b → 1 < b * a^-1.
+Proof.
+  intros a b H H0.
+  apply (O3 (a^-1)) in H0; auto using inv_lt.
+  rewrite inv_l, M1 in H0; auto using lt_neq.
+Qed.
