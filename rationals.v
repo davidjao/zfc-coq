@@ -499,6 +499,7 @@ Notation "a > b" := (b < a) (only parsing) : Q_scope.
 Definition le a b := a < b ∨ a = b.
 Infix "≤" := le : Q_scope.
 Notation "a ≥ b" := (b ≤ a) (only parsing) : Q_scope.
+Notation "a < b < c" := (a < b ∧ b < c) (at level 70, b at next level): Q_scope.
 Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level): Q_scope.
 Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): Q_scope.
 Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): Q_scope.
@@ -1036,3 +1037,97 @@ Proof.
   apply (O3 (a^-1)) in H0; auto using inv_lt.
   rewrite inv_l, M1 in H0; auto using lt_neq.
 Qed.
+
+Theorem zero_lt_1 : 0 < 1.
+Proof.
+  apply IZQ_lt, zero_lt_1.
+Qed.
+
+Theorem one_lt_2 : 1 < 2.
+Proof.
+  unfold IZQ, one, lt, sub.
+  rewrite neg_wf, add_wf, pos_wf; auto using zero_ne_1.
+  + replace ((2 * 1 + - (1) * 1) * (1 * 1))%Z with 1%Z by ring.
+    auto using integers.zero_lt_1.
+  + rewrite integers.M3.
+    apply zero_ne_1.
+Qed.
+
+Definition mul_right : Q → set → set.
+Proof.
+  intros a x.
+  destruct (excluded_middle_informative (x ∈ ℚ)).
+  - exact (mul (mkSet _ _ i : Q) a).
+  - exact ∅.
+Defined.
+
+Theorem mul_right_lemma : ∀ a b : Q, mul_right a b = b * a.
+Proof.
+  intros a b.
+  unfold mul_right.
+  destruct excluded_middle_informative.
+  - replace {| in_set := i |} with b; auto; now apply set_proj_injective.
+  - now destruct b.
+Qed.
+
+Definition pow : Q → N → Q.
+Proof.
+  intros a b.
+  assert (∀ x : set, x ∈ ℚ → mul_right a x ∈ ℚ) as H.
+  { intros x H.
+    unfold mul_right.
+    destruct excluded_middle_informative; intuition.
+    apply in_set. }
+  destruct (constructive_indefinite_description
+              _ (function_construction ℚ ℚ (mul_right a) H))
+    as [add_a [H0 [H1 H2]]].
+  destruct (constructive_indefinite_description
+              _ (recursion add_a _ _ (in_set ℚ 1) H0 H1))
+    as [pow_b [H3 [H4 [H5 H6]]]].
+  assert (pow_b b ∈ ℚ) as H7.
+  { rewrite <-H4.
+    apply function_maps_domain_to_range.
+    rewrite H3.
+    apply in_set. }
+  exact (mkSet ℚ (pow_b b) H7).
+Defined.
+
+Infix "^" := pow : Q_scope.
+
+Theorem pow_0_r : ∀ x, x^0 = 1.
+Proof.
+  intros x.
+  unfold pow.
+  repeat (destruct constructive_indefinite_description; repeat destruct a).
+  now apply set_proj_injective.
+Qed.
+
+Theorem pow_succ_r : ∀ x y, x^(S y) = x^y * x.
+Proof.
+  intros x y.
+  unfold pow.
+  repeat (destruct constructive_indefinite_description; repeat destruct a).
+  apply set_proj_injective.
+  simpl.
+  rewrite <-S_is_succ, e5, e1, <-mul_right_lemma; eauto using in_set.
+  rewrite <-e3.
+  apply function_maps_domain_to_range.
+  rewrite e2.
+  apply in_set.
+Qed.
+
+Theorem pow_1_r : ∀ x, x^1 = x.
+Proof.
+  intros x.
+  now rewrite pow_succ_r, pow_0_r, M3.
+Qed.
+
+Theorem pow_archimedean : ∀ a r, 1 < a → 1 < r → ∃ n : N, r^n ≤ a < r^(n+1).
+Admitted.
+
+Theorem square_in_interval : ∀ a, 1 < a → ∃ r, 1 < r^2 < a.
+(* If a > 2, trivially take r = 4/3 (or whatever).
+If a ≤ 2, take r = 1 + (a-1)/3 ≤ 1 + 1/3 < 2. Then
+(r^2 - 1) = (r-1)(r+1) = (a-1)/3 * (r+1) < (a-1)/3 * (2+1) ≤ a-1, so
+r^2 < a, and clearly 1 < r so 1 < r^2. *)
+Admitted.

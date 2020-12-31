@@ -272,9 +272,8 @@ Proof.
     exists (q-1).
     split; auto.
     unfold rationals.lt.
-    replace (q-(q-1)) with 1 by field.
-    unfold one.
-    rewrite pos_wf, integers.M3; auto using zero_ne_1, zero_lt_1.
+    replace (q-(q-1)) with (1-0) by field.
+    apply zero_lt_1.
   - intros H.
     apply Subset_equality_iff in H as [H H0].
     pose proof (H0 (q+1) (in_set _ _)) as H1.
@@ -282,7 +281,7 @@ Proof.
     replace ξ with (q+1) in * by eauto using set_proj_injective.
     contradiction (lt_antisym q (q+1)).
     rewrite <-(rationals.A3 q), rationals.A1 at 1.
-    apply O1, IZQ_lt, zero_lt_1.
+    auto using O1, zero_lt_1.
   - intros p x H H0.
     apply Specify_classification in H as [H [ξ [H1 H2]]].
     apply Specify_classification.
@@ -512,7 +511,7 @@ Proof.
     apply Specify_classification.
     split; eauto using in_set.
     exists (-σ-1), 1.
-    repeat split; try apply IZQ_lt; auto using zero_lt_1.
+    repeat split; auto using zero_lt_1.
     now replace (-(-σ-1)-1)%Q with σ by ring.
   - pose proof in_set _ α as H.
     apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
@@ -647,7 +646,7 @@ Proof.
       { rewrite <-(integers.A3_r n), <-integers.A2.
         apply integers.O1.
         rewrite integers.A3, <-integers.neg_lt_0.
-        exact zero_lt_1. }
+        exact integers.zero_lt_1. }
       pose proof (integers.T (n+(-(1))) n).
       eapply H9 in H10 as [H10 | H10]; try tauto.
       symmetry in H10.
@@ -688,9 +687,8 @@ Proof.
     subst.
     set (w := (-v * 2^-1)%Q).
     assert (0 < 2)%Z as H0.
-    { eapply integers.lt_trans; try now apply zero_lt_1.
-      rewrite <-(integers.A3_r 1) at 1.
-      apply integers.O1, zero_lt_1. }
+    apply IZQ_lt.
+    eauto using zero_lt_1, one_lt_2, rationals.lt_trans.
     assert (0 < w)%Q as H2.
     { unfold w.
       apply rationals.O2; try now apply lt_neg_0.
@@ -795,7 +793,7 @@ Proof.
     exists c, d, (c*d - 1).
     repeat split; auto.
     left.
-    apply lt_sub_pos, IZQ_lt, zero_lt_1.
+    apply lt_sub_pos, zero_lt_1.
   - destruct (Dedekind_cut_6 a) as [c H1], (Dedekind_cut_6 b) as [d H2].
     intros H3.
     apply Subset_equality_iff in H3 as [H3 H4].
@@ -983,7 +981,7 @@ Proof.
   unfold zero, one, IQR, iqr_set in H.
   inversion H as [H0].
   apply Subset_equality_iff in H0 as [H0 H1].
-  assert (0 < 1)%Q as H2 by apply IZQ_lt, zero_lt_1.
+  pose proof zero_lt_1 as H2.    
   apply lt_dense in H2 as [c [H2 H3]].
   contradiction (lt_antisym c 0).
   pose proof (H0 c) as H4.
@@ -1001,8 +999,7 @@ Proof.
     unfold zero, one, IQR, iqr_set in *.
     apply Specify_classification in H as [H [ξ [H0 H1]]].
     apply Specify_classification.
-    assert (0 < 1)%Q as H2 by apply IZQ_lt, zero_lt_1.
-    split; eauto using rationals.lt_trans.
+    split; eauto using rationals.lt_trans, zero_lt_1.
   - intros H.
     apply set_proj_injective in H.
     now contradiction M5.
@@ -1083,14 +1080,8 @@ Proof.
     apply Specify_classification.
     split; eauto using in_set.
     exists 0%Q, 2.
-    repeat split; auto.
-    unfold IZQ, rationals.one, rationals.lt, sub.
-    rewrite neg_wf, add_wf, pos_wf; auto using zero_ne_1.
-    + replace ((2 * 1 + - (1) * 1) * (1 * 1))%Z with 1%Z by ring.
-      auto using integers.zero_lt_1.
-    + rewrite integers.M3.
-      apply zero_ne_1.
-    + now left; right.
+    repeat split; eauto using zero_lt_1, one_lt_2, rationals.lt_trans.
+    now left; right.
   - pose proof H as H0.
     apply pos_nonempty in H0 as [c [H0 H1]].
     intros H2.
@@ -1166,14 +1157,8 @@ Proof.
       apply Specify_classification.
       split; eauto using in_set.
       exists 0%Q, 2%Q.
-      repeat split; auto.
-      unfold IZQ, rationals.one, rationals.lt, sub.
-      rewrite neg_wf, add_wf, pos_wf; auto using zero_ne_1.
-      * replace ((2 * 1 + - (1) * 1) * (1 * 1))%Z with 1%Z by ring.
-        auto using integers.zero_lt_1.
-      * rewrite integers.M3.
-        apply zero_ne_1.
-      * now left; right.
+      repeat split; auto using one_lt_2.
+      now left; right.
     + destruct (Dedekind_cut_6 a) as [c H1].
       exists (c^-1 * r^-1 * r^-1)%Q.
       assert (0 < r)%Q as H4.
@@ -1232,8 +1217,78 @@ Defined.
 
 Notation "a '^-1' " := (inv_pos a) (at level 35, format "a '^-1'") : R_scope.
 
+Lemma pos_not_in_0 : ∀ x : Q, (0 < x)%Q → x ∉ 0.
+Proof.
+  intros x H H0.
+  unfold zero, IQR, iqr_set in H0.
+  apply Specify_classification in H0 as [H0 [ξ [H1 H2]]].
+  apply set_proj_injective in H1.
+  subst.
+  contradiction (lt_antisym 0 ξ).
+Qed.
+
+Theorem inv_lt : ∀ a, 0 < a → 0 < a^-1.
+Proof.
+  intros a H.
+  unfold lt.
+  split.
+  - intros z H0.
+    unfold zero, IQR in H0.
+    apply Specify_classification in H0 as [H0 [ξ [H1 H2]]].
+    unfold inv_pos.
+    repeat destruct excluded_middle_informative; try tauto.
+    apply Specify_classification.
+    split; auto.
+    exists ξ, 2%Q.
+    repeat split; auto using one_lt_2.
+    now left; left.
+  - pose proof H as H0.
+    apply pos_nonempty in H0 as [c [H0 H1]].
+    intros H2.
+    destruct (Dedekind_cut_6 a).
+    assert (0 < x)%Q as H4.
+    { destruct (rationals.T 0 x)
+        as [[H4 [H5 H6]] | [[H4 [H5 H6]] | [H4 [H5 H6]]]]; try tauto; subst;
+        contradiction H3; eauto using Dedekind_cut_2, rationals.lt_trans. }
+    apply inv_lt in H4 as H5.
+    assert (0 < 2)%Q as H6 by
+          eauto using rationals.zero_lt_1, one_lt_2, rationals.lt_trans.
+    apply inv_lt in H6 as H7.
+    assert ((x^-1 * 2^-1)%Q ∉ 0) as H8 by auto using pos_not_in_0, O2.
+    contradiction H8.
+    rewrite H2.
+    unfold inv_pos, inv_pos_set.
+    destruct excluded_middle_informative; try tauto.
+    apply Specify_classification.
+    split; eauto using in_set.
+    exists (x^-1 * 2^-1)%Q, 2%Q.
+    repeat split; auto using one_lt_2.
+    right.
+    split; auto using O2.
+    rewrite <-M2, inv_l, M1, M3, inv_inv; auto using lt_neq.
+Qed.
+
 Theorem M4_pos : ∀ a, 0 < a → a^-1 * a = 1.
 Proof.
+  intros a H.
+  apply set_proj_injective, Extensionality.
+  split; intros H0; unfold mul_pos in H0;
+    repeat destruct excluded_middle_informative;
+    try tauto; try now apply inv_lt in l.
+  - apply Specify_classification in H0
+      as [H0 [r [s [ξ [H1 [H2 [H3 [H4 [H5 H6]]]]]]]]].
+    subst.
+    unfold inv_pos, inv_pos_set, IQR in H2 |- *.
+    repeat destruct excluded_middle_informative; try tauto.
+    simpl in *.
+    apply Specify_classification in H2 as [H2 [p [q [H7 [H8 [H9 | [H9 H10]]]]]]];
+      apply set_proj_injective in H7; subst.
+    + admit.
+    + admit.
+  - 
+    
+    
+
 Admitted.
 
 Theorem D1 : ∀ a b c, 0 < a → 0 < b → 0 < c → (a + b) * c = a * c + b * c.
