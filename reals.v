@@ -718,7 +718,7 @@ Proof.
         rewrite <-(M3 w) at 2.
         now rewrite <-D1.
       * unfold IZQ; rewrite add_wf, Qequiv; try rewrite integers.M3;
-          auto using zero_ne_1; ring.
+          auto using integers.zero_ne_1; try ring.
 Qed.
 
 Theorem O1 : ∀ a b c, b < c → a + b < a + c.
@@ -1097,7 +1097,7 @@ Proof.
       repeat destruct constructive_indefinite_description.
       destruct a0.
       unfold rationals.zero, IZQ in H6.
-      apply Qequiv in H6; eauto using zero_ne_1.
+      apply Qequiv in H6; eauto using integers.zero_ne_1.
       * replace (x*0)%Z with 0%Z in * by ring.
         rewrite integers.M3_r in H6.
         contradiction.
@@ -1105,7 +1105,7 @@ Proof.
         subst.
         unfold rationals.zero, IZQ in H0.
         unfold rationals.lt, rationals.sub in H0.
-        rewrite neg_wf, add_wf, pos_wf in H0; auto using zero_ne_1.
+        rewrite neg_wf, add_wf, pos_wf in H0; auto using integers.zero_ne_1.
         -- replace ((0 * 1 + - 0 * x0) * (x0 * 1))%Z with 0%Z in H0 by ring.
            contradiction (integers.lt_irrefl 0).
         -- now rewrite integers.M3_r.
@@ -1179,11 +1179,8 @@ Proof.
       split; eauto 6 using O2, inv_lt.
       eapply Dedekind_cut_5; eauto.
       rewrite <-M2, inv_l, (M1 _ 1), M3, inv_mul, inv_inv; auto.
-      * rewrite <-(M3 c), ? (M1 _ c) at 1.
-        now apply O3.
-      * intros H7.
-        apply cancellation_mul_0 in H7.
-        tauto.
+      rewrite <-(M3 c), ? (M1 _ c) at 1.
+      now apply O3.
     + apply lt_dense in H2 as [c [H2 H5]].
       exists (ρ * r * c^-1)%Q.
       assert (0 < c)%Q as H6.
@@ -1215,7 +1212,7 @@ Proof.
   - exact 0.
 Defined.
 
-Notation "a '^-1' " := (inv_pos a) (at level 35, format "a '^-1'") : R_scope.
+Notation "a '^-1' " := (inv_pos a) (at level 30, format "a '^-1'") : R_scope.
 
 Lemma pos_not_in_0 : ∀ x : Q, (0 < x)%Q → x ∉ 0.
 Proof.
@@ -1268,6 +1265,52 @@ Proof.
     rewrite <-M2, inv_l, M1, M3, inv_inv; auto using lt_neq.
 Qed.
 
+Theorem lt_is_in : ∀ (a : R) (b : Q), b < a ↔ b ∈ a.
+Proof.
+Admitted.
+
+Theorem pow_archimedean : ∀ (a : R) (r : Q),
+    0 < a → (1 < r)%Q → ∃ n : Z, (r^n)%Q ∈ a ∧ (r^(n+1))%Q ∉ a.
+Proof.
+  intros a r H H0.
+  apply pos_nonempty in H as [c [H H1]].
+  pose proof Dedekind_cut_6 a as [q H2].
+  apply (neg_pow_archimedean c r) in H0 as H3; auto.
+  apply (pos_pow_archimedean q r) in H0 as H5.
+  destruct H3 as [m [H3 H4]], H5 as [n [H5 H6]], (WOP (λ x, (r^(m+x))%Q ∉ a))
+        as [x [H7 H8]]; auto.
+  assert (0 < r)%Q as H7 by eauto using rationals.lt_trans, rationals.zero_lt_1.
+  - intros x H8.
+    destruct (integers.T 0 x) as [[H9 _] | [[_ [H9 _]] | [_ [_ H9]]]]; auto.
+    + subst.
+      contradict H8.
+      rewrite integers.A1, integers.A3.
+      eauto using Dedekind_cut_2.
+    + rewrite pow_add_r in H8; auto using lt_neq.
+      contradict H8.
+      eapply Dedekind_cut_2; eauto.
+      rewrite <-(M3 c), (M1 1).
+      apply lt_cross_mul; auto using pow_pos.
+      now apply pow_lt_1.
+  - exists (n+-m)%Z.
+    split.
+    + rewrite <-integers.lt_shift.
+      eauto using integers.lt_trans.
+    + replace (m+(n+-m))%Z with n%Z by ring.
+      eauto using Dedekind_cut_5.
+  - exists (m+(x+-(1)))%Z.
+    split.
+    + apply NNPP.
+      intros H9.
+      pose proof lt_succ (x+-(1)) as H10.
+      replace (x+-(1)+1)%Z with x in H10 by ring.
+      apply H8 in H9 as [H9 | H9].
+      * contradiction (integers.lt_antisym x (x+-(1))).
+      * contradiction (integers.lt_irrefl x).
+        now rewrite H9 at 1.
+    + now replace (m + (x + - (1)) + 1)%Z with (m+x)%Z by ring.
+Qed.
+
 Theorem M4_pos : ∀ a, 0 < a → a^-1 * a = 1.
 Proof.
   intros a H.
@@ -1283,14 +1326,98 @@ Proof.
     simpl in *.
     apply Specify_classification in H2 as [H2 [p [q [H7 [H8 [H9 | [H9 H10]]]]]]];
       apply set_proj_injective in H7; subst.
-    + admit.
-    + admit.
-  - 
-    
-    
+    + destruct H9 as [H9 | H9].
+      * contradiction (rationals.lt_antisym 0 p).
+      * subst.
+        contradiction (rationals.lt_irrefl 0).
+    + assert (0 < q)%Q as H1 by
+            eauto using rationals.lt_trans, rationals.zero_lt_1.
+      apply inv_lt_1 in H8; auto.
+      eapply Dedekind_cut_4 in H10; eauto.
+      rewrite <-inv_mul in H10.
+      apply (O3 (p^-1)) in H8; auto using rationals.inv_lt.
+      rewrite (rationals.M1 _ 1), rationals.M3 in H8.
+      assert (s < p^-1)%Q as H11 by eauto using rationals.lt_trans.
+      apply (O3 p) in H11; auto.
+      rewrite (M1 _ (p^-1)), inv_l in H11; auto using lt_neq.
+      apply Specify_classification.
+      split; auto.
+      exists ξ.
+      split; auto.
+      destruct H6 as [H6 | H6]; eauto using rationals.lt_trans.
+      congruence.
+  - unfold IQR, one in H0.
+    simpl in H0.
+    unfold iqr_set in H0.
+    apply Specify_classification in H0 as [H0 [ξ [H1 H2]]].
+    subst.
+    set (w := (ξ^-1)%Q).
+    apply NNPP; intros H1.
+    assert (0 < ξ)%Q as H3.
+    { destruct (rationals.T 0 ξ) as [[H4 _] | [[_ [H4 _]] | [_ [_ H4]]]];
+        try tauto; contradict H1.
+      + unfold mul_pos, mul_pos_set.
+        repeat destruct excluded_middle_informative; try contradiction.
+        * simpl.
+          apply Specify_classification.
+          split; auto.
+          apply pos_nonempty in l as [c [H1 H5]].
+          apply pos_nonempty in l0 as [d [H6 H7]].
+          exists c, d, ξ.
+          repeat split; auto; subst; left; eauto using O2.
+        * now apply inv_lt in l.
+      + unfold mul_pos, mul_pos_set.
+        repeat destruct excluded_middle_informative; try contradiction.
+        * simpl.
+          apply Specify_classification.
+          split; auto.
+          apply pos_nonempty in l as [c [H1 H5]].
+          apply pos_nonempty in l0 as [d [H6 H7]].
+          exists c, d, ξ.
+          repeat split; auto; left; eauto using rationals.lt_trans, O2.
+        * now apply inv_lt in l. }
+    assert (1 < w)%Q as H4.
+    { rewrite inv_lt_1; unfold w; auto using rationals.inv_lt.
+      now rewrite inv_inv. }
+    contradict H1.
+    pose proof H4 as H1.
+    apply square_in_interval in H4 as [r [H4 [H5 H6]]].
+    assert (1 < r)%Q as H7 by auto using square_ge_1.
+    pose proof H7 as H8.
+    eapply pow_archimedean in H8 as [n [H9 H10]]; eauto.
+    unfold mul_pos.
+    repeat destruct excluded_middle_informative; try tauto;
+      try now (exfalso; auto using inv_lt).
+    apply Specify_classification.
+    split; auto.
+    exists (r^(-(n+2))), (r^n), ξ.
+    repeat split; auto using pow_pos.
+    + unfold inv_pos.
+      destruct excluded_middle_informative; try tauto.
+      apply Specify_classification.
+      split; eauto using in_set.
+      exists (r^(-(n+2))), r.
+      repeat split; auto.
+      right.
+      split.
+      * now apply pow_pos.
+      * rewrite <-inv_mul, <-? inv_pow, <-pow_mul_r, <-pow_add_r;
+          auto using lt_neq.
+        replace (-(n+2)*-(1)+-(1))%Z with (n+1)%Z by ring; auto.
+    + unfold w in *.
+      rewrite <-pow_add_r; auto using lt_neq.
+      left.
+      replace (-(n+2)+n)%Z with (-(2))%Z by ring.
+      apply (O3 (ξ * r^(-(2)))) in H6; auto using O2, pow_pos.
+      rewrite <-M2, (M1 _ (ξ^-1)), ? M2, inv_l, M3 in H6; auto using lt_neq.
+      rewrite <-(pow_1_r r) in H6 at 2 3.
+      rewrite <-(M2 ξ), <-pow_add_r, <-M2, <-pow_add_r in H6; auto using lt_neq.
+      replace (-(2)+1+1)%Z with 0%Z in H6 by ring.
+      now rewrite pow_0_r, M1, M3 in H6.
+Qed.
 
-Admitted.
+Print Assumptions M4_pos.
 
-Theorem D1 : ∀ a b c, 0 < a → 0 < b → 0 < c → (a + b) * c = a * c + b * c.
+Theorem D1_pos : ∀ a b c, 0 < a → 0 < b → 0 < c → (a + b) * c = a * c + b * c.
 Proof.
 Admitted.

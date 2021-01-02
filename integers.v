@@ -138,6 +138,8 @@ Notation "- a" := (neg a) : Z_scope.
 Notation "0" := zero : Z_scope.
 Notation "1" := one : Z_scope.
 Notation "2" := (1+1) : Z_scope.
+Notation "3" := (2+1) : Z_scope.
+Notation "4" := (3+1) : Z_scope.
 
 Theorem INZ_add : ∀ a b : N, a + b = (a + b)%N.
 Proof.
@@ -1383,4 +1385,20 @@ Proof.
       unfold zero, one in *.
       rewrite add_wf, Zequiv, ? add_0_l, add_1_r in H0.
       now apply PA4 in H0.
+Qed.
+
+Lemma lt_shift : ∀ a b, a < b ↔ 0 < b + -a.
+Proof.
+  split; intros H.
+  - apply (O1 (-a)) in H.
+    now rewrite ? (A1 (-a)), A4 in H.
+  - apply (O1 a) in H.
+    now rewrite A1, A3, A1, <-A2, (A1 _ a), A4, A1, A3 in H.
+Qed.
+
+Theorem lt_neq : ∀ a b, a < b → b ≠ a.
+Proof.
+  intros a b H H0.
+  subst.
+  contradiction (lt_irrefl a).
 Qed.

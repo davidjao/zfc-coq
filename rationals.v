@@ -1241,6 +1241,34 @@ Proof.
     auto using O2.
 Qed.
 
+Theorem pow_N_ge_1 : ∀ a n, 1 < a → 1 ≤ a@n.
+Proof.
+  induction n using Induction; intros H.
+  - rewrite pow_N_0_r.
+    now right.
+  - rewrite pow_N_succ_r.
+    left.
+    destruct (IHn H) as [H0 | H0].
+    + eapply lt_cross_mul in H; try exact H0; auto using zero_lt_1.
+      now rewrite M3 in H.
+    + now rewrite <-H0, M3.
+Qed.
+
+Theorem pow_N_gt_1 : ∀ a n, 1 < a → (0 < n)%N → 1 < a@n.
+Proof.
+  induction n using Induction; intros H H0.
+  - contradiction (naturals.lt_irrefl 0).
+  - rewrite pow_N_succ_r.
+    destruct (classic (n = 0)%N).
+    + now rewrite H1, pow_N_0_r, M3.
+    + apply succ_0 in H1 as [m H1].
+      subst.
+      apply (lt_cross_mul 1 (a @ S m) 1 a) in H; auto using zero_lt_1.
+      * now rewrite M3 in H.
+      * apply IHn; auto.
+        apply naturals.lt_succ.
+Qed.
+
 Definition pow : Q → Z → Q.
 Proof.
   intros a b.
@@ -1272,8 +1300,6 @@ Proof.
 Qed.
 
 Infix "^" := pow : Q_scope.
-
-Axiom pow_add_distr : ∀ a b c, a ≠ 0 → a^(b+c) = a^b * a^c.
 
 Theorem pow_0_r : ∀ a, a^0 = 1.
 Proof.
@@ -1335,32 +1361,6 @@ Proof.
     now rewrite inv_one, pow_N_1_l.
 Qed.
 
-Theorem inv_pow : ∀ a, a^(-(1)) = a^-1.
-Proof.
-  intros a.
-  destruct (classic (a = 0)).
-  - subst.
-    rewrite inv_zero.
-    unfold pow.
-    repeat destruct excluded_middle_informative;
-      repeat destruct constructive_indefinite_description;
-      try destruct a.
-    + rewrite <-integers.lt_neg_0 in l.
-      contradiction (integers.lt_antisym 0 1).
-      exact integers.zero_lt_1.
-    + assert (x ≠ 0)%N.
-      { contradict n0.
-        now subst. }
-      apply succ_0 in H as [m H].
-      subst.
-      now rewrite inv_zero, pow_N_succ_r, mul_0_r.
-    + contradiction n0.
-      rewrite <-integers.neg_lt_0.
-      exact integers.zero_lt_1.
-  - apply inv_unique; auto.
-    rewrite <-(pow_1_r a), <-pow_add_distr, integers.A4, pow_0_r at 1; auto.
-Qed.
-
 Theorem pow_neg : ∀ a b, a^(-b) = (a^-1)^b.
 Proof.
   intros a b.
@@ -1390,6 +1390,32 @@ Proof.
     now rewrite <-integers.neg_lt_0.
   - contradiction n.
     now rewrite <-integers.lt_neg_0.
+Qed.
+
+Theorem inv_pow : ∀ a, a^(-(1)) = a^-1.
+Proof.
+  intros a.
+  destruct (classic (a = 0)).
+  - subst.
+    rewrite inv_zero.
+    unfold pow.
+    repeat destruct excluded_middle_informative;
+      repeat destruct constructive_indefinite_description;
+      try destruct a.
+    + rewrite <-integers.lt_neg_0 in l.
+      contradiction (integers.lt_antisym 0 1).
+      exact integers.zero_lt_1.
+    + assert (x ≠ 0)%N.
+      { contradict n0.
+        now subst. }
+      apply succ_0 in H as [m H].
+      subst.
+      now rewrite inv_zero, pow_N_succ_r, mul_0_r.
+    + contradiction n0.
+      rewrite <-integers.neg_lt_0.
+      exact integers.zero_lt_1.
+  - apply inv_unique; auto.
+    now rewrite pow_neg, pow_1_r, M1, inv_l.
 Qed.
 
 Lemma pow_add_r_pos_pos : ∀ a b c, (0 < b)%Z → (0 < c)%Z → a^(b+c) = a^b * a^c.
@@ -1696,6 +1722,36 @@ Proof.
       contradiction (lt_irrefl 1).
 Qed.
 
+Theorem pow_gt_1 : ∀ a n, 1 < a → (0 < n)%Z → 1 < a^n.
+Proof.
+  intros a n H H0.
+  unfold pow.
+  repeat destruct excluded_middle_informative;
+    repeat destruct constructive_indefinite_description; try destruct a0;
+      try tauto.
+  rewrite integers.A3 in e.
+  subst.
+  pose proof pow_N_gt_1.
+  destruct (T 1 x) as [[H2 _] | [[_ [H2 _]] | [_ [_ H2]]]].
+  - apply pow_N_gt_1; auto.
+    now apply INZ_lt.
+  - apply IZQ_eq, INZ_eq in H2.
+    subst.
+    now rewrite pow_N_1_r.
+  - contradiction (lt_0_1 x).
+    now apply IZQ_lt.
+Qed.
+
+Theorem pow_lt_1 : ∀ a n, 1 < a → (n < 0)%Z → a^n < 1.
+Proof.
+  intros a n H H0.
+  assert (0 < a) as H1 by eauto using lt_trans, zero_lt_1.
+  replace n with (--n)%Z by ring.
+  rewrite neg_pow, <-inv_lt_1; auto using pow_pos.
+  apply pow_gt_1; auto.
+  now rewrite <-integers.lt_neg_0.
+Qed.
+
 Theorem neg_pow_archimedean : ∀ a r, 0 < a → 1 < r → ∃ n, (n < 0)%Z ∧ r^n < a.
 Proof.
   intros a r H H0.
@@ -1714,9 +1770,93 @@ Proof.
     auto using lt_neq.
 Qed.
 
-Axiom square_in_interval : ∀ a, 1 < a → ∃ r, 0 < r ∧ 1 < r * r < a.
-(* If a > 2, trivially take r = 4/3 (or whatever).
-If a ≤ 2, take r = 1 + (a-1)/3 ≤ 1 + 1/3 < 2. Then
-(r^2 - 1) = (r-1)(r+1) = (a-1)/3 * (r+1) < (a-1)/3 * (2+1) ≤ a-1, so
-r^2 < a, and clearly 1 < r so 1 < r^2. *)
-
+Theorem square_in_interval : ∀ a, 1 < a → ∃ r, 0 < r ∧ 1 < r * r < a.
+Proof.
+  intros a H.
+  assert (3 ≠ 0)%Z as H0
+      by auto using integers.lt_neq, integers.O0, integers.zero_lt_1.
+  destruct (classic (2 < a)) as [H1 | H1].
+  - exists (4/3).
+    repeat split.
+    + unfold zero, lt, sub.
+      rewrite neg_wf, add_wf, pos_wf; auto using integers.zero_ne_1.
+      replace ((4*1+-0*3)*(3*1))%Z with (4+4+4)%Z by ring.
+      auto 6 using integers.O0, integers.zero_lt_1.
+      now rewrite integers.M1, integers.M3.
+    + unfold one, lt, sub.
+      rewrite mul_wf, neg_wf, add_wf, pos_wf; auto using integers.zero_ne_1.
+      * replace ((4*4*1+-(1)*(3*3))*(3*3*1))%Z with ((4+3)*(3*3))%Z by ring.
+        auto 6 using integers.O2, integers.O0, integers.zero_lt_1.
+      * intros H2.
+        apply cancellation_0_mul in H2 as [H2 | H2];
+          try now contradiction integers.zero_ne_1.
+        now apply cancellation_0_mul in H2 as [H2 | H2].
+      * intros H2.
+        now apply cancellation_0_mul in H2 as [H2 | H2].
+    + eapply lt_trans; eauto.
+      unfold IZQ, lt, sub.
+      rewrite mul_wf, neg_wf, add_wf, pos_wf; auto using integers.zero_ne_1.
+      * replace ((2*(3*3)+-(4*4)*1)*(1*(3*3)))%Z with (2*3*3)%Z by ring.
+        auto 6 using integers.O2, integers.O0, integers.zero_lt_1.
+      * intros H2.
+        apply cancellation_0_mul in H2 as [H2 | H2];
+          try now contradiction integers.zero_ne_1.
+        now apply cancellation_0_mul in H2 as [H2 | H2].
+      * intros H2.
+        now apply cancellation_0_mul in H2 as [H2 | H2].
+      * intros H2.
+        now apply cancellation_0_mul in H2 as [H2 | H2].
+  - set (r := 1+(a+-(1)) * 3^-1).
+    exists r.
+    assert (1 < r) as H2.
+    { rewrite <-(A3 1), (A1 0) at 1.
+      apply O1, O2.
+      - now rewrite <-lt_shift.
+      - rewrite <-? IZQ_add.
+        auto using inv_lt, O0, zero_lt_1. }
+    assert (0 < r) as H3 by eauto using lt_trans, zero_lt_1.
+    pose proof H2 as H4.
+    apply (pow_gt_1 _ 2) in H4; auto using integers.O0, integers.zero_lt_1.
+    rewrite pow_add_r, <-pow_mul_l, pow_1_r in H4; auto using lt_neq.
+    repeat split; auto.
+    assert (r*r + -(1) = (r+-(1)) * (r+1)) as H5 by ring.
+    assert (a ≤ 2) as H6 by (destruct (T 2 a)
+          as [[H6 _] | [[_ [H6 _]] | [_ [_ H6]]]]; subst; unfold le; tauto).
+    assert (r+1 < 3) as H7.
+    { rewrite <-IZQ_add, (A1 2), ? (A1 _ 1), <-IZQ_add.
+      unfold r.
+      repeat apply O1.
+      destruct H6 as [H6 | H6].
+      - rewrite <-(integers.M3 1) at 4.
+        rewrite <-IZQ_mul.
+        apply lt_cross_mul.
+        + now rewrite <-lt_shift.
+        + apply inv_lt.
+          rewrite <-? IZQ_add.
+          auto using O0, zero_lt_1.
+        + rewrite lt_shift in H6 |-*.
+          replace (-(a+-(1))) with (-a+1) by ring.
+          rewrite A1, <-A2.
+          replace (1 + 1%Z) with (1%Z+1%Z) by auto.
+          now rewrite IZQ_add, A1.
+        + apply inv_lt_1; rewrite <-? IZQ_add.
+          * auto using O0, zero_lt_1.
+          * rewrite <-(A3 1), A1, <-A2 at 1.
+            unfold IZQ, one.
+            auto using O1, O0, zero_lt_1.
+      - subst.
+        rewrite <-IZQ_add, <-A2, A4, A1, A3, M3.
+        apply inv_lt_1; rewrite <-? IZQ_add.
+        + auto using O0, zero_lt_1.
+        + rewrite <-(A3 1), A1, <-A2 at 1.
+          unfold IZQ, one.
+          auto using O1, O0, zero_lt_1. }
+    apply (O3 (r+-(1))) in H7; try now rewrite <-lt_shift.
+    unfold r in H7 at 3.
+    rewrite <-A2, (A1 1), <-A2, ? (A1 _ 1), A4, (A1 _ 0), A3, <-M2, inv_l in H7.
+    + rewrite (A1 1), <-H5, (M1 _ 1), M3, ? (A1 _ (-(1))) in H7.
+      rewrite <-(A3 (r*r)), <-(A3 a), <-(A4 1), <-? A2.
+      now apply O1.
+    + contradict H0.
+      now rewrite <-IZQ_eq.
+Qed.

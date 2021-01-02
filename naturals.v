@@ -994,3 +994,13 @@ Proof.
     apply PA5, cancellation_0_add in H1.
     intuition.
 Qed.
+
+Theorem lt_succ : ∀ m, 0 < S m.
+Proof.
+  intros m.
+  rewrite lt_def.
+  exists (S m).
+  split.
+  - apply PA4.
+  - now rewrite add_0_l.
+Qed.
