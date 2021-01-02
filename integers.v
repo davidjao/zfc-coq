@@ -1,4 +1,4 @@
-Require Export naturals List Permutation.
+Require Export naturals rings List Permutation.
 Set Warnings "-notation-overridden".
 
 Definition integer_relation :=
@@ -284,28 +284,12 @@ Qed.
 Definition sub a b := (a + -b).
 Infix "-" := sub : Z_scope.
 
-Theorem A3_r : ∀ a, a + 0 = a.
-Proof.
-  intros a.
-  now rewrite A1, A3.
-Qed.
+Definition integers := mkRing _ zero one add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
 
-Theorem M3_r : ∀ a, a * 1 = a.
-Proof.
-  intros a.
-  now rewrite M1, M3.
-Qed.
-
-Theorem D1_l : ∀ a b c, a * (b + c) = a * b + a * c.
-Proof.
-  intros a b c.
-  now rewrite ? (M1 a), D1.
-Qed.
-
-Theorem sub_neg : (∀ x y : Z, x - y = x + - y).
-Proof.
-  auto.
-Qed.
+Definition A3_r := A3_r integers : ∀ a, a + 0 = a.
+Definition M3_r := M3_r integers : ∀ a, a * 1 = a.
+Definition D1_l := D1_l integers : ∀ a b c, a * (b + c) = a * b + a * c.
+Definition sub_neg := sub_neg_R integers : ∀ a b, a - b = a + -b.
 
 Add Ring integer_ring :
   (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1 sub_neg A4).
@@ -516,100 +500,26 @@ Proof.
       auto.
 Qed.
 
-Definition divide x y := exists z, y = z * x.
+Definition divide := divide integers : Z → Z → Prop.
 
 Notation "x ｜ y" := (divide x y) (at level 60, format "x '｜' y") : Z_scope.
 
-Theorem div_mul_r : ∀ a b c, a｜b → a｜b*c.
-Proof.
-  intros a b c [d H].
-  exists (d*c).
-  ring [H].
-Qed.
-
-Theorem div_mul_l : ∀ a b c, a｜c → a｜b*c.
-Proof.
-  intros a b c [d H].
-  exists (d*b).
-  ring [H].
-Qed.
-
-Theorem div_add : ∀ a b c, a｜b → a｜c → a｜b+c.
-Proof.
-  intros a b c [x H] [y H0].
-  exists (x+y).
-  ring [H H0].
-Qed.
-
-Theorem div_mul_add : ∀ a m n x y, a｜m → a｜n → a｜m*x + n*y.
-Proof.
-  auto using div_add, div_mul_r.
-Qed.
-
-Theorem div_0_r : ∀ a, a｜0.
-Proof.
-  exists 0.
-  ring.
-Qed.
-
-Theorem div_0_l : ∀ a, 0｜a ↔ a = 0.
-Proof.
-  split; intros H; [ destruct H as [x H] | exists 0 ]; ring [H].
-Qed.
-
-Theorem div_refl : ∀ a, a｜a.
-Proof.
-  exists 1.
-  ring.
-Qed.
-
-Theorem div_trans : ∀ a b c, a｜b → b｜c → a｜c.
-Proof.
-  intros a b c [x H] [y H0].
-  exists (x*y).
-  ring [H H0].
-Qed.
-
-Theorem div_1_l : ∀ a, 1｜a.
-Proof.
-  intros a.
-  exists a.
-  ring.
-Qed.
-
-Theorem div_sign_r : ∀ a b, a｜b ↔ a｜-b.
-Proof.
-  split; intros [x H]; exists (-x); ring [H].
-Qed.
-
-Theorem div_sign_neg_r : ∀ a b, a｜-b → a｜b.
-Proof.
-  intros a b H.
-  now rewrite div_sign_r.
-Qed.
-
-Theorem div_sign_r_neg : ∀ a b, a｜b → a｜-b.
-Proof.
-  intros a b H.
-  now rewrite <-div_sign_r.
-Qed.
-
-Theorem div_sign_l : ∀ a b, a｜b ↔ -a｜b.
-Proof.
-  split; intros [x H]; exists (-x); ring [H].
-Qed.
-
-Theorem div_sign_neg_l : ∀ a b, -a｜b → a｜b.
-Proof.
-  intros a b H.
-  now rewrite div_sign_l.
-Qed.
-
-Theorem div_sign_l_neg : ∀ a b, a｜b → -a｜b.
-Proof.
-  intros a b H.
-  now rewrite <-div_sign_l.
-Qed.
+Definition div_mul_r := div_mul_r integers : ∀ a b c, a｜b → a｜b*c.
+Definition div_mul_l := div_mul_l integers : ∀ a b c, a｜c → a｜b*c.
+Definition div_add := div_add integers : ∀ a b c, a｜b → a｜c → a｜b+c.
+Definition div_mul_add :=
+  div_mul_add integers : ∀ a m n x y, a｜m → a｜n → a｜m*x + n*y.
+Definition div_0_r := div_0_r integers : ∀ a, a｜0.
+Definition div_0_l := div_0_l integers : ∀ a, 0｜a ↔ a = 0.
+Definition div_refl := div_refl integers : ∀ a, a｜a.
+Definition div_trans := div_trans integers : ∀ a b c, a｜b → b｜c → a｜c.
+Definition div_1_l := div_1_l integers : ∀ a, 1｜a.
+Definition div_sign_r := div_sign_r integers : ∀ a b, a｜b ↔ a｜-b.
+Definition div_sign_neg_r := div_sign_neg_r integers : ∀ a b, a｜-b → a｜b.
+Definition div_sign_r_neg := div_sign_r_neg integers : ∀ a b, a｜b → a｜-b.
+Definition div_sign_l := div_sign_l integers : ∀ a b, a｜b ↔ -a｜b.
+Definition div_sign_neg_l := div_sign_neg_l integers : ∀ a b, -a｜b → a｜b.
+Definition div_sign_l_neg := div_sign_l_neg integers : ∀ a b, a｜b → -a｜b.
 
 Definition mul_pos_pos := O2.
 Definition mul_lt_l := O3.
@@ -846,9 +756,10 @@ Proof.
   eapply pos_div_r, lt_0_le_1, mul_le_r in H; try rewrite M3 in H; eauto.
 Qed.
 
-Definition assoc a b := a｜b ∧ b｜a.
+Definition assoc := assoc integers : Z → Z → Prop.
 Infix "~" := assoc (at level 70) : Z_scope.
-Definition unit a := a｜1.
+Definition unit := unit integers : Z → Prop.
+
 Definition pm a b := (a = b ∨ a = -b).
 Notation " a = ± b " := (pm a b) (at level 60) : Z_scope.
 
@@ -870,61 +781,24 @@ Proof.
   now apply INZ_eq, assoc_N.
 Qed.
 
-Theorem assoc_refl : ∀ a, a ~ a.
-Proof.
-  split; eauto using div_refl.
-Qed.
-
-Theorem assoc_sym : ∀ a b, a ~ b → b ~ a.
-Proof.
-  now intros a b [H H0].
-Qed.
-
-Theorem assoc_sym_iff : ∀ a b, a ~ b ↔ b ~ a.
-Proof.
-  now split; intros [H H0].
-Qed.
-
-Theorem assoc_trans : ∀ a b c, a ~ b → b ~ c → a ~ c.
-Proof.
-  intros a b c [H H0] [H1 H2].
-  split; eapply div_trans; eauto.
-Qed.
-
-Theorem assoc_zero : ∀ a, a ~ 0 ↔ a = 0.
-Proof.
-  split; intros H; subst; auto using assoc_refl.
-  destruct H; now apply div_0_l.
-Qed.
-
-Theorem assoc_sign : ∀ a b, a ~ b → a ~ -b.
-Proof.
-  intros a b [H H0].
-  split; auto using div_sign_l_neg, div_sign_r_neg.
-Qed.
-
-Theorem unit_sign : ∀ a, unit a ↔ unit (-a).
-Proof.
-  split; intros H; unfold unit in *; now rewrite <-div_sign_l in *.
-Qed.
-
-Theorem unit_sign_r : ∀ a, unit a → unit (-a).
-Proof.
-  intros a H; now apply div_sign_l_neg.
-Qed.
-
-Theorem one_unit : unit 1.
-Proof.
-  apply div_refl.
-Qed.
+Definition assoc_refl := assoc_refl integers : ∀ a, a ~ a.
+Definition assoc_sym := assoc_sym integers : ∀ a b, a ~ b → b ~ a.
+Definition assoc_sym_iff := assoc_sym_iff integers : ∀ a b, a ~ b ↔ b ~ a.
+Definition assoc_trans := assoc_trans integers : ∀ a b c, a ~ b → b ~ c → a ~ c.
+Definition assoc_zero := assoc_zero integers : ∀ a, a ~ 0 ↔ a = 0.
+Definition assoc_sign := assoc_sign integers : ∀ a b, a ~ b → a ~ -b.
+Definition unit_sign := unit_sign integers : ∀ u, unit u ↔ unit (-u).
+Definition unit_sign_r := unit_sign_r integers : ∀ u, unit u → unit (-u).
+Definition one_unit := one_unit integers : unit 1.
 
 Theorem assoc_unit : ∀ a b, a ~ b → ∃ u, unit u ∧ b = a * u.
 Proof.
-  intros a b [[c H] [d H0]].
-  destruct (classic (b = 0)); subst.
-  - assert (a = 0) by ring [H0 H1].
-    exists 1.
-    split; auto using one_unit; ring [H H1].
+  intros a b [[c H] [d H0]];
+    destruct (classic (b = 0)); simpl in *; subst.
+  - exists 1.
+    split; auto using one_unit.
+    rewrite H0, H1.
+    ring.
   - exists c.
     split; try ring.
     exists d.
@@ -947,7 +821,7 @@ Qed.
 Theorem unit_pm_1 : ∀ a, unit a → a = ± 1.
 Proof.
   intros a H.
-  apply assoc_pm; split; auto using div_1_l.
+  apply assoc_pm; split; fold divide; auto using div_1_l.
 Qed.
 
 Theorem division_algorithm_N : ∀ a b,
@@ -991,8 +865,6 @@ Qed.
 
 Definition gcd a b d := d｜a ∧ d｜b ∧ ∀ x, x｜a → x｜b → x｜d.
 
-Hint Unfold gcd.
-
 Notation "'gcd' ( a , b )  = d" := (gcd a b d) (at level 80).
 
 Theorem Euclidean_algorithm_N :
@@ -1010,19 +882,20 @@ Proof.
   - exists 1, 0.
     ring_simplify.
     apply assoc_pos; auto using zero_lt_1.
-    split; auto using zero_lt_1, div_refl, div_add, div_mul_r, div_0_r.
+    split; fold divide;
+      auto using zero_lt_1, div_refl, div_add, div_mul_r, div_0_r.
 Qed.
 
 Lemma gcd_zero_l : ∀ a d, gcd (0,a) = d → a ~ d.
 Proof.
   intros a d [H [H0 H1]].
-  split; auto using div_0_r, div_refl.
+  split; fold divide; auto using div_0_r, div_refl.
 Qed.
 
 Lemma gcd_sym : ∀ a b d, gcd (a,b) = d → gcd(b,a) = d.
 Proof.
   intros a b d [H [H0 H1]].
-  auto.
+  repeat split; auto.
 Qed.
 
 Lemma gcd_zero_r : ∀ a d, gcd (a,0) = d → a ~ d.
@@ -1051,24 +924,26 @@ Proof.
   intros a b H.
   destruct (T a 0), (T b 0); intuition; subst;
     try apply gcd_zero_l in H; try apply gcd_zero_r in H;
-    try (now (destruct H as [[x H]]; exists x, 0; rewrite H; ring));
-    try (now (destruct H as [[x H]]; exists 0, x; rewrite H; ring));
-    destruct H; intuition; rewrite lt_neg_0 in *;
-      [ set (c := -a) | set (c := -a) | set (c := a) | set (c := a) ];
-      [ set (d := -b) | set (d := b) | set (d := -b) | set (d := b) ];
-      destruct (Euclidean_algorithm_N c d) as [x [y Z]];
-      try split; auto using div_1_l, div_sign_neg_r; unfold c, d in *;
-        [ exists (-x), (-y) | exists (-x), y | exists x, (-y) | exists x, y ];
-        rewrite Z; ring.
+      try (now (destruct H as [[x H]]; exists x, 0;
+                simpl in *; fold Z in x; rewrite H; ring));
+      try (now (destruct H as [[x H]]; exists 0, x;
+                simpl in *; fold Z in x; rewrite H; ring));
+      destruct H; intuition; rewrite lt_neg_0 in *;
+        [ set (c := -a) | set (c := -a) | set (c := a) | set (c := a) ];
+        [ set (d := -b) | set (d := b) | set (d := -b) | set (d := b) ];
+        destruct (Euclidean_algorithm_N c d) as [x [y Z]];
+        try split; auto using div_1_l, div_sign_neg_r; unfold c, d in *;
+          [ exists (-x), (-y) | exists (-x), y | exists x, (-y) | exists x, y ];
+          rewrite Z; ring.
 Qed.
 
 Theorem FTA : ∀ a b c, gcd (a,b) = 1 → a｜b * c → a｜c.
 Proof.
-  intros a b c H [d H0].
+  intros a b c H [d H0]; simpl in *; fold Z in *.
   destruct (Euclidean_algorithm a b H) as [x [y H1]].
   rewrite <-(M3 c), H1.
-  exists (c*x + d*y).
-  ring [H0].
+  exists (c*x + d*y); simpl.
+  now ring_simplify [H0].
 Qed.
 
 Definition prime p := ¬ unit p ∧ ∀ d : Z, d｜p → unit d ∨ d ~ p.
@@ -1293,8 +1168,9 @@ Proof.
         -- rewrite H7 in *.
            contradiction (lt_irrefl r).
       * rewrite <-H5 in *.
-        exists q.
-        ring [H4].
+        exists q; simpl.
+        rewrite <-H4.
+        now ring_simplify.
     + destruct (division_algorithm b d) as [q [r [H4 [[H5 | H5] H6]]]]; auto.
       replace b with (d*q + (b - d*q)) in H4 by ring.
       apply cancellation_add in H4.
@@ -1307,8 +1183,9 @@ Proof.
         -- rewrite H7 in *.
            contradiction (lt_irrefl r).
       * rewrite <-H5 in *.
-        exists q.
-        ring [H4].
+        exists q; simpl.
+        rewrite <-H4.
+        now ring_simplify.
     + intros z H4 H5.
       subst.
       auto using div_mul_add.
@@ -1345,7 +1222,7 @@ Theorem two_is_prime : prime 2.
 Proof.
   split.
   - intros H.
-    apply div_le in H as [H | H]; auto using zero_lt_1.
+    apply div_le in H as [H | H]; auto using zero_lt_1; simpl in *.
     + rewrite lt_def in H.
       destruct H as [c [H H0]].
       unfold INZ, one in H0.

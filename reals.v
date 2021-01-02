@@ -1416,8 +1416,6 @@ Proof.
       now rewrite pow_0_r, M1, M3 in H6.
 Qed.
 
-Print Assumptions M4_pos.
-
 Theorem D1_pos : ∀ a b c, 0 < a → 0 < b → 0 < c → (a + b) * c = a * c + b * c.
 Proof.
 Admitted.

@@ -643,7 +643,7 @@ Proof.
     rewrite integers.M2, <-(integers.M3 d) in H0 at 1.
     apply cancellation_mul_r in H0; try now (exists e).
     now apply cancellation_ne0 in H.
-  - rewrite Qequiv; auto; try ring.
+  - rewrite Qequiv; simpl in *; fold Z in *; auto; try ring.
     now apply cancellation_ne0 in H.
   - now apply cancellation_ne0 in H.
 Qed.
@@ -658,7 +658,7 @@ Proof.
   rewrite (integers.M1 _ 1), integers.M3, (integers.M1 _ 2) in H.
   assert (2｜(m*m)) as H1 by (rewrite H; eauto using div_mul_r, div_refl).
   apply Euclid's_lemma in H1; auto using two_is_prime.
-  assert (2｜m) as [k H3] by tauto.
+  assert (2｜m) as [k H3] by tauto; simpl in *; fold Z in *.
   subst.
   replace (k*2*(k*2))%Z with (2*(2*k*k))%Z in H by ring.
   apply cancellation_mul_l in H.
