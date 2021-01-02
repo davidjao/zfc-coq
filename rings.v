@@ -74,6 +74,12 @@ Section Ring_theorems.
     ring.
   Qed.
 
+  Theorem A4_l : ∀ a, -a + a = 0.
+  Proof.
+    intros a.
+    ring.
+  Qed.
+
   Theorem M3_r : ∀ a, a * 1 = a.
   Proof.
     intros a.

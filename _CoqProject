@@ -4,7 +4,8 @@ logic_axioms.v
 sets.v
 russell.v
 naturals.v
+rings.v
+ordered_rings.v
 integers.v
 rationals.v
-rings.v
 reals.v

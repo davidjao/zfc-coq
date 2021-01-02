@@ -1,4 +1,4 @@
-Require Export naturals rings List Permutation.
+Require Export naturals rings ordered_rings List Permutation.
 Set Warnings "-notation-overridden".
 
 Definition integer_relation :=
@@ -305,19 +305,10 @@ Proof.
 Defined.
 
 Infix "<" := lt : Z_scope.
-Notation "a > b" := (b < a) (only parsing) : Z_scope.
-Notation "x < y < z" := (x < y ∧ y < z) : Z_scope.
 
-Definition le a b := a < b ∨ a = b.
-Infix "≤" := le : Z_scope.
-Notation "a ≥ b" := (b ≤ a) (only parsing) : Z_scope.
-Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level): Z_scope.
-Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): Z_scope.
-Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): Z_scope.
-
-Theorem T : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ (a > b)) ∨
-                   (¬ (a < b) ∧ a = b ∧ ¬ (a > b)) ∨
-                   (¬ (a < b) ∧ a ≠ b ∧ a > b).
+Theorem T : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ b < a) ∨
+                   (¬ a < b ∧ a = b ∧ ¬ b < a) ∨
+                   (¬ a < b ∧ a ≠ b ∧ b < a).
 Proof.
   intros a b.
   unfold lt.
@@ -358,19 +349,6 @@ Proof.
     ring.
 Qed.
 
-Theorem O0 : ∀ a b, 0 < a → 0 < b → 0 < a + b.
-Proof.
-  intros a b H H0.
-  rewrite lt_def in *.
-  destruct H as [c [H H1]], H0 as [d [H2 H3]].
-  exists (c+d)%N.
-  split.
-  - intros H0.
-    apply INZ_eq, eq_sym, cancellation_0_add in H0 as [H0 H4].
-    now subst.
-  - now rewrite A3, H1, H3, INZ_add in *.
-Qed.
-
 Theorem O1 : ∀ a b c, b < c → a + b < a + c.
 Proof.
   intros a b c H.
@@ -398,20 +376,18 @@ Proof.
     auto using INZ_mul.
 Qed.
 
-Theorem O3 : ∀ a b c, 0 < a → b < c → a * b < a * c.
-Proof.
-  intros a b c H H0.
-  rewrite lt_def in *.
-  destruct H as [x [H H1]], H0 as [y [H0 H2]].
-  ring_simplify in H2.
-  subst.
-  exists (x*y)%N.
-  split.
-  - intros H1.
-    apply INZ_eq, eq_sym, cancellation_0_mul in H1 as [H1 | H1]; subst; auto.
-  - ring_simplify.
-    now rewrite INZ_mul.
-Qed.
+Definition integer_order := mkOring integers lt lt_trans T O1 O2.
+Definition O0 := O0 integer_order : ∀ a b, 0 < a → 0 < b → 0 < a + b.
+Definition le := le integer_order : Z → Z → Prop.
+Definition O3 := O3 integer_order : ∀ a b c, 0 < a → b < c → a * b < a * c.
+
+Infix "≤" := le : Z_scope.
+Notation "a > b" := (b < a) : Z_scope.
+Notation "x < y < z" := (x < y ∧ y < z) : Z_scope.
+Notation "a ≥ b" := (b ≤ a) (only parsing) : Z_scope.
+Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level): Z_scope.
+Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): Z_scope.
+Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): Z_scope.
 
 Theorem INZ_lt : ∀ a b : N, INZ a < INZ b ↔ (a < b)%N.
 Proof.
@@ -660,7 +636,8 @@ Qed.
 
 Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
 Proof.
-  intros a b c [H | H] [H0 | H0]; subst; unfold le; eauto using lt_trans.
+  intros a b c [H | H] [H0 | H0]; subst; unfold le, ordered_rings.le in *;
+    simpl in *; eauto using lt_trans.
 Qed.
 
 Lemma one_lt : ∀ a, 1 < a → 0 < a.
@@ -683,7 +660,7 @@ Qed.
 Theorem lt_0_le_1 : ∀ a, 0 < a ↔ 1 ≤ a.
 Proof.
   intros a.
-  destruct (T a 1); unfold le in *; intuition; subst;
+  destruct (T a 1); unfold le, ordered_rings.le in *; intuition; subst;
     eauto using zero_lt_1, one_lt.
   exfalso; apply (lt_0_1 a); eauto.
 Qed.
@@ -718,9 +695,9 @@ Proof.
   - now right.
   - left.
     destruct IHa as [H | H]; rewrite <-add_1_r, <-INZ_add.
-    + eauto using succ_lt.
+    + now apply succ_lt.
     + rewrite <-H, A3.
-      eauto using zero_lt_1.
+      now apply zero_lt_1.
 Qed.
 
 Theorem lt_irrefl : ∀ a, ¬ a < a.
@@ -751,7 +728,7 @@ Qed.
 Theorem div_le : ∀ a b, 0 < b → a｜b → a ≤ b.
 Proof.
   intros a b H [d H0].
-  destruct (T a b); unfold le; intuition; subst.
+  destruct (T a b); unfold le, ordered_rings.le; intuition; subst; simpl in *.
   assert (0 < a) by eauto using lt_trans.
   eapply pos_div_r, lt_0_le_1, mul_le_r in H; try rewrite M3 in H; eauto.
 Qed.
@@ -829,7 +806,8 @@ Theorem division_algorithm_N : ∀ a b,
 Proof.
   intros a b H H0.
   induction a as [a IHa] using strong_induction.
-  destruct (T a b); unfold le; intuition; [ exists 0, a | exists 1, 0 | ];
+  destruct (T a b); unfold le, ordered_rings.le; intuition;
+    [ exists 0, a | exists 1, 0 | ];
     repeat split; auto; subst; try ring.
   assert (0 < a + -b) as H3 by (rewrite <-(A4 a); eauto using O1, neg_neg_lt).
   destruct (IHa (a + -b)) as [q [r [H5 H6]]]; repeat split; auto.
@@ -857,10 +835,10 @@ Proof.
         now rewrite A3, <-neg_lt_0.
     + exists (-q), 0.
       subst.
-      repeat split; unfold le; auto.
+      repeat split; unfold le, ordered_rings.le; auto.
       replace a with (--a); try ring; rewrite <-H3; ring.
   - exists 0, 0.
-    subst; repeat split; unfold le; auto; ring.
+    subst; repeat split; unfold le, ordered_rings.le; auto; ring.
 Qed.
 
 Definition gcd a b d := d｜a ∧ d｜b ∧ ∀ x, x｜a → x｜b → x｜d.
@@ -991,7 +969,7 @@ Proof.
     * apply lt_0_le_1 in H3 as [H3 | H3]; auto.
       contradict H0.
       symmetry in H3.
-      replace d with (- (1)) by ring [H3].
+      replace d with (- (1)) by (rewrite <-H3; ring).
       eauto using unit_sign_r, one_unit.
     * apply div_sign_l_neg, div_le in H2 as [H2 | H2];
         eauto using lt_trans, zero_lt_1.
@@ -1140,7 +1118,7 @@ Proof.
   exists s.
   split; auto.
   intros t H0.
-  unfold le.
+  unfold le, ordered_rings.le.
   destruct (T s t) as [H1 | [H1 | [H1 [H2 H5]]]]; try tauto.
   contradiction (IHs t); auto.
 Qed.

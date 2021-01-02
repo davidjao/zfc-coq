@@ -586,8 +586,9 @@ Proof.
   - intros m H8.
     apply NNPP.
     contradict H8.
-    assert (m ≤ 0)%Z as [H9 | H9] by
-          (unfold integers.le; pose proof (integers.T m 0); tauto).
+    assert (m ≤ 0)%Z as [H9 | H9].
+    { unfold integers.le, ordered_rings.le.
+      pose proof (integers.T m 0); tauto. }
     + apply (H3 ξ); auto.
       destruct H6 as [H6 | H6]; rewrite <-IZQ_add; ring_simplify.
       * apply (rationals.lt_trans _ (k*b)); auto.
