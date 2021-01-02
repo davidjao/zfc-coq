@@ -36,7 +36,7 @@ Proof.
       apply set_proj_injective in H6.
       apply set_proj_injective in H8.
       subst.
-      apply (cancellation_add e).
+      apply (naturals.cancellation_add e).
       ring_simplify [H5 H7].
       rewrite H7, add_comm, add_assoc, H5.
       ring.
@@ -193,7 +193,7 @@ Proof.
   unfold add.
   repeat destruct constructive_indefinite_description.
   rewrite Zequiv in *.
-  apply (cancellation_add x2).
+  apply (naturals.cancellation_add x2).
   ring_simplify [e6]; ring_simplify in e6; rewrite <-e6;
     ring_simplify [e8]; ring_simplify in e8; rewrite e8; ring.
 Qed.
@@ -243,7 +243,7 @@ Proof.
   unfold mul.
   repeat destruct constructive_indefinite_description.
   rewrite Zequiv in *.
-  apply (cancellation_add (b*x1)).
+  apply (naturals.cancellation_add (b*x1)).
   rewrite ? add_assoc, <-mul_distr_r, (add_comm _ (b*d)), ? add_assoc,
   <-mul_distr_l, (add_comm b), (add_comm d), e0, e2, (add_comm x0),
   <-? add_assoc, (add_comm (x*x2)), ? add_assoc, (add_comm _ (a*d)),
@@ -343,7 +343,8 @@ Proof.
   exists (x+y)%N.
   split.
   - intros H3.
-    apply INZ_eq, eq_sym, cancellation_0_add in H3 as [H3 H4]; subst; auto.
+    apply INZ_eq, eq_sym, naturals.cancellation_0_add in H3 as [H3 H4];
+      subst; auto.
   - subst.
     rewrite <-INZ_add.
     ring.
@@ -370,21 +371,42 @@ Proof.
     unfold lt in *.
     repeat destruct constructive_indefinite_description.
     subst.
-    apply INZ_eq, eq_sym, cancellation_0_mul in H3 as [H3 | H3]; subst; auto.
+    apply INZ_eq, eq_sym, naturals.cancellation_0_mul in H3 as [H3 | H3];
+      subst; auto.
   - subst.
     ring_simplify.
     auto using INZ_mul.
 Qed.
 
-Definition integer_order := mkOring integers lt lt_trans T O1 O2.
+Theorem zero_lt_1 : 0 < 1.
+Proof.
+  rewrite lt_def.
+  exists 1%N.
+  split.
+  - intros H.
+    replace 0 with (INZ 0) in *; auto.
+    now apply INZ_eq, PA4 in H.
+  - now ring_simplify.
+Qed.
+
+Theorem zero_ne_1 : 1 ≠ 0.
+Proof.
+  intros H.
+  symmetry in H.
+  pose proof zero_lt_1.
+  pose proof (T 0 1).
+  tauto.
+Qed.
+
+Definition integer_order := mkOring integers lt lt_trans T O1 O2 zero_ne_1.
 Definition O0 := O0 integer_order : ∀ a b, 0 < a → 0 < b → 0 < a + b.
 Definition le := le integer_order : Z → Z → Prop.
 Definition O3 := O3 integer_order : ∀ a b c, 0 < a → b < c → a * b < a * c.
 
 Infix "≤" := le : Z_scope.
 Notation "a > b" := (b < a) : Z_scope.
-Notation "x < y < z" := (x < y ∧ y < z) : Z_scope.
 Notation "a ≥ b" := (b ≤ a) (only parsing) : Z_scope.
+Notation "x < y < z" := (x < y ∧ y < z) : Z_scope.
 Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level): Z_scope.
 Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): Z_scope.
 Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): Z_scope.
@@ -431,19 +453,8 @@ Proof.
   destruct H as [a [H H2]], H3 as [b [H3 H4]].
   subst.
   rewrite ? INZ_add, INZ_eq, <-add_1_r, <-add_assoc in H2.
-  apply cancellation_add, eq_sym, cancellation_1_add in H2 as [H2 | H2];
-    subst; [ contradiction H3 | contradiction H ]; auto.
-Qed.
-
-Theorem zero_lt_1 : 0 < 1.
-Proof.
-  rewrite lt_def.
-  exists 1%N.
-  split.
-  - intros H.
-    replace 0 with (INZ 0) in *; auto.
-    now apply INZ_eq, PA4 in H.
-  - now ring_simplify.
+  apply naturals.cancellation_add, eq_sym, cancellation_1_add in H2
+    as [H2 | H2]; subst; [ contradiction H3 | contradiction H ]; auto.
 Qed.
 
 Theorem strong_induction : ∀ P : Z → Prop,
@@ -500,102 +511,72 @@ Definition div_sign_l_neg := div_sign_l_neg integers : ∀ a b, a｜b → -a｜b
 Definition mul_pos_pos := O2.
 Definition mul_lt_l := O3.
 
-Theorem mul_lt_r : ∀ a b c, a < b →  0 < c → a * c < b * c.
+Definition mul_lt_r :=
+  O3_r integer_order : ∀ c a b, 0 < c → a < b → a * c < b * c.
+Definition neg_lt_0 := neg_lt_0 integer_order : ∀ a, 0 < a ↔ -a < 0.
+Definition lt_neg_0 := lt_neg_0 integer_order : ∀ a, a < 0 ↔ 0 < -a.
+Definition mul_pos_neg :=
+  mul_pos_neg integer_order : ∀ a b, 0 < a → b < 0 → a * b < 0.
+Definition mul_neg_pos :=
+  mul_neg_pos integer_order : ∀ a b, a < 0 → 0 < b → a * b < 0.
+Definition mul_neg_neg :=
+  mul_neg_neg integer_order : ∀ a b, a < 0 → b < 0 → 0 < a * b.
+Definition pos_mul :=
+  pos_mul integer_order : ∀ a b, 0 < a * b → (0 < a ∧ 0 < b) ∨ (a < 0 ∧ b < 0).
+Definition neg_mul :=
+  neg_mul integer_order : ∀ a b, a * b < 0 → (0 < a ∧ b < 0) ∨ (a < 0 ∧ 0 < b).
+Definition cancellation_0_add :=
+  rings.cancellation_0_add integers : ∀ a b, a + b = 0 → b = -a.
+Definition cancellation_add :=
+  rings.cancellation_add integers : ∀ a b c, a + b = a + c → b = c.
+
+Lemma lt_succ : ∀ m, m < m + 1.
 Proof.
-  intros a b c H H0.
-  rewrite ? (M1 _ c).
-  now apply mul_lt_l.
+  intros m.
+  rewrite <-(A3 m), A1 at 1.
+  eauto using O1, zero_lt_1.
 Qed.
 
-Theorem neg_lt_0 : ∀ a, 0 < a ↔ -a < 0.
+Lemma succ_lt : ∀ n m, n < m → n < m + 1.
 Proof.
-  split; intros H.
-  - eapply (O1 (-a)) in H.
-    now rewrite A3_r, A1, A4 in H.
-  - eapply (O1 a) in H.
-    now rewrite A3_r, A4 in H.
+  eauto using lt_succ, lt_trans.
 Qed.
 
-Theorem lt_neg_0 : ∀ a, a < 0 ↔ 0 < -a.
+Theorem N_ge_0 : ∀ a : N, 0 ≤ a.
+Proof.
+  induction a using Induction.
+  - now right.
+  - left.
+    destruct IHa as [H | H]; rewrite <-add_1_r, <-INZ_add.
+    + now apply succ_lt.
+    + rewrite <-H, A3.
+      now apply zero_lt_1.
+Qed.
+
+Theorem lt_irrefl : ∀ a, ¬ a < a.
 Proof.
   intros a.
-  rewrite neg_lt_0.
-  now replace (- -a) with a by ring.
+  destruct (T a a); intuition.
 Qed.
 
-Theorem mul_pos_neg : ∀ a b, 0 < a → b < 0 → a * b < 0.
-Proof.
-  intros a b H H0.
-  rewrite lt_neg_0 in *.
-  eapply O2 in H; eauto.
-  replace (-(a*b)) with (-b*a) in * by ring; auto.
-Qed.
-
-Theorem mul_neg_pos : ∀ a b, a < 0 → 0 < b → a * b < 0.
-Proof.
-  intros a b H H0.
-  rewrite M1.
-  now apply mul_pos_neg.
-Qed.
-
-Theorem mul_neg_neg : ∀ a b, a < 0 → b < 0 → 0 < a * b.
-Proof.
-  intros a b H H0.
-  rewrite lt_neg_0 in *.
-  replace (a*b) with (-a*-b) by ring; eauto using mul_pos_pos.
-Qed.
-
-Theorem pos_mul : ∀ a b, 0 < a * b → (0 < a ∧ 0 < b) ∨ (a < 0 ∧ b < 0).
+Theorem lt_antisym : ∀ a b, a < b → ¬ b < a.
 Proof.
   intros a b H.
-  destruct (T (a*b) 0), (T a 0), (T b 0); intuition; subst;
-    try replace (a*0) with 0 in * by ring;
-    try replace (0*b) with 0 in * by ring;
-    try replace (0*0) with 0 in * by ring; auto;
-      exfalso; eauto using mul_neg_pos, mul_pos_neg.
+  destruct (T a b); intuition.
 Qed.
 
-Theorem neg_mul : ∀ a b, a * b < 0 → (0 < a ∧ b < 0) ∨ (a < 0 ∧ 0 < b).
+Theorem le_antisymm : ∀ a b, a ≤ b → b ≤ a → a = b.
 Proof.
-  intros a b H.
-  destruct (T (a*b) 0), (T a 0), (T b 0); intuition; subst;
-    try replace (a*0) with 0 in * by ring;
-    try replace (0*b) with 0 in * by ring;
-    try replace (0*0) with 0 in * by ring; auto;
-      exfalso; eauto using mul_neg_neg, mul_pos_pos.
+  intros a b [H | H] [H0 | H0]; destruct (T a b); intuition.
 Qed.
 
-Theorem cancellation_0_add : ∀ a b, a + b = 0 → b = -a.
-Proof.
-  intros a b H.
-  now rewrite <-(A3 b), <-(A4 a), <-A2, (A1 (-a)), A2, H, A3.
-Qed.
-
-Theorem cancellation_add : ∀ a b c, a + b = a + c → b = c.
-Proof.
-  intros a b c H.
-  rewrite <-(A3 b), <-(A3 c), <-(A4 a), A1, A2, (A1 _ a), H.
-  ring.
-Qed.
-
-Theorem cancellation_0_mul : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
-Proof.
-  intros a b H.
-  destruct (T (a*b) 0), (T a 0), (T b 0); intuition;
-    eauto using pos_mul, neg_mul; exfalso;
-      eauto using mul_neg_neg, mul_neg_pos, mul_pos_neg, mul_pos_pos.
-Qed.
-
-Lemma cancellation_ne0 : ∀ a b, a * b ≠ 0 → a ≠ 0 ∧ b ≠ 0.
-Proof.
-  intros a b H; split; contradict H; subst; ring.
-Qed.
-
-Lemma ne0_cancellation : ∀ a b, a ≠ 0 → b ≠ 0 → a * b ≠ 0.
-Proof.
-  intros a b H H0 H1.
-  now apply cancellation_0_mul in H1 as [H1 | H1].
-Qed.
+Definition cancellation_0_mul :=
+  cancellation_0_mul integer_order : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
+Definition cancellation_ne0 :=
+  rings.cancellation_ne0 integers : ∀ a b, a * b ≠ 0 → a ≠ 0 ∧ b ≠ 0.
+Definition ne0_cancellation :=
+  (ne0_cancellation (integral_domain_OR integer_order)) :
+    ∀ a b, a ≠ 0 → b ≠ 0 → a * b ≠ 0.
 
 Lemma square_ne0 : ∀ a, a ≠ 0 → a*a > 0.
 Proof.
@@ -645,18 +626,6 @@ Proof.
   eauto using lt_trans, zero_lt_1.
 Qed.
 
-Lemma lt_succ : ∀ m, m < m + 1.
-Proof.
-  intros m.
-  rewrite <-(A3 m), A1 at 1.
-  eauto using O1, zero_lt_1.
-Qed.
-
-Lemma succ_lt : ∀ n m, n < m → n < m + 1.
-Proof.
-  eauto using lt_succ, lt_trans.
-Qed.
-
 Theorem lt_0_le_1 : ∀ a, 0 < a ↔ 1 ≤ a.
 Proof.
   intros a.
@@ -687,42 +656,6 @@ Proof.
   destruct H as [c [H H0]].
   exists c.
   split; auto; ring [H0].
-Qed.
-
-Theorem N_ge_0 : ∀ a : N, 0 ≤ a.
-Proof.
-  induction a using Induction.
-  - now right.
-  - left.
-    destruct IHa as [H | H]; rewrite <-add_1_r, <-INZ_add.
-    + now apply succ_lt.
-    + rewrite <-H, A3.
-      now apply zero_lt_1.
-Qed.
-
-Theorem lt_irrefl : ∀ a, ¬ a < a.
-Proof.
-  intros a.
-  destruct (T a a); intuition.
-Qed.
-
-Theorem zero_ne_1 : 1 ≠ 0.
-Proof.
-  intros H.
-  contradiction (lt_irrefl 0).
-  rewrite <-H at 2.
-  exact zero_lt_1.
-Qed.
-
-Theorem lt_antisym : ∀ a b, a < b → ¬ b < a.
-Proof.
-  intros a b H.
-  destruct (T a b); intuition.
-Qed.
-
-Theorem le_antisymm : ∀ a b, a ≤ b → b ≤ a → a = b.
-Proof.
-  intros a b [H | H] [H0 | H0]; destruct (T a b); intuition.
 Qed.
 
 Theorem div_le : ∀ a b, 0 < b → a｜b → a ≤ b.

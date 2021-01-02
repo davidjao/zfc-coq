@@ -244,6 +244,25 @@ Section Ring_theorems.
     apply unit_sign_r, one_unit.
   Qed.
 
+  Theorem cancellation_0_add : ∀ a b, a + b = 0 → b = -a.
+  Proof.
+    intros a b H.
+    rewrite <-(A3_R _ (-a)), <-H.
+    ring.
+  Qed.
+
+  Theorem cancellation_add : ∀ a b c, a + b = a + c → b = c.
+  Proof.
+    intros a b c H.
+    rewrite <-(A3_R _ b), <-(A4_l a), <-A2_R, H.
+    ring.
+  Qed.
+
+  Lemma cancellation_ne0 : ∀ a b, a * b ≠ 0 → a ≠ 0 ∧ b ≠ 0.
+  Proof.
+    intros a b H; split; contradict H; subst; ring.
+  Qed.
+
 End Ring_theorems.
 (*
 Theorem mul_test : ∀ a, a * 0 = 0.
