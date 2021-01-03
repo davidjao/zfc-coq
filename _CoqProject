@@ -5,6 +5,7 @@ sets.v
 russell.v
 naturals.v
 rings.v
+integral_domains.v
 ordered_rings.v
 integers.v
 rationals.v
