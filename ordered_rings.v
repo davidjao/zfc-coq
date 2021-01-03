@@ -87,6 +87,9 @@ Section Ordered_ring_theorems.
     now apply O3.
   Qed.
 
+  Definition mul_lt_l := O3.
+  Definition mul_lt_r := O3_r.
+
   Theorem neg_lt_0 : ∀ a, 0 < a ↔ -a < 0.
   Proof.
     split; intros H.
@@ -148,10 +151,6 @@ Section Ordered_ring_theorems.
         exfalso; eauto using mul_neg_neg, mul_pos_pos.
   Qed.
 
-  Definition cancellation_0_add := cancellation_0_add R.
-  Definition cancellation_add := cancellation_add R.
-  Definition cancellation_ne0 := cancellation_ne0 R.
-
   Theorem cancellation_0_mul : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
   Proof.
     intros a b H.
@@ -162,5 +161,105 @@ Section Ordered_ring_theorems.
 
   Definition integral_domain_OR :=
     mkID (ring_OR OR) cancellation_0_mul (nontrivial_OR OR).
+
+  Lemma zero_lt_1 : 0 < 1.
+  Proof.
+    destruct (T_OR _ 0 1) as [[H [H0 H1]] | [[H [H0 H1]] | [H [H0 H1]]]];
+      try tauto.
+    - now contradiction (nontrivial_OR OR).
+    - apply (O1_r (-(1))) in H1.
+      rewrite A4_R, A3_R in H1.
+      eapply O2_OR in H1; eauto.
+      now replace 1 with (-(1)*-(1)) by ring.
+  Qed.
+
+  Lemma lt_succ : ∀ m, m < m + 1.
+  Proof.
+    intros m.
+    rewrite <-(A3_R _ m), A1_R at 1.
+    eauto using O1_OR, zero_lt_1.
+  Qed.
+
+  Lemma succ_lt : ∀ n m, n < m → n < m + 1.
+  Proof.
+    eauto using lt_succ, lt_trans_OR.
+  Qed.
+
+  Theorem lt_irrefl : ∀ a, ¬ a < a.
+  Proof.
+    intros a.
+    destruct (T_OR _ a a); intuition.
+  Qed.
+
+  Theorem lt_antisym : ∀ a b, a < b → ¬ b < a.
+  Proof.
+    intros a b H.
+    destruct (T_OR _ a b); intuition.
+  Qed.
+
+  Theorem le_antisymm : ∀ a b, a ≤ b → b ≤ a → a = b.
+  Proof.
+    intros a b [H | H] [H0 | H0]; destruct (T_OR _ a b); intuition.
+  Qed.
+
+  Lemma square_ne0 : ∀ a, a ≠ 0 → a*a > 0.
+  Proof.
+    intros a H.
+    destruct (T_OR _ a 0) as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]];
+      try now subst; auto using mul_pos_pos, mul_neg_neg.
+  Qed.
+
+  Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
+  Proof.
+    intros a b c [H | H] [H0 | H0]; subst; unfold le; eauto using lt_trans_OR.
+  Qed.
+
+  Lemma pos_div_l : ∀ a b, 0 < a → 0 < a * b → 0 < b.
+  Proof.
+    intros a b H H0.
+    pose proof (pos_mul a b).
+    destruct (T_OR _ 0 a), (T_OR _ 0 b); intuition.
+  Qed.
+
+  Lemma pos_div_r : ∀ a b, 0 < a → 0 < b * a → 0 < b.
+  Proof.
+    intros a b H H0.
+    rewrite M1_R in *.
+    eauto using pos_div_l.
+  Qed.
+
+  Lemma one_lt : ∀ a, 1 < a → 0 < a.
+  Proof.
+    eauto using lt_trans_OR, zero_lt_1.
+  Qed.
+
+  Theorem mul_le_l : ∀ a b c, 0 < a → b ≤ c → a * b ≤ a * c.
+  Proof.
+    intros a b c H H0.
+    unfold le in *.
+    destruct H0 as [H0 | H0]; [ left | right ]; subst; simpl in *; auto.
+    apply mul_lt_l; eauto.
+  Qed.
+
+  Theorem mul_le_r : ∀ a b c, a ≤ b → 0 < c → a * c ≤ b * c.
+  Proof.
+    intros a b c H H0.
+    rewrite ? (M1_R _ _ c).
+    now apply mul_le_l.
+  Qed.
+
+  Theorem neg_neg_lt : ∀ a b, a < b → -b < -a.
+  Proof.
+    intros a b H.
+    apply (O1_r (-a+-b)) in H.
+    now rewrite A2_R, A4_R, A3_R, A1_R, <-A2_R, A4_l, A3_r in H.
+  Qed.
+
+  Theorem lt_neq : ∀ a b, a < b → b ≠ a.
+  Proof.
+    intros a b H H0.
+    subst.
+    contradiction (lt_irrefl a).
+  Qed.
 
 End Ordered_ring_theorems.

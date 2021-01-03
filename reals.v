@@ -604,7 +604,7 @@ Proof.
         rewrite ? (rationals.M1 _ b).
         now apply O3, IZQ_lt.
     + subst.
-      rewrite integers.A3_r.
+      rewrite integers.(A3_r).
       destruct H6 as [H6 | H6].
       * apply (H3 ξ); auto.
       * rewrite H6; auto.
@@ -644,9 +644,9 @@ Proof.
     + apply NNPP.
       intros H10.
       assert (n + (-(1)) < n)%Z.
-      { rewrite <-(integers.A3_r n), <-integers.A2.
+      { rewrite <-(integers.(A3_r) n), <-integers.A2.
         apply integers.O1.
-        rewrite integers.A3, <-integers.neg_lt_0.
+        rewrite integers.A3, <-(ordered_rings.neg_lt_0 integer_order).
         exact integers.zero_lt_1. }
       pose proof (integers.T (n+(-(1))) n).
       eapply H9 in H10 as [H10 | H10]; try tauto.
@@ -654,7 +654,7 @@ Proof.
       tauto.
     + replace (1) with (IZQ 1) by auto.
       now rewrite IZQ_add, <-? integers.A2, (integers.A1 _ 1), integers.A4,
-      integers.A3_r.
+      integers.(A3_r).
 Qed.
       
 Theorem A4 : ∀ a, a + -a = 0.
@@ -707,7 +707,7 @@ Proof.
       apply IZQ_eq in H5.
       subst.
       rewrite H5 in H0.
-      contradiction (integers.lt_irrefl 0).
+      contradiction (ordered_rings.lt_irrefl integer_order 0%Z).
     + apply Specify_classification.
       split; eauto using in_set.
       exists (-(n+2)*w), w.
@@ -1100,7 +1100,7 @@ Proof.
       unfold rationals.zero, IZQ in H6.
       apply Qequiv in H6; eauto using integers.zero_ne_1.
       * replace (x*0)%Z with 0%Z in * by ring.
-        rewrite integers.M3_r in H6.
+        rewrite integers.(M3_r) in H6.
         contradiction.
       * intros H7.
         subst.
@@ -1108,8 +1108,8 @@ Proof.
         unfold rationals.lt, rationals.sub in H0.
         rewrite neg_wf, add_wf, pos_wf in H0; auto using integers.zero_ne_1.
         -- replace ((0 * 1 + - 0 * x0) * (x0 * 1))%Z with 0%Z in H0 by ring.
-           contradiction (integers.lt_irrefl 0).
-        -- now rewrite integers.M3_r.
+           contradiction (ordered_rings.lt_irrefl integer_order 0%Z).
+        -- now rewrite integers.(M3_r).
     + contradict H7.
       eapply Dedekind_cut_2; eauto.
       rename H6 into H4.
@@ -1295,7 +1295,7 @@ Proof.
       now apply pow_lt_1.
   - exists (n+-m)%Z.
     split.
-    + rewrite <-integers.lt_shift.
+    + rewrite <-(ordered_rings.lt_shift integer_order); simpl.
       eauto using integers.lt_trans.
     + replace (m+(n+-m))%Z with n%Z by ring.
       eauto using Dedekind_cut_5.
@@ -1303,11 +1303,11 @@ Proof.
     split.
     + apply NNPP.
       intros H9.
-      pose proof lt_succ (x+-(1)) as H10.
+      pose proof (lt_succ integer_order (x+-(1))%Z) as H10; simpl in *.
       replace (x+-(1)+1)%Z with x in H10 by ring.
-      apply H8 in H9 as [H9 | H9].
-      * contradiction (integers.lt_antisym x (x+-(1))).
-      * contradiction (integers.lt_irrefl x).
+      apply H8 in H9 as [H9 | H9]; simpl in *.
+      * contradiction (ordered_rings.lt_antisym integer_order x (x+-(1))%Z).
+      * contradiction (ordered_rings.lt_irrefl integer_order x).
         now rewrite H9 at 1.
     + now replace (m + (x + - (1)) + 1)%Z with (m+x)%Z by ring.
 Qed.
