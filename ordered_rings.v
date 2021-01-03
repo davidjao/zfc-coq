@@ -33,6 +33,8 @@ Section Ordered_ring_theorems.
   Infix "+" := (add_R R).
   Infix "*" := (mul_R R).
   Notation "- a" := (neg_R R a).
+  Infix "-" := (sub_R R).
+  Infix "^" := (pow R).
   Infix "<" := (lt_OR OR).
   Notation "a > b" := (b < a) (only parsing).
   Definition le a b := a < b ∨ a = b.
@@ -260,6 +262,61 @@ Section Ordered_ring_theorems.
     intros a b H H0.
     subst.
     contradiction (lt_irrefl a).
+  Qed.
+
+  Theorem lt_sub_pos : ∀ a b, 0 < b → a - b < a.
+  Proof.
+    intros.
+    unfold sub_R.
+    rewrite lt_shift in *.
+    now replace (a+-(a+-b)) with (b+-0) by ring.
+  Qed.
+  
+  Theorem lt_cross_mul : ∀ a b c d,
+      0 < a → 0 < c → a < b → c < d → a * c < b * d.
+  Proof.
+    intros a b c d H H0 H1 H2.
+    apply (O3 c) in H1 as H3; auto.
+    apply (O3 b) in H2; eauto using lt_trans_OR.
+    rewrite ? (M1_R _ c) in H3.
+    eauto using lt_trans_OR.
+  Qed.
+
+  Theorem pow_pos : ∀ a b, 0 < a → 0 < a^b.
+  Proof.
+    induction b using Induction; intros H.
+    - rewrite pow_0_r.
+      exact zero_lt_1.
+    - rewrite pow_succ_r.
+      auto using O2_OR.
+  Qed.
+
+  Theorem pow_ge_1 : ∀ a n, 1 < a → 1 ≤ a^n.
+  Proof.
+    induction n using Induction; intros H.
+    - rewrite pow_0_r.
+      now right.
+    - rewrite pow_succ_r.
+      left.
+      destruct (IHn H) as [H0 | H0].
+      + eapply lt_cross_mul in H; try exact H0; auto using zero_lt_1.
+        now rewrite M3_R in H.
+      + now rewrite <-H0, M3_R.
+  Qed.
+
+  Theorem pow_gt_1 : ∀ a n, 1 < a → (0 < n)%N → 1 < a^n.
+  Proof.
+    induction n using Induction; intros H H0.
+    - contradiction (naturals.lt_irrefl 0).
+    - rewrite pow_succ_r.
+      destruct (classic (n = 0)%N).
+      + now rewrite H1, pow_0_r, M3_R.
+      + apply succ_0 in H1 as [m H1].
+        subst.
+        apply (lt_cross_mul 1 (a ^ S m) 1 a) in H; auto using zero_lt_1.
+        * now rewrite M3_R in H.
+        * apply IHn; auto.
+          apply naturals.lt_succ.
   Qed.
 
 End Ordered_ring_theorems.

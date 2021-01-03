@@ -27,6 +27,7 @@ Section Integral_domain_theorems.
   Infix "-" := (sub_R R).
   Infix "*" := (mul_R R).
   Notation "- a" := (neg_R R a).
+  Infix "^" := (pow R).
   
   Add Ring R_ring :
     (mk_rt 0 1 (add_R R) (mul_R R) (sub_R R) (neg_R R) eq (A3_R R) (A1_R R)
@@ -52,4 +53,15 @@ Section Integral_domain_theorems.
     eauto using M1_R, eq_trans, cancellation_mul_l.
   Qed.
 
+  Theorem pow_ne_0 : ∀ a b, a ≠ 0 → a^b ≠ 0.
+  Proof.
+    induction b using Induction; intros H.
+    - rewrite (pow_0_r R); auto using nontrivial_ID.
+    - rewrite pow_succ_r.
+      intros H0.
+      contradiction (IHb H).
+      apply cancellation_ID in H0.
+      tauto.
+  Qed.
+             
 End Integral_domain_theorems.

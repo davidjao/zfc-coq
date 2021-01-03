@@ -1,4 +1,4 @@
-Require Export sets Ring.
+Require Export naturals Ring.
 
 Record ring :=
   mkRing {
@@ -40,7 +40,7 @@ Section Ring_theorems.
     auto.
   Qed.
 
-  Add Ring R_ring :
+  Add Ring generic_ring :
     (mk_rt 0 1 (add_R R) (mul_R R) sub_R (neg_R R) eq (A3_R R) (A1_R R)
            (A2_R R) (M3_R R) (M1_R R) (M2_R R) (D1_R R) sub_neg_R (A4_R R)).
 
@@ -263,11 +263,109 @@ Section Ring_theorems.
     intros a b H; split; contradict H; subst; ring.
   Qed.
 
+  Definition mul_right : elts (set_R R) → set → set.
+  Proof.
+    intros a x.
+    destruct (excluded_middle_informative (x ∈ (set_R R))).
+    - exact (value _ (mul_R _ (mkSet _ _ i : elts (set_R R)) a)).
+    - exact ∅.
+  Defined.
+
+  Theorem mul_right_lemma :
+    ∀ a b : elts (set_R R), mul_right a (value _ b) = value _ (b * a).
+  Proof.
+    intros a b.
+    unfold mul_right.
+    destruct excluded_middle_informative.
+    - replace {| in_set := i |} with b; auto; now apply set_proj_injective.
+    - now destruct b.
+  Qed.
+
+  Definition pow : (elts (set_R R)) → N → (elts (set_R R)).
+  Proof.
+    intros a b.
+    assert (∀ x : set, x ∈ (set_R R) → mul_right a x ∈ (set_R R)) as H.
+    { intros x H.
+      unfold mul_right.
+      destruct excluded_middle_informative; intuition.
+      apply in_set. }
+    destruct (constructive_indefinite_description
+                _ (function_construction (set_R R) (set_R R) (mul_right a) H))
+      as [add_a [H0 [H1 H2]]].
+    destruct (constructive_indefinite_description
+                _ (recursion add_a _ _ (in_set (set_R R) 1) H0 H1))
+      as [pow_b [H3 [H4 [H5 H6]]]].
+    assert (pow_b b ∈ (set_R R)) as H7.
+    { rewrite <-H4.
+      apply function_maps_domain_to_range.
+      rewrite H3.
+      apply in_set. }
+    exact (mkSet (set_R R) (pow_b b) H7).
+  Defined.
+
+  Infix "^" := pow.
+
+  Theorem pow_0_r : ∀ x, x^0 = 1.
+  Proof.
+    intros x.
+    unfold pow.
+    repeat (destruct constructive_indefinite_description; repeat destruct a).
+    now apply set_proj_injective.
+  Qed.
+
+  Theorem pow_succ_r : ∀ x y, x^(S y) = x^y * x.
+  Proof.
+    intros x y.
+    unfold pow.
+    repeat (destruct constructive_indefinite_description; repeat destruct a).
+    apply set_proj_injective.
+    simpl.
+    rewrite <-S_is_succ, e5, e1, <-mul_right_lemma; eauto using in_set.
+    rewrite <-e3.
+    apply function_maps_domain_to_range.
+    rewrite e2.
+    apply in_set.
+  Qed.
+
+  Theorem pow_1_r : ∀ x, x^1 = x.
+  Proof.
+    intros x.
+    now rewrite pow_succ_r, pow_0_r, M3_R.
+  Qed.
+
+  Theorem pow_1_l : ∀ x, 1^x = 1.
+  Proof.
+    induction x using Induction.
+    - now rewrite pow_0_r.
+    - now rewrite pow_succ_r, IHx, M3_R.
+  Qed.
+
+  Theorem pow_0_l : ∀ x, x ≠ 0%N → 0^x = 0.
+  Proof.
+    induction x using Induction; intros H; try tauto.
+    now rewrite pow_succ_r, mul_0_r.
+  Qed.
+
+  Theorem pow_add_r : ∀ a b c, a^(b+c) = a^b * a^c.
+  Proof.
+    induction c using Induction.
+    - now rewrite add_0_r, pow_0_r, M3_r.
+    - now rewrite add_succ_r, ? pow_succ_r, IHc, M2_R.
+  Qed.
+
+  Theorem pow_mul_l : ∀ a b c, (a*b)^c = a^c * b^c.
+  Proof.
+    induction c using Induction.
+    - now rewrite ? pow_0_r, M3_R.
+    - now rewrite ? pow_succ_r, <-? M2_R, (M2_R _ a),
+      (M1_R _ _ (b^c)), IHc, ? M2_R.
+  Qed.
+
+  Theorem pow_mul_r : ∀ a b c, a^(b*c) = (a^b)^c.
+  Proof.
+    induction c using Induction.
+    - now rewrite naturals.mul_0_r, ? pow_0_r.
+    - now rewrite mul_succ_r, pow_succ_r, pow_add_r, IHc.
+  Qed.
+
 End Ring_theorems.
-(*
-Theorem mul_test : ∀ a, a * 0 = 0.
-Proof.
-  intros a.
-  now rewrite (mul_0_r integers).
-Qed.
-*)

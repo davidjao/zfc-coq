@@ -8,5 +8,6 @@ rings.v
 integral_domains.v
 ordered_rings.v
 integers.v
+fields.v
 rationals.v
 reals.v
