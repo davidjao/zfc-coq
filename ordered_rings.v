@@ -319,4 +319,10 @@ Section Ordered_ring_theorems.
           apply naturals.lt_succ.
   Qed.
 
+  Theorem one_lt_2 : 1 < 1 + 1.
+  Proof.
+    rewrite <-(A3_r _ 1) at 1.
+    apply O1_OR, zero_lt_1.
+  Qed.
+
 End Ordered_ring_theorems.

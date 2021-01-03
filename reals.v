@@ -807,7 +807,7 @@ Proof.
     apply set_proj_injective in H6.
     subst.
     assert (r*s < c*d)%Q by auto using lt_cross_mul.
-    unfold rationals.le in H11.
+    unfold rationals.le, ordered_rings.le in H11.
     pose proof (rationals.T (c*d) (r*s)).
     tauto.
   - intros p q H1 H2.
@@ -819,8 +819,8 @@ Proof.
     apply set_proj_injective in H3.
     subst.
     repeat split; auto.
-    destruct H8 as [H8 | H8]; left; eauto using rationals.lt_trans.
-    congruence.      
+    destruct H8 as [H8 | H8]; left; simpl in *; eauto using rationals.lt_trans.
+    congruence.
   - intros p H1.
     apply Specify_classification in H1
       as [H1 [r [s [ξ [H3 [H4 [H5 [H6 [H7 H8]]]]]]]]].
@@ -883,7 +883,7 @@ Proof.
     apply pos_nonempty in H0 as [d [H0 H4]].
     exists c, d, ξ.
     repeat split; auto.
-    left.
+    left; simpl.
     eauto using O2, rationals.lt_trans.
   - intros H1.
     apply pos_nonempty in H as [c [H H2]].
@@ -896,7 +896,7 @@ Proof.
       split; eauto using in_set.
       exists c, d, (e*f)%Q.
       repeat split; eauto using rationals.lt_trans.
-      left.
+      left; simpl in *.
       auto using lt_cross_mul. }
     unfold IRS, zero, IQR in H6.
     apply Specify_classification in H6 as [H6 [ξ [H7 H8]]].
@@ -936,7 +936,7 @@ Proof.
     + destruct H16 as [H16 | H16], H10 as [H10 | H10].
       * apply (O3 ρ) in H16; auto.
         rewrite M2 in H16.
-        left.
+        left; simpl in *.
         eauto using rationals.lt_trans.
       * subst.
         left.
@@ -962,7 +962,7 @@ Proof.
     + destruct H16 as [H16 | H16], H10 as [H10 | H10].
       * apply (O3 τ) in H16; auto.
         rewrite ? (M1 τ), <-M2 in H16.
-        left.
+        left; simpl in *.
         eauto using rationals.lt_trans.
       * subst.
         left.
@@ -1053,7 +1053,7 @@ Proof.
         apply pos_nonempty in l0 as [d [H5 H6]].
         exists c, d, ζ.
         repeat split; auto.
-        left.
+        left; simpl.
         destruct (rationals.T 0 ζ)
           as [[H7 [H8 H9]] | [[H7 [H8 H9]] | [H7 [H8 H9]]]]; try tauto;
           eauto using rationals.lt_trans, O2.
@@ -1134,12 +1134,13 @@ Proof.
       apply set_proj_injective in H2; subst; apply Specify_classification;
         split; eauto using in_set; exists q, r; repeat split; auto.
     + left.
-      destruct H4 as [H4 | H4]; left; eauto using rationals.lt_trans.
+      destruct H4 as [H4 | H4]; left; simpl in *;
+        eauto using rationals.lt_trans.
       congruence.
     + destruct (classic (q ≤ 0)%Q) as [H2 | H2]; try tauto; right.
       assert (0 < q)%Q as H6.
       { pose proof (rationals.T q 0).
-        unfold rationals.le in H2.
+        unfold rationals.le, ordered_rings.le in H2.
         tauto. }
       assert (0 < r)%Q as H7.
       { eapply (rationals.lt_trans _ 1); eauto.
@@ -1365,7 +1366,7 @@ Proof.
           apply pos_nonempty in l as [c [H1 H5]].
           apply pos_nonempty in l0 as [d [H6 H7]].
           exists c, d, ξ.
-          repeat split; auto; subst; left; eauto using O2.
+          repeat split; auto; subst; left; simpl in *; eauto using O2.
         * now apply inv_lt in l.
       + unfold mul_pos, mul_pos_set.
         repeat destruct excluded_middle_informative; try contradiction.
@@ -1375,7 +1376,7 @@ Proof.
           apply pos_nonempty in l as [c [H1 H5]].
           apply pos_nonempty in l0 as [d [H6 H7]].
           exists c, d, ξ.
-          repeat split; auto; left; eauto using rationals.lt_trans, O2.
+          repeat split; auto; left; simpl; eauto using rationals.lt_trans, O2.
         * now apply inv_lt in l. }
     assert (1 < w)%Q as H4.
     { rewrite inv_lt_1; unfold w; auto using rationals.inv_lt.

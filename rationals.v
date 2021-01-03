@@ -499,16 +499,6 @@ Defined.
 
 Infix "<" := lt : Q_scope.
 
-Notation "a > b" := (b < a) (only parsing) : Q_scope.
-
-Definition le a b := a < b ∨ a = b.
-Infix "≤" := le : Q_scope.
-Notation "a ≥ b" := (b ≤ a) (only parsing) : Q_scope.
-Notation "a < b < c" := (a < b ∧ b < c) (at level 70, b at next level): Q_scope.
-Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level): Q_scope.
-Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): Q_scope.
-Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): Q_scope.
-
 Theorem T : ∀ a b, a < b ∧ a ≠ b ∧ ¬ b < a
                    ∨ ¬ a < b ∧ a = b ∧ ¬ b < a
                    ∨ ¬ a < b ∧ a ≠ b ∧ b < a.
@@ -542,6 +532,16 @@ Proof.
     eauto 6 using integers.mul_pos_pos, integers.O0.
 Qed.
 
+Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
+Proof.
+  intros a b c H H0.
+  unfold lt in *.
+  replace (c-a) with ((b-a)+(c-b)-0) by ring.
+  apply O0.
+  - now replace (b-a) with ((b-a)-0) in H by ring.
+  - now replace (c-b) with ((c-b)-0) in H0 by ring.
+Qed.
+
 Theorem O1 : ∀ a b c, b < c → a + b < a + c.
 Proof.
   intros a b c H.
@@ -563,48 +563,27 @@ Proof.
   now apply (integers.mul_pos_pos).
 Qed.
 
-Theorem O3 : ∀ a b c, 0 < a → b < c → a * b < a * c.
-Proof.
-  intros a b c H H0.
-  unfold lt in *.
-  replace (a*c - a*b) with (a*(c-b) - 0) by ring.
-  apply O2; auto.
-  now replace (c-b) with (c-b-0) in H0 by ring.
-Qed.
-
-Theorem lt_irrefl : ∀ a, ¬ a < a.
-Proof.
-  intros a.
-  pose proof (T a a).
-  tauto.
-Qed.
-
-Theorem lt_antisym : ∀ a b, a < b → ¬ b < a.
-Proof.
-  intros a b H.
-  pose proof (T a b).
-  tauto.
-Qed.
-
-Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
-Proof.
-  intros a b c H H0.
-  unfold lt in *.
-  replace (c-a) with ((b-a)+(c-b)-0) by ring.
-  apply O0.
-  - now replace (b-a) with ((b-a)-0) in H by ring.
-  - now replace (c-b) with ((c-b)-0) in H0 by ring.
-Qed.
-
 Definition rational_ring := (ring_from_field rationals).
 Definition rational_order :=
   mkOring rational_ring lt lt_trans T O1 O2 zero_ne_1.
 
-Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
-Proof.
-  unfold le in *.
-  intros a b c [H | H] [H0 | H0]; pose proof lt_trans a b c; subst; tauto.
-Qed.
+Notation "a > b" := (b < a) (only parsing) : Q_scope.
+
+Definition le := ordered_rings.le rational_order : Q → Q → Prop.
+Infix "≤" := le : Q_scope.
+Notation "a ≥ b" := (b ≤ a) (only parsing) : Q_scope.
+Notation "a < b < c" := (a < b ∧ b < c) (at level 70, b at next level): Q_scope.
+Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level): Q_scope.
+Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): Q_scope.
+Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): Q_scope.
+
+Definition O3 :=
+  ordered_rings.O3 rational_order : ∀ a b c, 0 < a → b < c → a * b < a * c.
+Definition lt_irrefl := ordered_rings.lt_irrefl rational_order : ∀ a, ¬ a < a.
+Definition lt_antisym :=
+  ordered_rings.lt_antisym rational_order : ∀ a b, a < b → ¬ b < a.
+Definition le_trans :=
+  ordered_rings.le_trans rational_order : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
 
 Theorem lt_dense : ∀ a b, a < b → ∃ c, a < c ∧ c < b.
 Proof.
@@ -907,7 +886,7 @@ Proof.
   subst.
   split.
   - destruct H2 as [H2 | H2].
-    + left.
+    + left; simpl.
       unfold lt, sub, IZQ.
       rewrite neg_wf, add_wf, pos_wf, ? (M3_r integers);
         auto using integers.zero_ne_1.
@@ -943,53 +922,23 @@ Proof.
   destruct (Z_archimedean (x*b^-1)) as [n [[H1 | H1] H2]]; exists n;
     repeat split; try (rewrite <-(M3 x), <-(inv_l b) at 1; auto;
                        rewrite ? (M1 _ b), <-M2, (M1 _ x); now apply O3).
-  - left.
+  - left; simpl in *.
     rewrite <-(M3 x), <-(inv_l b), ? (M1 _ b), <-M2, (M1 _ x); auto using O3.
   - right.
     now rewrite H1, <-M2, inv_l, M1, M3.
 Qed.
 
-Theorem neg_lt_0 : ∀ a, 0 < a ↔ -a < 0.
-Proof.
-  split; intros H.
-  - eapply (O1 (-a)) in H.
-    now rewrite A1, A3, A1, A4 in H.
-  - eapply (O1 a) in H.
-    now rewrite A4, A1, A3 in H.
-Qed.
-
-Theorem lt_neg_0 : ∀ a, a < 0 ↔ 0 < -a.
-Proof.
-  intros a.
-  rewrite neg_lt_0.
-  now replace (- -a) with a by ring.
-Qed.
-
-Theorem lt_sub_pos : ∀ a b, 0 < b → a - b < a.
-Proof.
-  intros.
-  unfold sub.
-  rewrite <-(A3 a) at 2.
-  rewrite <-(A4 b), <-A2, (A1 _ a), (A1 b), <-(A3 (a+-b)), (A1 0) at 1.
-  now apply O1.
-Qed.
-  
-Theorem lt_neq : ∀ a b, a < b → b ≠ a.
-Proof.
-  intros a b H H0.
-  subst.
-  contradiction (lt_irrefl a).
-Qed.
-
-Theorem lt_cross_mul : ∀ a b c d,
-    0 < a → 0 < c → a < b → c < d → a * c < b * d.
-Proof.
-  intros a b c d H H0 H1 H2.
-  apply (O3 c) in H1 as H3; auto.
-  apply (O3 b) in H2; eauto using lt_trans.
-  rewrite ? (M1 c) in H3.
-  eauto using lt_trans.
-Qed.
+Definition neg_lt_0 :=
+  ordered_rings.neg_lt_0 rational_order : ∀ a, 0 < a ↔ -a < 0.
+Definition lt_neg_0 :=
+  ordered_rings.lt_neg_0 rational_order : ∀ a, a < 0 ↔ 0 < -a.
+Definition lt_sub_pos :=
+  ordered_rings.lt_sub_pos rational_order : ∀  a b, 0 < b → a - b < a.
+Definition lt_neq :=
+  ordered_rings.lt_neq rational_order : ∀ a b, a < b → b ≠ a.
+Definition lt_cross_mul :=
+  ordered_rings.lt_cross_mul rational_order :
+    ∀ a b c d, 0 < a → 0 < c → a < b → c < d → a * c < b * d.
 
 Theorem lt_cross_inv : ∀ a b, 0 < a → 0 < b → a < b ↔ b^-1 < a^-1.
 Proof.
@@ -1003,24 +952,9 @@ Proof.
       auto using lt_neq.
 Qed.
 
-Theorem inv_unique : ∀ a, (∀ b, a * b = 1 → b = a^-1).
-Proof.
-  intros a b H.
-  destruct (classic (a = 0)).
-  - subst.
-    replace (0*b) with 0 in H by ring.
-    now contradiction zero_ne_1.
-  - rewrite <-(inv_l a), (M1 _ a) in H; auto.
-    assert (a^-1 * (a*b) = a^-1 * (a*a^-1)) as H1 by congruence.
-    now rewrite ? M2, inv_l, ? M3 in H1.
-Qed.
-
-Theorem inv_one : 1^-1 = 1.
-Proof.
-  symmetry.
-  apply inv_unique.
-  now rewrite M3.
-Qed.
+Definition inv_unique :=
+  inv_unique rationals : ∀ a, (∀ b, a * b = 1 → b = a^-1).
+Definition inv_one := inv_one rationals : 1^-1 = 1.
 
 Theorem inv_zero : 0^-1 = 0.
 Proof.
@@ -1047,26 +981,10 @@ Proof.
     rewrite inv_zero.
     replace (-0) with 0 by field.
     now rewrite inv_zero.
-  - apply inv_unique.
-    replace (- a * - a^-1) with (a^-1 * a) by ring.
-    now rewrite inv_l.
+  - now apply (fields.inv_neg rationals).
 Qed.
 
-Theorem inv_ne_0 : ∀ a, a ≠ 0 → a^-1 ≠ 0.
-Proof.
-  intros a H.
-  contradict H.
-  destruct (T a 0) as [[H0 [H1 H2]] | [[H0 [H1 H2]] | [H0 [H1 H2]]]]; try tauto.
-  - apply (O1 (-a)) in H0.
-    rewrite A1, A4, A1, A3 in H0.
-    apply inv_lt in H0.
-    rewrite <-inv_neg in H0; auto.
-    apply (O1 (a^-1)) in H0.
-    rewrite A4, A1, A3 in H0.
-    pose proof (T (a^-1) 0); tauto.
-  - apply inv_lt in H2.
-    pose proof (T (a^-1) 0); tauto.
-Qed.
+Definition inv_ne_0 := fields.inv_ne_0 rationals : ∀ a, a ≠ 0 → a^-1 ≠ 0.
 
 Theorem inv_inv : ∀ a, a^-1^-1 = a.
 Proof.
@@ -1074,49 +992,25 @@ Proof.
   destruct (classic (a = 0)).
   - subst.
     now rewrite ? inv_zero.
-  - assert (a * a^-1 * a = a * a^-1 * a^-1^-1) as H0.
-    { rewrite <-? M2, inv_l, (M1 (a^-1)), inv_l; auto using inv_ne_0. }
-    now rewrite ? (M1 a), inv_l, ? M3 in H0.
-Qed.
-
-Theorem mul_0_l : ∀ a, 0 * a = 0.
-Proof.
-  intros a.
-  field.
-Qed.
-
-Theorem mul_0_r : ∀ a, a * 0 = 0.
-Proof.
-  intros a.
-  field.
+  - now apply (fields.inv_inv rationals).
 Qed.
 
 Theorem inv_mul : ∀ a b, a^-1 * b^-1 = (a*b)^-1.
 Proof.
   intros a b.
   destruct (classic (a = 0)), (classic (b = 0)); subst;
-    try now rewrite ? inv_zero, ? mul_0_l, ? mul_0_r, ? inv_zero.
+    try now rewrite ? inv_zero, ? (mul_0_l (ring_from_field rationals)),
+    ? (mul_0_r (ring_from_field rationals)); simpl; rewrite ? inv_zero.
   now field.
 Qed.
 
-Theorem cancellation_mul_0 : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
-Proof.
-  intros a b H.
-  destruct (classic (a = 0)) as [H0 | H0]; try tauto.
-  assert (a^-1 * (a * b) = a^-1 * 0) by congruence.
-  rewrite M2, inv_l, M3 in H1; auto.
-  right.
-  ring [H1].
-Qed.
+Definition cancellation_mul_0 :=
+  cancellation_ID (integral_domain_from_field rationals) :
+    ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
 
-Theorem cancellation_mul_l : ∀ a b c, a ≠ 0 → a * b = a * c → b = c.
-Proof.
-  intros a b c H H0.
-  assert (a*(b+-c) = 0) by ring [H0].
-  apply cancellation_mul_0 in H1 as [H1 | H1]; try tauto.
-  rewrite <-(A3 c), <-H1.
-  ring.
-Qed.
+Definition cancellation_mul_l :=
+  cancellation_mul_l (integral_domain_from_field rationals) :
+    ∀ a b c, a ≠ 0 → a * b = a * c → b = c.
 
 Theorem lt_div : ∀ a b, 0 < a → a < b → 1 < b * a^-1.
 Proof.
@@ -1125,19 +1019,11 @@ Proof.
   rewrite inv_l, M1 in H0; auto using lt_neq.
 Qed.
 
-Theorem zero_lt_1 : 0 < 1.
-Proof.
-  apply IZQ_lt, zero_lt_1.
-Qed.
+Definition zero_lt_1 := ordered_rings.zero_lt_1 rational_order : 0 < 1.
 
 Theorem one_lt_2 : 1 < 2.
 Proof.
-  unfold IZQ, one, lt, sub.
-  rewrite neg_wf, add_wf, pos_wf; auto using integers.zero_ne_1.
-  + replace ((2 * 1 + - (1) * 1) * (1 * 1))%Z with 1%Z by ring.
-    auto using integers.zero_lt_1.
-  + rewrite integers.M3.
-    apply integers.zero_ne_1.
+  apply IZQ_lt, (one_lt_2 integer_order).
 Qed.
 
 Definition pow_N := (pow rational_ring) : Q → N → Q.
@@ -1536,7 +1422,7 @@ Proof.
       replace (IZQ 1%Z) with 1 by auto.
       replace (1+x+(n*x*(1+x)+-(1)*x*(1+x))) with (1+n*x+x*x*(n+-(1))) by ring.
       rewrite <-(A3 (1+n*x)), (A1 0) at 1.
-      left.
+      left; simpl.
       rewrite IZQ_lt, <-IZQ_add, <-IZQ_neg in H5.
       auto using O1, O2.
   - subst.
@@ -1711,8 +1597,9 @@ Proof.
     rewrite pow_add_r, <-pow_mul_l, pow_1_r in H4; auto using lt_neq.
     repeat split; auto.
     assert (r*r + -(1) = (r+-(1)) * (r+1)) as H5 by ring.
-    assert (a ≤ 2) as H6 by (destruct (T 2 a)
-          as [[H6 _] | [[_ [H6 _]] | [_ [_ H6]]]]; subst; unfold le; tauto).
+    assert (a ≤ 2) as H6 by
+          (destruct (T 2 a) as [[H6 _] | [[_ [H6 _]] | [_ [_ H6]]]];
+           subst; unfold le, ordered_rings.le; try tauto).
     assert (r+1 < 3) as H7.
     { rewrite <-IZQ_add, (A1 2), ? (A1 _ 1), <-IZQ_add.
       unfold r.
