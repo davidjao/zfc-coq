@@ -33,6 +33,7 @@ Section Ordered_field_theorems.
   Infix "*" := (mul_F F).
   Notation "- a" := (neg_F F a).
   Infix "-" := (sub_F F).
+  Infix "^" := (pow F).
   Infix "<" := (lt_OF OF).
   Notation "a > b" := (b < a) (only parsing).
   Definition le a b := a < b ∨ a = b.
@@ -73,5 +74,58 @@ Section Ordered_field_theorems.
   Qed.
 
   Definition inv_lt := O4.
+
+  Theorem lt_cross_inv : ∀ a b, 0 < a → 0 < b → a < b ↔ b^-1 < a^-1.
+  Proof.
+    intros a b H H0.
+    split; intros H1.
+    - apply (ordered_rings.O3 ordered_ring_from_field (a^-1 * b^-1)) in H1;
+        simpl in *.
+      + rewrite <-? M2_F, inv_l, (M1_F _ _ 1), M3_F, M1_F, <-M2_F, (M1_F _ a),
+        inv_l, M1_F, M3_F in H1;
+          auto using (ordered_rings.lt_neq ordered_ring_from_field).
+      + apply (ordered_rings.O2_OR ordered_ring_from_field); now apply inv_lt.
+    - apply (ordered_rings.O3 ordered_ring_from_field (a*b)) in H1; simpl in *;
+        try now apply (ordered_rings.O2_OR ordered_ring_from_field).
+      rewrite <-M2_F, (M1_F _ b), inv_l, M1_F, M3_F, M1_F, M2_F, inv_l, M3_F in H1;
+        auto using (ordered_rings.lt_neq ordered_ring_from_field).
+  Qed.
+
+  Theorem lt_div : ∀ a b, 0 < a → a < b → 1 < b * a^-1.
+  Proof.
+    intros a b H H0.
+    apply (ordered_rings.O3 ordered_ring_from_field (a^-1)) in H0; simpl in *.
+    + rewrite inv_l, M1_F in H0;
+        auto using (ordered_rings.lt_neq ordered_ring_from_field).
+    + now apply inv_lt.
+  Qed.
+
+  Lemma square_ge_1 : ∀ r, 0 < r → 1 < r * r → 1 < r.
+  Proof.
+    intros r H H0.
+    destruct (T_OF _ 1 r) as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]];
+      try tauto.
+    - subst.
+      rewrite M3_F in *.
+      contradiction (lt_irrefl ordered_ring_from_field 1).
+    - contradiction (lt_antisym ordered_ring_from_field 1 (r*r)); auto; simpl.
+      rewrite <-(M3_F _ 1).
+      now apply (lt_cross_mul ordered_ring_from_field).
+  Qed.
+
+  Theorem pow_pos : ∀ a n, 0 < a → 0 < a^n.
+  Proof.
+    intros a n H.
+    unfold pow.
+    repeat destruct excluded_middle_informative;
+      repeat destruct constructive_indefinite_description;
+      try destruct a0.
+    - rewrite integers.A3 in *.
+      subst.
+      now apply (pow_pos ordered_ring_from_field).
+    - apply inv_lt in H.
+      now apply (pow_pos ordered_ring_from_field).
+    - exact (ordered_rings.zero_lt_1 ordered_ring_from_field).
+  Qed.
 
 End Ordered_field_theorems.

@@ -1151,7 +1151,8 @@ Proof.
         apply IZQ_lt, integers.zero_lt_1. }
       split; auto.
       eapply Dedekind_cut_5; eauto.
-      rewrite <-lt_cross_inv; eauto using O2, rationals.lt_trans.
+      rewrite <-(lt_cross_inv rational_field_order); simpl;
+        eauto using O2, rationals.lt_trans.
       rewrite ? (M1 _ r).
       eauto using O3.
   - intros p H0.
@@ -1195,7 +1196,7 @@ Proof.
       { apply (rationals.lt_trans _ 1); auto.
         apply IZQ_lt, integers.zero_lt_1. }
       split.
-      * apply lt_div in H5; auto.
+      * apply (lt_div rational_field_order) in H5; auto.
         apply (O3 ρ) in H5; auto.
         now rewrite M1, M3, M2 in H5.
       * apply Specify_classification.
@@ -1294,11 +1295,12 @@ Proof.
       contradict H8.
       rewrite integers.A1, integers.A3.
       eauto using Dedekind_cut_2.
-    + rewrite pow_add_r in H8; auto using lt_neq.
+    + rewrite (pow_add_r rationals) in H8; auto using lt_neq;
+        simpl in *; fold pow in *.
       contradict H8.
       eapply Dedekind_cut_2; eauto.
       rewrite <-(M3 c), (M1 1).
-      apply lt_cross_mul; auto using pow_pos.
+      apply lt_cross_mul; auto; try now apply (pow_pos rational_field_order).
       now apply pow_lt_1.
   - exists (n+-m)%Z.
     split.
@@ -1392,7 +1394,7 @@ Proof.
     contradict H1.
     pose proof H4 as H1.
     apply square_in_interval in H4 as [r [H4 [H5 H6]]].
-    assert (1 < r)%Q as H7 by auto using square_ge_1.
+    assert (1 < r)%Q as H7 by now apply (square_ge_1 rational_field_order).
     pose proof H7 as H8.
     eapply pow_archimedean in H8 as [n [H9 H10]]; eauto.
     unfold mul_pos.
@@ -1401,7 +1403,7 @@ Proof.
     apply Specify_classification.
     split; auto.
     exists (r^(-(n+2))), (r^n), ξ.
-    repeat split; auto using pow_pos.
+    repeat split; auto; try now apply (pow_pos rational_field_order).
     + unfold inv_pos.
       destruct excluded_middle_informative; try tauto.
       apply Specify_classification.
@@ -1410,18 +1412,20 @@ Proof.
       repeat split; auto.
       right.
       split.
-      * now apply pow_pos.
-      * rewrite <-inv_mul, <-? inv_pow, <-pow_mul_r, <-pow_add_r;
+      * now apply (pow_pos rational_field_order).
+      * rewrite <-inv_mul, <-? inv_pow, <-pow_mul_r, <-(pow_add_r rationals);
           auto using lt_neq.
         replace (-(n+2)*-(1)+-(1))%Z with (n+1)%Z by ring; auto.
     + unfold w in *.
-      rewrite <-pow_add_r; auto using lt_neq.
-      left.
+      rewrite <-(pow_add_r rationals); auto using lt_neq.
+      left; simpl; fold pow.
       replace (-(n+2)+n)%Z with (-(2))%Z by ring.
-      apply (O3 (ξ * r^(-(2)))) in H6; auto using O2, pow_pos.
+      apply (O3 (ξ * r^(-(2)))) in H6;
+        try (apply O2; try apply (pow_pos rational_field_order); auto).
       rewrite <-M2, (M1 _ (ξ^-1)), ? M2, inv_l, M3 in H6; auto using lt_neq.
-      rewrite <-(pow_1_r r) in H6 at 2 3.
-      rewrite <-(M2 ξ), <-pow_add_r, <-M2, <-pow_add_r in H6; auto using lt_neq.
+      rewrite <-(pow_1_r rationals r) in H6 at 2 3; fold pow in *.      
+      rewrite <-(M2 ξ), <-(pow_add_r rationals), <-M2,
+      <-(pow_add_r rationals) in H6; auto using lt_neq.
       replace (-(2)+1+1)%Z with 0%Z in H6 by ring.
       now rewrite pow_0_r, M1, M3 in H6.
 Qed.
