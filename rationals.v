@@ -1,4 +1,4 @@
-Require Export fields Field.
+Require Export ordered_fields Field.
 
 Definition ℤ0 := {z in ℤ × ℤ | (proj2 ℤ ℤ z) ≠ 0}.
 
@@ -566,6 +566,8 @@ Qed.
 Definition rational_ring := (ring_from_field rationals).
 Definition rational_order :=
   mkOring rational_ring lt lt_trans T O1 O2 zero_ne_1.
+Definition rational_field_order :=
+  mkOfield rationals lt lt_trans T O1 O2.
 
 Notation "a > b" := (b < a) (only parsing) : Q_scope.
 
@@ -842,30 +844,6 @@ Proof.
            ring.
 Qed.
 
-Theorem O4 : ∀ a, 0 < a → 0 < a^-1.
-Proof.
-  intros x H.
-  destruct (pos_denom x) as [a [b [H0 H1]]].
-  assert (b ≠ 0%Z) as H2 by (pose proof (integers.T b 0); tauto).
-  assert (a ≠ 0%Z) as H3.
-  { intros H3.
-    subst.
-    unfold zero, lt, sub in H.
-    rewrite neg_wf, add_wf, pos_wf in H; auto using integers.zero_ne_1.
-    - replace ((0*1+-0*b)*(b*1))%Z with 0%Z in * by ring.
-      contradiction (ordered_rings.lt_irrefl integer_order 0%Z).
-    - contradict H2.
-      ring [H2]. }
-  subst.
-  rewrite inv_wf; auto.
-  unfold zero, lt, sub in *.
-  rewrite neg_wf, add_wf, pos_wf in *; auto using integers.zero_ne_1;
-    try (contradict H2; ring [H2]); try (contradict H3; ring [H3]).
-  now replace ((b*1+-0*a)*(a*1))%Z with ((a*1+-0*b)*(b*1))%Z by ring.
-Qed.
-
-Definition inv_lt := O4.
-
 Theorem inv_div : ∀ a b : Z, b ≠ 0%Z → a / b = a * b^-1.
 Proof.
   intros a b H.
@@ -944,9 +922,10 @@ Theorem lt_cross_inv : ∀ a b, 0 < a → 0 < b → a < b ↔ b^-1 < a^-1.
 Proof.
   intros a b H H0.
   split; intros H1.
-  - apply (O3 (a^-1 * b^-1)) in H1; auto using inv_lt, O2.
-    rewrite <-? M2, inv_l, (M1 _ 1), M3, M1, <-M2, (M1 a), inv_l, M1, M3 in H1;
-      auto using lt_neq.
+  - apply (O3 (a^-1 * b^-1)) in H1.
+    + rewrite <-? M2, inv_l, (M1 _ 1), M3, M1, <-M2, (M1 a), inv_l, M1, M3
+        in H1; auto using lt_neq.
+    + apply O2; now apply (inv_lt rational_field_order).
   - apply (O3 (a*b)) in H1; auto using O2.
     rewrite <-M2, (M1 b), inv_l, M1, M3, M1, M2, inv_l, M3 in H1;
       auto using lt_neq.
@@ -1015,8 +994,9 @@ Definition cancellation_mul_l :=
 Theorem lt_div : ∀ a b, 0 < a → a < b → 1 < b * a^-1.
 Proof.
   intros a b H H0.
-  apply (O3 (a^-1)) in H0; auto using inv_lt.
-  rewrite inv_l, M1 in H0; auto using lt_neq.
+  apply (O3 (a^-1)) in H0.
+  + rewrite inv_l, M1 in H0; auto using lt_neq.
+  + now apply (inv_lt rational_field_order).
 Qed.
 
 Definition zero_lt_1 := ordered_rings.zero_lt_1 rational_order : 0 < 1.
@@ -1322,7 +1302,7 @@ Proof.
   - rewrite integers.A3 in *.
     subst.
     now apply (pow_pos rational_order).
-  - apply inv_lt in H.
+  - apply (inv_lt rational_field_order) in H.
     now apply (pow_pos rational_order).
   - exact zero_lt_1.
 Qed.
@@ -1494,9 +1474,10 @@ Proof.
     + subst.
       rewrite inv_one in H0.
       contradiction (lt_irrefl 1).
-    + apply (lt_cross_mul (a^-1) 1 a 1) in H0; auto using zero_lt_1, inv_lt.
-      rewrite inv_l, M3 in H0; auto using lt_neq.
-      contradiction (lt_irrefl 1).
+    + apply (lt_cross_mul (a^-1) 1 a 1) in H0; auto using zero_lt_1.
+      * rewrite inv_l, M3 in H0; auto using lt_neq.
+        contradiction (lt_irrefl 1).
+      * now apply (inv_lt rational_field_order).
 Qed.
 
 Theorem pow_gt_1 : ∀ a n, 1 < a → (0 < n)%Z → 1 < a^n.
@@ -1590,7 +1571,7 @@ Proof.
       apply O1, O2.
       - now rewrite <-lt_shift.
       - rewrite <-? IZQ_add.
-        auto using inv_lt, O0, zero_lt_1. }
+        apply (inv_lt rational_field_order); simpl; auto using O0, zero_lt_1. }
     assert (0 < r) as H3 by eauto using lt_trans, zero_lt_1.
     pose proof H2 as H4.
     apply (pow_gt_1 _ 2) in H4; auto using integers.O0, integers.zero_lt_1.
@@ -1609,7 +1590,7 @@ Proof.
         rewrite <-IZQ_mul.
         apply lt_cross_mul.
         + now rewrite <-lt_shift.
-        + apply inv_lt.
+        + apply (inv_lt rational_field_order); simpl.
           rewrite <-? IZQ_add.
           auto using O0, zero_lt_1.
         + rewrite lt_shift in H6 |-*.

@@ -45,7 +45,7 @@ Section Ordered_ring_theorems.
   Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level).
   Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level).
 
-  Add Ring R_ring :
+  Add Ring generic_ordered_ring :
     (mk_rt 0 1 (add_R R) (mul_R R) (sub_R R) (neg_R R) eq (A3_R R) (A1_R R)
            (A2_R R) (M3_R R) (M1_R R) (M2_R R) (D1_R R) (sub_neg_R R) (A4_R R)).
 

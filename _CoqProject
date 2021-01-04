@@ -9,5 +9,6 @@ integral_domains.v
 ordered_rings.v
 integers.v
 fields.v
+ordered_fields.v
 rationals.v
 reals.v

@@ -693,7 +693,7 @@ Proof.
     assert (0 < w)%Q as H2.
     { unfold w.
       apply rationals.O2; try now apply lt_neg_0.
-      now apply O4, IZQ_lt. }
+      now apply (O4 rational_field_order), IZQ_lt. }
     destruct (cut_archimedean α w) as [n [H3 H4]]; auto.
     apply Specify_classification.
     split; auto.
@@ -1039,14 +1039,17 @@ Proof.
            { intros H4.
              subst.
              contradiction (lt_antisym 0 ζ). }
-        repeat split; eauto using O2, inv_lt, rationals.lt_trans.
+        repeat split; eauto using rationals.lt_trans.
         -- unfold one, IQR, iqr_set.
            apply Specify_classification.
            split; eauto using in_set.
            exists (ζ * t^-1)%Q.
            split; auto.
            rewrite <-(inv_l t), (M1 ζ); auto.
-           eauto using O3, inv_lt, rationals.lt_trans.
+           apply O3; try apply (inv_lt rational_field_order); simpl; auto.
+           eauto using rationals.lt_trans.
+        -- apply O2, (inv_lt rational_field_order); auto; simpl.
+           eauto using rationals.lt_trans.
         -- rewrite <-M2, inv_l, M1, M3; auto.
            now right.
       * apply pos_nonempty in l as [c [H3 H4]].
@@ -1091,7 +1094,7 @@ Proof.
     apply Specify_classification in H3
       as [H3 [p [r [H4 [H5 [[H6 | H6] | [H6 H7]]]]]]];
       apply set_proj_injective in H4; subst.
-    + apply inv_lt in H0.
+    + apply (inv_lt rational_field_order) in H0.
       pose proof (rationals.T (c^-1) 0).
       tauto.
     + unfold inv in H6.
@@ -1119,11 +1122,12 @@ Proof.
       rewrite <-(rationals.M3 c) at 2.
       rewrite <-(inv_l (c^-1 * r)), <-rationals.M2.
       * rewrite <-(rationals.M3 ((c^-1 * r)^-1)), (rationals.M1 1) at 1.
-        apply rationals.O3; eauto using inv_lt, O2.
-        rewrite M1, M2, (M1 c), inv_l, M3; auto.
-        intros H7.
-        subst.
-        contradiction (lt_irrefl 0).
+        apply rationals.O3.
+        -- now apply (inv_lt rational_field_order), O2.
+        -- rewrite M1, M2, (M1 c), inv_l, M3; auto.
+           intros H7.
+           subst.
+           contradiction (lt_irrefl 0).
       * intros H7.
         symmetry in H7.
         assert (0 < c^-1 * r)%Q by eauto using O2.
@@ -1172,17 +1176,19 @@ Proof.
         eauto using Dedekind_cut_2. }
       assert (c ≠ 0%Q) as H5 by eauto using lt_neq.
       assert (r ≠ 0%Q) as H6 by eauto using lt_neq.
-      split; eauto 6 using O2, inv_lt.
-      apply Specify_classification.
-      split; eauto using in_set.
-      exists (c^-1 * r^-1 * r^-1)%Q, r.
-      repeat split; auto.
-      right.
-      split; eauto 6 using O2, inv_lt.
-      eapply Dedekind_cut_5; eauto.
-      rewrite <-M2, inv_l, (M1 _ 1), M3, inv_mul, inv_inv; auto.
-      rewrite <-(M3 c), ? (M1 _ c) at 1.
-      now apply O3.
+      split.
+      * repeat apply O2; now apply (inv_lt rational_field_order).
+      * apply Specify_classification.
+        split; eauto using in_set.
+        exists (c^-1 * r^-1 * r^-1)%Q, r.
+        repeat split; auto.
+        right.
+        split.
+        -- repeat apply O2; now apply (inv_lt rational_field_order).
+        -- eapply Dedekind_cut_5; eauto.
+           rewrite <-M2, inv_l, (M1 _ 1), M3, inv_mul, inv_inv; auto.
+           rewrite <-(M3 c), ? (M1 _ c) at 1.
+           now apply O3.
     + apply lt_dense in H2 as [c [H2 H5]].
       exists (ρ * r * c^-1)%Q.
       assert (0 < c)%Q as H6.
@@ -1203,7 +1209,7 @@ Proof.
         { apply (rationals.lt_trans _ 1); eauto.
           apply IZQ_lt, integers.zero_lt_1.
           eauto using rationals.lt_trans. }
-        eauto using O2, inv_lt.
+        repeat apply O2; auto; now apply (inv_lt rational_field_order).
 Qed.
 
 Definition inv_pos : R → R.
@@ -1249,10 +1255,10 @@ Proof.
     { destruct (rationals.T 0 x)
         as [[H4 [H5 H6]] | [[H4 [H5 H6]] | [H4 [H5 H6]]]]; try tauto; subst;
         contradiction H3; eauto using Dedekind_cut_2, rationals.lt_trans. }
-    apply inv_lt in H4 as H5.
+    apply (inv_lt rational_field_order) in H4 as H5.
     assert (0 < 2)%Q as H6 by
           eauto using rationals.zero_lt_1, one_lt_2, rationals.lt_trans.
-    apply inv_lt in H6 as H7.
+    apply (inv_lt rational_field_order) in H6 as H7.
     assert ((x^-1 * 2^-1)%Q ∉ 0) as H8 by auto using pos_not_in_0, O2.
     contradiction H8.
     rewrite H2.
@@ -1337,7 +1343,8 @@ Proof.
       apply inv_lt_1 in H8; auto.
       eapply Dedekind_cut_4 in H10; eauto.
       rewrite <-inv_mul in H10.
-      apply (O3 (p^-1)) in H8; auto using rationals.inv_lt.
+      apply (O3 (p^-1)) in H8;
+        try now apply (ordered_fields.inv_lt rational_field_order).
       rewrite (rationals.M1 _ 1), rationals.M3 in H8.
       assert (s < p^-1)%Q as H11 by eauto using rationals.lt_trans.
       apply (O3 p) in H11; auto.
@@ -1379,7 +1386,8 @@ Proof.
           repeat split; auto; left; simpl; eauto using rationals.lt_trans, O2.
         * now apply inv_lt in l. }
     assert (1 < w)%Q as H4.
-    { rewrite inv_lt_1; unfold w; auto using rationals.inv_lt.
+    { rewrite inv_lt_1; unfold w;
+        try now apply (ordered_fields.inv_lt rational_field_order).
       now rewrite inv_inv. }
     contradict H1.
     pose proof H4 as H1.
