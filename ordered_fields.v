@@ -100,19 +100,6 @@ Section Ordered_field_theorems.
     + now apply inv_lt.
   Qed.
 
-  Lemma square_ge_1 : ∀ r, 0 < r → 1 < r * r → 1 < r.
-  Proof.
-    intros r H H0.
-    destruct (T_OF _ 1 r) as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]];
-      try tauto.
-    - subst.
-      rewrite M3_F in *.
-      contradiction (lt_irrefl ordered_ring_from_field 1).
-    - contradiction (lt_antisym ordered_ring_from_field 1 (r*r)); auto; simpl.
-      rewrite <-(M3_F _ 1).
-      now apply (lt_cross_mul ordered_ring_from_field).
-  Qed.
-
   Theorem pow_pos : ∀ a n, 0 < a → 0 < a^n.
   Proof.
     intros a n H.

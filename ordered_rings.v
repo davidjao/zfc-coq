@@ -464,4 +464,17 @@ Section Ordered_ring_theorems.
     eauto using le_trans.
   Qed.
 
+  Lemma square_ge_1 : ∀ r, 0 < r → 1 < r * r → 1 < r.
+  Proof.
+    intros r H H0.
+    destruct (T_OR _ 1 r) as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]];
+      try tauto.
+    - subst.
+      rewrite M3_R in *.
+      contradiction (lt_irrefl 1).
+    - contradiction (lt_antisym 1 (r*r)); auto; simpl.
+      rewrite <-(M3_R _ 1).
+      now apply lt_cross_mul.
+  Qed.
+
 End Ordered_ring_theorems.

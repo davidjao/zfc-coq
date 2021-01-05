@@ -1406,7 +1406,7 @@ Proof.
     contradict H1.
     pose proof H4 as H1.
     apply square_in_interval in H4 as [r [H4 [H5 H6]]].
-    assert (1 < r)%Q as H7 by now apply (square_ge_1 rational_field_order).
+    assert (1 < r)%Q as H7 by now apply (square_ge_1 rational_order).
     pose proof H7 as H8.
     eapply pow_archimedean in H8 as [n [H9 H10]]; eauto.
     unfold mul_pos.
@@ -2004,7 +2004,7 @@ Proof.
           now apply (ordered_fields.inv_lt rational_field_order). }
       apply square_in_interval in H6 as [z [H6 [H7 H8]]].
       exists (a*z^-1)%Q, (b*z^-1)%Q, ξ.
-      apply (square_ge_1 rational_field_order) in H7; simpl in *;
+      apply (square_ge_1 rational_order) in H7; simpl in *;
         repeat split; auto.
       * apply Specify_classification.
         split; eauto using in_set.
