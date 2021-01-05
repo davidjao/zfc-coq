@@ -113,8 +113,8 @@ Proof.
   apply Product_classification in H0 as [a [b [H0 [H4 H5]]]].
   subst.
   exists (mkSet _ _ H0), (mkSet _ _ H4).
-  set (a' := {| value := a; in_set := H0 |}).
-  set (b' := {| value := b; in_set := H4 |}).
+  set (a' := {| in_set := H0 |}).
+  set (b' := {| in_set := H4 |}).
   assert (b' ≠ 0) as H5.
   { contradict H3.
     unfold proj2.
@@ -567,8 +567,7 @@ Qed.
 Definition rational_ring := (ring_from_field rationals).
 Definition rational_order :=
   mkOring rational_ring lt lt_trans T O1 O2 zero_ne_1.
-Definition rational_field_order :=
-  mkOfield rationals lt lt_trans T O1 O2.
+Definition rational_field_order := mkOfield rationals lt lt_trans T O1 O2.
 
 Notation "a > b" := (b < a) (only parsing) : Q_scope.
 

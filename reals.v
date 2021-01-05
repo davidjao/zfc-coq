@@ -165,10 +165,7 @@ Proof.
     - apply Powerset_classification.
       intros z H2.
       apply Union_classification in H2 as [a [H2 H3]].
-      apply H in H2.
-      apply Specify_classification in H2 as [H2 [H4 [H5 [H6 H7]]]].
-      apply Powerset_classification in H2.
-      now apply H2.
+      now apply (Dedekind_cut_0 (mkSet _ _ (H _ H2))).
     - apply Nonempty_classification.
       apply Nonempty_classification in H0 as [z H0].
       pose proof H0 as H2.
