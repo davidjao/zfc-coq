@@ -142,4 +142,29 @@ Section Ordered_field_theorems.
         * now apply inv_lt.
   Qed.
 
+  Theorem pow_gt_1 : ∀ a n, 1 < a → (0 < n)%Z → 1 < a^n.
+  Proof.
+    intros a n H H0.
+    pose proof H0 as H1.
+    apply lt_def in H1 as [c [H1 H2]].
+    subst.
+    rewrite A3, <-pow_wf in *.
+    assert (0 < c)%N as H2 by now rewrite <-INZ_lt.
+    now apply (ordered_rings.pow_gt_1 ordered_ring_from_field).
+  Qed.
+
+  Theorem pow_lt_1 : ∀ a n, 1 < a → (n < 0)%Z → a^n < 1.
+  Proof.
+    intros a n H H0.
+    assert (0 < a) as H1.
+    { eapply (ordered_rings.lt_trans_OR ordered_ring_from_field); eauto.
+        apply (ordered_rings.zero_lt_1 ordered_ring_from_field). }
+    replace n with (--n)%Z by ring.
+    rewrite neg_pow, <-inv_lt_1; simpl.
+    - apply pow_gt_1; auto.
+      now rewrite <-(ordered_rings.lt_neg_0 integer_order).
+    - now apply pow_pos.
+    - auto using (ordered_rings.lt_neq ordered_ring_from_field).
+  Qed.
+
 End Ordered_field_theorems.

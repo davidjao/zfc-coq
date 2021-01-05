@@ -1173,37 +1173,6 @@ Proof.
         rewrite (pow_1_r rationals); subst; eauto using lt_trans.
 Qed.
 
-Theorem pow_gt_1 : ∀ a n, 1 < a → (0 < n)%Z → 1 < a^n.
-Proof.
-  intros a n H H0.
-  unfold pow, fields.pow.
-  repeat destruct excluded_middle_informative;
-    repeat destruct constructive_indefinite_description; try destruct a0;
-      try tauto.
-  rewrite integers.A3 in e.
-  subst.
-  pose proof (pow_gt_1 rational_order); simpl in *.
-  destruct (T 1 x) as [[H2 _] | [[_ [H2 _]] | [_ [_ H2]]]].
-  - apply (pow_gt_1 rational_order); auto.
-    now apply INZ_lt.
-  - apply IZQ_eq, INZ_eq in H2.
-    subst.
-    now rewrite pow_wf, fields.pow_1_r.
-  - contradiction (lt_0_1 x).
-    now apply IZQ_lt.
-Qed.
-
-Theorem pow_lt_1 : ∀ a n, 1 < a → (n < 0)%Z → a^n < 1.
-Proof.
-  intros a n H H0.
-  assert (0 < a) as H1 by eauto using lt_trans, zero_lt_1.
-  replace n with (--n)%Z by ring.
-  rewrite neg_pow, <-(inv_lt_1 rational_field_order); simpl.
-  - apply pow_gt_1; auto.
-    now rewrite <-(ordered_rings.lt_neg_0 integer_order).
-  - now apply (ordered_fields.pow_pos rational_field_order).
-Qed.
-
 Theorem neg_pow_archimedean : ∀ a r, 0 < a → 1 < r → ∃ n, (n < 0)%Z ∧ r^n < a.
 Proof.
   intros a r H H0.
@@ -1271,8 +1240,10 @@ Proof.
         apply (inv_lt rational_field_order); simpl; auto using O0, zero_lt_1. }
     assert (0 < r) as H3 by eauto using lt_trans, zero_lt_1.
     pose proof H2 as H4.
-    apply (pow_gt_1 _ 2) in H4; auto using integers.O0, integers.zero_lt_1.
-    rewrite (pow_add_r rationals) in H4; simpl in *; fold pow in *; auto using lt_neq.
+    apply (ordered_fields.pow_gt_1 rational_field_order _ 2) in H4;
+      auto using integers.O0, integers.zero_lt_1.
+    rewrite (pow_add_r rationals) in H4; simpl in *; fold pow in *;
+      auto using lt_neq.
     rewrite <-pow_mul_l, (pow_1_r rationals) in H4; auto using lt_neq.
     repeat split; auto.
     assert (r*r + -(1) = (r+-(1)) * (r+1)) as H5 by ring.

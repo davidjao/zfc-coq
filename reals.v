@@ -1306,7 +1306,7 @@ Proof.
       eapply Dedekind_cut_2; eauto.
       rewrite <-(M3 c), (M1 1).
       apply lt_cross_mul; auto; try now apply (pow_pos rational_field_order).
-      now apply pow_lt_1.
+      now apply (pow_lt_1 rational_field_order).
   - exists (n+-m)%Z.
     split.
     + rewrite <-(ordered_rings.lt_shift integer_order); simpl.
