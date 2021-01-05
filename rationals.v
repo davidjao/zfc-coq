@@ -3,8 +3,7 @@ Require Export ordered_fields Field.
 Definition ℤ0 := {z in ℤ × ℤ | (proj2 ℤ ℤ z) ≠ 0}.
 
 Definition rational_relation :=
-  {z in ℤ0 × ℤ0 |
-    ∃ a b c d : Z, b ≠ 0 ∧ d ≠ 0 ∧ z = ((a, b), (c, d)) ∧ a * d = b * c}.
+  {z in ℤ0 × ℤ0 | ∃ a b c d : Z, z = ((a, b), (c, d)) ∧ a * d = b * c}.
 
 Theorem rational_equivalence : is_equivalence ℤ0 rational_relation.
 Proof.
@@ -28,26 +27,29 @@ Proof.
       apply Product_classification; eauto.
   - intros x y H H0 H1.
     rewrite Specify_classification in *.
-    destruct H1 as [H1 [a [b [c [d [H2 [H3 [H4 H5]]]]]]]].
+    destruct H1 as [H1 [a [b [c [d [H2 H3]]]]]].
     split; try apply Product_classification; eauto.
     exists c, d, a ,b.
-    repeat split; auto; try ring [H5].
+    repeat split; auto; try ring [H3].
     repeat rewrite Ordered_pair_iff in *.
     intuition.
   - intros x y z H H0 H1 H2 H3.
     rewrite Specify_classification in *.
-    destruct H2 as [H2 [a [b [c [d [H4 [H5 [H6 H7]]]]]]]],
-                   H3 as [H3 [a' [b' [c' [d' [H8 [H9 [H10 H11]]]]]]]].
+    destruct H2 as [H2 [a [b [c [d [H4 H5]]]]]], H3
+        as [H3 [a' [b' [c' [d' [H8 H9]]]]]].
     split; try apply Product_classification; eauto.
     exists a, b, c', d'.
     repeat split; auto; repeat rewrite Ordered_pair_iff in *; intuition;
       subst; rewrite Ordered_pair_iff in *; intuition.
-    apply set_proj_injective in H10.
-    apply set_proj_injective in H12.
+    apply set_proj_injective in H6.
+    apply set_proj_injective in H7.
     subst.
-    apply (cancellation_mul_l (integral_domain_OR integer_order) b'); auto.
-    simpl in *.
-    now ring_simplify [H7 H11].
+    apply (cancellation_mul_l (integral_domain_OR integer_order) b'); simpl.
+    + apply Specify_classification in H0 as [H0 H4].
+      rewrite proj2_eval in H4; eauto using in_set.
+      contradict H4.
+      now subst.
+    + now ring_simplify [H5 H9].
 Qed.
 
 Definition ℚ := ℤ0 / rational_relation.
@@ -139,14 +141,13 @@ Proof.
       destruct excluded_middle_informative; try (now contradiction);
         [apply quotient_equiv in H1 | apply quotient_equiv];
         auto using rational_equivalence; simpl in *.
-  - apply Specify_classification in H1
-      as [H1 [c' [d' [a' [b' [H2 [H3 [H4 H5]]]]]]]].
+  - apply Specify_classification in H1 as [H1 [c' [d' [a' [b' [H2 H3]]]]]].
     repeat rewrite Ordered_pair_iff in *.
     intuition.
     subst.
     replace {| in_set := A |} with a'; replace {| in_set := B |} with b';
       replace {| in_set := C |} with c'; replace {| in_set := D |} with d';
-        try (now apply set_proj_injective); ring [H5].
+        try (now apply set_proj_injective); ring [H3].
   - apply Specify_classification.
     split.
     + apply Product_classification.
