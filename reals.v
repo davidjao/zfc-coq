@@ -1432,4 +1432,118 @@ Qed.
 
 Theorem D1_pos : ∀ a b c, 0 < a → 0 < b → 0 < c → (a + b) * c = a * c + b * c.
 Proof.
-Admitted.
+  intros a b c H H0 H1.
+  assert (0 < a + b) as H2.
+  { apply (O1 a) in H0.
+    rewrite A3 in H0.
+    eauto using lt_trans. }
+  unfold mul_pos, add_set, mul_pos_set.
+  repeat destruct excluded_middle_informative; try tauto;
+    try (contradict n; unfold mul_pos in *;
+         repeat destruct excluded_middle_informative; tauto).
+  apply set_proj_injective.
+  simpl.
+  apply Extensionality.
+  split; intros H3; apply Specify_classification;
+    apply Specify_classification in H3; repeat split; try tauto.
+  - destruct H3 as [H3 [r [s [ξ [H4 [H5 [H6 [H7 [H8 H9]]]]]]]]].
+    apply Specify_classification in H5 as [H5 [r' [s' [H10 [H11 H12]]]]].
+    apply set_proj_injective in H10.
+    subst.
+    destruct (classic (0 < r')%Q) as [H4 | H4], (classic (0 < s')%Q)
+        as [H10 | H10].
+    + exists (ξ+-s'*s)%Q, (s'*s)%Q.
+      repeat split; try (apply f_equal; ring).
+      * apply Specify_classification; split; eauto using in_set.
+        exists r', s, (ξ+-s'*s)%Q.
+        repeat split; auto.
+        destruct H9 as [H9 | H9]; simpl in *.
+        -- left; simpl.
+           apply (rationals.O1 (-s'*s)) in H9.
+           replace (-s'*s+(r'+s')*s)%Q with (r'*s)%Q in H9 by ring.
+           now rewrite rationals.A1 in H9.
+        -- right; subst.
+           now ring_simplify.
+      * apply Specify_classification; split; eauto using in_set.
+        exists s', s, (s'*s)%Q.
+        repeat split; try right; auto.
+    + destruct (pos_nonempty b) as [t [H13 H14]]; auto.
+      destruct (lt_dense2 t (r'+s')) as [k [H15 [H16 H17]]]; auto.
+      exists (ξ+-k*s)%Q, (k*s)%Q.
+      repeat split; simpl; try (apply f_equal; ring).
+      * apply Specify_classification.
+        split; eauto using in_set.
+        exists (r'+s'+-k)%Q, s, (ξ+-k*s)%Q.
+        repeat split; auto.
+        -- eapply Dedekind_cut_2; eauto.
+           rewrite lt_shift.
+           replace (r'+-(r'+s'+-k))%Q with (k+-s')%Q by ring.
+           rewrite <-lt_shift.
+           rewrite <-(le_not_gt rational_order) in H10; fold rationals.le in *.
+           destruct H10 as [H10 | H10]; simpl in *.
+           ++ eauto using rationals.lt_trans.
+           ++ now subst.
+        -- now rewrite <-lt_shift.
+        -- replace ((r'+s'+-k)*s)%Q with ((r'+s')*s+-k*s)%Q by ring.
+           now apply add_le_r.
+      * apply Specify_classification.
+        split; eauto using in_set.
+        exists k, s, (k*s)%Q.
+        repeat split; eauto using Dedekind_cut_2.
+        now right.
+    + destruct (pos_nonempty a) as [t [H13 H14]]; auto.
+      destruct (lt_dense2 t (r'+s')) as [k [H15 [H16 H17]]]; auto.
+      exists (k*s)%Q, (ξ+-k*s)%Q.
+      repeat split; simpl; try (apply f_equal; ring).
+      * apply Specify_classification.
+        split; eauto using in_set.
+        exists k, s, (k*s)%Q.
+        repeat split; eauto using Dedekind_cut_2.
+        now right.
+      * apply Specify_classification.
+        split; eauto using in_set.
+        exists (r'+s'+-k)%Q, s, (ξ+-k*s)%Q.
+        repeat split; auto.
+        -- eapply Dedekind_cut_2; eauto.
+           rewrite lt_shift.
+           replace (s'+-(r'+s'+-k))%Q with (k+-r')%Q by ring.
+           rewrite <-lt_shift.
+           rewrite <-(le_not_gt rational_order) in H4; fold rationals.le in *.
+           destruct H4 as [H4 | H4]; simpl in *.
+           ++ eauto using rationals.lt_trans.
+           ++ now subst.
+        -- now rewrite <-lt_shift.
+        -- replace ((r' + s' + - k) * s)%Q with ((r'+s')*s + -k*s)%Q by ring.
+           now apply add_le_r.
+    + apply (O0_opp rational_order) in H7.
+      tauto.
+  - destruct H3 as [H3 [ac [bc [H4 [H5 H6]]]]].
+    set (ζ := mkSet _ _ H3 : Q).
+    replace z with (IQS ζ) in * by auto.
+    apply set_proj_injective in H4.
+    apply Specify_classification in H5
+      as [H5 [a' [c' [a'c' [H7 [H8 [H9 [H10 [H11 H12]]]]]]]]].
+    apply set_proj_injective in H7.
+    apply Specify_classification in H6
+      as [H6 [b' [c'' [b'c'' [H13 [H14 [H15 [H16 [H17 H18]]]]]]]]].
+    apply set_proj_injective in H13.
+    subst.
+    exists (a'+b')%Q, (ordered_rings.max rational_order c' c''), ζ.
+    repeat split; auto using O0.
+    + apply Specify_classification.
+      split; eauto using in_set.
+    + destruct (max_eq rational_order c' c'') as [H19 | H19]; now rewrite H19.
+    + destruct (max_eq rational_order c' c'') as [H19 | H19]; now rewrite H19.
+    + rewrite H4, rationals.D1.
+      destruct (max_eq rational_order c' c'') as [H19 | H19]; rewrite H19.
+      * apply le_cross_add; fold rationals.le; auto.
+        eapply rationals.le_trans; eauto.
+        apply mul_le_l; simpl; auto; fold rationals.le.
+        rewrite <-H19.
+        now apply max_le_r.
+      * apply le_cross_add; fold rationals.le; auto.
+        eapply rationals.le_trans; eauto.
+        apply mul_le_l; simpl; auto; fold rationals.le.
+        rewrite <-H19.
+        now apply max_le_l.
+Qed.

@@ -610,6 +610,19 @@ Proof.
       integers.square_ne0, zero_lt_1.
 Qed.
 
+Theorem lt_dense2 : ∀ a b, 0 < a → 0 < b → ∃ c, 0 < c ∧ c < a ∧ c < b.
+Proof.
+  intros a b H H0.
+  destruct (lt_or_ge rational_order a b) as [H1 | H1]; fold le in *;
+    simpl in *.
+  - destruct (lt_dense 0 a) as [c [H2 H3]]; auto.
+    exists c.
+    eauto using lt_trans.
+  - destruct (lt_dense 0 b) as [c [H2 H3]]; auto.
+    exists c.
+    destruct H1 as [H1 | H1]; simpl in *; subst; eauto using lt_trans.
+Qed.
+
 Theorem pos_denom : ∀ x, ∃ a b, (0 < b ∧ x = a / b)%Z.
 Proof.
   intros x.

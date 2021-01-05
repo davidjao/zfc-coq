@@ -56,6 +56,22 @@ Section Ordered_ring_theorems.
     auto using O1_OR.
   Qed.
 
+  Theorem add_le_r : ∀ a b c, b ≤ c → b + a ≤ c + a.
+  Proof.
+    intros a b c [H | H].
+    - left.
+      auto using O1_r.
+    - right.
+      now subst.
+  Qed.
+
+  Theorem add_le_l : ∀ a b c, b ≤ c → a + b ≤ a + c.
+  Proof.
+    intros a b c H.
+    rewrite ? (A1_R R a) in *.
+    now apply add_le_r.
+  Qed.
+
   Theorem O0 : ∀ a b, 0 < a → 0 < b → 0 < a + b.
   Proof.
     intros a b H H0.
@@ -282,6 +298,43 @@ Section Ordered_ring_theorems.
     eauto using lt_trans_OR.
   Qed.
 
+  Theorem lt_or_ge : ∀ a b, a < b ∨ b ≤ a.
+  Proof.
+    intros a b.
+    unfold le.
+    destruct (T_OR _ a b) as [[H _] | [[_ [H _]] | [_ [_ H]]]];
+      try symmetry in H; tauto.
+  Qed.
+
+  Theorem lt_not_ge : ∀ a b, a < b ↔ ¬ b ≤ a.
+  Proof.
+    intros a b.
+    unfold le.
+    pose proof (T_OR _ b a).
+    tauto.
+  Qed.
+
+  Theorem le_not_gt : ∀ a b, a ≤ b ↔ ¬ b < a.
+  Proof.
+    intros a b.
+    unfold le.
+    pose proof (T_OR _ a b).
+    tauto.
+  Qed.
+
+  Theorem O0_opp : ∀ a b, 0 < a + b → 0 < a ∨ 0 < b.
+  Proof.
+    intros a b H.
+    destruct (T_OR _ 0 a) as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]]; try tauto.
+    - subst.
+      rewrite A3_R in H.
+      now right.
+    - assert (a < a + b) as H1 by eauto using lt_trans_OR.
+      rewrite lt_shift in H1.
+      ring_simplify in H1.
+      now right.
+  Qed.
+
   Theorem pow_pos : ∀ a b, 0 < a → 0 < a^b.
   Proof.
     induction b using Induction; intros H.
@@ -323,6 +376,84 @@ Section Ordered_ring_theorems.
   Proof.
     rewrite <-(A3_r _ 1) at 1.
     apply O1_OR, zero_lt_1.
+  Qed.
+
+  Definition min : (elts (set_R R)) → (elts (set_R R)) → (elts (set_R R)).
+  Proof.
+    intros a b.
+    destruct (excluded_middle_informative (a < b)).
+    - exact a.
+    - exact b.
+  Defined.
+
+  Theorem min_le_l : ∀ a b, min a b ≤ a.
+  Proof.
+    intros a b.
+    unfold min.
+    destruct excluded_middle_informative.
+    - now right.
+    - now rewrite <-le_not_gt in n.
+  Qed.
+
+  Theorem min_le_r : ∀ a b, min a b ≤ b.
+  Proof.
+    intros a b.
+    unfold min.
+    destruct excluded_middle_informative.
+    - now left.
+    - now right.
+  Qed.
+
+  Theorem min_eq : ∀ a b, min a b = a ∨ min a b = b.
+  Proof.
+    intros a b.
+    unfold min.
+    destruct excluded_middle_informative.
+    - now left.
+    - now right.
+  Qed.
+
+  Definition max : (elts (set_R R)) → (elts (set_R R)) → (elts (set_R R)).
+  Proof.
+    intros a b.
+    destruct (excluded_middle_informative (a < b)).
+    - exact b.
+    - exact a.
+  Defined.
+
+  Theorem max_le_l : ∀ a b, a ≤ max a b.
+  Proof.
+    intros a b.
+    unfold max.
+    destruct excluded_middle_informative.
+    - now left.
+    - now right.
+  Qed.
+
+  Theorem max_le_r : ∀ a b, b ≤ max a b.
+  Proof.
+    intros a b.
+    unfold max.
+    destruct excluded_middle_informative.
+    - now right.
+    - now rewrite <-le_not_gt in n.
+  Qed.
+
+  Theorem max_eq : ∀ a b, max a b = a ∨ max a b = b.
+  Proof.
+    intros a b.
+    unfold max.
+    destruct excluded_middle_informative.
+    - now right.
+    - now left.
+  Qed.
+
+  Theorem le_cross_add : ∀ a b c d, a ≤ b → c ≤ d → a + c ≤ b + d.
+  Proof.
+    intros a b c d H H0.
+    apply (add_le_r c) in H.
+    apply (add_le_l b) in H0.
+    eauto using le_trans.
   Qed.
 
 End Ordered_ring_theorems.
