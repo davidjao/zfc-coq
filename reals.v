@@ -657,7 +657,7 @@ Proof.
       now rewrite IZQ_add, <-? integers.A2, (integers.A1 _ 1), integers.A4,
       integers.(A3_r).
 Qed.
-      
+
 Theorem A4 : ∀ a, a + -a = 0.
 Proof.
   intros α.
@@ -994,7 +994,7 @@ Proof.
   unfold zero, one, IQR, iqr_set in H.
   inversion H as [H0].
   apply Subset_equality_iff in H0 as [H0 H1].
-  pose proof zero_lt_1 as H2.    
+  pose proof zero_lt_1 as H2.
   apply lt_dense in H2 as [c [H2 H3]].
   contradiction (rationals.lt_antisym c 0).
   pose proof (H0 c) as H4.
@@ -1286,10 +1286,6 @@ Proof.
     rewrite <-M2, inv_l, M1, M3, inv_inv; auto using lt_neq.
 Qed.
 
-Theorem lt_is_in : ∀ (a : R) (b : Q), b < a ↔ b ∈ a.
-Proof.
-Admitted.
-
 Theorem pow_archimedean : ∀ (a : R) (r : Q),
     0 < a → (1 < r)%Q → ∃ n : Z, (r^n)%Q ∈ a ∧ (r^(n+1))%Q ∉ a.
 Proof.
@@ -1346,7 +1342,8 @@ Proof.
     unfold inv_pos, inv_pos_set, IQR in H2 |- *.
     repeat destruct excluded_middle_informative; try tauto.
     simpl in *.
-    apply Specify_classification in H2 as [H2 [p [q [H7 [H8 [H9 | [H9 H10]]]]]]];
+    apply Specify_classification in H2
+      as [H2 [p [q [H7 [H8 [H9 | [H9 H10]]]]]]];
       apply set_proj_injective in H7; subst.
     + destruct H9 as [H9 | H9].
       * contradiction (rationals.lt_antisym 0 p).
@@ -1354,7 +1351,7 @@ Proof.
         contradiction (rationals.lt_irrefl 0).
     + assert (0 < q)%Q as H1 by
             eauto using rationals.lt_trans, rationals.zero_lt_1.
-      apply inv_lt_1 in H8; auto.
+      apply (inv_lt_1 rational_field_order) in H8; simpl in *; auto.
       eapply Dedekind_cut_4 in H10; eauto.
       rewrite <-inv_mul in H10.
       apply (O3 (p^-1)) in H8;
@@ -1400,7 +1397,7 @@ Proof.
           repeat split; auto; left; simpl; eauto using rationals.lt_trans, O2.
         * now apply inv_lt in l. }
     assert (1 < w)%Q as H4.
-    { rewrite inv_lt_1; unfold w;
+    { rewrite (inv_lt_1 rational_field_order); unfold w;
         try now apply (ordered_fields.inv_lt rational_field_order).
       now rewrite inv_inv. }
     contradict H1.
@@ -1435,7 +1432,7 @@ Proof.
       apply (O3 (ξ * r^(-(2)))) in H6;
         try (apply O2; try apply (pow_pos rational_field_order); auto).
       rewrite <-M2, (M1 _ (ξ^-1)), ? M2, inv_l, M3 in H6; auto using lt_neq.
-      rewrite <-(pow_1_r rationals r) in H6 at 2 3; fold pow in *.      
+      rewrite <-(pow_1_r rationals r) in H6 at 2 3; fold pow in *.
       rewrite <-(M2 ξ), <-(pow_add_r rationals), <-M2,
       <-(pow_add_r rationals) in H6; auto using lt_neq.
       replace (-(2)+1+1)%Z with 0%Z in H6 by ring.
@@ -1603,7 +1600,7 @@ Proof.
   unfold mul.
   repeat destruct excluded_middle_informative; tauto.
 Qed.
-  
+
 Theorem R_mul_pos_neg : ∀ a b, 0 < a → b < 0 → a * b = -(a · -b).
 Proof.
   intros a b H H0.
@@ -1909,7 +1906,7 @@ Proof.
       split.
       * apply f_equal.
         ring.
-      * rewrite (ordered_rings.lt_shift rational_order); simpl. 
+      * rewrite (ordered_rings.lt_shift rational_order); simpl.
         replace (s+-(s+-(r+s-ρ-c)))%Q with ((r+s-ρ)+-c)%Q by ring.
         now rewrite <-(ordered_rings.lt_shift rational_order).
 Qed.
@@ -1973,7 +1970,7 @@ Proof.
   unfold zero in *.
   pose proof H as H1.
   pose proof H0 as H2.
-  rewrite IQR_lt in H1, H2.  
+  rewrite IQR_lt in H1, H2.
   apply set_proj_injective, Subset_equality_iff.
   split; intros p H3; unfold mul_pos, mul_pos_set, IQR, iqr_set in *;
     repeat destruct excluded_middle_informative; try tauto; simpl in *.
@@ -2013,7 +2010,7 @@ Proof.
         rewrite <-(rationals.M3 a) at 2.
         rewrite (rationals.M1 1).
         apply rationals.O3; auto.
-        now apply inv_lt_1.
+        now apply (inv_lt_1 rational_field_order).
       * apply Specify_classification.
         split; eauto using in_set.
         exists (b*z^-1)%Q.
@@ -2021,7 +2018,7 @@ Proof.
         rewrite <-(rationals.M3 b) at 2.
         rewrite (rationals.M1 1).
         apply rationals.O3; auto.
-        now apply inv_lt_1.
+        now apply (inv_lt_1 rational_field_order).
       * apply rationals.O2; auto.
         now apply (ordered_fields.inv_lt rational_field_order).
       * apply rationals.O2; auto.

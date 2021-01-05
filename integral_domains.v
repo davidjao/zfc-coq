@@ -28,7 +28,7 @@ Section Integral_domain_theorems.
   Infix "*" := (mul_R R).
   Notation "- a" := (neg_R R a).
   Infix "^" := (pow R).
-  
+
   Add Ring R_ring :
     (mk_rt 0 1 (add_R R) (mul_R R) (sub_R R) (neg_R R) eq (A3_R R) (A1_R R)
            (A2_R R) (M3_R R) (M1_R R) (M2_R R) (D1_R R) (sub_neg_R R) (A4_R R)).
@@ -63,5 +63,5 @@ Section Integral_domain_theorems.
       apply cancellation_ID in H0.
       tauto.
   Qed.
-             
+
 End Integral_domain_theorems.

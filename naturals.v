@@ -441,8 +441,8 @@ Proof.
   intros P H H0 [_ n H1].
   induction n using Induction_ω; intuition.
   - rewrite <-(set_proj_injective ω 0); auto using set_proj_injective.
-  - replace {| value := succ n; in_set := H1 |} with
-        (S {| value := n; in_set := H2 |}); try apply set_proj_injective; auto.
+  - replace {| in_set := H1 |} with (S {| in_set := H2 |});
+      eauto using set_proj_injective.
 Qed.
 
 Definition PA3 := Induction.

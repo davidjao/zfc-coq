@@ -13,7 +13,7 @@ Proof.
     split.
     + apply Product_classification; eauto.
     + apply Product_classification in H as [x [y [H [H0 H1]]]].
-      exists (mkSet ω x H), (mkSet ω y H0), (mkSet ω x H), (mkSet ω y H0).
+      exists (mkSet _ _ H), (mkSet _ _ H0), (mkSet _ _ H), (mkSet _ _ H0).
       split; simpl; try congruence; ring.
   - intros x y H H0 H1.
     rewrite Specify_classification in *.
@@ -60,7 +60,7 @@ Proof.
   { apply Product_classification.
     exists a, b.
     auto. }
-  exact (quotient_map (ω × ω) integer_relation (mkSet (ω × ω) (a,b) H)).
+  exact (quotient_map _ _ (mkSet _ _ H)).
 Defined.
 
 Infix "-" := embed : N_scope.
@@ -889,14 +889,6 @@ Proof.
     intuition.
 Qed.
 
-Definition max : Z → Z → Z.
-Proof.
-  intros a b.
-  destruct (excluded_middle_informative (a < b)).
-  - exact b.
-  - exact a.
-Defined.
-
 Theorem WOP : ∀ S : Z → Prop,
     (∀ x, S x → 0 < x) → (∃ x, 0 < x ∧ S x) → ∃ s, S s ∧ ∀ t, S t → s ≤ t.
 Proof.
@@ -1034,5 +1026,3 @@ Proof.
       rewrite add_wf, Zequiv, ? add_0_l, add_1_r in H0.
       now apply PA4 in H0.
 Qed.
-
-Definition lt_neq := lt_neq integer_order : ∀ a b, a < b → b ≠ a.

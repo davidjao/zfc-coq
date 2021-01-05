@@ -1,5 +1,7 @@
 Require Export logic_axioms.
 
+(* Beginning of axioms. *)
+
 Parameter set : Type.
 Parameter IN: set → set → Prop.
 Delimit Scope set_scope with set.
@@ -17,6 +19,13 @@ Axiom Specification : ∀ z p, ∃ y, ∀ x, (x ∈ y ↔ (x ∈ z ∧ (p x))).
 Axiom Replacement : ∀ A R,
       (∀ x, x ∈ A → exists ! y, (R x y)) →
       ∃ B, ∀ x, (x ∈ A → ∃ y, (y ∈ B ∧ (R x y))).
+Axiom Pairing : ∀ x y, ∃ z, ((x ∈ z) ∧ (y ∈ z)).
+Axiom Union : ∀ F, ∃ A, ∀ x y, (x ∈ y ∧ y ∈ F) → x ∈ A.
+
+Definition subset a b := ∀ x, x ∈ a → x ∈ b.
+Infix "⊂" := subset (at level 70) : set_scope.
+
+Axiom Powerset : ∀ x, ∃ y, ∀ z, z ⊂ x → z ∈ y.
 
 Definition specify : set → (set → Prop) → set.
 Proof.
@@ -27,14 +36,6 @@ Defined.
 
 Notation "{ x 'in' A | P }" := (specify A (λ x, P)) : set_scope.
 
-Theorem Specify_classification : ∀ A P x, x ∈ (specify A P) ↔ x ∈ A ∧ P x.
-Proof.
-  intros A P x.
-  unfold specify in *.
-  repeat destruct constructive_indefinite_description.
-  split; intros H; now apply i.
-Qed.
-
 Definition empty_set : set.
 Proof.
   destruct (constructive_indefinite_description _ Nontriviality) as [w].
@@ -42,6 +43,45 @@ Proof.
 Defined.
 
 Notation "∅" := empty_set : set_scope.
+
+Definition pair : set → set → set.
+Proof.
+  intros x y.
+  destruct (constructive_indefinite_description _ (Pairing x y)) as [z].
+  exact {t in z | t = x ∨ t = y}.
+Defined.
+
+Notation " { x , y } " := (pair x y) : set_scope.
+Notation " { x } " := (pair x x) : set_scope.
+
+Definition union : set → set.
+Proof.
+  intros F.
+  destruct (constructive_indefinite_description _ (Union F)) as [A].
+  exact {x in A | ∃ y, (x ∈ y ∧ y ∈ F)}.
+Defined.
+
+Notation "⋃ x" := (union x) (at level 60) : set_scope.
+
+Definition pairwise_union A B := (⋃ {A, B}).
+
+Infix "∪" := pairwise_union (at level 60) : set_scope.
+
+Definition succ w := w ∪ {w, w}.
+
+Definition Inductive X := ∀ y, y ∈ X → succ y ∈ X.
+
+Axiom Infinity : ∃ X, (∅ ∈ X ∧ Inductive X).
+
+(* End of axioms. *)
+
+Theorem Specify_classification : ∀ A P x, x ∈ (specify A P) ↔ x ∈ A ∧ P x.
+Proof.
+  intros A P x.
+  unfold specify in *.
+  repeat destruct constructive_indefinite_description.
+  split; intros H; now apply i.
+Qed.
 
 Theorem Empty_set_classification : ∀ w, w ∉ ∅.
 Proof.
@@ -66,18 +106,6 @@ Proof.
     congruence.
 Qed.
 
-Axiom Pairing : ∀ x y, ∃ z, ((x ∈ z) ∧ (y ∈ z)).
-
-Definition pair : set → set → set.
-Proof.
-  intros x y.
-  destruct (constructive_indefinite_description _ (Pairing x y)) as [z].
-  exact {t in z | t = x ∨ t = y}.
-Defined.
-
-Notation " { x , y } " := (pair x y) : set_scope.
-Notation " { x } " := (pair x x) : set_scope.
-
 Lemma Pairing_classification : ∀ x y z, z ∈ {x,y} ↔ (z = x ∨ z = y).
 Proof.
   intros x y z.
@@ -94,29 +122,6 @@ Proof.
   split; intros H; auto; rewrite Pairing_classification in *; tauto.
 Qed.
 
-Axiom Union : ∀ F, ∃ A, ∀ x y, (x ∈ y ∧ y ∈ F) → x ∈ A.
-
-Definition union : set → set.
-Proof.
-  intros F.
-  destruct (constructive_indefinite_description _ (Union F)) as [A].
-  exact {x in A | ∃ y, (x ∈ y ∧ y ∈ F)}.
-Defined.
-
-Notation "⋃ x" := (union x) (at level 60) : set_scope.
-
-Definition pairwise_union A B := (⋃ {A, B}).
-
-Infix "∪" := pairwise_union (at level 60) : set_scope.
-
-Definition succ w := w ∪ {w, w}.
-
-Definition Inductive X := ∀ y, y ∈ X → succ y ∈ X.
-
-Axiom Infinity : ∃ X, (∅ ∈ X ∧ Inductive X).
-
-Definition subset a b := ∀ x, x ∈ a → x ∈ b.
-Infix "⊂" := subset (at level 70) : set_scope.
 Definition proper_subset a b := a ⊂ b ∧ a ≠ b.
 Infix "⊊" := proper_subset (at level 70) : set_scope.
 
@@ -131,8 +136,6 @@ Proof.
   contradict H.
   now (exists z).
 Qed.
-
-Axiom Powerset : ∀ x, ∃ y, ∀ z, z ⊂ x → z ∈ y.
 
 Definition P : set → set.
 Proof.
@@ -1075,9 +1078,7 @@ Qed.
 
 Definition empty_function : function.
 Proof.
-  assert (∀ a : set, a ∈ ∅ → (λ x : set, x) a ∈ ∅).
-  { intros a H.
-    contradiction (Empty_set_classification a). }
+  assert (∀ a : set, a ∈ ∅ → (λ x : set, x) a ∈ ∅) as H by auto.
   apply function_construction in H.
   destruct (constructive_indefinite_description _ H) as [f i].
   exact f.
@@ -1163,7 +1164,7 @@ Section Quotient_maps.
         now rewrite Specify_classification in *.
       - exists x.
         repeat split; auto; rewrite Specify_classification in *; intuition. }
-    exact (mkSet (X/R) {z in X | (x,z) ∈ R} H0).
+    exact (mkSet _ _ H0).
   Defined.
 
 End Quotient_maps.
@@ -1175,7 +1176,7 @@ Proof.
   unfold quotient in *.
   pose proof in_set (X/R) y as H.
   apply quotient_classification in H as [H [x [H0 H1]]].
-  exists (mkSet X x H0).
+  exists (mkSet _ _ H0).
   destruct y as [y Y].
   apply set_proj_injective.
   simpl in *.
@@ -1213,22 +1214,3 @@ Theorem quotient_image : ∀ X R x,
 Proof.
   now intros X R [_ x H].
 Qed.
-
-Record relation : Type := mkrel
-                           { R1 : set;
-                             R2 : set;
-                             R : set;
-                             rel_cond : R ⊂ R1 × R2 }.
-
-Goal ∀ R : relation, R.(R1) = ∅.
-Admitted.
-
-Theorem Product_left_empty : ∀ A, ∅ × A = ∅.
-Proof.
-  intros A.
-  apply Extensionality; split; intros H;
-    try apply Product_classification in H as [a [b [H H0]]];
-    now apply Empty_set_classification in H.
-Qed.
-
-(*Check (mkrel ∅ ∅ ∅ (Empty_set_is_subset _)).(rel_cond).*)

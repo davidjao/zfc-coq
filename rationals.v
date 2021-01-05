@@ -135,7 +135,7 @@ Theorem Qequiv : ∀ a b c d, b ≠ 0 → d ≠ 0 → a / b = c / d ↔ a * d = 
 Proof.
   intros [_ a A] [_ b B] [_ c C] [_ d D] H H0.
   split; intros H1; unfold embed in *; destruct excluded_middle_informative;
-    try (now contradiction); [symmetry in H1 | symmetry]; 
+    try (now contradiction); [symmetry in H1 | symmetry];
       destruct excluded_middle_informative; try (now contradiction);
         [apply quotient_equiv in H1 | apply quotient_equiv];
         auto using rational_equivalence; simpl in *.
@@ -327,7 +327,7 @@ Proof.
 Qed.
 
 Theorem M1 : ∀ a b, a * b = b * a.
-Proof.  
+Proof.
   intros [_ a A] [_ b B].
   unfold mul in *.
   repeat destruct constructive_indefinite_description.
@@ -1173,26 +1173,6 @@ Proof.
         rewrite (pow_1_r rationals); subst; eauto using lt_trans.
 Qed.
 
-Theorem inv_lt_1 : ∀ a, 0 < a → 1 < a ↔ a^-1 < 1.
-Proof.
-  split; intros H0.
-  - destruct (T 1 (a^-1)) as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]];
-      auto.
-    + apply (lt_cross_mul 1 (a^-1) 1 a) in H1; auto using zero_lt_1.
-      rewrite inv_l, M3 in H1; auto using lt_neq.
-      contradiction (lt_irrefl 1).
-    + rewrite <-inv_inv, <-H2, inv_one in H0.
-      contradiction (lt_irrefl 1).
-  - destruct (T 1 a) as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]]; auto.
-    + subst.
-      rewrite inv_one in H0.
-      contradiction (lt_irrefl 1).
-    + apply (lt_cross_mul (a^-1) 1 a 1) in H0; auto using zero_lt_1.
-      * rewrite inv_l, M3 in H0; auto using lt_neq.
-        contradiction (lt_irrefl 1).
-      * now apply (inv_lt rational_field_order).
-Qed.
-
 Theorem pow_gt_1 : ∀ a n, 1 < a → (0 < n)%Z → 1 < a^n.
 Proof.
   intros a n H H0.
@@ -1218,7 +1198,7 @@ Proof.
   intros a n H H0.
   assert (0 < a) as H1 by eauto using lt_trans, zero_lt_1.
   replace n with (--n)%Z by ring.
-  rewrite neg_pow, <-inv_lt_1.
+  rewrite neg_pow, <-(inv_lt_1 rational_field_order); simpl.
   - apply pow_gt_1; auto.
     now rewrite <-(ordered_rings.lt_neg_0 integer_order).
   - now apply (ordered_fields.pow_pos rational_field_order).
@@ -1246,8 +1226,10 @@ Qed.
 Theorem square_in_interval : ∀ a, 1 < a → ∃ r, 0 < r ∧ 1 < r * r < a.
 Proof.
   intros a H.
-  assert (3 ≠ 0)%Z as H0
-      by auto using integers.lt_neq, integers.O0, integers.zero_lt_1.
+  assert (3 ≠ 0)%Z as H0.
+  { apply (ordered_rings.lt_neq integer_order), integers.O0;
+      auto using integers.zero_lt_1.
+    apply integers.O0; auto using integers.zero_lt_1. }
   destruct (classic (2 < a)) as [H1 | H1].
   - exists (4/3).
     repeat split.
@@ -1314,14 +1296,14 @@ Proof.
           rewrite A1, <-A2.
           replace (1 + 1%Z) with (1%Z+1%Z) by auto.
           now rewrite IZQ_add, A1.
-        + apply inv_lt_1; rewrite <-? IZQ_add.
+        + apply (inv_lt_1 rational_field_order); rewrite <-? IZQ_add; simpl.
           * auto using O0, zero_lt_1.
           * rewrite <-(A3 1), A1, <-A2 at 1.
             unfold IZQ, one.
             auto using O1, O0, zero_lt_1.
       - subst.
         rewrite <-IZQ_add, <-A2, A4, A1, A3, M3.
-        apply inv_lt_1; rewrite <-? IZQ_add.
+        apply (inv_lt_1 rational_field_order); rewrite <-? IZQ_add; simpl.
         + auto using O0, zero_lt_1.
         + rewrite <-(A3 1), A1, <-A2 at 1.
           unfold IZQ, one.

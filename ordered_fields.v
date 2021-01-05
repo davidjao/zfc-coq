@@ -115,4 +115,31 @@ Section Ordered_field_theorems.
     - exact (ordered_rings.zero_lt_1 ordered_ring_from_field).
   Qed.
 
+  Theorem inv_lt_1 : ∀ a, 0 < a → 1 < a ↔ a^-1 < 1.
+  Proof.
+    split; intros H0.
+    - destruct (T_OF _ 1 (a^-1))
+        as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]]; auto.
+      + apply (lt_cross_mul ordered_ring_from_field 1 (a^-1) 1 a) in H1;
+          auto using (ordered_rings.zero_lt_1 ordered_ring_from_field);
+          simpl in *.
+        rewrite inv_l, M3_F in H1;
+          auto using (ordered_rings.lt_neq ordered_ring_from_field).
+        contradiction (ordered_rings.lt_irrefl ordered_ring_from_field 1).
+      + rewrite <-inv_inv, <-H2, inv_one in H0;
+          auto using (ordered_rings.lt_neq ordered_ring_from_field).
+        contradiction (ordered_rings.lt_irrefl ordered_ring_from_field 1).
+    - destruct (T_OF _ 1 a)
+        as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]]; auto.
+      + subst.
+        rewrite inv_one in H0.
+        contradiction (ordered_rings.lt_irrefl ordered_ring_from_field 1).
+      + apply (lt_cross_mul ordered_ring_from_field (a^-1) 1 a 1) in H0;
+          simpl in *; auto.
+        * rewrite inv_l, M3_F in H0;
+            auto using (ordered_rings.lt_neq ordered_ring_from_field).
+          contradiction (ordered_rings.lt_irrefl ordered_ring_from_field 1).
+        * now apply inv_lt.
+  Qed.
+
 End Ordered_field_theorems.

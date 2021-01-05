@@ -287,7 +287,7 @@ Section Ordered_ring_theorems.
     rewrite lt_shift in *.
     now replace (a+-(a+-b)) with (b+-0) by ring.
   Qed.
-  
+
   Theorem lt_cross_mul : ∀ a b c d,
       0 < a → 0 < c → a < b → c < d → a * c < b * d.
   Proof.
