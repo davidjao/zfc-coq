@@ -1,30 +1,26 @@
 Require Export integers Field.
+Set Warnings "-notation-bound-to-variable".
 
 Record field :=
   mkField {
       set_F : set;
-      zero_F : elts set_F (*where "0" := zero_F*);
-      one_F : elts set_F (*where "1" := one_F*);
+      zero_F : elts set_F where "0" := zero_F;
+      one_F : elts set_F where "1" := one_F;
       add_F : elts set_F → elts set_F → elts set_F where "a + b" := (add_F a b);
       mul_F : elts set_F → elts set_F → elts set_F where "a * b" := (mul_F a b);
       neg_F : elts set_F → elts set_F where "- a" := (neg_F a);
       inv_F : elts set_F → elts set_F;
-      A3_F : ∀ a, zero_F + a = a;
+      A3_F : ∀ a, 0 + a = a;
       A1_F : ∀ a b, a + b = b + a;
       A2_F : ∀ a b c, a + (b + c) = (a + b) + c;
-      M3_F : ∀ a, one_F * a = a;
+      M3_F : ∀ a, 1 * a = a;
       M1_F : ∀ a b, a * b = b * a;
       M2_F : ∀ a b c, a * (b * c) = (a * b) * c;
       D1_F : ∀ a b c, (a + b) * c = a * c + b * c;
-      A4_F : ∀ a, a + (-a) = zero_F;
-      M4_F : ∀ a, a ≠ zero_F → (inv_F a) * a = one_F;
-      one_ne_0_F : one_F ≠ zero_F;
+      A4_F : ∀ a, a + (-a) = 0;
+      M4_F : ∀ a, a ≠ 0 → (inv_F a) * a = 1;
+      one_ne_0_F : 1 ≠ 0;
     }.
-
-(*
-Definition rationals :=
-mkField _ zero one add mul neg inv A3 A1 A2 M3 M1 M2 D1 A4 inv_l zero_ne_1.
-*)
 
 Section Field_theorems.
   Variable F : field.
@@ -135,8 +131,11 @@ Section Field_theorems.
   Qed.
 
   Definition pow_N := (pow ring_from_field) : elts (set_F F) → N → elts (set_F F).
-  
-  Infix "@" := pow_N (at level 35).
+
+  (* Temporarily use ** to denote natural number exponentiation, as is done in
+     some programming languages, to distinguish from integer exponentiation,
+     which we will define shortly, and denote with ^ as usual. *)
+  Infix "**" := pow_N (at level 35).
 
   Definition pow : elts (set_F F) → Z → elts (set_F F).
   Proof.
@@ -145,12 +144,12 @@ Section Field_theorems.
     - apply lt_def in l.
       destruct (constructive_indefinite_description _ l) as [c [H H0]].
       rewrite integers.A3 in H0.
-      exact (a@c).
+      exact (a**c).
     - destruct (excluded_middle_informative (b < 0)%Z).
       + rewrite (ordered_rings.lt_neg_0 integer_order), lt_def in l.
         destruct (constructive_indefinite_description _ l) as [c [H H0]].
         rewrite integers.A3 in H0.
-        exact ((a^-1@c)).
+        exact ((a^-1**c)).
       + exact 1.
   Defined.
 
@@ -348,7 +347,7 @@ Section Field_theorems.
       repeat destruct excluded_middle_informative;
         repeat destruct constructive_indefinite_description;
         try destruct a0; try tauto; try rewrite e, integers.A3.
-      replace ((a ^ b)^-1 @ x) with ((a ^ b)^-1 ^ (-c)).
+      replace ((a ^ b)^-1 ** x) with ((a ^ b)^-1 ^ (-c)).
       + replace (b*c)%Z with ((-b)*(-c))%Z by ring.
         rewrite <-neg_pow; auto.
         now apply pow_mul_r_pos, (ordered_rings.lt_neg_0 integer_order).
@@ -419,7 +418,7 @@ Section Field_theorems.
       apply pow_add_r_pos_pos; now apply (ordered_rings.lt_neg_0 integer_order).
   Qed.
 
-  Theorem pow_wf : ∀ a b, a@b = a^b.
+  Theorem pow_wf : ∀ a b, a**b = a^b.
   Proof.
     intros a b.
     destruct (N_ge_0 b) as [H | H]; simpl in *.

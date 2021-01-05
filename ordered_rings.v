@@ -448,6 +448,14 @@ Section Ordered_ring_theorems.
     - now left.
   Qed.
 
+  Theorem lt_cross_add : ∀ a b c d, a < b → c < d → a + c < b + d.
+  Proof.
+    intros a b c d H H0.
+    apply (O1_r c) in H.
+    apply (O1_OR _ b) in H0.
+    eauto using lt_trans_OR.
+  Qed.
+
   Theorem le_cross_add : ∀ a b c d, a ≤ b → c ≤ d → a + c ≤ b + d.
   Proof.
     intros a b c d H H0.
