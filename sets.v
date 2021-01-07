@@ -75,6 +75,11 @@ Axiom Infinity : ∃ X, (∅ ∈ X ∧ Inductive X).
 
 (* End of axioms. *)
 
+Lemma neq_sym : ∀ a b : set, a ≠ b ↔ b ≠ a.
+Proof.
+  split; intros H; now contradict H.
+Qed.
+
 Theorem Specify_classification : ∀ A P x, x ∈ (specify A P) ↔ x ∈ A ∧ P x.
 Proof.
   intros A P x.
