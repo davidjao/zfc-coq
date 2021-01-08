@@ -1,5 +1,30 @@
 Require Export sets Ring.
 
+Theorem Infinity : ∃ X, ∅ ∈ X ∧ Inductive X.
+Proof.
+  destruct sets.Infinity as [X [[e [H H0]] H1]].
+  exists X.
+  unfold Inductive, succ.
+  split.
+  - replace ∅ with e; auto.
+    apply Extensionality.
+    split; intros H2.
+    + contradiction (H z).
+    + contradiction (Empty_set_classification z).
+  - intros y H2.
+    apply H1 in H2 as [Y [H2 H3]].
+    replace (y ∪ {y,y}) with Y; auto.
+    apply Extensionality.
+    split; intros H4.
+    + apply Pairwise_union_classification.
+      apply H3 in H4 as [H4 | H4]; intuition.
+      right.
+      apply Pairing_classification; auto.
+    + apply Pairwise_union_classification in H4 as [H4 | H4];
+        apply H3; auto.
+      apply Pairing_classification in H4; intuition.
+Qed.
+
 Definition ω : set.
 Proof.
   destruct (constructive_indefinite_description _ Infinity) as [X].
@@ -10,13 +35,16 @@ Theorem PA1_ω : ∅ ∈ ω.
 Proof.
   unfold empty_set, ω, intersection, union, specify.
   repeat destruct constructive_indefinite_description.
-  destruct a as [H H0].
+  destruct a as [H H0], a0 as [Z Z0].
   replace x0 with ∅.
   - apply i0.
     split.
     + apply i3.
-      split; [ eapply i1; split; try exact H | exists x1; intuition ];
-        apply i2; eauto using Set_in_powerset.
+      split.
+      * eapply i1.
+        split; try exact Z; apply i2; eauto using Set_in_powerset.
+      * exists x1.
+        split; auto; apply i2; eauto using Set_in_powerset.
     + intros z H1.
       now apply i2 in H1.
   - apply Extensionality; split; intros H1.

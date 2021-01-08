@@ -11,21 +11,20 @@ Bind Scope set_scope with set.
 Infix "∈" := IN (at level 75) : set_scope.
 Notation "a ∉ b" := (¬ a ∈ b) (at level 75) : set_scope.
 
-Axiom Nontriviality : ∃ w : set, True.
 Axiom Extensionality : ∀ x y, (∀ z, z ∈ x ↔ z ∈ y) → x = y.
 Axiom Regularity :
-  ∀ x, ((∃ a, a ∈ x) → ∃ y, (y ∈ x ∧ ¬ ∃ z, (z ∈ y ∧ z ∈ x))).
+  ∀ x, (∃ a, a ∈ x) → ∃ y, y ∈ x ∧ ¬ ∃ z, (z ∈ y ∧ z ∈ x).
 Axiom Specification : ∀ z p, ∃ y, ∀ x, (x ∈ y ↔ (x ∈ z ∧ (p x))).
 Axiom Replacement : ∀ A R,
       (∀ x, x ∈ A → exists ! y, (R x y)) →
       ∃ B, ∀ x, (x ∈ A → ∃ y, (y ∈ B ∧ (R x y))).
-Axiom Pairing : ∀ x y, ∃ z, ((x ∈ z) ∧ (y ∈ z)).
 Axiom Union : ∀ F, ∃ A, ∀ x y, (x ∈ y ∧ y ∈ F) → x ∈ A.
+Axiom Powerset : ∀ x, ∃ y, ∀ z, (∀ u, u ∈ z → u ∈ x) → z ∈ y.
+Axiom Infinity : ∃ X,
+    (∃ y, (∀ z, z ∉ y) ∧ y ∈ X)
+    ∧ ∀ x, x ∈ X → ∃ y, y ∈ X ∧ ∀ z, (z ∈ y ↔ z ∈ x ∨ z = x).
 
-Definition subset a b := ∀ x, x ∈ a → x ∈ b.
-Infix "⊂" := subset (at level 70) : set_scope.
-
-Axiom Powerset : ∀ x, ∃ y, ∀ z, z ⊂ x → z ∈ y.
+(* End of axioms. *)
 
 Definition specify : set → (set → Prop) → set.
 Proof.
@@ -38,11 +37,135 @@ Notation "{ x 'in' A | P }" := (specify A (λ x, P)) : set_scope.
 
 Definition empty_set : set.
 Proof.
-  destruct (constructive_indefinite_description _ Nontriviality) as [w].
+  destruct (constructive_indefinite_description _ Infinity) as [w].
   exact {x in w | False}.
 Defined.
 
 Notation "∅" := empty_set : set_scope.
+
+Theorem Empty_set_classification : ∀ w, w ∉ ∅.
+Proof.
+  unfold empty_set, specify.
+  repeat destruct constructive_indefinite_description.
+  firstorder.
+Qed.
+
+Theorem Nonempty_classification : ∀ y, y ≠ ∅ ↔ ∃ x, x ∈ y.
+Proof.
+  split; intros H.
+  - apply NNPP.
+    contradict H.
+    apply Extensionality.
+    split; intros.
+    + contradict H.
+      now (exists z).
+    + now apply Empty_set_classification in H0.
+  - intros H0.
+    destruct H as [x H].
+    contradiction (Empty_set_classification x).
+    congruence.
+Qed.
+
+Definition subset a b := ∀ x, x ∈ a → x ∈ b.
+Infix "⊂" := subset (at level 70) : set_scope.
+
+Definition P : set → set.
+Proof.
+  intros x.
+  destruct (constructive_indefinite_description _ (Powerset x)) as [y].
+  exact {s in y | s ⊂ x}.
+Defined.
+
+Theorem Empty_set_is_subset : ∀ X, ∅ ⊂ X.
+Proof.
+  intros X z H.
+  now apply Empty_set_classification in H.
+Qed.
+
+Theorem Set_is_subset : ∀ X, X ⊂ X.
+Proof.
+  firstorder.
+Qed.
+
+Theorem Powerset_classification : ∀ X x, x ∈ P X ↔ x ⊂ X.
+Proof.
+  intros X.
+  unfold P, specify.
+  repeat destruct constructive_indefinite_description.
+  split; [ | intros H ]; apply i0; split; auto.
+Qed.
+
+Theorem Empty_set_in_powerset : ∀ X, ∅ ∈ P X.
+Proof.
+  firstorder using Powerset_classification, Empty_set_is_subset.
+Qed.
+
+Theorem Set_in_powerset : ∀ X, X ∈ P X.
+Proof.
+  firstorder using Powerset_classification, Set_is_subset.
+Qed.
+
+Theorem Powerset_nonempty : ∀ x, ∅ ≠ P x.
+Proof.
+  intros x H.
+  contradiction (Empty_set_classification x).
+  rewrite H.
+  now apply Set_in_powerset.
+Qed.
+
+Lemma Subset_of_emptyset : ∀ a, a ∈ P (P ∅) → a = ∅ ∨ a = P ∅.
+Proof.
+  intros a H.
+  destruct (classic (a = ∅)); try tauto.
+  right.
+  apply Extensionality.
+  - split; intros H1.
+    + apply Powerset_classification in H.
+      now apply H in H1.
+    + apply Powerset_classification in H1.
+      replace z with ∅ in *.
+      * apply Powerset_classification in H.
+        apply Nonempty_classification in H0 as [x H0].
+        apply H in H0 as H2.
+        apply Powerset_classification in H2.
+        replace x with ∅ in *; auto.
+        apply Extensionality.
+        split; intros H3; auto.
+        contradiction (Empty_set_classification z0).
+      * apply Extensionality.
+        split; intros H2; auto.
+        contradiction (Empty_set_classification z0).
+Qed.
+
+(* The axiom of pairing is a theorem in ZFC. *)
+Theorem Pairing : ∀ x y, ∃ z, ((x ∈ z) ∧ (y ∈ z)).
+Proof.
+  intros x y.
+  destruct (Replacement (P (P ∅)) (λ a b, ∅ = a ∧ x = b ∨ P ∅ = a ∧ y = b))
+    as [z H].
+  - intros a H.
+    apply Subset_of_emptyset in H as [H | H].
+    + exists x.
+      split; auto.
+      intros x' [[H0 H1] | [H0 H1]]; auto.
+      contradiction (Powerset_nonempty ∅).
+      congruence.
+    + exists y.
+      split; auto.
+      intros x' [[H0 H1] | [H0 H1]]; auto.
+      contradiction (Powerset_nonempty ∅).
+      congruence.
+  - exists z.
+    split.
+    + destruct (H ∅) as [w [H0 [[H1 H2] | [H1 H2]]]].
+      * apply Empty_set_in_powerset.
+      * now subst.
+      * now contradiction (Powerset_nonempty ∅).
+    + destruct (H (P ∅)) as [w [H0 [[H1 H2] | [H1 H2]]]].
+      * apply Set_in_powerset.
+      * contradiction (Powerset_nonempty ∅).
+      * now subst.
+Qed.
 
 Definition pair : set → set → set.
 Proof.
@@ -71,10 +194,6 @@ Definition succ w := w ∪ {w, w}.
 
 Definition Inductive X := ∀ y, y ∈ X → succ y ∈ X.
 
-Axiom Infinity : ∃ X, (∅ ∈ X ∧ Inductive X).
-
-(* End of axioms. *)
-
 Lemma neq_sym : ∀ a b : set, a ≠ b ↔ b ≠ a.
 Proof.
   split; intros H; now contradict H.
@@ -86,29 +205,6 @@ Proof.
   unfold specify in *.
   repeat destruct constructive_indefinite_description.
   split; intros H; now apply i.
-Qed.
-
-Theorem Empty_set_classification : ∀ w, w ∉ ∅.
-Proof.
-  unfold empty_set, specify.
-  repeat destruct constructive_indefinite_description.
-  firstorder.
-Qed.
-
-Theorem Nonempty_classification : ∀ y, y ≠ ∅ ↔ ∃ x, x ∈ y.
-Proof.
-  split; intros H.
-  - apply NNPP.
-    contradict H.
-    apply Extensionality.
-    split; intros.
-    + contradict H.
-      now (exists z).
-    + now apply Empty_set_classification in H0.
-  - intros H0.
-    destruct H as [x H].
-    contradiction (Empty_set_classification x).
-    congruence.
 Qed.
 
 Lemma Pairing_classification : ∀ x y z, z ∈ {x,y} ↔ (z = x ∨ z = y).
@@ -142,28 +238,10 @@ Proof.
   now (exists z).
 Qed.
 
-Definition P : set → set.
-Proof.
-  intros x.
-  destruct (constructive_indefinite_description _ (Powerset x)) as [y].
-  exact {s in y | s ⊂ x}.
-Defined.
-
 Theorem Subset_transitive : ∀ X Y Z, X ⊂ Y → Y ⊂ Z → X ⊂ Z.
 Proof.
   intros X Y Z H H0 x H1.
   eauto.
-Qed.
-
-Theorem Empty_set_is_subset : ∀ X, ∅ ⊂ X.
-Proof.
-  intros X z H.
-  now apply Empty_set_classification in H.
-Qed.
-
-Theorem Set_is_subset : ∀ X, X ⊂ X.
-Proof.
-  firstorder.
 Qed.
 
 Theorem Subset_equality : ∀ A B, A ⊂ B → B ⊂ A → A = B.
@@ -192,24 +270,6 @@ Proof.
   apply NNPP.
   contradict H0.
   eauto.
-Qed.
-
-Theorem Powerset_classification : ∀ X x, x ∈ P X ↔ x ⊂ X.
-Proof.
-  intros X.
-  unfold P, specify.
-  repeat destruct constructive_indefinite_description.
-  split; [ | intros H ]; apply i0; split; auto.
-Qed.
-
-Theorem Empty_set_in_powerset : ∀ X, ∅ ∈ P X.
-Proof.
-  firstorder using Powerset_classification, Empty_set_is_subset.
-Qed.
-
-Theorem Set_in_powerset : ∀ X, X ∈ P X.
-Proof.
-  firstorder using Powerset_classification, Set_is_subset.
 Qed.
 
 Theorem Union_classification : ∀ x C, x ∈ ⋃ C ↔ ∃ X, X ∈ C ∧ x ∈ X.
@@ -1218,4 +1278,36 @@ Theorem quotient_image : ∀ X R x,
     value (X / R) (quotient_map X R x) = {z in X | ((value X x),z) ∈ R}.
 Proof.
   now intros X R [_ x H].
+Qed.
+
+Theorem no_quines : ∀ x, ¬ x ∈ x.
+Proof.
+  intros x H.
+  destruct (Regularity {x,x}) as [y [H0 H1]].
+  - exists x.
+    now apply Singleton_classification.
+  - contradict H1.
+    exists x.
+    split.
+    + apply Singleton_classification in H0.
+      now subst.
+    + now apply Singleton_classification.
+Qed.
+
+Theorem no_loops : ∀ x y, ¬ (x ∈ y ∧ y ∈ x).
+Proof.
+  intros x y [H H0].
+  destruct (Regularity {x,y}) as [z [H1 H2]].
+  - exists x.
+    apply Pairing_classification; auto.
+  - contradict H2.
+    apply Pairing_classification in H1 as [H1 | H1].
+    + exists y.
+      subst.
+      split; auto.
+      apply Pairing_classification; auto.
+    + exists x.
+      subst.
+      split; auto.
+      apply Pairing_classification; auto.
 Qed.
