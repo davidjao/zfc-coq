@@ -11,43 +11,38 @@ Bind Scope set_scope with set.
 Infix "∈" := IN (at level 75) : set_scope.
 Notation "a ∉ b" := (¬ a ∈ b) (at level 75) : set_scope.
 
+(* Axiom list from https://math.stackexchange.com/questions/916072/ *)
 Axiom Extensionality : ∀ x y, (∀ z, z ∈ x ↔ z ∈ y) → x = y.
 Axiom Regularity :
   ∀ x, (∃ a, a ∈ x) → ∃ y, y ∈ x ∧ ¬ ∃ z, (z ∈ y ∧ z ∈ x).
-Axiom Specification : ∀ z p, ∃ y, ∀ x, (x ∈ y ↔ (x ∈ z ∧ (p x))).
-Axiom Replacement : ∀ A R,
-      (∀ x, x ∈ A → exists ! y, (R x y)) →
-      ∃ B, ∀ x, (x ∈ A → ∃ y, (y ∈ B ∧ (R x y))).
+Axiom Replacement : ∀ A R, (∀ x, x ∈ A → exists ! y, R x y) →
+                           ∃ B, ∀ y, y ∈ B ↔ ∃ x, x ∈ A ∧ R x y.
 Axiom Union : ∀ F, ∃ A, ∀ x y, (x ∈ y ∧ y ∈ F) → x ∈ A.
 Axiom Powerset : ∀ x, ∃ y, ∀ z, (∀ u, u ∈ z → u ∈ x) → z ∈ y.
 Axiom Infinity : ∃ X,
-    (∃ y, (∀ z, z ∉ y) ∧ y ∈ X)
-    ∧ ∀ x, x ∈ X → ∃ y, y ∈ X ∧ ∀ z, (z ∈ y ↔ z ∈ x ∨ z = x).
+    (∃ y, (∀ z, z ∉ y) ∧ y ∈ X) ∧
+    ∀ x, x ∈ X → ∃ y, y ∈ X ∧ ∀ z, (z ∈ y ↔ z ∈ x ∨ z = x).
 
 (* End of axioms. *)
 
-Definition specify : set → (set → Prop) → set.
+Theorem Empty_Set : ∃ w, ∀ x, x ∉ w.
 Proof.
-  intros A p.
-  destruct (constructive_indefinite_description _ (Specification A p)) as [S].
-  exact S.
-Defined.
-
-Notation "{ x 'in' A | P }" := (specify A (λ x, P)) : set_scope.
+  destruct Infinity as [x [[w [H H0]] H1]].
+  eauto.
+Qed.
 
 Definition empty_set : set.
 Proof.
-  destruct (constructive_indefinite_description _ Infinity) as [w].
-  exact {x in w | False}.
+  destruct (constructive_indefinite_description _ Empty_Set) as [w].
+  exact w.
 Defined.
 
 Notation "∅" := empty_set : set_scope.
 
 Theorem Empty_set_classification : ∀ w, w ∉ ∅.
 Proof.
-  unfold empty_set, specify.
-  repeat destruct constructive_indefinite_description.
-  firstorder.
+  unfold empty_set.
+  now destruct constructive_indefinite_description.
 Qed.
 
 Theorem Nonempty_classification : ∀ y, y ≠ ∅ ↔ ∃ x, x ∈ y.
@@ -65,6 +60,36 @@ Proof.
     contradiction (Empty_set_classification x).
     congruence.
 Qed.
+
+(* The axiom of specification is a theorem in ZFC under classical logic. *)
+Theorem Specification : ∀ z p, ∃ y, ∀ x, (x ∈ y ↔ (x ∈ z ∧ (p x))).
+Proof.
+  intros z p.
+  destruct (classic (∃ x, x ∈ z ∧ p x)) as [[e [H H0]] | H].
+  - destruct (Replacement z (λ x y, p x ∧ x = y ∨ ¬ p x ∧ e = y)).
+    + intros x H1.
+      destruct (classic (p x)); [ exists x | exists e ];
+        split; auto; intros x' H3; tauto.
+    + exists x.
+      split; intros H2.
+      * apply H1 in H2 as [w [H2 [[H3 H4] | [H3 H4]]]]; now subst.
+      * destruct H2 as [H2 H3].
+        apply H1.
+        eauto.
+  - exists ∅.
+    split; intros H0.
+    + contradiction (Empty_set_classification x).
+    + exfalso; eauto.
+Qed.
+
+Definition specify : set → (set → Prop) → set.
+Proof.
+  intros A p.
+  destruct (constructive_indefinite_description _ (Specification A p)) as [S].
+  exact S.
+Defined.
+
+Notation "{ x 'in' A | P }" := (specify A (λ x, P)) : set_scope.
 
 Definition subset a b := ∀ x, x ∈ a → x ∈ b.
 Infix "⊂" := subset (at level 70) : set_scope.
@@ -113,7 +138,7 @@ Proof.
   now apply Set_in_powerset.
 Qed.
 
-Lemma Subset_of_emptyset : ∀ a, a ∈ P (P ∅) → a = ∅ ∨ a = P ∅.
+Lemma Subset_of_subsets_of_emptyset : ∀ a, a ∈ P (P ∅) → a = ∅ ∨ a = P ∅.
 Proof.
   intros a H.
   destruct (classic (a = ∅)); try tauto.
@@ -137,34 +162,18 @@ Proof.
         contradiction (Empty_set_classification z0).
 Qed.
 
-(* The axiom of pairing is a theorem in ZFC. *)
+(* The axiom of pairing is a theorem in ZFC under classical logic. *)
 Theorem Pairing : ∀ x y, ∃ z, ((x ∈ z) ∧ (y ∈ z)).
 Proof.
   intros x y.
   destruct (Replacement (P (P ∅)) (λ a b, ∅ = a ∧ x = b ∨ P ∅ = a ∧ y = b))
     as [z H].
   - intros a H.
-    apply Subset_of_emptyset in H as [H | H].
-    + exists x.
-      split; auto.
-      intros x' [[H0 H1] | [H0 H1]]; auto.
-      contradiction (Powerset_nonempty ∅).
-      congruence.
-    + exists y.
-      split; auto.
-      intros x' [[H0 H1] | [H0 H1]]; auto.
-      contradiction (Powerset_nonempty ∅).
-      congruence.
-  - exists z.
-    split.
-    + destruct (H ∅) as [w [H0 [[H1 H2] | [H1 H2]]]].
-      * apply Empty_set_in_powerset.
-      * now subst.
-      * now contradiction (Powerset_nonempty ∅).
-    + destruct (H (P ∅)) as [w [H0 [[H1 H2] | [H1 H2]]]].
-      * apply Set_in_powerset.
-      * contradiction (Powerset_nonempty ∅).
-      * now subst.
+    apply Subset_of_subsets_of_emptyset in H as [H | H];
+      [ exists x | exists y ]; split; auto; intros x' [[H0 H1] | [H0 H1]];
+        auto; contradiction (Powerset_nonempty ∅); congruence.
+  - exists z; split; apply H; [ exists ∅ | exists (P ∅) ];
+      split; eauto using Empty_set_in_powerset, Set_in_powerset.
 Qed.
 
 Definition pair : set → set → set.
@@ -1178,7 +1187,7 @@ Proof.
 Qed.
 
 Lemma func_ext_lemma : ∀ f g,
-    domain f = domain g → range f = range g → (∀ x, x ∈ domain f → f x = g x)
+    domain f = domain g → range f = range g → (∀ x, f x = g x)
     → graph f ⊂ graph g.
 Proof.
   intros f g H H0 H1 z H2.
@@ -1187,7 +1196,7 @@ Proof.
   pose proof func_hyp f as [H5 H6].
   apply H5 in H2 as H7.
   apply Product_classification in H7 as [a [b [H7 [H8 H9]]]].
-  apply H1 in H7 as H10.
+  pose proof (H1 a) as H10.
   unfold eval in H10.
   destruct H, H0.
   subst.
@@ -1199,15 +1208,12 @@ Proof.
 Qed.
 
 Theorem func_ext : ∀ f g, domain f = domain g → range f = range g
-                          → (∀ x, x ∈ domain f → f x = g x) → f = g.
+                          → (∀ x, f x = g x) → f = g.
 Proof.
   intros f g H H0 H1.
   assert (graph f = graph g).
   { apply Subset_equality_iff.
-    split; apply func_ext_lemma; auto.
-    intros x H2.
-    destruct H.
-    now apply H1 in H2. }
+    eauto using func_ext_lemma. }
   destruct f, g.
   simpl in *.
   subst.

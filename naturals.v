@@ -35,21 +35,21 @@ Theorem PA1_ω : ∅ ∈ ω.
 Proof.
   unfold empty_set, ω, intersection, union, specify.
   repeat destruct constructive_indefinite_description.
-  destruct a as [H H0], a0 as [Z Z0].
-  replace x0 with ∅.
-  - apply i0.
+  destruct a as [H H0].
+  replace x with ∅.
+  - apply i.
     split.
-    + apply i3.
+    + apply i2.
       split.
-      * eapply i1.
-        split; try exact Z; apply i2; eauto using Set_in_powerset.
-      * exists x1.
-        split; auto; apply i2; eauto using Set_in_powerset.
+      * eapply i0.
+        split; try exact H; apply i1; eauto using Set_in_powerset.
+      * exists x0.
+        split; auto; apply i1; eauto using Set_in_powerset.
     + intros z H1.
-      now apply i2 in H1.
+      now apply i1 in H1.
   - apply Extensionality; split; intros H1.
     + now apply Empty_set_classification in H1.
-    + now apply i in H1.
+    + now apply n in H1.
 Qed.
 
 Theorem PA2_ω : Inductive ω.
