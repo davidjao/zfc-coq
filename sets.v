@@ -2,7 +2,7 @@ Require Export logic_axioms.
 
 (* Beginning of axioms. *)
 
-Parameter set : Type.
+Definition set := Set.
 Parameter IN: set → set → Prop.
 Delimit Scope set_scope with set.
 Open Scope set_scope.
@@ -12,18 +12,19 @@ Infix "∈" := IN (at level 75) : set_scope.
 Notation "a ∉ b" := (¬ a ∈ b) (at level 75) : set_scope.
 
 (* Axiom list from https://math.stackexchange.com/questions/916072/ *)
+
 Axiom Extensionality : ∀ x y, (∀ z, z ∈ x ↔ z ∈ y) → x = y.
-Axiom Regularity :
-  ∀ x, (∃ a, a ∈ x) → ∃ y, y ∈ x ∧ ¬ ∃ z, (z ∈ y ∧ z ∈ x).
+Axiom Regularity : ∀ x, (∃ a, a ∈ x) → ∃ y, y ∈ x ∧ ¬ ∃ z, (z ∈ y ∧ z ∈ x).
 Axiom Replacement : ∀ A R, (∀ x, x ∈ A → exists ! y, R x y) →
                            ∃ B, ∀ y, y ∈ B ↔ ∃ x, x ∈ A ∧ R x y.
 Axiom Union : ∀ F, ∃ A, ∀ x y, (x ∈ y ∧ y ∈ F) → x ∈ A.
 Axiom Powerset : ∀ x, ∃ y, ∀ z, (∀ u, u ∈ z → u ∈ x) → z ∈ y.
-Axiom Infinity : ∃ X,
-    (∃ y, (∀ z, z ∉ y) ∧ y ∈ X) ∧
-    ∀ x, x ∈ X → ∃ y, y ∈ X ∧ ∀ z, (z ∈ y ↔ z ∈ x ∨ z = x).
+Axiom Infinity : ∃ X, (∃ y, (∀ z, z ∉ y) ∧ y ∈ X) ∧ ∀ x,
+      x ∈ X → ∃ y, y ∈ X ∧ ∀ z, (z ∈ y ↔ z ∈ x ∨ z = x).
 
 (* End of axioms. *)
+
+Definition elts (S : set) := {x : set | x ∈ S}.
 
 Theorem Empty_Set : ∃ w, ∀ x, x ∉ w.
 Proof.
@@ -262,10 +263,7 @@ Qed.
 Theorem Subset_equality_iff : ∀ A B, (A ⊂ B ∧ B ⊂ A) ↔ A = B.
 Proof.
   intros A B.
-  split; intros H.
-  - apply Subset_equality; tauto.
-  - rewrite H.
-    split; apply Set_is_subset.
+  split; intros H; subst; firstorder using Subset_equality, Set_is_subset.
 Qed.
 
 Lemma proper_subset_inhab : ∀ x y, x ⊊ y → ∃ z, z ∈ y ∧ z ∉ x.
@@ -286,9 +284,8 @@ Proof.
   intros x C.
   unfold union, specify in *.
   repeat destruct constructive_indefinite_description.
-  split; intros H;
-    [ apply i0 in H as [H [y H0]] | destruct H as [y H]; apply i0 ];
-    firstorder.
+  split; intros H; [ apply i0 in H as [H [y H0]]
+                   | destruct H as [y H]; apply i0 ]; firstorder.
 Qed.
 
 Theorem Empty_union : ⋃ ∅ = ∅.
@@ -354,11 +351,7 @@ Proof.
     firstorder; firstorder using Pairwise_union_classification.
 Qed.
 
-Definition intersection : set → set.
-Proof.
-  intros X.
-  exact {y in ⋃ X | ∀ x, x ∈ X → y ∈ x}.
-Defined.
+Definition intersection X := {y in ⋃ X | ∀ x, x ∈ X → y ∈ x}.
 
 Notation "⋂ x" := (intersection x) (at level 60) : set_scope.
 
@@ -482,11 +475,7 @@ Proof.
       Pairwise_union_classification in *; pose proof (H z); tauto.
 Qed.
 
-Definition complement : set → set → set.
-Proof.
-  intros A B.
-  exact {x in A | x ∉ B}.
-Defined.
+Definition complement A B := {x in A | x ∉ B}.
 
 Infix "\" := complement (at level 60) : set_scope.
 
@@ -573,15 +562,8 @@ Proof.
     subst; rewrite <-H0; apply Pairing_classification; auto.
 Qed.
 
-Definition product : set → set → set.
-Proof.
-  intros A B.
-  destruct (constructive_indefinite_description
-              _ (Specification (P (P (A ∪ B)))
-                               (λ x, ∃ a b, a ∈ A ∧ b ∈ B ∧ x = (a,b))))
-    as [x].
-  exact x.
-Defined.
+Definition product A B :=
+  {x in P (P (A ∪ B)) | ∃ a b, a ∈ A ∧ b ∈ B ∧ x = (a,b)}.
 
 Infix "×" := product (at level 60) : set_scope.
 
@@ -590,14 +572,13 @@ Theorem Product_classification : ∀ A B x,
 Proof.
   intros A B x.
   unfold product.
-  destruct constructive_indefinite_description.
   split; intros H.
-  - apply i in H as [H [a [b [H0 [H1 H2]]]]].
+  - apply Specify_classification in H as [H [a [b [H0 [H1 H2]]]]].
     now exists a, b.
   - destruct H as [a [b [H0 [H1 H2]]]].
     subst.
-    apply i.
-    split; try now exists a, b.
+    apply Specify_classification.
+    split; eauto.
     apply Powerset_classification.
     intros y H3.
     apply Powerset_classification.
@@ -777,14 +758,10 @@ Qed.
 Definition is_function f A B :=
   (f ⊂ A × B) ∧ (∀ a, a ∈ A → exists ! b, b ∈ B ∧ (a,b) ∈ f).
 
-(* Coqification of sets *)
-Record elts (S : set) : Type := mkSet { ambient_set := S;
-                                        value : set;
-                                        in_set : value ∈ S }.
-
-Theorem unique_set_element : ∀ X x, exists ! y, y ∈ X ∧ value X x = y.
+Theorem unique_set_element :
+  ∀ X (x : elts X), exists ! y, y ∈ X ∧ proj1_sig x = y.
 Proof.
-  intros X [_ x H].
+  intros X [x H].
   exists x.
   repeat split; auto.
   now intros x' [H0 H1].
@@ -796,13 +773,13 @@ Record function : Type :=
            graph : set;
            func_hyp : is_function graph domain range }.
 
-Theorem set_proj_injective : ∀ X n m, (value X n) = (value X m) → n = m.
+Theorem set_proj_injective :
+  ∀ X (n m : elts X), proj1_sig n = proj1_sig m → n = m.
 Proof.
   intros S n m H.
   destruct n, m; simpl in *.
   subst.
-  assert (in_set0 = in_set1) by apply proof_irrelevance.
-  now subst.
+  now replace i with i0 by apply proof_irrelevance.
 Qed.
 
 Definition eval_rel : set → set → set → set → set.
@@ -866,25 +843,25 @@ Qed.
 
 Theorem functionify_construction : ∀ A B (p : elts A → elts B),
   ∃ f, domain f = A ∧ range f = B ∧
-       ∀ a : elts A, f (value A a) = (value B (p a)).
+       ∀ a : elts A, f (proj1_sig a) = proj1_sig (p a).
 Proof.
   intros A B p.
-  assert (∀ a : elts A, ((value A a), (value B (p a))) ∈ A × B) as H.
+  assert (∀ a : elts A, (proj1_sig a, proj1_sig (p a)) ∈ A × B) as H.
   { intros.
     rewrite Product_classification.
-    exists (value A a), (value B (p a)).
-    repeat split; auto using in_set. }
+    exists (proj1_sig a), (proj1_sig (p a)).
+    repeat split; apply proj2_sig. }
   assert (is_function {z in A × B | ∃ a : elts A,
-                         z = ((value A a), (value B (p a)))} A B) as H0.
+                         z = (proj1_sig a, proj1_sig (p a))} A B) as H0.
   { split; intros a H0; try now rewrite Specify_classification in *.
-    exists (value B (p (mkSet A a H0))).
-    repeat split; intros; auto using in_set.
+    exists (proj1_sig (p (exist _ _ H0))).
+    repeat split; intros; try apply proj2_sig.
     - rewrite Specify_classification in *.
       split.
       + apply Product_classification.
-        exists a, (value B (p {| value := a; in_set := H0 |})).
-        auto using in_set.
-      + exists (mkSet A a H0).
+        exists a, (proj1_sig (p (exist _ _ H0))).
+        repeat split; auto; try apply proj2_sig.
+      + exists (exist _ _ H0 : elts A).
         now simpl.
     - destruct H1 as [H1 H2].
       apply Specify_classification in H2 as [H2 [[a' H3] H4]].
@@ -894,15 +871,15 @@ Proof.
       repeat apply f_equal.
       apply proof_irrelevance. }
   exists (mkFunc A B {z in A × B | ∃ a : elts A,
-                        z = ((value A a), (value B (p a)))} H0).
+                        z = (proj1_sig a, proj1_sig (p a))} H0).
   repeat split; auto.
   intros a.
-  pose proof Function_classification _ _ _ _ (in_set A a) H0 as [[H1 H2] H3].
-  destruct (H3 (value B (p a))); split; simpl; intuition; try apply in_set.
+  pose proof Function_classification _ _ _ _ (proj2_sig a) H0 as [[H1 H2] H3].
+  destruct (H3 (proj1_sig (p a))); split; simpl; intuition; try apply proj2_sig.
   rewrite Specify_classification.
   split; try now (exists a).
   rewrite Product_classification.
-  exists (value A a), (value B (p a)); auto using in_set.
+  exists (proj1_sig a), (proj1_sig (p a)); repeat split; try apply proj2_sig.
 Qed.
 
 Section Function_evaluation.
@@ -912,10 +889,10 @@ Section Function_evaluation.
 
   Definition lambdaify : elts (domain f) → elts (range f).
   Proof.
-    intros [_ x H].
+    intros [x H].
     assert (f x ∈ range f)
       by auto using function_maps_domain_to_range.
-    exact (mkSet (range f) (f x) H0).
+    exact (exist _ _ H0).
   Defined.
 
   Definition functionify : (elts A → elts B) → function.
@@ -1066,22 +1043,17 @@ Section inverse_functions.
         repeat destruct constructive_indefinite_description.
       + destruct a as [H6 H7].
         rewrite H5.
-        assert ((mkSet A x1 H6) = (mkSet A x H2)) by
+        assert ((exist _ _ H6) = (exist _ _ H2)) by
             now apply H0, set_proj_injective.
-        congruence.
+        now inversion H8.
       + contradiction n.
         now (exists x).
     - destruct H0 as [g [H0 [H1 H2]]].
       intros x1 x2 H3.
       unfold lambdaify in H3.
       destruct x1, x2.
-      assert (value0 = value1).
-      { rewrite <-H2; rewrite <-H2 at 1; try rewrite <-H1; try congruence.
-        apply function_maps_domain_to_range.
-        rewrite H0.
-        now apply function_maps_domain_to_range. }
-      subst.
-      now apply set_proj_injective.
+      replace x with x0; try apply set_proj_injective; simpl;
+        inversion H3 as [H4]; now rewrite <-(H2 _ i), <-(H2 _ i0), H4.
   Qed.
 
   Theorem right_inverse_iff_surjective_nonempty :
@@ -1097,21 +1069,21 @@ Section inverse_functions.
       exists g; intuition.
       pose proof H2 as H5.
       apply H4 in H5.
-      destruct (H0 (mkSet B y H2)) as [[_ x H6] H7].
+      destruct (H0 (exist _ _ H2)) as [[x H6] H7].
       simpl in *.
       unfold partial_left_inverse in H5.
       repeat destruct excluded_middle_informative;
         repeat destruct constructive_indefinite_description; subst; try tauto.
       contradiction n.
       exists x; split; auto.
-      congruence.
+      now inversion H7.
     - destruct H0 as [g [H0 [H1 H2]]].
-      intros [_ b H3].
+      intros [b H3].
       assert (g b ∈ A).
       { rewrite <-H1.
         apply function_maps_domain_to_range.
         congruence. }
-      exists (mkSet A (g b) H4).
+      exists (exist _ _ H4 : elts A).
       simpl.
       now apply set_proj_injective, H2.
   Qed.
@@ -1131,7 +1103,7 @@ Proof.
     { apply NNPP.
       intros H1.
       apply Nonempty_classification in H1 as [y H1].
-      destruct (H0 (mkSet (range f) y H1)) as [[_ x H2] H3].
+      destruct (H0 (exist _ _ H1)) as [[x H2] H3].
       contradiction (Empty_set_classification x).
       congruence. }
     destruct (function_construction (range f) (domain f) (λ x, x)) as [g Hg].
@@ -1142,7 +1114,7 @@ Proof.
     contradiction (Empty_set_classification y).
     congruence.
   - destruct H0 as [g [H0 [H1 H2]]].
-    intros [_ y H3].
+    intros [y H3].
     exfalso.
     contradiction (Empty_set_classification (g y)).
     rewrite <-H, <-H1.
@@ -1227,7 +1199,7 @@ Section Quotient_maps.
 
   Definition quotient_map : elts X → elts (X/R).
   Proof.
-    intros [_ x H].
+    intros [x H].
     assert ({z in X | (x,z) ∈ R} ∈ X/R).
     { apply quotient_classification.
       split.
@@ -1235,7 +1207,7 @@ Section Quotient_maps.
         now rewrite Specify_classification in *.
       - exists x.
         repeat split; auto; rewrite Specify_classification in *; intuition. }
-    exact (mkSet _ _ H0).
+    exact (exist _ _ H0).
   Defined.
 
 End Quotient_maps.
@@ -1245,25 +1217,26 @@ Theorem quotient_lift : ∀ (X R : set) (y : elts (X/R)),
 Proof.
   intros X R y.
   unfold quotient in *.
-  pose proof in_set (X/R) y as H.
-  apply quotient_classification in H as [H [x [H0 H1]]].
-  exists (mkSet _ _ H0).
-  destruct y as [y Y].
+  destruct y as [y H].
+  pose proof H as H0.
+  apply quotient_classification in H0 as [H0 [x [H1 H2]]].
+  exists (exist (λ x, x ∈ X) _ H1).
   apply set_proj_injective.
   simpl in *.
-  apply Extensionality; split; intros H2.
-  - now apply Specify_classification, H1 in H2.
-  - now apply Specify_classification, H1.
+  apply Specify_classification in H as [H3 H4].
+  apply Extensionality; split; intros H5.
+  - now apply Specify_classification, H2 in H5.
+  - now apply Specify_classification, H2.
 Qed.
 
 Theorem quotient_equiv : ∀ X R x y,
     is_equivalence X R →
-    quotient_map X R x = quotient_map X R y ↔ ((value X x), (value X y)) ∈ R.
+    quotient_map X R x = quotient_map X R y ↔ (proj1_sig x, proj1_sig y) ∈ R.
 Proof.
-  intros X R [_ x A] [_ y B] [H [H0 H1]].
+  intros X R [x A] [y B] [H [H0 H1]].
   split; intros H2.
   - assert ({z in X | (x, z) ∈ R} = {z in X | (y, z) ∈ R}) as H3 by
-          (unfold quotient_map in H2; congruence).
+          now inversion H2.
     simpl.
     apply Subset_equality_iff in H3 as [H4 H5].
     pose proof (H5 y) as H6.
@@ -1273,17 +1246,15 @@ Proof.
   - apply set_proj_injective.
     simpl in *.
     apply Extensionality.
-    split; intros H3; rewrite Specify_classification in *.
-    + split; try tauto.
-      apply (H1 y x z); intuition.
-    + split; try tauto.
-      apply (H1 x y z); intuition.
+    split; intros H3; rewrite Specify_classification in *; split; try tauto.
+    + apply (H1 y x z); intuition.
+    + apply (H1 x y z); intuition.
 Qed.
 
 Theorem quotient_image : ∀ X R x,
-    value (X / R) (quotient_map X R x) = {z in X | ((value X x),z) ∈ R}.
+    proj1_sig (quotient_map X R x) = {z in X | ((proj1_sig x),z) ∈ R}.
 Proof.
-  now intros X R [_ x H].
+  now intros X R [x H].
 Qed.
 
 Theorem no_quines : ∀ x, ¬ x ∈ x.

@@ -20,9 +20,12 @@ Proof.
     + destruct a as [H3 [H4 H5]].
       apply Ordered_pair_iff in H5 as [H5 H6].
       subst.
-      exists (mkSet ℤ x0 H1), (mkSet ℤ x1 H2), (mkSet ℤ x0 H1), (mkSet ℤ x1 H2).
+      exists (exist _ _ H1 : Z), (exist _ _ H2 : Z),
+      (exist _ _ H3 : Z), (exist _ _ H4 : Z).
       simpl.
-      repeat split; try ring; contradict H0; now rewrite <-H0.
+      split; auto.
+      rewrite M1.
+      replace H1 with H3; replace H2 with H4; auto using proof_irrelevance.
     + contradiction n.
       apply Product_classification; eauto.
   - intros x y H H0 H1.
@@ -46,7 +49,7 @@ Proof.
     subst.
     apply (cancellation_mul_l (integral_domain_OR integer_order) b'); simpl.
     + apply Specify_classification in H0 as [H0 H4].
-      rewrite proj2_eval in H4; eauto using in_set.
+      rewrite proj2_eval in H4; unfold IZS; try now apply proj2_sig.
       contradict H4.
       now subst.
     + now ring_simplify [H5 H9].
@@ -56,7 +59,7 @@ Definition ℚ := ℤ0 / rational_relation.
 
 Definition Q := elts ℚ.
 
-Definition IQS (a : Q) := value ℚ a : set.
+Definition IQS (a : Q) := proj1_sig a : set.
 Coercion IQS : Q >-> set.
 
 Delimit Scope Q_scope with Q.
@@ -71,7 +74,8 @@ Proof.
     { apply Specify_classification.
       split.
       + apply Product_classification.
-        eauto using in_set.
+        exists 0, 1.
+        unfold IZS; repeat split; auto; now apply proj2_sig.
       + unfold proj2.
         destruct excluded_middle_informative.
         repeat destruct constructive_indefinite_description.
@@ -82,9 +86,11 @@ Proof.
           contradiction zero_ne_1.
           now apply set_proj_injective.
         * contradiction n.
-          apply Product_classification; eauto using in_set. }
-    exact (quotient_map ℤ0 rational_relation (mkSet _ (0, 1) H)).
-  - destruct a as [_ a' A], b as [_ b' B].
+          apply Product_classification.
+          exists 0, 1.
+          unfold IZS; repeat split; auto; now apply proj2_sig. }
+    exact (quotient_map ℤ0 rational_relation (exist _ _ H)).
+  - destruct a as [a' A], b as [b' B].
     assert ((a', b') ∈ ℤ0) as H.
     { apply Specify_classification.
       split.
@@ -99,7 +105,7 @@ Proof.
           now apply set_proj_injective.
         * contradict n0.
           apply Product_classification; eauto. }
-    exact (quotient_map ℤ0 rational_relation (mkSet _ (a', b') H)).
+    exact (quotient_map ℤ0 rational_relation (exist _ _ H)).
 Defined.
 
 Infix "/" := embed : Q_scope.
@@ -112,9 +118,9 @@ Proof.
   apply Specify_classification in H0 as [H0 H3].
   apply Product_classification in H0 as [a [b [H0 [H4 H5]]]].
   subst.
-  exists (mkSet _ _ H0), (mkSet _ _ H4).
-  set (a' := {| in_set := H0 |}).
-  set (b' := {| in_set := H4 |}).
+  exists (exist _ _ H0 : Z), (exist _ _ H4 : Z).
+  set (a' := exist _ _ H0 : Z).
+  set (b' := exist _ _ H4 : Z).
   assert (b' ≠ 0) as H5.
   { contradict H3.
     unfold proj2.
@@ -135,7 +141,7 @@ Qed.
 
 Theorem Qequiv : ∀ a b c d, b ≠ 0 → d ≠ 0 → a / b = c / d ↔ a * d = b * c.
 Proof.
-  intros [_ a A] [_ b B] [_ c C] [_ d D] H H0.
+  intros [a A] [b B] [c C] [d D] H H0.
   split; intros H1; unfold embed in *; destruct excluded_middle_informative;
     try (now contradiction); [symmetry in H1 | symmetry];
       destruct excluded_middle_informative; try (now contradiction);
@@ -145,14 +151,16 @@ Proof.
     repeat rewrite Ordered_pair_iff in *.
     intuition.
     subst.
-    replace {| in_set := A |} with a'; replace {| in_set := B |} with b';
-      replace {| in_set := C |} with c'; replace {| in_set := D |} with d';
-        try (now apply set_proj_injective); ring [H3].
+    destruct a', b', c', d'.
+    simpl in *.
+    replace A with i; replace B with i0; replace C with i1;
+      replace D with i2; auto using proof_irrelevance.
+    ring [H3].
   - apply Specify_classification.
     split.
     + apply Product_classification.
       exists (c, d), (a, b).
-      assert (∀ e f (F : f ∈ ℤ), e ∈ ℤ → {| in_set := F |} ≠ 0 → (e, f) ∈ ℤ0);
+      assert (∀ e f (F : f ∈ ℤ), e ∈ ℤ → (exist _ _ F) ≠ 0 → (e, f) ∈ ℤ0);
         eauto.
       intros e f F E H2.
       apply Specify_classification.
@@ -166,8 +174,8 @@ Proof.
       contradict H2.
       subst.
       now apply set_proj_injective.
-    + exists {| in_set := C |}, {| in_set := D |},
-      {| in_set := A |}, {| in_set := B |}.
+    + exists (exist _ _ C : Z), (exist _ _ D : Z),
+      (exist _ _ A : Z), (exist _ _ B : Z).
       repeat split; auto.
       ring [H1].
 Qed.
@@ -276,7 +284,7 @@ Qed.
 
 Theorem A3 : ∀ x, 0 + x = x.
 Proof.
-  intros [_ x H].
+  intros [x H].
   unfold add in *.
   repeat destruct constructive_indefinite_description.
   destruct a, a0.
@@ -291,7 +299,7 @@ Qed.
 
 Theorem A1 : ∀ a b, a + b = b + a.
 Proof.
-  intros [_ a A] [_ b B].
+  intros [a A] [b B].
   unfold add in *.
   repeat destruct constructive_indefinite_description.
   destruct a0, a1.
@@ -302,7 +310,7 @@ Qed.
 
 Theorem A2 : ∀ a b c, a + (b + c) = (a + b) + c.
 Proof.
-  intros [_ a A] [_ b B] [_ c C].
+  intros [a A] [b B] [c C].
   unfold add in *.
   repeat destruct constructive_indefinite_description.
   destruct a0, a1, a2, a3, a4.
@@ -314,7 +322,7 @@ Qed.
 
 Theorem M3 : ∀ x, 1 * x = x.
 Proof.
-  intros [_ x H].
+  intros [x H].
   unfold mul in *.
   repeat destruct constructive_indefinite_description.
   destruct a, a0.
@@ -329,7 +337,7 @@ Qed.
 
 Theorem M1 : ∀ a b, a * b = b * a.
 Proof.
-  intros [_ a A] [_ b B].
+  intros [a A] [b B].
   unfold mul in *.
   repeat destruct constructive_indefinite_description.
   destruct a0, a1.
@@ -340,7 +348,7 @@ Qed.
 
 Theorem M2 : ∀ a b c, a * (b * c) = (a * b) * c.
 Proof.
-  intros [_ a A] [_ b B] [_ c C].
+  intros [a A] [b B] [c C].
   unfold mul in *.
   repeat destruct constructive_indefinite_description.
   destruct a0, a1, a2, a3, a4.
@@ -352,7 +360,7 @@ Qed.
 
 Theorem D1 : ∀ a b c, (a + b) * c = a * c + b * c.
 Proof.
-  intros [_ a A] [_ b B] [_ c C].
+  intros [a A] [b B] [c C].
   unfold mul, add in *.
   repeat destruct constructive_indefinite_description.
   destruct a0, a1, a2, a3, a4, a5.
@@ -375,7 +383,7 @@ Qed.
 
 Theorem A4 : ∀ a, a + -a = 0.
 Proof.
-  intros [_ a A].
+  intros [a A].
   unfold add, neg.
   repeat destruct constructive_indefinite_description.
   destruct a0, a1.
@@ -495,7 +503,7 @@ Qed.
 Definition lt : Q → Q → Prop.
 Proof.
   intros x y.
-  exact (positive (y-x)).
+  exact (positive (y - x)).
 Defined.
 
 Infix "<" := lt : Q_scope.

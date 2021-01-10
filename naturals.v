@@ -384,15 +384,15 @@ Delimit Scope N_scope with N.
 Open Scope N_scope.
 Bind Scope N_scope with N.
 
-Definition INS (a : N) := value ω a : set.
+Definition INS (a : N) := proj1_sig a : set.
 Coercion INS : N >-> set.
 
-Definition zero := (mkSet ω ∅ PA1_ω) : N. (* PA1 : Zero is a natural. *)
+Definition zero := (exist _ _ PA1_ω) : N. (* PA1 : Zero is a natural. *)
 
 Definition S : N → N. (* PA2 : The successor of a natural is a natural. *)
 Proof.
-  intros [_ n H].
-  exact (mkSet ω (succ n) (PA2_ω n H)).
+  intros [n H].
+  exact (exist _ _ (PA2_ω n H)).
 Defined.
 
 Notation "0" := zero : N_scope.
@@ -411,14 +411,15 @@ Proof.
   destruct (constructive_indefinite_description
               _ (function_construction ω ω succ PA2_ω)) as [X [H0 [H1 H2]]].
   destruct (constructive_indefinite_description
-              _ (recursion X ω (value ω a) (in_set ω a) H0 H1))
+              _ (recursion X ω (proj1_sig a) (proj2_sig a) H0 H1))
     as [u_a [H3 [H4 [H5 H6]]]].
   assert (u_a b ∈ ω) as H7.
   { rewrite <-H4.
     apply function_maps_domain_to_range.
     rewrite H3.
-    apply in_set. }
-  exact (mkSet _ (u_a b) H7).
+    unfold INS.
+    apply proj2_sig. }
+  exact (exist _ (u_a b) H7).
 Defined.
 
 Infix "+" := add : N_scope.
@@ -427,7 +428,7 @@ Definition add_right : N → set → set.
 Proof.
   intros a x.
   destruct (excluded_middle_informative (x ∈ ω)).
-  - exact (add (mkSet _ _ i) a).
+  - exact (add (exist _ _ i) a).
   - exact 0.
 Defined.
 
@@ -436,8 +437,8 @@ Proof.
   intros a b.
   unfold add_right.
   destruct excluded_middle_informative.
-  - replace {| in_set := i |} with b; auto; now apply set_proj_injective.
-  - exfalso; eauto using in_set.
+  - replace (exist _ _ i : N) with b; eauto using set_proj_injective.
+  - contradict n; unfold INS; apply proj2_sig.
 Qed.
 
 Definition mul : N → N → N.
@@ -447,7 +448,8 @@ Proof.
   { intros x H.
     unfold add_right.
     destruct excluded_middle_informative; intuition.
-    apply in_set. }
+    unfold INS.
+    apply proj2_sig. }
   destruct (constructive_indefinite_description
               _ (function_construction ω ω (add_right a) H))
     as [add_a [H0 [H1 H2]]].
@@ -457,8 +459,9 @@ Proof.
   { rewrite <-H4.
     apply function_maps_domain_to_range.
     rewrite H3.
-    apply in_set. }
-  exact (mkSet _ (mul_b b) H7).
+    unfold INS.
+    apply proj2_sig. }
+  exact (exist _ (mul_b b) H7).
 Defined.
 
 Infix "*" := mul : N_scope.
@@ -466,10 +469,10 @@ Infix "*" := mul : N_scope.
 Theorem Induction : ∀ P : N → Prop,
     P 0 → (∀ n : N, P n → P (S n)) → ∀ n : N, P n.
 Proof.
-  intros P H H0 [_ n H1].
+  intros P H H0 [n H1].
   induction n using Induction_ω; intuition.
   - rewrite <-(set_proj_injective ω 0); auto using set_proj_injective.
-  - replace {| in_set := H1 |} with (S {| in_set := H2 |});
+  - replace (exist _ _ H1 : N) with (S (exist _ _ H2 : N));
       eauto using set_proj_injective.
 Qed.
 
@@ -480,7 +483,7 @@ Proof.
   intros n H.
   unfold S, zero in H.
   destruct n.
-  contradiction (PA4_ω value).
+  contradiction (PA4_ω x).
   congruence.
 Qed.
 
@@ -548,11 +551,12 @@ Proof.
   repeat (destruct constructive_indefinite_description; repeat destruct a).
   apply set_proj_injective.
   simpl.
-  rewrite <-S_is_succ, e5, e1, <-add_right_lemma; eauto using in_set.
+  rewrite <-S_is_succ, e5, e1, <-add_right_lemma;
+    unfold INS; try now simpl; try apply proj2_sig.
   rewrite <-e3.
   apply function_maps_domain_to_range.
   rewrite e2.
-  apply in_set.
+  apply proj2_sig.
 Qed.
 
 Theorem add_1_r : ∀ a, a + 1 = S a.
@@ -656,7 +660,7 @@ Definition mul_right : N → set → set.
 Proof.
   intros a x.
   destruct (excluded_middle_informative (x ∈ ω)).
-  - exact (mul (mkSet _ _ i) a).
+  - exact (mul (exist _ _ i) a).
   - exact ∅.
 Defined.
 
@@ -665,7 +669,7 @@ Proof.
   intros a b.
   unfold mul_right.
   destruct excluded_middle_informative.
-  - replace {| in_set := i |} with b; auto; now apply set_proj_injective.
+  - replace (exist _ (INS b) i) with b; auto; now apply set_proj_injective.
   - now destruct b.
 Qed.
 
@@ -676,19 +680,21 @@ Proof.
   { intros x H.
     unfold mul_right.
     destruct excluded_middle_informative; intuition.
-    apply in_set. }
+    unfold INS.
+    apply proj2_sig. }
   destruct (constructive_indefinite_description
               _ (function_construction ω ω (mul_right a) H))
     as [add_a [H0 [H1 H2]]].
   destruct (constructive_indefinite_description
-              _ (recursion add_a _ _ (in_set ω 1) H0 H1))
+              _ (recursion add_a _ _ (proj2_sig 1) H0 H1))
     as [pow_b [H3 [H4 [H5 H6]]]].
   assert (pow_b b ∈ ω) as H7.
   { rewrite <-H4.
     apply function_maps_domain_to_range.
     rewrite H3.
-    apply in_set. }
-  exact (mkSet ω (pow_b b) H7).
+    unfold INS.
+    apply proj2_sig. }
+  exact (exist _ (pow_b b) H7).
 Defined.
 
 Infix "^" := pow : N_scope.
@@ -708,11 +714,12 @@ Proof.
   repeat (destruct constructive_indefinite_description; repeat destruct a).
   apply set_proj_injective.
   simpl.
-  rewrite <-S_is_succ, e5, e1, <-mul_right_lemma; eauto using in_set.
+  rewrite <-S_is_succ, e5, e1, <-mul_right_lemma; unfold INS;
+    try now simpl; try now apply proj2_sig.
   rewrite <-e3.
   apply function_maps_domain_to_range.
   rewrite e2.
-  apply in_set.
+  apply proj2_sig.
 Qed.
 
 Theorem pow_1_r : ∀ x, x^1 = x.
@@ -806,7 +813,7 @@ Proof.
         rewrite <-S_is_succ in H1.
         apply Pairwise_union_classification in H1 as [H1 | H1];
           try now (rewrite Singleton_classification in *; subst).
-        now (eapply elements_of_naturals_are_subsets; eauto using in_set).
+        eapply elements_of_naturals_are_subsets; eauto; now apply proj2_sig.
       * destruct IHb as [x H1].
         { intros x H1.
           pose proof H _ H1 as H2.
@@ -822,12 +829,14 @@ Theorem lt_is_in : ∀ a b, a < b ↔ a ∈ b.
   intros a b.
   split; intros H; unfold lt in *; rewrite le_is_subset in *.
   - destruct H as [H H0].
-    eapply subsets_of_naturals_are_elements; eauto using in_set.
+    eapply subsets_of_naturals_are_elements; unfold INS;
+      eauto; try now apply proj2_sig.
     contradict H0.
     now apply set_proj_injective.
   - split.
-    + apply elements_of_naturals_are_subsets; eauto using in_set.
-    + apply pigeonhole_precursor in H; eauto using in_set.
+    + apply elements_of_naturals_are_subsets; unfold INS;
+        try (now apply proj2_sig); auto.
+    + apply pigeonhole_precursor in H; unfold INS; try now apply proj2_sig.
       contradict H.
       subst.
       auto using Set_is_subset.
@@ -837,7 +846,7 @@ Theorem le_trichotomy : ∀ a b, a ≤ b ∨ b ≤ a.
 Proof.
   intros a b.
   rewrite ? le_is_subset.
-  eauto using ω_trichotomy, in_set.
+  apply ω_trichotomy; unfold INS; apply proj2_sig.
 Qed.
 
 Theorem lt_trichotomy : ∀ a b, a < b ∨ a = b ∨ a > b.
@@ -860,7 +869,7 @@ Theorem lt_antisym : ∀ a b, a < b → ¬ b < a.
 Proof.
   intros a b H H0.
   rewrite ? lt_is_in in *.
-  eapply ω_irreflexive; eauto using in_set.
+  eapply ω_irreflexive; eauto; unfold INS; try now apply proj2_sig.
 Qed.
 
 Theorem lt_irrefl : ∀ a, ¬ a < a.

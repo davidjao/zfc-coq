@@ -1,9 +1,8 @@
 Require Export naturals rings ordered_rings List Permutation.
 Set Warnings "-notation-overridden".
 
-Definition integer_relation :=
-  {z in (ω × ω) × (ω × ω) |
-    ∃ a b c d : N, z = ((a, b), (c, d)) ∧ a + d = b + c}.
+Definition integer_relation := {z in (ω × ω) × (ω × ω) | ∃ a b c d : N,
+                                  z = ((a, b), (c, d)) ∧ a + d = b + c}.
 
 Theorem integer_equivalence : is_equivalence (ω × ω) integer_relation.
 Proof.
@@ -13,7 +12,8 @@ Proof.
     split.
     + apply Product_classification; eauto.
     + apply Product_classification in H as [x [y [H [H0 H1]]]].
-      exists (mkSet _ _ H), (mkSet _ _ H0), (mkSet _ _ H), (mkSet _ _ H0).
+      exists (exist (λ x, x ∈ ω) _ H), (exist (λ x, x ∈ ω) _ H0),
+      (exist (λ x, x ∈ ω) _ H), (exist (λ x, x ∈ ω) _ H0).
       split; simpl; try congruence; ring.
   - intros x y H H0 H1.
     rewrite Specify_classification in *.
@@ -25,8 +25,8 @@ Proof.
       now rewrite Ordered_pair_iff in *.
   - intros x y z H H0 H1 H2 H3.
     rewrite Specify_classification in *.
-    destruct H2 as [H2 [a [b [c [d [H4 H5]]]]]],
-                   H3 as [H3 [e [f [g [h [H6 H7]]]]]].
+    destruct H2 as [H2 [a [b [c [d [H4 H5]]]]]], H3
+        as [H3 [e [f [g [h [H6 H7]]]]]].
     split.
     + apply Product_classification; eauto.
     + exists a, b, g, h.
@@ -46,7 +46,7 @@ Definition ℤ := (ω × ω) / integer_relation.
 
 Definition Z := elts ℤ.
 
-Definition IZS (a : Z) := value ℤ a : set.
+Definition IZS (a : Z) := proj1_sig a : set.
 Coercion IZS : Z >-> set.
 
 Delimit Scope Z_scope with Z.
@@ -55,12 +55,12 @@ Bind Scope Z_scope with Z.
 
 Definition embed : N → N → Z.
 Proof.
-  intros [_ a A] [_ b B].
+  intros [a A] [b B].
   assert ((a, b) ∈ ω × ω).
   { apply Product_classification.
     exists a, b.
     auto. }
-  exact (quotient_map _ _ (mkSet _ _ H)).
+  exact (quotient_map _ _ (exist _ _ H)).
 Defined.
 
 Infix "-" := embed : N_scope.
@@ -71,31 +71,32 @@ Proof.
   destruct (quotient_lift _ _ z) as [y H].
   destruct (unique_set_element _ y) as [x [[H0 H1] H2]].
   apply Product_classification in H0 as [a [b [H3 [H4 H5]]]].
-  exists (mkSet _ _ H3), (mkSet _ _ H4).
+  exists (exist (λ x, x ∈ ω) _ H3), (exist (λ x, x ∈ ω) _ H4).
   apply set_proj_injective.
   simpl in *.
   now rewrite <-H, <-H5, <-H1, <-quotient_image. (* or use "destruct y." *)
 Qed.
 
-Theorem Zequiv : ∀ a b c d, a - b = c - d ↔ a+d = b+c.
+Theorem Zequiv : ∀ a b c d, a - b = c - d ↔ a + d = b + c.
 Proof.
-  intros [_ a A] [_ b B] [_ c C] [_ d D].
+  intros [a A] [b B] [c C] [d D].
   split; intros H; unfold embed in *.
   - apply quotient_equiv in H; auto using integer_equivalence.
     simpl in *.
     apply Specify_classification in H as [H [a0 [b0 [c0 [d0 [H0 H1]]]]]].
     rewrite ? Ordered_pair_iff in *; intuition; subst.
-    replace {| in_set := A |} with a0; replace {| in_set := B |} with b0;
-    replace {| in_set := C |} with c0; replace {| in_set := D |} with d0;
-    auto; now apply set_proj_injective.
+    destruct a0, b0, c0, d0.
+    simpl in *.
+    replace A with i; replace B with i0; replace C with i1;
+      replace D with i2; auto using proof_irrelevance.
   - apply quotient_equiv; auto using integer_equivalence.
     simpl.
     apply Specify_classification; split.
     + apply Product_classification.
       exists (a,b), (c,d).
       repeat split; auto; apply Product_classification; eauto.
-    + now exists {| in_set := A |}, {| in_set := B |},
-    {| in_set := C |}, {| in_set := D |}.
+    + now exists (exist (λ x, x ∈ ω) _ A), (exist (λ x, x ∈ ω) _ B),
+      (exist (λ x, x ∈ ω) _ C), (exist (λ x, x ∈ ω) _ D).
 Qed.
 
 Definition INZ a := a - 0.
@@ -108,7 +109,7 @@ Proof.
   destruct (constructive_indefinite_description _ H) as [b H0].
   destruct (constructive_indefinite_description _ (Zlift y)) as [c H1].
   destruct (constructive_indefinite_description _ H1) as [d H2].
-  exact ((a+c) - (b+d)).
+  exact ((a + c) - (b + d)).
 Defined.
 
 Definition mul : Z → Z → Z.
@@ -118,7 +119,7 @@ Proof.
   destruct (constructive_indefinite_description _ H) as [n H0].
   destruct (constructive_indefinite_description _ (Zlift y)) as [p H1].
   destruct (constructive_indefinite_description _ H1) as [q H2].
-  exact ((m*p+n*q) - (n*p+m*q)).
+  exact ((m * p + n * q) - (n * p + m * q)).
 Defined.
 
 Definition neg : Z → Z.
@@ -167,7 +168,7 @@ Proof.
   ring [H].
 Qed.
 
-Theorem add_wf : ∀ a b c d, (a - b) + (c - d) = (a+c) - (b+d).
+Theorem add_wf : ∀ a b c d, (a - b) + (c - d) = (a + c) - (b + d).
 Proof.
   intros a b c d.
   unfold add.
@@ -263,7 +264,7 @@ Qed.
 
 Theorem M3 : ∀ a, 1 * a = a.
 Proof.
-  intros [_ a H].
+  intros [a H].
   unfold mul in *.
   repeat destruct constructive_indefinite_description.
   unfold one, INZ in *.

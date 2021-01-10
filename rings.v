@@ -267,17 +267,18 @@ Section Ring_theorems.
   Proof.
     intros a x.
     destruct (excluded_middle_informative (x ∈ (set_R R))).
-    - exact (value _ (mul_R _ (mkSet _ _ i : elts (set_R R)) a)).
+    - exact (proj1_sig (mul_R _ (exist _ _ i : elts (set_R R)) a)).
     - exact ∅.
   Defined.
 
   Theorem mul_right_lemma :
-    ∀ a b : elts (set_R R), mul_right a (value _ b) = value _ (b * a).
+    ∀ a b : elts (set_R R), mul_right a (proj1_sig b) = proj1_sig (b * a).
   Proof.
     intros a b.
     unfold mul_right.
     destruct excluded_middle_informative.
-    - replace {| in_set := i |} with b; auto; now apply set_proj_injective.
+    - replace (exist _ (proj1_sig b) i) with b;
+        auto; now apply set_proj_injective.
     - now destruct b.
   Qed.
 
@@ -288,19 +289,20 @@ Section Ring_theorems.
     { intros x H.
       unfold mul_right.
       destruct excluded_middle_informative; intuition.
-      apply in_set. }
+      apply proj2_sig. }
     destruct (constructive_indefinite_description
                 _ (function_construction (set_R R) (set_R R) (mul_right a) H))
       as [add_a [H0 [H1 H2]]].
     destruct (constructive_indefinite_description
-                _ (recursion add_a _ _ (in_set (set_R R) 1) H0 H1))
+                _ (recursion add_a _ _ (proj2_sig 1) H0 H1))
       as [pow_b [H3 [H4 [H5 H6]]]].
     assert (pow_b b ∈ (set_R R)) as H7.
     { rewrite <-H4.
       apply function_maps_domain_to_range.
       rewrite H3.
-      apply in_set. }
-    exact (mkSet (set_R R) (pow_b b) H7).
+      unfold INS.
+      apply proj2_sig. }
+    exact (exist _ (pow_b b) H7).
   Defined.
 
   Infix "^" := pow.
@@ -320,11 +322,12 @@ Section Ring_theorems.
     repeat (destruct constructive_indefinite_description; repeat destruct a).
     apply set_proj_injective.
     simpl.
-    rewrite <-S_is_succ, e5, e1, <-mul_right_lemma; eauto using in_set.
+    rewrite <-S_is_succ, e5, e1, <-mul_right_lemma; unfold INS;
+      try now simpl; try now apply proj2_sig.
     rewrite <-e3.
     apply function_maps_domain_to_range.
     rewrite e2.
-    apply in_set.
+    apply proj2_sig.
   Qed.
 
   Theorem pow_1_r : ∀ x, x^1 = x.
