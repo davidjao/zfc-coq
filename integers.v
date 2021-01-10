@@ -12,8 +12,8 @@ Proof.
     split.
     + apply Product_classification; eauto.
     + apply Product_classification in H as [x [y [H [H0 H1]]]].
-      exists (exist (λ x, x ∈ ω) _ H), (exist (λ x, x ∈ ω) _ H0),
-      (exist (λ x, x ∈ ω) _ H), (exist (λ x, x ∈ ω) _ H0).
+      exists (exist _ _ H : N), (exist _ _ H0 : N),
+      (exist _ _ H : N), (exist _ _ H0 : N).
       split; simpl; try congruence; ring.
   - intros x y H H0 H1.
     rewrite Specify_classification in *.
@@ -71,7 +71,7 @@ Proof.
   destruct (quotient_lift _ _ z) as [y H].
   destruct (unique_set_element _ y) as [x [[H0 H1] H2]].
   apply Product_classification in H0 as [a [b [H3 [H4 H5]]]].
-  exists (exist (λ x, x ∈ ω) _ H3), (exist (λ x, x ∈ ω) _ H4).
+  exists (exist _ _ H3 : N), (exist _ _ H4 : N).
   apply set_proj_injective.
   simpl in *.
   now rewrite <-H, <-H5, <-H1, <-quotient_image. (* or use "destruct y." *)
@@ -95,8 +95,8 @@ Proof.
     + apply Product_classification.
       exists (a,b), (c,d).
       repeat split; auto; apply Product_classification; eauto.
-    + now exists (exist (λ x, x ∈ ω) _ A), (exist (λ x, x ∈ ω) _ B),
-      (exist (λ x, x ∈ ω) _ C), (exist (λ x, x ∈ ω) _ D).
+    + now exists (exist _ _ A : N), (exist _ _ B : N),
+      (exist _ _ C : N), (exist _ _ D : N).
 Qed.
 
 Definition INZ a := a - 0.
