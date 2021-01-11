@@ -155,7 +155,7 @@ Theorem lub : ∀ A, A ⊂ ℝ → A ≠ ∅ → (∃ β : R, ∀ α : R, α ∈
 Proof.
   intros A H H0 [β H1].
   set (g := ⋃ A).
-  assert (g ∈ ℝ).
+  assert (g ∈ ℝ) as H2.
   { apply Specify_classification.
     repeat split.
     - apply Powerset_classification.
