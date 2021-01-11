@@ -12,8 +12,8 @@ Coercion IRS : R >-> set.
 
 Lemma Dedekind_cut_0 : ∀ (α : R) (p : set), p ∈ α → p ∈ ℚ.
 Proof.
-  intros [α A] p H.
-  pose proof A as H0.
+  intros α p H.
+  pose proof proj2_sig α as H0.
   apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
   apply Powerset_classification in H0.
   eauto.
@@ -21,53 +21,50 @@ Qed.
 
 Lemma Dedekind_cut_1 : ∀ α : R, ∅ ≠ α.
 Proof.
-  intros [α A] H.
-  pose proof A as H0.
+  intros α H.
+  pose proof proj2_sig α as H0.
   apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
   now contradict H1.
 Qed.
 
 Lemma Dedekind_cut_2 : ∀ (α : R) (p q : Q), p ∈ α → q < p → q ∈ α.
 Proof.
-  intros [α A] p q H H0.
-  pose proof A as H1.
-  apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
-  eauto.
+  intros α.
+  pose proof proj2_sig α as H1.
+  now apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
 Qed.
 
 Lemma Dedekind_cut_3 : ∀ (α : R) (p : Q), p ∈ α → ∃ r : Q, p < r ∧ r ∈ α.
 Proof.
-  intros [α A] p H.
-  pose proof A as H0.
-  apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
-  eauto.
+  intros α.
+  pose proof proj2_sig α as H0.
+  now apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
 Qed.
 
 Lemma Dedekind_cut_4 : ∀ α : R, ∀ p q : Q, p ∈ α → q ∉ α → p < q.
 Proof.
-  intros [α A] p q H H0.
-  pose proof A as H1.
+  intros α p q H H0.
+  pose proof proj2_sig α as H1.
   apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
-  destruct (T p q) as [[H6 [H7 H8]] | [[H6 [H7 H8]] | [H6 [H7 H8]]]]; subst;
-    try tauto.
+  destruct (T p q) as [[H6 _] | [[_ [H6 _]] | [_ [_ H6]]]]; subst; try tauto.
   exfalso; eauto.
 Qed.
 
 Lemma Dedekind_cut_5 : ∀ α : R, ∀ r s : Q, r ∉ α → r < s → s ∉ α.
 Proof.
-  intros [α A] r s H H0 H1.
-  pose proof A as H2.
+  intros α r s H H0 H1.
+  pose proof proj2_sig α as H2.
   apply Specify_classification in H2 as [H2 [H3 [H4 [H5 H6]]]].
   eauto.
 Qed.
 
 Lemma Dedekind_cut_6 : ∀ a : R, ∃ q : Q, q ∉ a.
 Proof.
-  intros [a A].
-  pose proof A as H.
+  intros α.
+  pose proof proj2_sig α as H.
   apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
   apply Powerset_classification in H.
-  assert (ℚ ≠ a) as H4 by (now contradict H1).
+  assert (ℚ ≠ α) as H4 by (now contradict H1).
   apply not_proper_subset_inhab in H4 as [z [H4 H5]].
   - exists (exist _ _ H4 : Q); auto.
   - contradict H4.
@@ -255,8 +252,8 @@ Proof.
     split; unfold IQS; try apply proj2_sig.
     exists (q-1).
     split; auto.
-    unfold rationals.lt.
-    replace (q-(q-1)) with (1-0) by field.
+    rewrite lt_shift.
+    replace (q+-(q-1)) with 1 by field.
     apply zero_lt_1.
   - intros H.
     assert (q+1 ∈ ℚ) as H1 by (unfold IQS; apply proj2_sig).
@@ -266,8 +263,7 @@ Proof.
     apply set_proj_injective in H2.
     subst.
     contradiction (lt_antisym q (q+1)).
-    rewrite <-(rationals.A3 q), rationals.A1 at 1.
-    auto using O1, zero_lt_1.
+    apply (lt_succ rational_order).
   - intros p x H H0.
     apply Specify_classification in H as [H [ξ [H1 H2]]].
     apply Specify_classification.
@@ -305,11 +301,10 @@ Qed.
 
 Lemma not_Q_eq : ∀ α : R, ℚ ≠ α.
 Proof.
-  intros [α A] H.
-  pose proof A as H0.
-  apply Specify_classification in H0.
-  symmetry in H.
-  tauto.
+  intros α H.
+  pose proof proj2_sig α as H0.
+  apply Specify_classification in H0 as [H0 [H1 [H2 H3]]].
+  now contradict H2.
 Qed.
 
 Theorem add_in : ∀ α β, add_set α β ∈ ℝ.
@@ -548,23 +543,18 @@ Proof.
   - intros m H8.
     apply NNPP.
     contradict H8.
-    assert (m ≤ 0)%Z as [H9 | H9].
-    { unfold integers.le, ordered_rings.le.
-      pose proof (integers.T m 0); tauto. }
+    apply (le_not_gt integer_order) in H8 as [H8 | H8]; simpl in *.
     + apply (H3 ξ); auto.
       destruct H6 as [H6 | H6]; rewrite <-IZQ_add; ring_simplify.
       * apply (rationals.lt_trans _ (k*b)); auto.
-        rewrite <-(rationals.A3 (k*b)) at 2.
-        rewrite (rationals.A1 0).
-        apply rationals.O1.
-        replace 0%Q with (0*b)%Q by ring.
-        rewrite ? (rationals.M1 _ b).
-        now apply O3, IZQ_lt.
-      * rewrite <-(rationals.A3 ξ), <-H6, (rationals.A1 0).
-        apply O1.
-        replace 0%Q with (0*b)%Q by ring.
-        rewrite ? (rationals.M1 _ b).
-        now apply O3, IZQ_lt.
+        rewrite lt_shift.
+        replace (k*b+-(k*b+m*b))%Q with (-m*b)%Q by field.
+        apply O2; auto.
+        now rewrite IZQ_lt, lt_neg_0 in H8.
+      * rewrite <-H6, lt_shift.
+        replace (k*b+-(k*b+m*b))%Q with (-m*b)%Q by field.
+        apply O2; auto.
+        now rewrite IZQ_lt, lt_neg_0 in H8.
     + subst.
       rewrite integers.(A3_r).
       destruct H6 as [H6 | H6].
@@ -578,42 +568,33 @@ Proof.
     destruct (Q_archimedean ζ b) as [m [H10 H11]]; auto.
     exists (m - k + 1)%Z.
     split.
-    + unfold integers.sub.
-      rewrite  <-(integers.A4 k), (integers.A1 m), (integers.A1 k),
-      <-integers.A2.
-      apply integers.O1.
+    + replace (m-k+1)%Z with (m+1+-k)%Z by ring.
+      rewrite <-(ordered_rings.lt_shift integer_order); simpl.
       destruct (integers.T k (m+1)) as [H12 | [H12 | H12]]; intuition;
         contradict H9; replace z with (proj1_sig ζ); try apply (H3 ξ); auto.
       * rewrite H12, <-IZQ_add in H6.
         destruct H6 as [H6 | H6]; eauto using rationals.lt_trans.
         now rewrite <-H6.
       * apply IZQ_lt, (O3 b) in H15; auto.
-        rewrite ? (M1 b) in H15.
-        rewrite <-IZQ_add in H15.
+        rewrite ? (M1 b), <-IZQ_add in H15.
         assert (ζ < k * b)%Q as H9 by eauto using rationals.lt_trans.
         destruct H6 as [H6 | H6]; eauto using rationals.lt_trans.
         now rewrite <-H6.
-    + unfold integers.sub.
-      rewrite ? IZQ_add.
-      replace (k+(m+-k+1))%Z with (m+1)%Z by ring.
+    + replace (k+(m-k+1))%Z with (m+1)%Z by ring.
       eapply Dedekind_cut_5.
-      * replace z with (proj1_sig ζ) in * by auto.
-        exact H9.
+      * replace z with (proj1_sig ζ) in *; eauto.
       * now rewrite <-IZQ_add.
   - exists (k+(n+-(1)))%Z.
     rewrite ? IZQ_add.
     split.
     + apply NNPP.
       intros H10.
-      assert (n + (-(1)) < n)%Z.
-      { rewrite <-(integers.(A3_r) n), <-integers.A2.
-        apply integers.O1.
-        rewrite integers.A3, <-(ordered_rings.neg_lt_0 integer_order).
-        exact integers.zero_lt_1. }
-      pose proof (integers.T (n+(-(1))) n).
-      eapply H9 in H10 as [H10 | H10]; try tauto.
-      symmetry in H10.
-      tauto.
+      pose proof (H9 _ H10) as H11.
+      rewrite (le_not_gt integer_order) in H11; simpl in *.
+      contradict H11.
+      rewrite (ordered_rings.lt_shift integer_order); simpl.
+      replace (n+-(n+-(1)))%Z with 1%Z by ring.
+      apply integers.zero_lt_1.
     + replace (1) with (IZQ 1) by auto.
       now rewrite IZQ_add, <-? integers.A2, (integers.A1 _ 1), integers.A4,
       integers.(A3_r).
@@ -658,27 +639,24 @@ Proof.
     split; auto.
     exists (n*w)%Q, (-(n+2)*w)%Q.
     repeat split; auto.
-    + apply f_equal.
+    + f_equal.
       unfold w.
       ring_simplify.
       rewrite <-M2, inv_l; try ring.
       intros H5.
       apply IZQ_eq in H5.
-      subst.
       rewrite H5 in H0.
       contradiction (ordered_rings.lt_irrefl integer_order 0%Z).
     + apply Specify_classification.
       split; unfold IQS; try apply proj2_sig.
       exists (-(n+2)*w), w.
       repeat split; auto.
-      replace ((-(-(n+2)*w)-w))%Q with ((n+2)*w+-w)%Q by ring.
-      rewrite ? D1.
+      replace ((-(-(n+2)*w)-w))%Q with (n*w+2*w+-w)%Q by ring.
       replace (IZQ 2) with (1/1+1/1)%Q.
       * rewrite D1, M3, <-? rationals.A2, A4, (rationals.A1 w), rationals.A3.
-        rewrite <-(M3 w) at 2.
-        now rewrite <-D1.
-      * unfold IZQ; rewrite add_wf, Qequiv; try rewrite integers.M3;
-          auto using integers.zero_ne_1; try ring.
+        now replace (n*w+w)%Q with ((n+1)*w)%Q by ring.
+      * unfold IZQ; rewrite add_wf, Qequiv; rewrite ? integers.M3;
+          auto using integers.zero_ne_1; ring.
 Qed.
 
 Theorem O1 : ∀ a b c, b < c → a + b < a + c.
@@ -695,7 +673,7 @@ Proof.
     exists r, s.
     split; auto.
   - contradict H0.
-    apply f_equal.
+    f_equal.
     apply set_proj_injective in H0.
     assert (-a+(a+b) = -a+(a+c)) by congruence.
     now rewrite ? A2, ? (A1 (-a)), ? A4, ? (A1 0), ? A3 in H1.
@@ -1071,12 +1049,8 @@ Proof.
         contradiction.
       * intros H7.
         subst.
-        unfold rationals.zero, IZQ in H0.
-        unfold rationals.lt, rationals.sub in H0.
-        rewrite neg_wf, add_wf, pos_wf in H0; auto using integers.zero_ne_1.
-        -- replace ((0*1+-0*x0)*(x0*1))%Z with 0%Z in H0 by ring.
-           contradiction (ordered_rings.lt_irrefl integer_order 0%Z).
-        -- now rewrite integers.(M3_r).
+        rewrite inv_div, (mul_0_l rational_ring) in H0; auto; simpl in *.
+        contradiction (ordered_rings.lt_irrefl rational_order 0%Q).
     + contradict H7.
       eapply Dedekind_cut_2; eauto.
       rename H6 into H4.
@@ -1084,13 +1058,11 @@ Proof.
       { eapply (rationals.lt_trans _ 1); auto.
         apply IZQ_lt, integers.zero_lt_1. }
       rewrite <-(rationals.M3 c) at 2.
-      rewrite <-(inv_l (c^-1*r)), <-rationals.M2.
-      * rewrite <-(rationals.M3 ((c^-1*r)^-1)), (rationals.M1 1) at 1.
-        apply rationals.O3.
-        -- now apply (inv_lt rational_field_order), O2.
-        -- rewrite M1, M2, (M1 c), inv_l, M3; auto.
-           now apply lt_neq.
-      * now apply lt_neq, O2.
+      rewrite <-(inv_l (c^-1*r)), <-rationals.M2,
+      <-(M3_r rational_ring ((c^-1*r)^-1)) at 1; auto using lt_neq, O2; simpl.
+      apply rationals.O3.
+      * now apply (inv_lt rational_field_order), O2.
+      * rewrite M1, M2, (M1 c), inv_l, M3; auto using lt_neq.
   - intros p q H0 H1.
     apply Specify_classification in H0 as [H0 [ρ [r [H2 [H3 [H4 | [H4 H5]]]]]]];
       apply set_proj_injective in H2; subst; apply Specify_classification;
@@ -1149,7 +1121,7 @@ Proof.
       { apply (rationals.lt_trans _ 1); auto.
         apply IZQ_lt, integers.zero_lt_1. }
       split.
-      * apply (lt_div rational_field_order) in H5; auto.
+      * apply (lt_div rational_field_order) in H5; auto; simpl in *.
         apply (O3 ρ) in H5; auto.
         now rewrite M1, M3, M2 in H5.
       * apply Specify_classification.
