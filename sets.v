@@ -1,4 +1,4 @@
-Require Export logic_axioms.
+Require Export logic_axioms Basics.
 
 (* Beginning of axioms. *)
 
@@ -1145,7 +1145,7 @@ Proof.
   - exact empty_function.
 Defined.
 
-Infix "∘" := composition (at level 60) : set_scope.
+Infix "∘" := composition : set_scope.
 
 Theorem Composition_classification :
   ∀ f g, domain f = range g →

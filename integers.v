@@ -288,7 +288,8 @@ Infix "-" := sub : Z_scope.
 Definition integers := mkRing _ zero one add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
 
 Add Ring integer_ring :
-  (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1 (sub_neg_R integers) A4).
+  (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1
+         (sub_neg integers : ∀ a b : Z, a + -b = a - b) A4).
 
 Definition lt : Z → Z → Prop.
 Proof.
@@ -408,6 +409,20 @@ Notation "x < y < z" := (x < y ∧ y < z) : Z_scope.
 Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level): Z_scope.
 Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): Z_scope.
 Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): Z_scope.
+
+Theorem le_def : ∀ a b, a ≤ b ↔ ∃ c : N, b = a + c.
+Proof.
+  split; intros H; unfold le, ordered_rings.le in *; rewrite lt_def in *.
+  - destruct H as [[c [H H0]] | H]; eauto.
+    subst.
+    exists 0%N.
+    now rewrite A1, A3.
+  - destruct H as [c H].
+    destruct (classic (0 = c)).
+    + subst.
+      right; now rewrite <-H0, A1, A3.
+    + left; eauto.
+Qed.
 
 Theorem INZ_lt : ∀ a b : N, INZ a < INZ b ↔ (a < b)%N.
 Proof.
@@ -704,7 +719,8 @@ Qed.
 
 Theorem FTA : ∀ a b c, gcd (a,b) = 1 → a｜b * c → a｜c.
 Proof.
-  intros a b c H [d H0]; simpl in *; fold Z in *.
+  intros a b c H [d H0]; simpl in *; unfold rings.R, set_R, integers in *;
+    fold Z in *.
   destruct (Euclidean_algorithm a b H) as [x [y H1]].
   rewrite <-(M3 c), H1.
   exists (c*x + d*y); simpl.

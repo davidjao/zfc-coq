@@ -11,4 +11,5 @@ integers.v
 fields.v
 ordered_fields.v
 rationals.v
+summation_example.v
 reals.v

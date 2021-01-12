@@ -21,17 +21,17 @@ Section Integral_domain_theorems.
   Variable ID : integral_domain.
 
   Notation R := (ring_ID ID).
-  Notation "0" := (zero_R R).
-  Notation "1" := (one_R R).
-  Infix "+" := (add_R R).
-  Infix "-" := (sub_R R).
-  Infix "*" := (mul_R R).
-  Notation "- a" := (neg_R R a).
+  Notation "0" := (zero R).
+  Notation "1" := (one R).
+  Infix "+" := (add R).
+  Infix "-" := (sub R).
+  Infix "*" := (mul R).
+  Notation "- a" := (neg R a).
   Infix "^" := (pow R).
 
   Add Ring R_ring :
-    (mk_rt 0 1 (add_R R) (mul_R R) (sub_R R) (neg_R R) eq (A3_R R) (A1_R R)
-           (A2_R R) (M3_R R) (M1_R R) (M2_R R) (D1_R R) (sub_neg_R R) (A4_R R)).
+    (mk_rt 0 1 (add R) (mul R) (sub R) (neg R) eq (A3 R) (A1 R)
+           (A2 R) (M3 R) (M1 R) (M2 R) (D1 R) (sub_neg R) (A4 R)).
 
   Lemma ne0_cancellation : ∀ a b, a ≠ 0 → b ≠ 0 → a * b ≠ 0.
   Proof.

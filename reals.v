@@ -347,7 +347,8 @@ Proof.
     split; unfold IQS; try apply proj2_sig.
     exists (q+-s), s.
     repeat split; auto.
-    + now replace (q+-s+s) with q by ring.
+    + f_equal.
+      ring.
     + eapply Dedekind_cut_2; eauto.
       rewrite lt_shift in *.
       now replace (r+-(q+-s)) with (r+s+-q) by ring.
@@ -439,7 +440,8 @@ Proof.
     apply Dedekind_cut_3 in H as [r [H H1]].
     exists r, (ζ+-r)%Q.
     repeat split; auto.
-    + now replace (r+(ζ+-r))%Q with ζ by ring.
+    + apply f_equal.
+      now ring_simplify.
     + simpl.
       apply Specify_classification; split;
         unfold IQS; try apply proj2_sig; eauto.

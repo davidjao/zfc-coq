@@ -601,11 +601,7 @@ Proof.
   destruct (Qlift x) as [a [b [H0 H1]]], (Qlift y) as [c [d [H2 H3]]].
   exists ((b*c + a*d)/(2*b*d)).
   subst.
-  assert (2 ≠ 0)%Z.
-  { intros H1.
-    contradiction (ordered_rings.lt_irrefl integer_order 0%Z).
-    rewrite <-H1 at 2.
-    apply integers.O0; eauto using zero_lt_1. }
+  assert (2 ≠ 0)%Z as H1 by apply (ordered_rings.zero_ne_2 integer_order).
   split; unfold lt, sub in *; rewrite neg_wf, add_wf, pos_wf in *;
     auto using (ne0_cancellation (integral_domain_OR integer_order)).
   - replace (((b*c+a*d)*b+-a*(2*b*d))*(2*b*d*b))%Z

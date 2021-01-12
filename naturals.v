@@ -1041,3 +1041,53 @@ Proof.
   - apply PA4.
   - now rewrite add_0_l.
 Qed.
+
+Theorem succ_lt : ∀ m, m < S m.
+Proof.
+  intros m.
+  rewrite lt_def.
+  exists 1.
+  split; auto using PA4, add_1_r.
+Qed.
+
+Theorem S_lt : ∀ m n, m < n ↔ S m < S n.
+Proof.
+  split; intros H.
+  - rewrite <-? (add_1_r m), <-? (add_1_r n).
+    now apply O1.
+  - apply lt_def in H as [c [H H0]].
+    apply lt_def.
+    exists c.
+    split; auto.
+    rewrite add_comm, add_succ_r, add_comm in H0.
+    now apply PA5.
+Qed.
+
+Theorem zero_le : ∀ n, 0 ≤ n.
+Proof.
+  intros n.
+  apply le_is_subset, Empty_set_is_subset.
+Qed.
+
+Theorem lt_not_ge : ∀ a b, a < b ↔ ¬ b ≤ a.
+Proof.
+  split; intros H.
+  - destruct H as [H H0].
+    contradict H0.
+    now apply le_antisymm.
+  - destruct (lt_trichotomy b a) as [[H0 H1] | [H0 | H0]]; try tauto.
+    contradict H.
+    subst.
+    apply le_refl.
+Qed.
+
+Theorem le_not_gt : ∀ a b, a ≤ b ↔ ¬ b < a.
+Proof.
+  split; intros H.
+  - intros [H0 H1].
+    contradict H1.
+    now apply le_antisymm.
+  - apply NNPP.
+    intros H0.
+    now rewrite <-lt_not_ge in H0.
+Qed.
