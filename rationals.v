@@ -24,7 +24,7 @@ Proof.
       (exist _ _ H3 : Z), (exist _ _ H4 : Z).
       simpl.
       split; auto.
-      rewrite M1.
+      rewrite integers.M1.
       replace H1 with H3; replace H2 with H4; auto using proof_irrelevance.
     + contradiction n.
       apply Product_classification; eauto.
@@ -448,7 +448,7 @@ Proof.
   assert (∀ x y z w,
              y ≠ 0 → z ≠ 0 → x * y = z * w → 0 < x → 0 < z → 0 < w * y)%Z as L.
   { intros x y z w H H0 H1 H2 H3.
-    destruct (T w 0), (T y 0); intuition; subst;
+    destruct (integers.T w 0), (integers.T y 0); intuition; subst;
       try (now apply (mul_neg_neg integer_order); simpl);
       try (now apply (integers.mul_pos_pos); simpl).
     + assert (0 < x * y) by now apply (integers.mul_pos_pos).
@@ -492,7 +492,7 @@ Proof.
   replace (-a*b)%Z with (-(a*b))%Z by ring.
   rewrite <-(lt_neg_0 integer_order).
   replace (a * 1 = b * 0)%Z with (a * b = 0)%Z.
-  - destruct (T (a*b) 0); intuition.
+  - destruct (integers.T (a*b) 0); intuition.
   - apply propositional_extensionality.
     replace (b*0)%Z with 0%Z by ring.
     rewrite (M3_r integers).

@@ -26,15 +26,23 @@ Section Ordered_field_theorems.
 
   Variable OF : ordered_field.
 
-  Notation F := (field_OF OF).
-  Notation "0" := (zero_F F).
-  Notation "1" := (one_F F).
-  Infix "+" := (add_F F).
-  Infix "*" := (mul_F F).
-  Notation "- a" := (neg_F F a).
-  Infix "-" := (sub_F F).
+  Definition F := (field_OF OF).
+  Notation "0" := (zero F).
+  Notation "1" := (one F).
+  Infix "+" := (add F).
+  Infix "*" := (mul F).
+  Notation "- a" := (neg a).
+  Infix "-" := (sub F).
   Infix "^" := (pow F).
-  Infix "<" := (lt_OF OF).
+  Infix "/" := (div F).
+  Definition lt := lt_OF OF : fields.F F → fields.F F → Prop.
+  Infix "<" := lt.
+  Definition lt_trans := lt_trans_OF OF : ∀ a b c, a < b → b < c → a < c.
+  Definition O1 := O1_OF OF : ∀ a b c, b < c → a + b < a + c.
+  Definition O2 := O2_OF OF : ∀ a b, 0 < a → 0 < b → 0 < a * b.
+  Definition T := T_OF OF : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ b < a) ∨
+                                   (¬ a < b ∧ a = b ∧ ¬ b < a) ∨
+                                   (¬ a < b ∧ a ≠ b ∧ b < a).
   Notation "a > b" := (b < a) (only parsing).
   Definition le a b := a < b ∨ a = b.
   Infix "≤" := le.
@@ -43,25 +51,23 @@ Section Ordered_field_theorems.
   Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level).
   Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level).
   Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level).
-  Notation "a '^-1' " := (inv_F _ a) (at level 30, format "a '^-1'").
+  Notation "a '^-1' " := (inv F a) (at level 30, format "a '^-1'").
 
   Add Field generic_ordered_field :
-    (mk_field (div_F F) (inv_F F)
-              (mk_rt 0 1 (add_F F) (mul_F F) (sub_F F) (neg_F F) eq (A3_F F)
-                     (A1_F F) (A2_F F) (M3_F F) (M1_F F) (M2_F F) (D1_F F)
-                     (sub_neg_F F) (A4_F F))
-              (one_ne_0_F F) (div_inv F) (M4_F F)).
+    (mk_field (div F) (inv F)
+              (mk_rt 0 1 (add F) (mul F) (sub F) (neg F) eq (A3 F) (A1 F) (A2 F)
+                     (M3 F) (M1 F) (M2 F) (D1 F) (sub_neg F) (A4 F))
+              (one_ne_0 F) (div_inv F) (M4 F)).
 
   Definition ordered_ring_from_field :=
-    (mkOring (ring_from_field F) (lt_OF OF) (lt_trans_OF OF)
-             (T_OF OF) (O1_OF OF) (O2_OF OF) (one_ne_0_F F)).
+    (mkOring (ring_from_field F) lt lt_trans T O1 O2 (one_ne_0_F F)).
 
   Theorem O4 : ∀ a, 0 < a → 0 < a^-1.
   Proof.
     intros x H.
-    destruct (T_OF _ 0 (x^-1)) as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]];
+    destruct (T 0 (x^-1)) as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]];
       try tauto.
-    - contradiction (one_ne_0_F F).
+    - contradiction (one_ne_0 F).
       rewrite <-(inv_r _ x);
         auto using (ordered_rings.lt_neq ordered_ring_from_field).
       replace 0 with (x*0) by ring.
@@ -148,7 +154,7 @@ Section Ordered_field_theorems.
     pose proof H0 as H1.
     apply lt_def in H1 as [c [H1 H2]].
     subst.
-    rewrite A3, <-pow_wf in *.
+    rewrite integers.A3, <-pow_wf in *.
     assert (0 < c)%N as H2 by now rewrite <-INZ_lt.
     now apply (ordered_rings.pow_gt_1 ordered_ring_from_field).
   Qed.
