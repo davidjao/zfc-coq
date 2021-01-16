@@ -266,6 +266,30 @@ Proof.
   split; intros H; subst; firstorder using Subset_equality, Set_is_subset.
 Qed.
 
+Theorem subset_subsetneq_trans : ∀ A B C, A ⊂ B → B ⊊ C → A ⊊ C.
+Proof.
+  intros A B C H [H0 H1].
+  split.
+  - intros a H2.
+    auto.
+  - intros H2.
+    subst.
+    contradict H1.
+    now apply Subset_equality_iff.
+Qed.
+
+Theorem subsetneq_subset_trans : ∀ A B C, A ⊊ B → B ⊂ C → A ⊊ C.
+Proof.
+  intros A B C [H H0] H1.
+  split.
+  - intros a H2.
+    auto.
+  - intros H2.
+    subst.
+    contradict H0.
+    now apply Subset_equality_iff.
+Qed.
+
 Lemma proper_subset_inhab : ∀ x y, x ⊊ y → ∃ z, z ∈ y ∧ z ∉ x.
 Proof.
   intros x y [H H0].
@@ -950,6 +974,8 @@ Definition injective f := ∀ x1 x2, f[x1] = f[x2] → x1 = x2.
 
 Definition surjective f := ∀ y, ∃ x, f[x] = y.
 
+Definition bijective f := injective f ∧ surjective f.
+
 Section Choice.
 
   (* Axiom of choice is a theorem since we assume indefinite description. *)
@@ -1122,6 +1148,42 @@ Proof.
     congruence.
 Qed.
 
+Theorem Injective_classification : ∀ f, injective f ↔ ∀ x y,
+        x ∈ domain f → y ∈ domain f → f x = f y → x = y.
+Proof.
+  split; intros H.
+  - intros x y H0 H1 H2.
+    replace x with (proj1_sig (exist (λ x, x ∈ domain f) _ H0)) by auto.
+    replace y with (proj1_sig (exist (λ x, x ∈ domain f) _ H1)) by auto.
+    auto using f_equal, set_proj_injective.
+  - intros [x X] [y Y] H0.
+    inversion H0.
+    auto using set_proj_injective.
+Qed.
+
+Theorem Surjective_classification : ∀ f, surjective f ↔ ∀ y,
+        y ∈ range f → ∃ x, x ∈ domain f ∧ f x = y.
+Proof.
+  split; intros H.
+  - intros y H0.
+    destruct (H (exist (λ x, x ∈ range f) _ H0)) as [[x X] H1].
+    exists x.
+    now inversion H1.
+  - intros [y Y].
+    pose proof (H _ Y) as [x [H0 H1]].
+    exists (exist (λ x, x ∈ domain f) _ H0).
+    simpl.
+    now apply set_proj_injective.
+Qed.
+
+Definition image (f : function) := {y in range f | ∃ x, x ∈ domain f ∧ f x = y}.
+
+Theorem image_subset_range : ∀ f, image f ⊂ range f.
+Proof.
+  intros f x H.
+  now apply Specify_classification in H as [H H0].
+Qed.
+
 Definition empty_function : function.
 Proof.
   assert (∀ a : set, a ∈ ∅ → (λ x : set, x) a ∈ ∅) as H by auto.
@@ -1156,6 +1218,38 @@ Proof.
   unfold composition.
   repeat destruct excluded_middle_informative;
     repeat destruct constructive_indefinite_description; intuition.
+Qed.
+
+Theorem composition_injective : ∀ f g,
+    domain f = range g → injective f → injective g → injective (f ∘ g).
+Proof.
+  intros f g H H0 H1 [x X] [y Y] H2.
+  destruct (Composition_classification f g) as [H3 [H4 H5]]; try congruence.
+  apply set_proj_injective.
+  simpl in *.
+  inversion H2.
+  rewrite Injective_classification in H1, H0.
+  apply H1; try congruence.
+  apply H0; try (rewrite H; apply function_maps_domain_to_range;
+                 now rewrite <-H3).
+  rewrite <-? H5; congruence.
+Qed.
+
+Theorem composition_surjective : ∀ f g,
+    domain f = range g → surjective f → surjective g → surjective (f ∘ g).
+Proof.
+  intros f g H H0 H1 [y Y].
+  destruct (Composition_classification f g) as [H2 [H3 H4]]; try congruence.
+  rewrite Surjective_classification in H0, H1.
+  destruct (H0 y) as [z [H5 H6]]; try now rewrite <-H3.
+  rewrite H in H5.
+  destruct (H1 z) as [x [H7 H8]]; auto.
+  rewrite <-H2 in H7.
+  exists (exist (λ x, x ∈ domain (f ∘ g)) _ H7).
+  simpl.
+  apply set_proj_injective.
+  simpl.
+  rewrite H4; congruence.
 Qed.
 
 Lemma func_ext_lemma : ∀ f g,
