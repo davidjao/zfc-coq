@@ -1,4 +1,5 @@
-Require Export naturals.
+Require Export naturals Setoid.
+Set Warnings "-notation-overridden".
 
 Open Scope set_scope.
 
@@ -92,6 +93,11 @@ Proof.
     apply Product_classification.
     now exists A, C.
 Qed.
+
+Add Parametric Relation : set equinumerous
+      reflexivity proved by (cardinality_refl)
+      symmetry proved by (cardinality_sym)
+      transitivity proved by (cardinality_trans) as set_equivalence.
 
 Theorem injective_into_image : ∀ f, injective f → domain f ~ image f.
 Proof.
@@ -345,10 +351,7 @@ Proof.
         apply equivalence_minus_element; auto.
         -- exists f.
            repeat split; auto.
-        -- rewrite <-S_is_succ.
-           apply Pairwise_union_classification.
-           rewrite Singleton_classification.
-           tauto.
+        -- apply lt_is_in, succ_lt.
     + apply (IHn (m \ {f n, f n})).
       * apply (subsetneq_subset_trans _ m); repeat split.
         -- intros x H6.
@@ -357,9 +360,8 @@ Proof.
            assert (f n ∈ m \ {f n, f n}) as H7.
            { rewrite H6, <-H1.
              apply function_maps_domain_to_range.
-             rewrite H0, <-S_is_succ.
-             now apply Pairwise_union_classification,
-             or_intror, Singleton_classification. }
+             rewrite H0.
+             apply lt_is_in, succ_lt. }
            apply Complement_classification in H7 as [H7 H8].
            now rewrite Singleton_classification in H8.
         -- destruct H as [H H6].
@@ -373,16 +375,11 @@ Proof.
         apply equivalence_minus_element.
         ++ exists f.
            repeat split; auto.
-        ++ rewrite <-S_is_succ.
-           apply Pairwise_union_classification.
-           rewrite Singleton_classification.
-           tauto.
+        ++ apply lt_is_in, succ_lt.
         ++ rewrite <-H1.
            apply function_maps_domain_to_range.
-           rewrite H0, <-S_is_succ.
-           apply Pairwise_union_classification.
-           rewrite Singleton_classification.
-           tauto.
+           rewrite H0.
+           apply lt_is_in, succ_lt.
 Qed.
 
 Theorem equiv_proper_subset_ω : ∃ S, S ⊊ ω ∧ S ~ ω.
@@ -467,6 +464,13 @@ Definition finite S := ∃ n : N, S ~ n.
 
 Definition infinite S := ¬ finite S.
 
+Theorem naturals_are_finite : ∀ n : N, finite n.
+Proof.
+  intros n.
+  exists n.
+  auto using cardinality_refl.
+Qed.
+
 Theorem infinite_ω : infinite ω.
 Proof.
   intros [n H].
@@ -518,4 +522,1285 @@ Proof.
         exists s.
         split; auto.
         rewrite H10; congruence.
+Qed.
+
+Theorem natural_cardinality_uniqueness : ∀ m n : N, m ~ n → m = n.
+Proof.
+  intros m n H.
+  apply NNPP.
+  intros H0.
+  destruct (lt_trichotomy m n) as [H1 | [H1 | H1]]; auto;
+    rewrite lt_is_in in H1.
+  - apply (proper_subsets_of_natural_numbers m n); repeat split.
+    + apply elements_of_naturals_are_subsets; auto; apply (proj2_sig n).
+    + contradict H0.
+      now apply set_proj_injective.
+    + eauto using cardinality_trans, cardinality_sym.
+  - apply (proper_subsets_of_natural_numbers n m); repeat split.
+    + apply elements_of_naturals_are_subsets; auto; apply (proj2_sig m).
+    + contradict H0.
+      now apply set_proj_injective.
+    + eauto using cardinality_trans, cardinality_sym.
+Qed.
+
+Theorem finite_cardinality_uniqueness : ∀ S, finite S → exists ! n : N, S ~ n.
+Proof.
+  intros S [n H].
+  exists n.
+  split; auto.
+  intros x H0.
+  apply natural_cardinality_uniqueness.
+  now rewrite <-H, <-H0.
+Qed.
+
+Definition finite_cardinality : set → N.
+Proof.
+  intros S.
+  destruct (excluded_middle_informative (finite S)).
+  - apply finite_cardinality_uniqueness in f.
+    destruct (constructive_definite_description _ f) as [n H].
+    exact n.
+  - exact 0.
+Defined.
+
+Notation " # E " := (finite_cardinality E) (at level 45) : set_scope.
+
+Add Morphism finite with signature equinumerous ==> iff as finiteness_equiv.
+Proof.
+  intros x y H.
+  split; intros [n H0].
+  - exists n.
+    now rewrite <-H.
+  - exists n.
+    now rewrite H.
+Qed.
+
+Add Morphism finite_cardinality with signature
+    equinumerous ==> eq as finite_cardinality_equiv.
+Proof.
+  intros x y H.
+  destruct (classic (finite x)).
+  - pose proof H0 as [n H1].
+    assert (finite y) by now rewrite <-H.
+    unfold finite_cardinality.
+    repeat destruct excluded_middle_informative; try tauto.
+    repeat destruct constructive_definite_description.
+    apply natural_cardinality_uniqueness.
+    now rewrite <-e, <-e0.
+  - assert (¬ finite y) by now rewrite <-H.
+    unfold finite_cardinality.
+    repeat destruct excluded_middle_informative; tauto.
+Qed.
+
+Theorem card_of_natural : ∀ n : N, # n = n.
+Proof.
+  intros n.
+  unfold finite_cardinality.
+  destruct excluded_middle_informative; try tauto.
+  - destruct constructive_definite_description.
+    now apply natural_cardinality_uniqueness.
+  - contradiction (naturals_are_finite n).
+Qed.
+
+Theorem equivalence_to_card : ∀ S (n : N), finite S → S ~ n → # S = n.
+Proof.
+  intros S n H H0.
+  rewrite H0.
+  apply card_of_natural.
+Qed.
+
+Lemma subset_equinumerosity :
+  ∀ A B C D, A ~ B → B ⊂ C → C ~ D → ∃ E, E ⊂ D ∧ A ~ E.
+Proof.
+  intros A B C D [f [H [H0 [H1 H2]]]] H3 [g [H4 [H5 [H6 H7]]]].
+  exists ({d in D | ∃ a, a ∈ A ∧ g (f a) = d}).
+  split.
+  - intros d H8.
+    apply Specify_classification in H8; tauto.
+  - destruct (function_construction
+                A {d in D | ∃ a : set, a ∈ A ∧ g (f a) = d} (λ x, g (f x)))
+      as [h [H8 [H9 H10]]].
+    + intros a H8.
+      apply Specify_classification.
+      split.
+      * rewrite <-H5.
+        apply function_maps_domain_to_range.
+        rewrite H4.
+        apply H3.
+        rewrite <-H0.
+        apply function_maps_domain_to_range.
+        congruence.
+      * now (exists a).
+    + exists h.
+      repeat split; auto.
+      * rewrite Injective_classification in *.
+        intros x y H11 H12 H13.
+        rewrite ? H10 in *; try congruence.
+        apply H6 in H13; try apply H1 in H13; auto; try congruence.
+        -- rewrite H4.
+           apply H3.
+           rewrite <-H0.
+           apply function_maps_domain_to_range.
+           congruence.
+        -- rewrite H4.
+           apply H3.
+           rewrite <-H0.
+           apply function_maps_domain_to_range.
+           congruence.
+      * rewrite Surjective_classification.
+        intros y H11.
+        rewrite H9 in H11.
+        apply Specify_classification in H11 as [H11 [a [H12 H13]]].
+        exists a.
+        split; try congruence.
+        now rewrite H10.
+Qed.
+
+Theorem finite_subsets : ∀ E F,
+    finite E → finite F → E ⊂ F → # E ≤ # F.
+Proof.
+  intros E F H H0 H1.
+  unfold finite_cardinality.
+  repeat destruct excluded_middle_informative; try tauto.
+  repeat destruct constructive_definite_description.
+  destruct (subset_equinumerosity x E F x0) as [m [H2 H3]];
+    auto using cardinality_sym.
+  destruct (le_trichotomy x x0); auto.
+  apply le_is_subset in H4.
+  apply le_not_gt.
+  intros [H5 H6].
+  destruct H3 as [g [H3 [H7 H8]]].
+  apply (proper_subsets_of_natural_numbers
+           {z in x0 | ∃ y, y ∈ x0 ∧ g y = z} x0); repeat split; auto.
+  - intros z H9.
+    apply Specify_classification in H9 as [H9 [y [H10 H11]]].
+    now subst.
+  - assert (x0 ⊊ x) as H9.
+    { split; auto.
+      contradict H6.
+      now apply set_proj_injective. }
+    apply proper_subset_inhab in H9 as [z [H9 H10]].
+    assert (g z ∈ x0) as H11.
+    { apply H2.
+      rewrite <-H7.
+      apply function_maps_domain_to_range.
+      congruence. }
+    intros H12.
+    rewrite <-H12 in H11.
+    apply Specify_classification in H11 as [H11 [z' [H13 H14]]].
+    destruct H8 as [H8 H15].
+    rewrite Injective_classification in H8.
+    apply H8 in H14; try (now subst); rewrite H3; auto.
+  - destruct (function_construction
+                x0 {z in x0 | ∃ y : set, y ∈ x0 ∧ g y = z}
+                (λ x, g x)) as [g' [H9 [H10 H11]]].
+    { intros a H9.
+      apply Specify_classification.
+      split.
+      - apply H2.
+        rewrite <-H7.
+        apply function_maps_domain_to_range.
+        rewrite H3.
+        auto.
+      - now (exists a). }
+    exists g'.
+    destruct H8 as [H8 H12].
+    repeat split; auto.
+    + rewrite Injective_classification in *.
+      intros x1 x2 H13 H14 H15.
+      rewrite ? H11 in H15; try congruence.
+      apply H8 in H15; auto.
+      * rewrite H3.
+        apply H4.
+        congruence.
+      * rewrite H3.
+        apply H4.
+        congruence.
+    + rewrite Surjective_classification.
+      intros y H13.
+      rewrite H10 in H13.
+      apply Specify_classification in H13 as [H13 [z [H14 H15]]].
+      exists z.
+      split; try congruence.
+      now rewrite H11.
+Qed.
+
+Theorem naturals_sum_diff : ∀ n m, (m + n) \ m ~ n.
+Proof.
+  intros n m.
+  induction n using Induction.
+  - replace ((m + 0) \ m) with ∅; auto using cardinality_refl.
+    apply Extensionality.
+    split; intros H.
+    + contradiction (Empty_set_classification z).
+    + rewrite add_0_r, Complement_classification in H.
+      tauto.
+  - rewrite add_succ_r.
+    destruct IHn as [f [H [H0 [H1 H2]]]].
+    destruct
+      (function_construction
+         (S (m + n) \ m) (S n)
+         (λ x, if (excluded_middle_informative (x = m + n)) then n else (f x)))
+      as [f' [H3 [H4 H5]]].
+    { intros a H3.
+      destruct excluded_middle_informative.
+      - apply lt_is_in, succ_lt.
+      - rewrite <-S_is_succ in *.
+        apply Pairwise_union_classification.
+        left.
+        rewrite <-H0.
+        apply function_maps_domain_to_range.
+        rewrite H.
+        rewrite Complement_classification in *.
+        split; try tauto.
+        destruct H3 as [H3].
+        apply Pairwise_union_classification in H3 as [H3 | H3]; auto.
+        now apply Singleton_classification in H3. }
+    exists f'.
+    assert (∀ z, z ∈ domain f' → z ≠ m + n → z ∈ domain f) as H6.
+    { intros z H6 H7.
+      rewrite H, H3, <-S_is_succ, Complement_classification in *.
+      destruct H6 as [H6].
+      apply Pairwise_union_classification in H6 as [H6 | H6]; auto.
+      now apply Singleton_classification in H6. }
+    repeat split; auto.
+    + rewrite Injective_classification in *.
+      intros x y H7 H8 H9.
+      rewrite ? H5 in H9; try congruence.
+      repeat destruct excluded_middle_informative; try congruence; auto.
+      * contradiction (no_quines n).
+        rewrite H9, <-H0 at 1.
+        auto using function_maps_domain_to_range.
+      * contradiction (no_quines n).
+        rewrite <-H9, <-H0 at 1.
+        auto using function_maps_domain_to_range.
+    + rewrite Surjective_classification in *.
+      intros y H7.
+      rewrite H4, <-S_is_succ in H7.
+      apply Pairwise_union_classification in H7 as [H7 | H7].
+      * rewrite <-H0 in H7.
+        apply H2 in H7 as [x [H7 H8]].
+        exists x.
+        split.
+        -- rewrite <-S_is_succ, H, H3, Complement_classification in *.
+           split; try tauto.
+           destruct H7 as [H7].
+           apply Pairwise_union_classification; tauto.
+        -- rewrite H5.
+           ++ destruct excluded_middle_informative; auto.
+              subst.
+              rewrite H, Complement_classification in H7.
+              contradiction (no_quines (m+n)); tauto.
+           ++ rewrite H, Complement_classification, <-S_is_succ in *.
+              split; try tauto.
+              destruct H7 as [H7].
+              apply Pairwise_union_classification; tauto.
+      * apply Singleton_classification in H7.
+        subst.
+        exists (m+n).
+        assert (m+n ∈ domain f') as H7.
+        { rewrite H3, Complement_classification, <-S_is_succ.
+          split.
+          - apply Pairwise_union_classification.
+            rewrite Singleton_classification.
+            tauto.
+          - intros H7.
+            destruct (classic (n = 0)).
+            + subst.
+              rewrite add_0_r in H7.
+              contradiction (no_quines m).
+            + apply lt_is_in in H7.
+              contradiction (lt_antisym (m+n) m).
+              rewrite <-(add_0_r m), ? (add_comm m) at 1.
+              apply O1.
+              apply succ_0 in H8 as [k H8].
+              subst.
+              apply lt_succ. }
+        split; auto.
+        rewrite H5.
+        -- destruct excluded_middle_informative; intuition.
+        -- now rewrite <-H3.
+Qed.
+
+Theorem finite_union_cardinality : ∀ E F,
+    finite E → finite F → E ∩ F = ∅ → # (E ∪ F) = # E + # F.
+Proof.
+  intros E F [n H] [m H0] H1.
+  rewrite (equivalence_to_card E n); unfold finite; eauto.
+  rewrite (equivalence_to_card F m); unfold finite; eauto.
+  cut (E ∪ F ~ n + m).
+  { intros H2.
+    apply equivalence_to_card; unfold finite; eauto. }
+  pose proof (naturals_sum_diff m n).
+  apply cardinality_sym in H.
+  apply cardinality_sym in H0.
+  apply cardinality_sym.
+  pose proof H as [f [H3 [H4 [H5 H6]]]].
+  pose proof H0 as [g [H7 [H8 [H9 H10]]]].
+  pose proof H2 as [h [H11 [H12 [H13 H14]]]].
+  destruct (function_construction
+              (n + m) (E ∪ F)
+              (λ x, if (excluded_middle_informative (x ∈ n))
+                    then (f x) else (g (h x)))) as [f' [H15 [H16 H17]]].
+  { intros a H15.
+    destruct excluded_middle_informative;
+      apply Pairwise_union_classification.
+    - left.
+      rewrite <-H4.
+      apply function_maps_domain_to_range.
+      congruence.
+    - right.
+      rewrite <-H8.
+      apply function_maps_domain_to_range.
+      rewrite H7, <-H12.
+      apply function_maps_domain_to_range.
+      now rewrite H11, Complement_classification. }
+  exists f'.
+  repeat split; auto.
+  - rewrite Injective_classification in *.
+    intros x y H18 H19 H20.
+    rewrite ? H17 in H20; try congruence.
+    repeat destruct excluded_middle_informative.
+    + apply H5; congruence.
+    + contradiction (Empty_set_classification (f x)).
+      rewrite <-H1.
+      apply Pairwise_intersection_classification.
+      split.
+      * rewrite <-H4.
+        apply function_maps_domain_to_range.
+        congruence.
+      * rewrite H20, <-H8.
+        apply function_maps_domain_to_range.
+        rewrite H7, <-H12.
+        apply function_maps_domain_to_range.
+        rewrite H11, Complement_classification.
+        split; congruence.
+    + contradiction (Empty_set_classification (f y)).
+      rewrite <-H1.
+      apply Pairwise_intersection_classification.
+      split.
+      * rewrite <-H4.
+        apply function_maps_domain_to_range.
+        congruence.
+      * rewrite <-H20, <-H8.
+        apply function_maps_domain_to_range.
+        rewrite H7, <-H12.
+        apply function_maps_domain_to_range.
+        rewrite H11, Complement_classification.
+        split; congruence.
+    + apply H13;
+        try (rewrite H11, Complement_classification; split; congruence).
+      apply H9; auto;
+        rewrite H7, <-H12;
+        apply function_maps_domain_to_range;
+        rewrite H11, Complement_classification;
+        split; congruence.
+  - rewrite Surjective_classification in *.
+    intros y H18.
+    rewrite H16, <-H4, <-H8 in *.
+    apply Pairwise_union_classification in H18 as [H18 | H18].
+    + apply H6 in H18 as [x [H18 H19]].
+      assert (n ⊂ n + m).
+      { apply le_is_subset.
+        now exists m. }
+      exists x.
+      split.
+      * rewrite H3, H15 in *; auto.
+      * rewrite H17; try destruct excluded_middle_informative; auto;
+          try congruence.
+        rewrite H3 in *; auto.
+    + apply H10 in H18 as [z [H18 H19]].
+      rewrite H7, <-H12 in H18.
+      apply H14 in H18 as [x [H20 H21]].
+      exists x.
+      split.
+      * rewrite H15, H11 in *.
+        now apply Complement_classification in H20 as [H20].
+      * rewrite H17; try destruct excluded_middle_informative; auto;
+          try congruence; rewrite H11, Complement_classification in H20; tauto.
+Qed.
+
+Theorem card_empty : # ∅ = 0.
+Proof.
+  now rewrite <-card_of_natural.
+Qed.
+
+Theorem empty_card : ∀ S, S ~ 0 → S = ∅.
+Proof.
+  intros S H.
+  apply cardinality_sym in H.
+  destruct H as [f [H [H0 [H1 H2]]]].
+  apply Extensionality.
+  split; intros H3.
+  - rewrite Surjective_classification in H2.
+    rewrite <-H0 in H3.
+    apply H2 in H3 as [x [H3 H4]].
+    rewrite H in H3.
+    contradiction (Empty_set_classification x).
+  - contradiction (Empty_set_classification z).
+Qed.
+
+Theorem finite_disjoint_unions_are_finite : ∀ E F,
+    finite E → finite F → E ∩ F = ∅ → finite (E ∪ F).
+Proof.
+  intros E F H H0 H1.
+  apply NNPP.
+  intros H2.
+  pose proof (finite_union_cardinality E F) H H0 H1.
+  unfold finite_cardinality in H3.
+  repeat destruct excluded_middle_informative; auto.
+  repeat destruct constructive_definite_description.
+  apply eq_sym, cancellation_0_add in H3 as [H3 H4].
+  subst.
+  contradict n.
+  exists 0.
+  apply empty_card in e.
+  apply empty_card in e0.
+  subst.
+  rewrite Union_empty.
+  apply cardinality_refl.
+Qed.
+
+Theorem singleton_card_1 : ∀ x, {x,x} ~ 1.
+Proof.
+  intros x.
+  destruct (function_construction {x,x} 1 (λ x, 0)) as [f [H [H0 H1]]].
+  { intros a H.
+    apply lt_is_in, succ_lt. }
+  exists f.
+  repeat split; auto.
+  - rewrite Injective_classification.
+    intros a b H2 H3 H4.
+    rewrite H, Singleton_classification in *.
+    congruence.
+  - rewrite Surjective_classification.
+    intros y H2.
+    exists x.
+    split.
+    + now rewrite H, Singleton_classification.
+    + rewrite H1; try now apply Singleton_classification.
+      rewrite H0, <-S_is_succ in H2.
+      apply Pairwise_union_classification in H2 as [H2 | H2].
+      * contradiction (Empty_set_classification y).
+      * now rewrite Singleton_classification in H2.
+Qed.
+
+Theorem singletons_are_finite : ∀ x, finite {x,x}.
+Proof.
+  intros x.
+  exists 1.
+  apply singleton_card_1.
+Qed.
+
+Lemma singleton_times_natural_equiv_natural : ∀ n m : N, ({n,n} × m ~ m).
+Proof.
+  intros n m.
+  apply cardinality_sym.
+  destruct (function_construction m ({n,n} × m) (λ x, (n,x)))
+    as [f [H [H0 H1]]].
+  { intros a H.
+    apply Product_classification.
+    exists n, a.
+    now rewrite Singleton_classification. }
+  exists f.
+  repeat split; auto.
+  - rewrite Injective_classification.
+    intros x y H2 H3 H4.
+    rewrite ? H1 in H4; try congruence.
+    now apply Ordered_pair_iff in H4.
+  - rewrite Surjective_classification.
+    intros y H2.
+    rewrite H0 in H2.
+    apply Product_classification in H2 as [a [b [H2 [H3 H4]]]].
+    exists b.
+    split; try congruence.
+    rewrite H1; auto.
+    rewrite H4.
+    apply Ordered_pair_iff.
+    split; auto.
+    now apply Singleton_classification in H2.
+Qed.
+
+Lemma singleton_times_natural_is_finite : ∀ n m : N, finite ({n,n} × m).
+Proof.
+  intros n m.
+  exists m.
+  auto using singleton_times_natural_equiv_natural.
+Qed.
+
+Lemma singleton_times_m_card : ∀ n m : N, # ({n,n} × m) = m.
+Proof.
+  intros n m.
+  pose proof singleton_times_natural_is_finite n m as H.
+  unfold finite_cardinality.
+  destruct excluded_middle_informative; try tauto.
+  destruct constructive_definite_description.
+  pose proof (singleton_times_natural_equiv_natural n m).
+  apply natural_cardinality_uniqueness.
+  now rewrite <-H0, <-e.
+Qed.
+
+Theorem natural_products_are_finite : ∀ n m : N, finite (n × m).
+Proof.
+  intros n m.
+  induction n using Induction.
+  - replace (0 × m) with ∅.
+    + exists 0.
+      apply cardinality_refl.
+    + apply Extensionality.
+      split; intros H.
+      * contradiction (Empty_set_classification z).
+      * apply Product_classification in H as [a [b [H H0]]].
+        contradiction (Empty_set_classification a).
+  - rewrite <-S_is_succ.
+    unfold succ.
+    rewrite Product_union_distr_l, ? finite_union_cardinality.
+    apply finite_disjoint_unions_are_finite;
+      auto using singleton_times_natural_is_finite.
+    apply NNPP.
+    intros H.
+    apply Nonempty_classification in H as [z H].
+    apply Pairwise_intersection_classification in H as [H H0].
+    apply Product_classification in H as [a [b [H [H1 H2]]]].
+    apply Product_classification in H0 as [c [d [H0 [H3 H4]]]].
+    subst.
+    apply Ordered_pair_iff in H4 as [H4 H5].
+    subst.
+    apply Singleton_classification in H0.
+    subst.
+    contradiction (no_quines n).
+Qed.
+
+Theorem card_equiv : ∀ S, finite S → # S ~ S.
+Proof.
+  intros S H.
+  unfold finite_cardinality.
+  destruct excluded_middle_informative; try tauto.
+  destruct constructive_definite_description.
+  now apply cardinality_sym.
+Qed.
+
+Theorem singleton_card : ∀ n, # {n,n} = 1.
+Proof.
+  intros n.
+  pose proof singletons_are_finite n as H.
+  unfold finite_cardinality.
+  destruct excluded_middle_informative; try tauto.
+  destruct constructive_definite_description.
+  apply natural_cardinality_uniqueness.
+  now rewrite <-e, singleton_card_1.
+Qed.
+
+Theorem natural_prod_card : ∀ n m : N, # (n × m) = (# n) * (# m).
+Proof.
+  intros n m.
+  induction n using Induction.
+  - replace (INS 0) with ∅ by auto.
+    replace (∅ × m) with ∅.
+    + now rewrite card_empty, mul_0_l.
+    + apply Extensionality.
+      split; intros H.
+      * contradiction (Empty_set_classification z).
+      * apply Product_classification in H as [a [b [H H0]]].
+        contradiction (Empty_set_classification a).
+  - rewrite <-S_is_succ.
+    unfold succ.
+    rewrite Product_union_distr_l, ? finite_union_cardinality, IHn, mul_distr_r,
+    singleton_times_m_card, ? card_of_natural, singleton_card, mul_1_l;
+      auto using naturals_are_finite, natural_products_are_finite,
+      singletons_are_finite, singleton_times_natural_is_finite, disjoint_succ.
+    now rewrite <-Product_intersection, disjoint_succ, Empty_product_left.
+Qed.
+
+Theorem subsets_of_finites_are_finite : ∀ E F, finite F → E ⊂ F → finite E.
+Proof.
+  intros E F H H0.
+  destruct (classic (E = F)) as [| H1]; try congruence.
+  destruct H as [n [f [H2 [H3 H4]]]].
+  assert (E ⊊ F) as H5 by (split; auto).
+  destruct (cardinality_of_subsets_of_n {y in n | ∃ x, x ∈ E ∧ f x = y} n)
+    as [n' [H6 [g [H7 [H8 H9]]]]].
+  { split.
+    - intros x H6.
+      apply Specify_classification in H6 as [H6 [z [H7 H8]]].
+      rewrite <-H3, <-H8.
+      apply function_maps_domain_to_range.
+      subst; auto.
+    - intros H6.
+      destruct (proper_subset_inhab _ _ H5) as [x [H7 H8]].
+      contradict H8.
+      assert (f x ∈ range f) as H8.
+      { apply function_maps_domain_to_range.
+        congruence. }
+      rewrite H3, <-H6 in H8.
+      apply Specify_classification in H8 as [H8 [z [H9 H10]]].
+      destruct H4 as [H4].
+      rewrite Injective_classification in H4.
+      apply H4 in H10; subst; auto. }
+  exists n'.
+  apply (cardinality_trans _ (domain g)).
+  - destruct (function_construction E (domain g) (λ x, f x))
+      as [f' [H10 [H11 H12]]].
+    { intros a H.
+      rewrite H7.
+      apply Specify_classification.
+      split.
+      - rewrite <-H3.
+        apply function_maps_domain_to_range.
+        subst; auto.
+      - now (exists a). }
+    exists f'.
+    destruct H4 as [H4 H13].
+    repeat split; auto.
+    + rewrite Injective_classification in *.
+      intros x y H H14 H15.
+      rewrite ? H12 in H15; try congruence.
+      apply H4; subst; auto.
+    + rewrite Surjective_classification in *.
+      intros y H.
+      rewrite H11, H7, <-H3, Specify_classification in H.
+      destruct H as [H [x [H14 H15]]].
+      exists x.
+      split; try congruence.
+      now rewrite H12.
+  - now exists g.
+Qed.
+
+Theorem Inclusion_Exclusion : ∀ E F,
+    finite E → finite F → # (E ∪ F) + # (E ∩ F) = # E + # F.
+Proof.
+  intros E F H H0.
+  rewrite disjoint_union_complement, finite_union_cardinality, <-add_assoc,
+  <-finite_union_cardinality, complement_union_intersection;
+    eauto using disjoint_intersection_complement, complement_subset,
+    subsets_of_finites_are_finite, complement_disjoint_intersection,
+    Intersection_left.
+Qed.
+
+Theorem finite_unions_are_finite : ∀ E F, finite E → finite F → finite (E ∪ F).
+Proof.
+  intros E F H H0.
+  rewrite disjoint_union_complement.
+  apply finite_disjoint_unions_are_finite;
+    eauto using disjoint_intersection_complement, complement_subset,
+    subsets_of_finites_are_finite.
+Qed.
+
+Add Morphism product with signature
+    equinumerous ==> equinumerous ==> equinumerous as product_equiv.
+Proof.
+  intros E n H F m H0.
+  destruct H as [f [H [H1 [H2 H3]]]], H0 as [g [H0 [H4 [H5 H6]]]].
+  destruct (function_construction
+              (E × F) (n × m)
+              (λ z, (f (proj1 E F z), g (proj2 E F z)))) as [h [H7 [H8 H9]]].
+  { intros z H7.
+    apply Product_classification in H7 as [a [b [H7 [H8 H9]]]].
+    subst.
+    rewrite proj1_eval, proj2_eval; auto.
+    apply Product_classification.
+    exists (f a), (g b).
+    repeat split; auto; rewrite <-? H1, <-? H4;
+      now apply function_maps_domain_to_range. }
+  exists h.
+  repeat split; auto.
+  - rewrite Injective_classification in *.
+    intros x y H10 H11 H12.
+    rewrite ? H9 in H12; try congruence.
+    rewrite H7 in *.
+    apply Product_classification in H10 as [a [b [H10 [H13 H14]]]].
+    apply Product_classification in H11 as [c [d [H11 [H15 H16]]]].
+    subst.
+    rewrite ? proj1_eval, ? proj2_eval, Ordered_pair_iff in *; auto.
+    split.
+    + now apply H2.
+    + now apply H5.
+  - rewrite Surjective_classification in *.
+    intros y H10.
+    rewrite H8, Product_classification in H10.
+    destruct H10 as [a [b [H10 [H11 H12]]]].
+    subst.
+    apply H3 in H10 as [x [H10 H12]].
+    apply H6 in H11 as [y [H11 H13]].
+    exists (x,y).
+    split.
+    + rewrite H7, Product_classification.
+      now exists x, y.
+    + rewrite H9.
+      * rewrite proj1_eval, proj2_eval, Ordered_pair_iff; auto.
+      * rewrite Product_classification.
+        now exists x, y.
+Qed.
+
+Theorem finite_products_are_finite :
+  ∀ E F, finite E → finite F → finite (E × F).
+Proof.
+  intros E F [n H] [m H0].
+  rewrite H, H0.
+  apply natural_products_are_finite.
+Qed.
+
+Theorem finite_products_card :
+  ∀ E F, finite E → finite F → # (E × F) = (# E) * (# F).
+Proof.
+  intros E F [n H] [m H0].
+  now rewrite H, H0, natural_prod_card.
+Qed.
+
+Theorem power_union_r : ∀ A B C, B ∩ C = ∅ → A ^ (B ∪ C) ~ A ^ B × A ^ C.
+Proof.
+  intros A B C H.
+  destruct (function_construction
+              (A ^ (B ∪ C)) (A ^ B × A ^ C)
+              (λ z, ({x in z | proj1 (B ∪ C) A x ∈ B},
+                     {x in z | proj1 (B ∪ C) A x ∈ C})))
+    as [f [H0 [H1 H2]]].
+  { intros a H0.
+    apply Specify_classification in H0 as [H0 [H1 H2]].
+    apply Product_classification.
+    exists {x in a | proj1 (B ∪ C) A x ∈ B}, {x in a | proj1 (B ∪ C) A x ∈ C}.
+    repeat split; auto.
+    - apply Specify_classification.
+      repeat split.
+      + rewrite Powerset_classification.
+        intros x H3.
+        apply Specify_classification in H3 as [H3 H4].
+        apply H1, Product_classification in H3 as [b' [a' [H3 [H5 H6]]]].
+        subst.
+        rewrite proj1_eval in *; auto.
+        apply Product_classification.
+        now exists b', a'.
+      + intros x H3.
+        apply Specify_classification in H3 as [H3 H4].
+        apply H1, Product_classification in H3 as [b' [a' [H3 [H5 H6]]]].
+        subst.
+        rewrite proj1_eval in *; auto.
+        apply Product_classification.
+        now exists b', a'.
+      + intros x H3.
+        destruct (H2 x) as [y [[H4 H5] H6]];
+          try (apply Pairwise_union_classification; tauto).
+        exists y.
+        repeat split; auto.
+        * apply Specify_classification.
+          rewrite proj1_eval; auto.
+          apply Pairwise_union_classification; tauto.
+        * intros x' [H7 H8].
+          apply H6.
+          split; auto.
+          now apply Specify_classification in H8 as [H8 H9].
+    - apply Specify_classification.
+      repeat split.
+      + rewrite Powerset_classification.
+        intros x H3.
+        apply Specify_classification in H3 as [H3 H4].
+        apply H1, Product_classification in H3 as [b' [a' [H3 [H5 H6]]]].
+        subst.
+        rewrite proj1_eval in *; auto.
+        apply Product_classification.
+        now exists b', a'.
+      + intros x H3.
+        apply Specify_classification in H3 as [H3 H4].
+        apply H1, Product_classification in H3 as [b' [a' [H3 [H5 H6]]]].
+        subst.
+        rewrite proj1_eval in *; auto.
+        apply Product_classification.
+        now exists b', a'.
+      + intros x H3.
+        destruct (H2 x) as [y [[H4 H5] H6]];
+          try (apply Pairwise_union_classification; tauto).
+        exists y.
+        repeat split; auto.
+        * apply Specify_classification.
+          rewrite proj1_eval; auto.
+          apply Pairwise_union_classification; tauto.
+        * intros x' [H7 H8].
+          apply H6.
+          split; auto.
+          now apply Specify_classification in H8 as [H8 H9]. }
+  exists f.
+  repeat split; auto.
+  - rewrite Injective_classification.
+    intros u v H3 H4 H5.
+    rewrite ? H2 in H5; try congruence.
+    apply Extensionality.
+    rewrite H0 in *.
+    apply Specify_classification in H3 as [H3 _].    
+    apply Specify_classification in H4 as [H4 _].
+    rewrite Powerset_classification in *.
+    apply Ordered_pair_iff in H5 as [H5 H6].
+    split; intros H7.
+    + pose proof H7 as H8.
+      apply H3, Product_classification in H8 as [y [x [H8 [H9 H10]]]].
+      apply Pairwise_union_classification in H8 as [H8 | H8].
+      * assert (z ∈ {x in v | proj1 (B ∪ C) A x ∈ B}) as H11.
+        { rewrite <-H5.
+          apply Specify_classification.
+          subst.
+          rewrite proj1_eval; auto.
+          rewrite Pairwise_union_classification; tauto. }
+        apply Specify_classification in H11; tauto.
+      * assert (z ∈ {x in v | proj1 (B ∪ C) A x ∈ C}) as H11.
+        { rewrite <-H6.
+          apply Specify_classification.
+          subst.
+          rewrite proj1_eval; auto.
+          rewrite Pairwise_union_classification; tauto. }
+        apply Specify_classification in H11; tauto.
+    + pose proof H7 as H8.
+      apply H4, Product_classification in H8 as [y [x [H8 [H9 H10]]]].
+      apply Pairwise_union_classification in H8 as [H8 | H8].
+      * assert (z ∈ {x in u | proj1 (B ∪ C) A x ∈ B}) as H11.
+        { rewrite H5.
+          apply Specify_classification.
+          subst.
+          rewrite proj1_eval; auto.
+          rewrite Pairwise_union_classification; tauto. }
+        apply Specify_classification in H11; tauto.
+      * assert (z ∈ {x in u | proj1 (B ∪ C) A x ∈ C}) as H11.
+        { rewrite H6.
+          apply Specify_classification.
+          subst.
+          rewrite proj1_eval; auto.
+          rewrite Pairwise_union_classification; tauto. }
+        apply Specify_classification in H11; tauto.
+  - rewrite Surjective_classification.
+    intros y H3.
+    rewrite H1, Product_classification in H3.
+    destruct H3 as [u [v [H3 [H4 H5]]]].
+    exists (u ∪ v).
+    apply Specify_classification in H3 as [H3 [H6 H7]].
+    apply Specify_classification in H4 as [H4 [H8 H9]].
+    assert (u ∪ v ∈ A ^ (B ∪ C)) as H10.
+    { apply Specify_classification.
+      repeat split.
+      - apply Powerset_classification.
+        intros z H10.
+        apply Pairwise_union_classification in H10 as [H10 | H10].
+        + apply H6 in H10 as H11.
+           apply Product_classification in H11 as [b [a [H11 [H12 H13]]]].
+           apply Product_classification.
+           exists b, a.
+           repeat split; auto.
+           apply Pairwise_union_classification; tauto.
+        + apply H8 in H10 as H11.
+           apply Product_classification in H11 as [b [a [H11 [H12 H13]]]].
+           apply Product_classification.
+           exists b, a.
+           repeat split; auto.
+           apply Pairwise_union_classification; tauto.
+      - intros z H10.
+        apply Pairwise_union_classification in H10 as [H10 | H10].
+        + apply H6 in H10 as H11.
+           apply Product_classification in H11 as [b [a [H11 [H12 H13]]]].
+           apply Product_classification.
+           exists b, a.
+           repeat split; auto.
+           apply Pairwise_union_classification; tauto.
+        + apply H8 in H10 as H11.
+           apply Product_classification in H11 as [b [a [H11 [H12 H13]]]].
+           apply Product_classification.
+           exists b, a.
+           repeat split; auto.
+           apply Pairwise_union_classification; tauto.
+      - intros a H10.
+        apply Pairwise_union_classification in H10 as [H10 | H10].
+        + apply H7 in H10 as [z [[H10 H11] H12]].
+          exists z.
+          repeat split; auto.
+          * apply Pairwise_union_classification; tauto.
+          * intros x' [H13 H14].
+            apply H12.
+            apply Pairwise_union_classification in H14 as [H14 | H14];
+              try tauto.
+            contradiction (Empty_set_classification a).
+            rewrite <-H.
+            apply Pairwise_intersection_classification.
+            apply H6, Product_classification in H11 as [c [d [H11 [H15 H16]]]].
+            apply H8, Product_classification in H14 as [e [g [H14 [H17 H18]]]].
+            apply Ordered_pair_iff in H16 as [H16 H19].
+            apply Ordered_pair_iff in H18 as [H18 H20].
+            subst; split; auto.
+        + apply H9 in H10 as [z [[H10 H11] H12]].
+          exists z.
+          repeat split; auto.
+          * apply Pairwise_union_classification; tauto.
+          * intros x' [H13 H14].
+            apply H12.
+            apply Pairwise_union_classification in H14 as [H14 | H14];
+              try tauto.
+            contradiction (Empty_set_classification a).
+            rewrite <-H.
+            apply Pairwise_intersection_classification.
+            apply H8, Product_classification in H11 as [c [d [H11 [H15 H16]]]].
+            apply H6, Product_classification in H14 as [e [g [H14 [H17 H18]]]].
+            apply Ordered_pair_iff in H16 as [H16 H19].
+            apply Ordered_pair_iff in H18 as [H18 H20].
+            subst; split; auto. }
+    repeat split; try congruence.
+    rewrite H2; subst; auto.
+    replace {x in u ∪ v | proj1 (B ∪ C) A x ∈ B} with u.
+    replace {x in u ∪ v | proj1 (B ∪ C) A x ∈ C} with v; auto.
+    + apply Extensionality.
+      split; intros H5.
+      * apply Specify_classification.
+        split.
+        -- apply Pairwise_union_classification; tauto.
+        -- apply H8 in H5.
+           apply Product_classification in H5 as [a [b [H5 [H11 H12]]]].
+           subst.
+           rewrite proj1_eval; auto.
+           apply Pairwise_union_classification; tauto.
+      * apply Specify_classification in H5 as [H5 H11].
+        apply Pairwise_union_classification in H5 as [H5 | H5]; auto.
+        contradiction (Empty_set_classification (proj1 (B ∪ C) A z)).
+        rewrite <-H.
+        apply Pairwise_intersection_classification.
+        split; auto.
+        apply H6, Product_classification in H5 as [a [b [H5 [H12 H13]]]].
+        subst.
+        rewrite proj1_eval in *; auto;
+          apply Pairwise_union_classification; tauto.
+    + apply Extensionality.
+      split; intros H5.
+      * apply Specify_classification.
+        split.
+        -- apply Pairwise_union_classification; tauto.
+        -- apply H6 in H5.
+           apply Product_classification in H5 as [a [b [H5 [H11 H12]]]].
+           subst.
+           rewrite proj1_eval; auto.
+           apply Pairwise_union_classification; tauto.
+      * apply Specify_classification in H5 as [H5 H11].
+        apply Pairwise_union_classification in H5 as [H5 | H5]; auto.
+        contradiction (Empty_set_classification (proj1 (B ∪ C) A z)).
+        rewrite <-H.
+        apply Pairwise_intersection_classification.
+        split; auto.
+        apply H8, Product_classification in H5 as [a [b [H5 [H12 H13]]]].
+        subst.
+        rewrite proj1_eval in *; auto;
+          apply Pairwise_union_classification; tauto.
+Qed.
+
+Theorem power_1_r : ∀ m n, m^{n,n} ~ m.
+Proof.
+  intros m n.
+  symmetry.
+  destruct (function_construction m (m^{n,n}) (λ x, {(n,x),(n,x)}))
+    as [f [H [H0 H1]]].
+  { intros a H.
+    apply Specify_classification.
+    repeat split.
+    - apply Powerset_classification.
+      intros x H0.
+      apply Singleton_classification in H0.
+      subst.
+      apply Product_classification.
+      exists n, a.
+      repeat split; auto.
+      now apply Singleton_classification.
+    - intros x H0.
+      apply Singleton_classification in H0.
+      subst.
+      apply Product_classification.
+      exists n, a.
+      repeat split; auto.
+      now apply Singleton_classification.
+    - intros a' H0.
+      apply Singleton_classification in H0.
+      subst.
+      exists a.
+      repeat split; auto.
+      + now apply Singleton_classification.
+      + intros x' [H0 H1].
+        now apply Singleton_classification, Ordered_pair_iff in H1 as [H1 H2]. }
+  exists f.
+  repeat split; auto.
+  - rewrite Injective_classification.
+    intros x y H2 H3 H4.
+    rewrite ? H1 in H4; try congruence.
+    assert ((n,x) ∈ {(n,y),(n,y)}) as H5.
+    { rewrite <-H4.
+      now apply Singleton_classification. }
+    now apply Singleton_classification, Ordered_pair_iff in H5 as [H5 H6].
+  - rewrite Surjective_classification.
+    intros y H2.
+    rewrite H0 in H2.
+    apply Specify_classification in H2 as [H2 [H3 H4]].
+    destruct (H4 n) as [a [[H5 H6] H7]]; try now apply Singleton_classification.
+    exists a.
+    split; try congruence.
+    rewrite H1; auto.
+    apply Extensionality.
+    split; intros H8.
+    + apply Singleton_classification in H8; congruence.
+    + apply H3 in H8 as H9.
+      apply Product_classification in H9 as [c [d [H9 [H10 H11]]]].
+      subst.
+      apply Singleton_classification in H9.
+      subst.
+      rewrite (H7 d); intuition.
+      now apply Singleton_classification.
+Qed.
+
+Theorem natural_powers_are_finite : ∀ m n : N, finite (m^n).
+Proof.
+  intros m n.
+  induction n using Induction.
+  - rewrite power_0_r.
+    replace (succ ∅) with (INS 1) by auto.
+    apply naturals_are_finite.
+  - pose proof IHn as [x H].
+    exists (m * x).
+    rewrite <-S_is_succ.
+    unfold succ.
+    rewrite power_union_r; auto using disjoint_succ.
+    rewrite H, power_1_r, mul_comm.
+    rewrite <-(card_equiv (x × m)), finite_products_card, ? card_of_natural;
+      auto using cardinality_refl, naturals_are_finite,
+      finite_products_are_finite.
+Qed.
+
+Theorem natural_powers_card : ∀ m n : N, # (m^n) = ((# m)^(# n))%N.
+Proof.
+  intros m n.
+  induction n using Induction.
+  - now rewrite ? card_of_natural, power_0_r, pow_0_r, <-(card_of_natural 1).
+  - rewrite <-S_is_succ.
+    unfold succ.
+    now rewrite power_union_r, finite_union_cardinality, singleton_card,
+    pow_add_r, pow_1_r, power_1_r, finite_products_card, IHn;
+      auto using naturals_are_finite, disjoint_succ, singletons_are_finite,
+      natural_powers_are_finite.
+Qed.
+
+Add Morphism power with signature
+    equinumerous ==> equinumerous ==> equinumerous as power_equiv.
+Proof.
+  intros A C [f [H [H0 [H1 H2]]]] B D [g [H3 [H4 [H5 H6]]]].
+  rewrite Injective_classification, Surjective_classification in *.
+  destruct (function_construction
+              (A^B) (C^D)
+              (λ S, {z in D × C | ∃ x, x ∈ S ∧ g (proj1 B A x) = proj1 D C z ∧
+                                       f (proj2 B A x) = proj2 D C z}))
+    as [h [H7 [H8 H9]]]; subst.
+  { intros φ H.
+    apply Specify_classification in H as [H [H0 H3]].
+    apply Specify_classification.
+    repeat split.
+    - apply Powerset_classification.
+      intros z H4.
+      apply Specify_classification in H4.
+      tauto.
+    - intros z H4.
+      apply Specify_classification in H4.
+      tauto.
+    - intros d H4.
+      apply H6 in H4 as [x' [H4 H7]].
+      apply H3 in H4 as [y [[H4 H8] H9]].
+      exists (f y).
+      assert (x' ∈ domain g) as H10.
+      { apply H0 in H8.
+        apply Product_classification in H8 as [a [b [H8 [H10 H11]]]].
+        apply Ordered_pair_iff in H11 as [H11 H12].
+        congruence. }
+      repeat split.
+      + now apply function_maps_domain_to_range.
+      + assert (d ∈ range g) as H11.
+        { rewrite <-H7.
+          now apply function_maps_domain_to_range. }          
+        assert (f y ∈ range f) as H12.
+        { now apply function_maps_domain_to_range. }
+        apply Specify_classification.
+        repeat split.
+        * apply Product_classification.
+          exists d, (f y).
+          repeat split; auto.
+        * exists (x', y).
+          repeat split; auto; rewrite ? proj1_eval, ? proj2_eval; auto.
+      + intros z [H11 H12].
+        apply Specify_classification in H12 as [H12 [x [H13 [H14 H15]]]].
+        apply H0 in H13 as H16.
+        apply Product_classification in H16 as [a [b [H16 [H17 H18]]]].
+        subst.
+        rewrite ? proj1_eval, ? proj2_eval in *; auto;
+          try now apply function_maps_domain_to_range.
+        apply H5 in H14; auto.
+        subst.
+        rewrite (H9 b); auto. }
+  exists h.
+  repeat split; auto.
+  - rewrite Injective_classification.
+    intros x y H H0 H3.
+    rewrite ? H9 in H3; try congruence.
+    pose proof H as H4.
+    pose proof H0 as H10.
+    rewrite H7 in H4, H10.
+    apply Specify_classification in H4 as [H4 [H11 H12]].
+    apply Specify_classification in H10 as [H10 [H13 H14]].
+    apply Extensionality.
+    split; intros H15.
+    + apply H11 in H15 as H16.
+      apply Product_classification in H16 as [a [b [H16 [H17 H18]]]].
+      subst.
+      assert
+        ((g a, f b)
+           ∈ {z in range g × range f | ∃ x0 : set,
+                x0 ∈ x
+                ∧ g (proj1 (domain g) (domain f) x0) =
+                  proj1 (range g) (range f) z
+                ∧ f (proj2 (domain g) (domain f) x0) =
+                  proj2 (range g) (range f) z}) as H18.
+      { apply Specify_classification.
+        split.
+        - apply Product_classification.
+          exists (g a), (f b).
+          repeat split; auto; now apply function_maps_domain_to_range.
+        - exists (a, b).
+          rewrite ? proj1_eval, ? proj2_eval; auto;
+            now apply function_maps_domain_to_range. }
+      rewrite H3 in H18.
+      apply Specify_classification in H18 as [H18 [z [H19 [H20 H21]]]].
+      apply H13 in H19 as H22.
+      apply Product_classification in H22 as [a' [b' [H22 [H23 H24]]]].
+      subst.
+      rewrite ? proj1_eval, ? proj2_eval in *; auto;
+        try now apply function_maps_domain_to_range.
+      apply H1 in H21; apply H5 in H20; auto.
+      now subst.
+    + apply H13 in H15 as H16.
+      apply Product_classification in H16 as [a [b [H16 [H17 H18]]]].
+      subst.
+      assert
+        ((g a, f b)
+           ∈ {z in range g × range f | ∃ x0 : set,
+                x0 ∈ y
+                ∧ g (proj1 (domain g) (domain f) x0) =
+                  proj1 (range g) (range f) z
+                ∧ f (proj2 (domain g) (domain f) x0) =
+                  proj2 (range g) (range f) z}) as H18.
+      { apply Specify_classification.
+        split.
+        - apply Product_classification.
+          exists (g a), (f b).
+          repeat split; auto; now apply function_maps_domain_to_range.
+        - exists (a, b).
+          rewrite ? proj1_eval, ? proj2_eval; auto;
+            now apply function_maps_domain_to_range. }
+      rewrite <-H3 in H18.
+      apply Specify_classification in H18 as [H18 [z [H19 [H20 H21]]]].
+      apply H11 in H19 as H22.
+      apply Product_classification in H22 as [a' [b' [H22 [H23 H24]]]].
+      subst.
+      rewrite ? proj1_eval, ? proj2_eval in *; auto;
+        try now apply function_maps_domain_to_range.
+      apply H1 in H21; apply H5 in H20; auto.
+      now subst.
+  - rewrite Surjective_classification.
+    intros y H.
+    rewrite H8 in H.
+    apply Specify_classification in H as [H [H0 H3]].
+    exists {z in domain g × domain f |
+             (g (proj1 (domain g) (domain f) z),
+              f (proj2 (domain g) (domain f) z)) ∈ y}.
+    split.
+    + rewrite H7.
+      apply Specify_classification.
+      repeat split.
+      * apply Powerset_classification.
+        intros z H4.
+        apply Specify_classification in H4.
+        tauto.
+      * intros z H4.
+        apply Specify_classification in H4.
+        tauto.
+      * intros a H4.
+        destruct (H3 (g a)) as [x [[H10 H11] H12]];
+          try now apply function_maps_domain_to_range.
+        apply H2 in H10 as [z [H10 H13]].
+        exists z.
+        repeat split; auto.
+        -- rewrite Specify_classification, Product_classification.
+           split.
+           ++ now exists a, z.
+           ++ rewrite proj1_eval, proj2_eval, H13; auto.
+        -- intros x' [H14 H15].
+           apply Specify_classification in H15 as [H15 H16].
+           rewrite proj1_eval, proj2_eval in H16; auto.
+           destruct (H3 (g a)) as [y' [[H18 H19] H20]];
+             try now apply function_maps_domain_to_range.
+           assert (y' = f x').
+           { apply H20.
+             split; auto; now apply function_maps_domain_to_range. }
+           assert (y' = f z).
+           { apply H20.
+             split; auto; try now apply function_maps_domain_to_range.
+             now rewrite H13. }
+           apply H1; try congruence.
+    + rewrite H9.
+      * apply Extensionality.
+        split; intros H10.
+        -- apply Specify_classification in H10 as [H10 [x [H11 [H12 H13]]]].
+           apply Specify_classification in H11 as [H11 H14].
+           rewrite H12, H13 in H14.
+           apply Product_classification in H10 as [a [b [H10 [H15 H16]]]].
+           subst.
+           rewrite proj1_eval, proj2_eval in *; auto.
+        -- apply Specify_classification.
+           split; auto.
+           apply H0 in H10 as H11.
+           apply Product_classification in H11 as [a [b [H12 [H13 H14]]]].
+           subst.
+           apply H6 in H12 as [c [H12 H14]].
+           apply H2 in H13 as [d [H15 H16]].
+           subst.
+           exists (c, d).
+           repeat split.
+           ++ apply Specify_classification.
+              split.
+              ** apply Product_classification.
+                 now exists c, d.
+              ** rewrite ? proj1_eval, ? proj2_eval; auto.
+           ++ rewrite ? proj1_eval, ? proj2_eval; auto;
+                now apply function_maps_domain_to_range.
+           ++ rewrite ? proj1_eval, ? proj2_eval; auto;
+                now apply function_maps_domain_to_range.
+      * apply Specify_classification.
+        repeat split.
+        -- apply Powerset_classification.
+           intros z H4.
+           apply Specify_classification in H4; tauto.
+        -- intros z H4.
+           apply Specify_classification in H4; tauto.
+        -- intros a H4.
+           destruct (H3 (g a)) as [b [[H10 H11] H12]];
+             try now apply function_maps_domain_to_range.
+           apply H2 in H10 as [x [H10 H13]].
+           exists x.
+           subst.
+           repeat split; auto.
+           ++ apply Specify_classification.
+              rewrite Product_classification, proj1_eval, proj2_eval; auto.
+              repeat split; auto.
+              now exists a, x.
+           ++ intros x' [H13 H14].
+              apply Specify_classification in H14 as [H14 H16].
+              apply H1; auto.
+              apply H12.
+              split.
+              ** now apply function_maps_domain_to_range.
+              ** rewrite proj1_eval, proj2_eval in *; auto.
+Qed.
+
+Theorem finite_powers_are_finite : ∀ E F, finite E → finite F → finite (E^F).
+Proof.
+  intros E F [n H] [m H0].
+  rewrite power_equiv; eauto using natural_powers_are_finite.
+Qed.
+
+Theorem finite_power_card : ∀ E F, finite E → finite F → #(E^F) = ((#E)^(#F))%N.
+Proof.
+  intros E F [n H] [m H0].
+  rewrite power_equiv, H, H0, ? natural_powers_card; eauto.
 Qed.

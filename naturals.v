@@ -1,8 +1,8 @@
 Require Export sets Ring.
 
-Theorem Infinity : ∃ X, ∅ ∈ X ∧ Inductive X.
+Theorem Infinity_ω: ∃ X, ∅ ∈ X ∧ Inductive X.
 Proof.
-  destruct sets.Infinity as [X [[e [H H0]] H1]].
+  destruct Infinity as [X [[e [H H0]] H1]].
   exists X.
   unfold Inductive, succ.
   split.
@@ -27,7 +27,7 @@ Qed.
 
 Definition ω : set.
 Proof.
-  destruct (constructive_indefinite_description _ Infinity) as [X].
+  destruct (constructive_indefinite_description _ Infinity_ω) as [X].
   exact (⋂ {x in P X | ∅ ∈ x ∧ Inductive x}).
 Defined.
 
@@ -840,6 +840,17 @@ Theorem lt_is_in : ∀ a b, a < b ↔ a ∈ b.
       contradict H.
       subst.
       auto using Set_is_subset.
+Qed.
+
+Theorem lt_is_subsetneq : ∀ a b, a < b ↔ a ⊊ b.
+Proof.
+  split; intros [H H0].
+  - rewrite le_is_subset in H.
+    split; auto.
+    contradict H0.
+    now apply set_proj_injective.
+  - split; try congruence.
+    now apply le_is_subset.
 Qed.
 
 Theorem le_trichotomy : ∀ a b, a ≤ b ∨ b ≤ a.

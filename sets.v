@@ -501,7 +501,7 @@ Qed.
 
 Definition complement A B := {x in A | x ∉ B}.
 
-Infix "\" := complement (at level 60) : set_scope.
+Infix "\" := complement (at level 45) : set_scope.
 
 Theorem Complement_classification : ∀ A B x, x ∈ A \ B ↔ x ∈ A ∧ x ∉ B.
 Proof.
@@ -703,6 +703,26 @@ Proof.
     contradict H2.
     rewrite Product_classification.
     now exists a, b.
+Qed.
+
+Theorem Empty_product_left : ∀ S, ∅ × S = ∅.
+Proof.
+  intros.
+  apply Extensionality.
+  split; intros H.
+  - apply Product_classification in H as [a [b [H [H0 H1]]]].
+    contradiction (Empty_set_classification a).
+  - contradiction (Empty_set_classification z).
+Qed.
+
+Theorem Empty_product_right : ∀ S, S × ∅ = ∅.
+Proof.
+  intros.
+  apply Extensionality.
+  split; intros H.
+  - apply Product_classification in H as [a [b [H [H0 H1]]]].
+    contradiction (Empty_set_classification b).
+  - contradiction (Empty_set_classification z).
 Qed.
 
 Definition quotient X R := {s in P X | ∃ x, x ∈ X ∧ s = {y in X | (x,y) ∈ R}}.
@@ -932,7 +952,7 @@ End Function_evaluation.
 Notation "f [ x ] " :=
   ((lambdaify f) x) (at level 60, format "f [ x ]") : set_scope.
 
-Definition power X Y := {f in P (X × Y) | is_function f X Y}.
+Definition power X Y := {f in P (Y × X) | is_function f Y X}.
 
 Infix "^" := power : set_scope.
 
@@ -1381,4 +1401,122 @@ Proof.
       subst.
       split; auto.
       apply Pairing_classification; auto.
+Qed.
+
+Lemma disjoint_succ : ∀ s, s ∩ {s,s} = ∅.
+Proof.
+  intros s.
+  apply Extensionality.
+  split; intros H.
+  - apply Pairwise_intersection_classification in H as [H H0].
+    apply Singleton_classification in H0.
+    subst.
+    contradiction (no_quines s).
+  - contradiction (Empty_set_classification z).
+Qed.
+
+Theorem disjoint_union_complement : ∀ E F, E ∪ F = E ∪ (F \ E).
+Proof.
+  intros E F.
+  apply Extensionality.
+  split; intros H; apply Pairwise_union_classification;
+    apply Pairwise_union_classification in H as [H | H]; try tauto.
+  - destruct (classic (z ∈ E)); try tauto.
+    right.
+    now apply Complement_classification.
+  - apply Complement_classification in H as [H H0].
+    tauto.
+Qed.
+
+Theorem disjoint_intersection_complement : ∀ E F, E ∩ (F \ E) = ∅.
+Proof.
+  intros E F.
+  apply Extensionality.
+  split; intros H; rewrite Pairwise_intersection_classification in *.
+  - rewrite Complement_classification in *.
+    tauto.
+  - contradiction (Empty_set_classification z).
+Qed.
+
+Theorem complement_union_intersection : ∀ E F, (F \ E) ∪ (E ∩ F) = F.
+Proof.
+  intros E F.
+  apply Extensionality.
+  split; intros H;
+    rewrite Pairwise_union_classification, Complement_classification,
+    Pairwise_intersection_classification in *.
+  - tauto.
+  - destruct (classic (z ∈ E)); tauto.
+Qed.
+
+Theorem complement_disjoint_intersection : ∀ E F, (F \ E) ∩ (E ∩ F) = ∅.
+Proof.
+  intros E F.
+  apply Extensionality.
+  split; intros H.
+  - rewrite ? Pairwise_intersection_classification,
+    Complement_classification in *.
+    tauto.
+  - contradiction (Empty_set_classification z).
+Qed.
+
+Theorem complement_subset : ∀ E F, F \ E ⊂ F.
+Proof.
+  intros E F x H.
+  now apply Complement_classification in H as [H].
+Qed.
+
+Theorem Intersection_left : ∀ E F, E ∩ F ⊂ E.
+Proof.
+  intros E F x H.
+  rewrite Pairwise_intersection_classification in H.
+  tauto.
+Qed.
+
+Theorem Intersection_right : ∀ E F, E ∩ F ⊂ F.
+Proof.
+  intros E F x H.
+  rewrite Pairwise_intersection_classification in H.
+  tauto.
+Qed.
+
+Theorem power_0_l : ∀ m, m ≠ ∅ → ∅^m = ∅.
+Proof.
+  intros m H.
+  apply Extensionality.
+  split; intros H0.
+  - apply Specify_classification in H0 as [H0 [H1 H2]].
+    pose proof H as H3. 
+    apply Nonempty_classification in H3 as [x H3].
+    apply H2 in H3 as [y [[H3 H4] _]].
+    contradiction (Empty_set_classification y).
+  - contradiction (Empty_set_classification z).
+Qed.
+
+Theorem power_0_r : ∀ m, m^∅ = succ ∅.
+Proof.
+  intros m.
+  apply Extensionality.
+  split; intros H.
+  - apply Specify_classification in H as [H [H0 H1]].
+    rewrite Empty_product_left in H.
+    apply Powerset_classification in H.
+    assert (z = ∅).
+    { apply Extensionality.
+      split; intros H2; auto.
+      contradiction (Empty_set_classification z0). }
+    subst.
+    apply Pairwise_union_classification.
+    rewrite Singleton_classification.
+    tauto.
+  - apply Pairwise_union_classification in H as [H | H].
+    + contradiction (Empty_set_classification z).
+    + rewrite Singleton_classification in H.
+      subst.
+      apply Specify_classification.
+      repeat split.
+      * apply Empty_set_in_powerset.
+      * apply Empty_set_is_subset.
+      * intros a H.
+        contradiction (Empty_set_classification a).
 Qed.
