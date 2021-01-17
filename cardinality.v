@@ -30,30 +30,9 @@ Qed.
 
 Theorem cardinality_sym : ∀ A B, A ~ B → B ~ A.
 Proof.
-  intros A B [f [H [H0 [H1 H2]]]].
-  pose proof H2 as H3.
-  apply right_inverse_iff_surjective in H3 as [g [H3 [H4 H5]]].
-  exists g; subst.
-  repeat split; try congruence.
-  - apply Injective_classification.
-    intros x y H H0 H6.
-    rewrite <-H5, <-H6, H5; congruence.
-  - apply Surjective_classification.
-    intros y H.
-    exists (f y).
-    split.
-    + rewrite H3.
-      apply function_maps_domain_to_range.
-      congruence.
-    + rewrite Injective_classification in H1.
-      apply H1; try rewrite <-H4; auto.
-      * apply function_maps_domain_to_range.
-        rewrite H3.
-        apply function_maps_domain_to_range.
-        congruence.
-      * rewrite H5; auto.
-        apply function_maps_domain_to_range.
-        congruence.
+  intros A B [f [H [H0 H1]]].
+  exists (inverse f).
+  rewrite inverse_domain, inverse_range; auto using inverse_bijective.
 Qed.
 
 Theorem cardinality_trans : ∀ A B C, A ~ B → B ~ C → A ~ C.
@@ -1798,4 +1777,240 @@ Theorem finite_power_card : ∀ E F, finite E → finite F → #(E^F) = ((#E)^(#
 Proof.
   intros E F [n H] [m H0].
   now rewrite H, H0, natural_powers_card.
+Qed.
+
+Definition bijection_set A B :=
+  { f in P (A × B) |
+    ∃ f', domain f' = A ∧ range f' = B ∧ graph f' = f ∧ bijective f'}.
+
+Definition size_of_bijections A B := # (bijection_set A B).
+
+Theorem equinumerous_cardinality : ∀ A B, A ~ B → # A = # B.
+Proof.
+  intros A B H.
+  now rewrite H.
+Qed.
+
+Definition inverse_function_out : set → set → set → set.
+Proof.
+  intros A B f.
+  destruct (excluded_middle_informative (f ∈ bijection_set A B)).
+  - apply Specify_classification in i as [H H0].
+    destruct (constructive_indefinite_description _ H0)
+      as [f' [H1 [H2 [H3 H4]]]].
+    exact (graph (inverse f')).
+  - exact ∅.
+Defined.
+
+Theorem size_of_bijections_sym :
+  ∀ A B, size_of_bijections A B = size_of_bijections B A.
+Proof.
+  intros A B.
+  apply equinumerous_cardinality.
+  destruct (function_construction
+              (bijection_set A B) (bijection_set B A)
+              (λ x, inverse_function_out A B x)) as [f [H [H0 H1]]].
+  { intros a H.
+    unfold inverse_function_out.
+    destruct excluded_middle_informative; try tauto.
+    destruct Specify_classification, a0.
+    destruct constructive_indefinite_description as [g].
+    repeat destruct a1.
+    apply Specify_classification.
+    split.
+    - apply Powerset_classification.
+      intros z H0.
+      apply graph_elements_are_pairs in H0.
+      rewrite inverse_domain, inverse_range in H0; congruence.
+    - exists (inverse g).
+      rewrite inverse_domain, inverse_range; auto using inverse_bijective. }
+  exists f.
+  repeat split; auto.
+  - rewrite Injective_classification.
+    intros x y H2 H3 H4.
+    rewrite H in *.
+    rewrite ? H1 in H4; auto.
+    unfold inverse_function_out in H4.
+    repeat destruct excluded_middle_informative; try tauto.
+    repeat destruct Specify_classification.
+    destruct a, a0.
+    repeat destruct constructive_indefinite_description.
+    repeat destruct a1, a2.
+    rewrite <-e5, <-e6.
+    replace x0 with x1; auto.
+    rewrite <-(function_inv_inv x0), <-(function_inv_inv x1); auto.
+    f_equal.
+      apply function_record_injective; auto.
+    + rewrite ? inverse_domain; congruence.
+    + rewrite ? inverse_range; congruence.
+  - rewrite Surjective_classification.
+    intros y H2.
+    rewrite H0 in H2.
+    unfold bijection_set in H2.
+    apply Specify_classification in H2 as [H2 [g [H3 [H4 [H5 H6]]]]].
+    exists (graph (inverse g)).
+    assert (graph (inverse g) ∈ bijection_set A B) as H7.
+    { unfold bijection_set.
+      apply Specify_classification.
+      split.
+      - apply Powerset_classification.
+        intros x H7.
+        apply graph_elements_are_pairs in H7.
+          rewrite inverse_domain, inverse_range in *; congruence.
+      - exists (inverse g).
+        rewrite inverse_domain, inverse_range; auto using inverse_bijective. }
+    split; try now rewrite H.
+    rewrite H1; auto.
+    unfold inverse_function_out.
+    destruct excluded_middle_informative; try tauto.
+    destruct Specify_classification, a.
+    destruct constructive_indefinite_description as [h].
+    repeat destruct a0.
+    rewrite <-H5.
+    replace h with (inverse g).
+    + rewrite function_inv_inv; auto.
+    + apply function_record_injective; auto.
+      * rewrite inverse_domain; congruence.
+      * rewrite inverse_range; congruence.
+Qed.
+
+Section inverse_function_sideload.
+
+  Variable C : set.
+  Variable f : function.
+  Hypothesis H : bijective f.
+  Variable x : set.
+  Definition inverse_function_shift : set.
+  Proof.
+    destruct (excluded_middle_informative (x ∈ bijection_set (range f) C)).
+    - apply Specify_classification in i as [H0 H1].
+      destruct (constructive_indefinite_description _ H1)
+        as [g [H2 [H3 [H4 H5]]]].
+      exact (graph (g ∘ f)).
+    - exact ∅.
+  Defined.
+
+  Lemma inverse_function_shift_in_A_C :
+    x ∈ bijection_set (range f) C →
+    inverse_function_shift ∈ bijection_set (domain f) C.
+  Proof.
+    intros H0.
+    unfold inverse_function_shift.
+    destruct excluded_middle_informative; try tauto.
+    destruct Specify_classification.
+    repeat destruct a.
+    - apply Specify_classification.
+      split; auto.
+    - destruct constructive_indefinite_description.
+      repeat destruct a.
+      apply Specify_classification.
+      destruct (Composition_classification x0 f) as [H3 [H4 H5]];
+        try congruence.
+      split.
+      + apply Powerset_classification.
+        intros z H6.
+        apply graph_elements_are_pairs in H6.
+        congruence.
+      + exists (x0 ∘ f).
+        destruct H, b.
+        repeat split; try congruence.
+        * apply composition_injective; auto; congruence.
+        * apply composition_surjective; auto; congruence.
+  Qed.
+
+End inverse_function_sideload.
+
+Lemma size_of_bijections_wf : ∀ A B C,
+    A ~ B → size_of_bijections A C = size_of_bijections B C.
+Proof.
+  intros A B C [f [H [H0 H1]]].
+  apply equinumerous_cardinality, cardinality_sym.
+  destruct (function_construction
+              (bijection_set B C) (bijection_set A C)
+              (λ x, inverse_function_shift C f x)) as [h [H2 [H3 H4]]].
+  { intros G H2.
+    rewrite <-H, <-H0 in *.
+    now apply inverse_function_shift_in_A_C. }
+  exists h.
+  repeat split; auto.
+  - rewrite Injective_classification.
+    intros x y H5 H6 H7.
+    subst.
+    rewrite ? H4 in H7; try congruence.
+    rewrite H2 in H5, H6.
+    unfold inverse_function_shift in H7.
+    repeat destruct excluded_middle_informative; try tauto.
+    repeat destruct Specify_classification.
+    destruct a, a0.
+    repeat destruct constructive_indefinite_description.
+    repeat destruct a1, a2.
+    rewrite <-e5, <-e6.
+    destruct (Composition_classification x0 f) as [H8 [H9 H10]]; try congruence.
+    destruct (Composition_classification x1 f) as [H11 [H12 H13]];
+      try congruence.
+    assert (x0 ∘ f = x1 ∘ f) as H14.
+    { apply function_record_injective; congruence. }
+    replace x0 with x1; auto.
+    apply func_ext; try congruence.
+    intros z H15.
+    pose proof H1 as [H16 H17].
+    rewrite Surjective_classification in H17.
+    destruct (H17 z) as [w [H18 H19]]; try congruence.
+    subst.
+    rewrite <-H10, <-H13, H14; auto.
+  - rewrite Surjective_classification.
+    intros y H5.
+    rewrite H3 in H5.
+    assert (bijective (inverse f)) as H6 by now apply inverse_bijective.
+    exists (inverse_function_shift C (inverse f) y).
+    split.
+    { rewrite H2, <-H0, <-inverse_domain; auto.
+      apply inverse_function_shift_in_A_C; auto.
+      rewrite inverse_range; auto; congruence. }
+    rewrite H4;
+      try (rewrite <-H0, <-inverse_domain; auto;
+           apply inverse_function_shift_in_A_C; auto;
+           rewrite inverse_range; auto; congruence).
+    unfold inverse_function_shift at 1.
+    repeat destruct excluded_middle_informative;
+    try (contradict n; rewrite <-inverse_domain; auto;
+         apply inverse_function_shift_in_A_C; auto;
+         rewrite inverse_range; auto; congruence).
+    destruct Specify_classification, a, constructive_indefinite_description.
+    repeat destruct a0.
+    unfold inverse_function_shift in e2.
+    destruct excluded_middle_informative;
+      try now rewrite inverse_range, H in n.
+    destruct Specify_classification, a0, constructive_indefinite_description.
+    repeat destruct a1.
+    rewrite <-e6.
+    f_equal.
+    destruct (Composition_classification x0 (inverse f)) as [H7 [H8 H9]];
+      try congruence.
+    destruct (Composition_classification x f) as [H10 [H11 H12]];
+      try congruence.
+    destruct (Composition_classification (x0 ∘ inverse f) f)
+      as [H13 [H14 H15]]; try congruence.
+    { now rewrite H7, inverse_domain. }
+    replace x with (x0 ∘ inverse f).
+    + apply func_ext; try congruence.
+      * now rewrite H13, e4, inverse_range.
+      * intros x1 H16.
+        rewrite H15, H9; try congruence.
+        -- rewrite left_inverse; auto; congruence.
+        -- rewrite inverse_domain; auto.
+           apply function_maps_domain_to_range.
+           congruence.
+    + apply function_record_injective; try congruence.
+      rewrite H7, inverse_domain; auto.
+Qed.
+
+Add Morphism size_of_bijections with signature
+    equinumerous ==> equinumerous ==> eq as size_of_bijections_equiv.
+Proof.
+  intros x y H x0 y0 H0.
+  eapply (size_of_bijections_wf x y x0) in H.
+  rewrite (size_of_bijections_sym y), (size_of_bijections_sym x) in *.
+  eapply (size_of_bijections_wf x0 y0 y) in H0.
+  congruence.
 Qed.
