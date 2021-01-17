@@ -1547,19 +1547,14 @@ Qed.
 Theorem natural_powers_are_finite : ∀ m n : N, finite (m^n).
 Proof.
   intros m n.
-  induction n using Induction.
+  induction n as [| n [x H]] using Induction.
   - rewrite power_0_r.
     replace (succ ∅) with (INS 1) by auto.
     apply naturals_are_finite.
-  - pose proof IHn as [x H].
-    exists (m * x).
-    rewrite <-S_is_succ.
+  - rewrite <-S_is_succ.
     unfold succ.
-    rewrite power_union_r; auto using disjoint_succ.
-    rewrite H, power_1_r, mul_comm.
-    rewrite <-(card_equiv (x × m)), finite_products_card, ? card_of_natural;
-      auto using cardinality_refl, naturals_are_finite,
-      finite_products_are_finite.
+    rewrite power_union_r, H, power_1_r;
+      auto using disjoint_succ, finite_products_are_finite, naturals_are_finite.
 Qed.
 
 Theorem natural_powers_card : ∀ m n : N, # (m^n) = ((# m)^(# n))%N.
@@ -1796,11 +1791,11 @@ Qed.
 Theorem finite_powers_are_finite : ∀ E F, finite E → finite F → finite (E^F).
 Proof.
   intros E F [n H] [m H0].
-  rewrite power_equiv; eauto using natural_powers_are_finite.
+  rewrite H, H0; auto using natural_powers_are_finite.
 Qed.
 
 Theorem finite_power_card : ∀ E F, finite E → finite F → #(E^F) = ((#E)^(#F))%N.
 Proof.
   intros E F [n H] [m H0].
-  rewrite power_equiv, H, H0, ? natural_powers_card; eauto.
+  now rewrite H, H0, natural_powers_card.
 Qed.
