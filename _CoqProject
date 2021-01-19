@@ -9,6 +9,8 @@ rings.v
 integral_domains.v
 ordered_rings.v
 integers.v
+integers_mod_n.v
+combinatorics.v
 fields.v
 ordered_fields.v
 rationals.v

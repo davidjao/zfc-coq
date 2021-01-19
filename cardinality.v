@@ -1802,11 +1802,10 @@ Proof.
   - exact ∅.
 Defined.
 
-Theorem size_of_bijections_sym :
-  ∀ A B, size_of_bijections A B = size_of_bijections B A.
+Theorem bijection_set_sym :
+  ∀ A B, bijection_set A B ~ bijection_set B A.
 Proof.
   intros A B.
-  apply equinumerous_cardinality.
   destruct (function_construction
               (bijection_set A B) (bijection_set B A)
               (λ x, inverse_function_out A B x)) as [f [H [H0 H1]]].
@@ -1874,6 +1873,13 @@ Proof.
       * rewrite inverse_range; congruence.
 Qed.
 
+Theorem size_of_bijections_sym :
+  ∀ A B, size_of_bijections A B = size_of_bijections B A.
+Proof.
+  intros A B.
+  apply equinumerous_cardinality, bijection_set_sym.
+Qed.
+
 Section inverse_function_sideload.
 
   Variable C : set.
@@ -1920,11 +1926,11 @@ Section inverse_function_sideload.
 
 End inverse_function_sideload.
 
-Lemma size_of_bijections_wf : ∀ A B C,
-    A ~ B → size_of_bijections A C = size_of_bijections B C.
+Lemma bijection_set_wf : ∀ A B C,
+    A ~ B → bijection_set A C ~ bijection_set B C.
 Proof.
   intros A B C [f [H [H0 H1]]].
-  apply equinumerous_cardinality, cardinality_sym.
+  apply cardinality_sym.
   destruct (function_construction
               (bijection_set B C) (bijection_set A C)
               (λ x, inverse_function_shift C f x)) as [h [H2 [H3 H4]]].
@@ -2003,6 +2009,23 @@ Proof.
            congruence.
     + apply function_record_injective; try congruence.
       rewrite H7, inverse_domain; auto.
+Qed.
+  
+Lemma size_of_bijections_wf : ∀ A B C,
+    A ~ B → size_of_bijections A C = size_of_bijections B C.
+Proof.
+  intros A B C H.
+  now apply equinumerous_cardinality, bijection_set_wf.
+Qed.
+
+Add Morphism bijection_set with signature
+    equinumerous ==> equinumerous ==> equinumerous as bijection_set_equiv.
+Proof.
+  intros x y H x0 y0 H0.
+  eapply (bijection_set_wf x y x0) in H.
+  rewrite (bijection_set_sym y), (bijection_set_sym x) in *.
+  eapply (bijection_set_wf x0 y0 y) in H0.
+  now rewrite H, H0.
 Qed.
 
 Add Morphism size_of_bijections with signature

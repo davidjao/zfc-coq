@@ -1102,3 +1102,15 @@ Proof.
     intros H0.
     now rewrite <-lt_not_ge in H0.
 Qed.
+
+Theorem lt_1_eq_0 : ∀ n, n < 1 → n = 0.
+Proof.
+  intros n H.
+  induction n using Induction; auto.
+  pose proof H as H0.
+  assert (n < 1).
+  { eapply lt_trans; eauto using succ_lt. }
+  apply IHn in H1.
+  subst.
+  contradiction (lt_irrefl 1).
+Qed.
