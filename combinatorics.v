@@ -84,37 +84,24 @@ Section orbit_stabilizer_cardinality_theorem.
       repeat destruct a.
       destruct b.
       rewrite Injective_classification in H7.
-      apply H7 in H6; auto.
-      + rewrite e0.
-        unfold inverse_image_of_element.
-        now apply Specify_classification.
-      + rewrite e0.
-        unfold inverse_image_of_element.
-        now apply Specify_classification.
+      apply H7 in H6; auto; rewrite e0; unfold inverse_image_of_element;
+          now apply Specify_classification.
     - rewrite Surjective_classification.
       intros y H3.
       rewrite H1 in H3.
       apply Product_classification in H3 as [a [b [H3 [H4 H5]]]].
       subst.
-      pose proof oschf_domain (inverse_image_of_element f a) (H a H3).
-      pose proof oschf_range (inverse_image_of_element f a) (H a H3).
-      pose proof oschf_bijective (inverse_image_of_element f a) (H a H3).
-      pose proof H7 as [H8 H9].
-      rewrite Surjective_classification in H9.
-      destruct (H9 b) as [z [H10 H11]]; try congruence.
-      exists z.
-      assert (f z = a).
-      { rewrite H5 in H10.
-        unfold inverse_image_of_element in H10.
-        apply Specify_classification in H10.
-        tauto. }
-      assert (z ∈ domain g).
-      { rewrite H5 in H10.
-        unfold inverse_image_of_element in H10.
-        apply Specify_classification in H10 as [H10 H13].
-        congruence. }
-      split; auto.
-      rewrite H2; congruence.
+      pose proof oschf_bijective (inverse_image_of_element f a) (H a H3)
+        as [H5 H6].
+      rewrite Surjective_classification in H6.
+      destruct (H6 b) as [z [H7 H8]].
+      { rewrite oschf_range; auto. }
+      rewrite oschf_domain in H7.
+      + apply Specify_classification in H7.
+        exists z.
+        split; intuition; try congruence.
+        rewrite H2; congruence.
+      + now rewrite H.
   Qed.
 
 End orbit_stabilizer_cardinality_theorem.
@@ -192,7 +179,7 @@ Section permutation_succ_helper_functions.
     rewrite e0, <-lt_is_in.
     apply naturals.succ_lt.
   Qed.
-    
+
   Definition permutation_succ_proj : function.
   Proof.
     destruct (constructive_indefinite_description
@@ -279,7 +266,7 @@ Section permutation_succ_helper_functions.
     destruct Specify_classification, a, Specify_classification, a0,
     constructive_indefinite_description as [f'].
     destruct a1 as [H [H0 [H1 H2]]].
-    apply Specify_classification in i0 as [H3 H4].
+    apply Specify_classification in i0 as [H3 H4]; auto.
     clear i a i1 i2 a0 i3 e0.
     rewrite psp_domain in H3.
     set (ξ := (exist (λ x, x ∈ bijection_set (S n) (S n)) _ H3)).
@@ -290,7 +277,6 @@ Section permutation_succ_helper_functions.
     - rewrite functionify_domain; congruence.
     - rewrite functionify_range; congruence.
     - rewrite functionify_graph; congruence.
-    - split; auto.
   Qed.
 
   Theorem permutation_succ_left_helper_lemma :
@@ -329,7 +315,7 @@ Section permutation_succ_helper_functions.
     intros f x.
     exact (exist _ _ (permutation_succ_left_helper_lemma f x)).
   Defined.
-          
+ 
   Theorem pslh_action : ∀ f x,
       proj1_sig (permutation_succ_left_helper f x) =
       (functionify _ _ (inverse_image_incl f)) (proj1_sig x).
@@ -584,57 +570,14 @@ Section permutation_succ_helper_functions.
   Qed.
 
   Definition permutation_succ_right :
-    elts (bijection_set n (S n \ {proj1_sig y, proj1_sig y})) → 
+    elts (bijection_set n (S n \ {proj1_sig y, proj1_sig y})) →
     elts (inverse_image_of_element permutation_succ_proj (proj1_sig y)).
   Proof.
     intros f.
     exact (exist _ _ (permutation_succ_right_construction f)).
   Defined.
-      
+ 
 End permutation_succ_helper_functions.
-
-Theorem function_graph_equality : ∀ A B g1 g2,
-    is_function g1 A B → is_function g2 A B → g1 ⊂ g2 → g1 = g2.
-Proof.
-  intros A B g1 g2 H H0 H1.
-  apply Subset_equality_iff.
-  split; auto.
-  intros z H2.
-  set (f1 := mkFunc A B g1 H).
-  set (f2 := mkFunc A B g2 H0).
-  unfold is_function in *.
-  replace g2 with (graph f2) in H2 by auto.
-  apply Graph_classification in H2 as [z1 [H2 H3]].
-  subst.
-  replace g1 with (graph f1) by auto.
-  apply Graph_classification.
-  exists z1.
-  simpl in *.
-  split; auto.
-  assert ((z1, f1 z1) ∈ g2) as H3.
-  { apply H1.
-    replace g1 with (graph f1) by auto.
-    apply Graph_classification.
-    exists z1.
-    now simpl. }
-  assert ((z1, f2 z1) ∈ g2) as H4.
-  { replace g2 with (graph f2) by auto.
-    apply Graph_classification.
-    exists z1.
-    now simpl. }
-  pose proof H0 as H5.
-  apply H5 in H2 as H6.
-  destruct H6 as [z1' [[H6 H7] H8]].
-  pose proof H8 (f1 z1) as H9.
-  pose proof H8 (f2 z1) as H10.
-  rewrite <-H9, <-H10; repeat split; auto.
-  - replace B with (range f2) by auto.
-    apply function_maps_domain_to_range.
-    now simpl.
-  - replace B with (range f1) by auto.
-    apply function_maps_domain_to_range.
-    now simpl.
-Qed.
 
 Theorem permutation_succ :
   (∀ n : N, (bijection_set (S n) (S n)) ~ (S n) × (bijection_set n n))%set.
@@ -644,40 +587,36 @@ Proof.
   apply orbit_stabilizer_cardinality.
   intros y H.
   rewrite psp_range in H.
-  assert ((S n \ {n,n}) = n) as L0.
-  { apply Extensionality.
-    split; intros H3.
-    - apply Complement_classification in H3 as [H3 H4].
-      rewrite <-S_is_succ in H3.
-      rewrite Singleton_classification in H4.
-      apply Pairwise_union_classification in H3 as [H3 | H3]; auto.
-      now apply Singleton_classification in H3.
-    - apply Complement_classification.
-      split.
-      + rewrite <-S_is_succ.
-        apply Pairwise_union_classification; tauto.
-      + intros H4.
-        apply Singleton_classification in H4.
-        subst.
-        now apply (no_quines n). }
-  assert ((S n \ {y,y}) ~ (S n \ {n,n}))%set as L1.
-  { apply equivalence_minus_element; auto using cardinality_refl.
-    apply lt_is_in, naturals.succ_lt. }
-  rewrite <-L0 at 2.
-  rewrite <-L1.
+  replace (INS n) with (S n \ {n,n}) at 2.
+  2: { apply Extensionality.
+       split; intros H0.
+       - apply Complement_classification in H0 as [H0 H1].
+         rewrite <-S_is_succ in H0.
+         rewrite Singleton_classification in H1.
+         apply Pairwise_union_classification in H0 as [H0 | H0]; auto.
+         now apply Singleton_classification in H0.
+       - apply Complement_classification.
+         split.
+         + rewrite <-S_is_succ.
+           apply Pairwise_union_classification; tauto.
+         + intros H1.
+           apply Singleton_classification in H1.
+           subst.
+           now apply (no_quines n). }
+  setoid_replace (S n \ {n,n}) with (S n \ {y,y}).
+  2: { apply equivalence_minus_element; auto using cardinality_refl.
+       apply lt_is_in, naturals.succ_lt. }
   apply two_sided_inverse_bijective.
   set (γ := exist _ _ H : elts (S n)).
   replace y with (proj1_sig γ) in * by auto.
-  exists (permutation_succ_left n γ), (permutation_succ_right n γ).
+  exists (permutation_succ_left _ γ), (permutation_succ_right _ γ).
   split.
   - intros a.
     pose proof (proj2_sig a) as H0; simpl in H0.
     apply set_proj_injective, (function_graph_equality (S n) (S n)); simpl in *.
-    { pose proof func_hyp
-           (sets.functionify
-              (S n) (S n)
-              (permutation_succ_right_helper
-                 n γ (permutation_succ_left n γ a))).
+    { pose proof func_hyp (sets.functionify
+                             _ _ (permutation_succ_right_helper
+                                    _ _ (permutation_succ_left _ γ a))).
       now rewrite sets.functionify_domain, sets.functionify_range in *. }
     { pose proof proj2_sig a.
       simpl in *.
@@ -698,8 +637,7 @@ Proof.
     set (ζ1 := exist _ _ H4 : elts (S n)).
     replace z1 with (proj1_sig ζ1) in * by auto.
     rewrite H3.
-    unfold permutation_succ_right_helper.
-    simpl.
+    unfold permutation_succ_right_helper; simpl.
     destruct excluded_middle_informative.
     * subst.
       apply Inverse_image_classification in H0 as H5.
@@ -751,7 +689,7 @@ Proof.
       replace z1' with (proj1_sig ζ1') in * by auto.
       rewrite H13.
       simpl.
-      clear H11 H8 H7 H13 H12 H10 f'' H6 H5 f' ζ1 H3 H2 H1 L1 L0 f.
+      clear H11 H8 H7 H13 H12 H10 f'' H6 H5 f' ζ1 H3 H2 H1 f.
       rewrite Inverse_image_classification in H0.
       2: { rewrite psp_domain.
            pose proof (proj2_sig (inverse_image_incl n (exist _ _ H) a)).
@@ -774,18 +712,14 @@ Proof.
       exists z1'.
       split; auto.
       rewrite H1, <-S_is_succ.
-      apply Pairwise_union_classification.
-      now left.
+      apply Pairwise_union_classification; tauto.
   - intros b.
     pose proof (proj2_sig b) as H0; simpl in H0.
     apply set_proj_injective; simpl.
     apply (function_graph_equality n (S n \ {y,y})); auto.
-    { pose proof
-           (func_hyp
-              (sets.functionify
-                 n (S n \ {y,y})
-                 (permutation_succ_left_helper
-                    n γ (permutation_succ_right n γ b)))).
+    { pose proof (func_hyp (sets.functionify
+                              _ _ (permutation_succ_left_helper
+                                     _ _ (permutation_succ_right n γ b)))).
       now rewrite sets.functionify_domain, sets.functionify_range in *. }
     { apply Specify_classification in H0 as [H0 [f H2]].
       replace (proj1_sig b) with (graph f) by intuition.
@@ -815,8 +749,7 @@ Proof.
     constructive_indefinite_description.
     clear e0 i2 i1 a0 e i0 i a.
     destruct a1 as [H1 [H2 [H4 H5]]].
-    replace x with
-        (sets.functionify (S n) (S n) (permutation_succ_right_helper n γ b)).
+    replace x with (sets.functionify _ _ (permutation_succ_right_helper n γ b)).
     2: { apply function_record_injective.
          - rewrite sets.functionify_domain; congruence.
          - rewrite sets.functionify_range; congruence.
@@ -854,8 +787,7 @@ Proof.
   split; intros.
   - apply Singleton_classification.
     apply Specify_classification in H as [H H0].
-    rewrite Empty_product_left in H.
-    apply Powerset_classification in H.
+    rewrite Empty_product_left, Powerset_classification in H.
     apply Extensionality.
     split; intros.
     + now apply H in H1.
@@ -899,98 +831,28 @@ Proof.
   unfold succ.
   rewrite Union_comm, Union_empty.
   apply Extensionality.
-  split; intros H; rewrite Singleton_classification in *.
-  - apply Specify_classification in H as [H [f [H0 [H1 [H2 H3]]]]].
-    subst.
-    apply Extensionality.
-    split; intros H2; rewrite Singleton_classification in *.
-    + apply Graph_classification in H2 as [a [H2 H4]].
-      rewrite H0 in H2.
-      rewrite Singleton_classification in H2.
-      subst.
-      apply Ordered_pair_iff.
-      split; auto.
-      assert (f ∅ ∈ range f).
-      { apply function_maps_domain_to_range.
-        rewrite H0.
-        now apply Singleton_classification. }
-      rewrite H1 in H2.
-      now apply Singleton_classification in H2.
-    + apply Graph_classification.
-      exists ∅.
-      split.
-      * now rewrite H0, Singleton_classification.
-      * subst.
-        apply Ordered_pair_iff.
-        split; auto.
-        assert (f ∅ ∈ range f).
-        { apply function_maps_domain_to_range.
-          rewrite H0.
-          now apply Singleton_classification. }
-        rewrite H1 in H2.
-        now apply Singleton_classification in H2.
-  - subst.
-    apply Specify_classification.
+  split; intros H; rewrite Singleton_classification in *; subst.
+  - apply Specify_classification in H as [H [f [H0 [H1 [H2 H3]]]]];
+      subst; auto using singleton_functions.
+  - apply Specify_classification.
     split.
-    + apply Powerset_classification.
-      intros z H.
-      apply Singleton_classification in H.
-      subst.
-      apply Product_classification.
-      exists ∅, ∅.
-      now rewrite Singleton_classification.
+    + rewrite Powerset_classification, singleton_products.
+      apply Set_is_subset.
     + destruct (function_construction {∅,∅} {∅,∅} (λ x, x)) as [f]; try tauto.
       exists f.
-      destruct H as [H [H0 H1]].
-      repeat split; auto.
-      { apply Extensionality.
-        split; intros H2.
-        - apply Graph_classification in H2 as [a [H2 H3]].
-          subst.
-          rewrite Singleton_classification, Ordered_pair_iff.
-          split.
-          + rewrite H in H2.
-            now rewrite Singleton_classification in H2.
-          + rewrite H in H2.
-            apply Singleton_classification in H2.
-            subst.
-            assert (f ∅ ∈ range f).
-            { apply function_maps_domain_to_range.
-              rewrite H.
-              now apply Singleton_classification. }
-            rewrite H0 in H2.
-            now apply Singleton_classification in H2.
-        - apply Graph_classification.
-          exists ∅.
-          split.
-          * now rewrite H, Singleton_classification.
-          * rewrite Singleton_classification in H2.
-            subst.
-            apply Ordered_pair_iff.
-            split; auto.
-            assert (f ∅ ∈ range f).
-            { apply function_maps_domain_to_range.
-              rewrite H.
-              now apply Singleton_classification. }
-            rewrite H0 in H2.
-            now apply Singleton_classification in H2. }
-      { rewrite Injective_classification.
-        intros x y H2 H3 H4.
-        rewrite H, Singleton_classification in *.
-        congruence. }
-      { rewrite Surjective_classification.
-        intros y H2.
+      repeat split; intuition; try congruence; auto using singleton_functions.
+      * rewrite Injective_classification.
+        intros x y H1 H3 H4.
+        now rewrite ? H0, ? H, ? Singleton_classification, ? H1, ? H3 in *.
+      * rewrite Surjective_classification.
+        intros y H1.
         exists ∅.
-        split.
-        - now rewrite H, Singleton_classification.
-        - rewrite H0, Singleton_classification in H2.
-          subst.
-          assert (f ∅ ∈ range f).
-          { apply function_maps_domain_to_range.
-            rewrite H.
-            now apply Singleton_classification. }
-          rewrite H0 in H2.
-          now apply Singleton_classification in H2. }
+        split; try now rewrite H0, Singleton_classification.
+        rewrite H, Singleton_classification in *.
+        subst.
+        apply function_maps_domain_to_graph;
+          now rewrite ? (singleton_functions f ∅ ∅),
+          ? H0, ? H, ? Singleton_classification.
 Qed.
 
 Theorem permutations_are_finite : ∀ n : N, finite (bijection_set n n).
@@ -1044,7 +906,7 @@ Proof.
       apply naturals.lt_succ.
     - unfold permutations.
       now rewrite size_of_bijections_of_empty_set. }
-  destruct (classic (n = 0%N)).
+  destruct (classic (n = 0%N)) as [H | H].
   { subst.
     unfold factorial, prod.
     rewrite iterate_0.
@@ -1052,11 +914,11 @@ Proof.
     now rewrite size_of_bijections_of_one. }
   unfold factorial, prod in *.
   rewrite iterate_succ, IHn.
-  simpl.
-  unfold permutations, size_of_bijections.
-  rewrite permutation_succ, finite_products_card, card_of_natural,
-  mul_comm, INZ_mul; auto using naturals_are_finite, permutations_are_finite.
-  rewrite naturals.le_not_gt.
-  contradict H.
-  now apply lt_1_eq_0 in H.
+  - simpl.
+    unfold permutations, size_of_bijections.
+    rewrite permutation_succ, finite_products_card, card_of_natural,
+    mul_comm, INZ_mul; auto using naturals_are_finite, permutations_are_finite.
+  - rewrite naturals.le_not_gt.
+    contradict H.
+    now apply lt_1_eq_0 in H.
 Qed.

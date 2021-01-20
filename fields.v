@@ -1,5 +1,5 @@
 Require Export integers Field.
-Set Warnings "-notation-bound-to-variable".
+Set Warnings "-notation-overridden,-notation-bound-to-variable".
 
 Record field :=
   mkField {

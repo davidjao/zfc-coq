@@ -323,9 +323,8 @@ Proof.
               apply Complement_classification.
               now rewrite Singleton_classification.
         -- apply Pairwise_union_classification in H8 as [H8 | H8].
-           ++ apply Complement_classification in H8; intuition.
-           ++ apply Singleton_classification in H8.
-              now subst.
+           ++ apply Complement_classification in H8; now (subst; intuition).
+           ++ apply Singleton_classification in H8; now (subst; intuition).
       * rewrite <-H4 at 1.
         apply equivalence_minus_element; auto.
         -- exists f.
@@ -512,13 +511,11 @@ Proof.
     rewrite lt_is_in in H1.
   - apply (proper_subsets_of_natural_numbers m n); repeat split.
     + apply elements_of_naturals_are_subsets; auto; apply (proj2_sig n).
-    + contradict H0.
-      now apply set_proj_injective.
+    + contradict H0; now apply set_proj_injective.
     + eauto using cardinality_trans, cardinality_sym.
   - apply (proper_subsets_of_natural_numbers n m); repeat split.
     + apply elements_of_naturals_are_subsets; auto; apply (proj2_sig m).
-    + contradict H0.
-      now apply set_proj_injective.
+    + contradict H0; now apply set_proj_injective.
     + eauto using cardinality_trans, cardinality_sym.
 Qed.
 
@@ -614,18 +611,9 @@ Proof.
       repeat split; auto.
       * rewrite Injective_classification in *.
         intros x y H11 H12 H13.
-        rewrite ? H10 in *; try congruence.
-        apply H6 in H13; try apply H1 in H13; auto; try congruence.
-        -- rewrite H4.
-           apply H3.
-           rewrite <-H0.
-           apply function_maps_domain_to_range.
-           congruence.
-        -- rewrite H4.
-           apply H3.
-           rewrite <-H0.
-           apply function_maps_domain_to_range.
-           congruence.
+        rewrite ? H10 in *; try congruence; apply H6 in H13;
+          try apply H1 in H13; auto; try congruence; rewrite H4; apply H3;
+            rewrite <-H0; apply function_maps_domain_to_range; congruence.
       * rewrite Surjective_classification.
         intros y H11.
         rewrite H9 in H11.

@@ -1261,7 +1261,7 @@ Proof.
 Defined.
 
 Theorem left_inverse :
-  ∀ f, bijective f → ∀ x, x ∈ domain f → (inverse f) (f x) = x.
+  ∀ f, bijective f → ∀ x, x ∈ domain f → inverse f (f x) = x.
 Proof.
   intros f H x H0.
   unfold inverse.
@@ -1279,7 +1279,7 @@ Proof.
 Qed.
 
 Theorem right_inverse :
-  ∀ f, bijective f → ∀ x, x ∈ domain (inverse f) → f ((inverse f) x) = x.
+  ∀ f, bijective f → ∀ x, x ∈ domain (inverse f) → f (inverse f x) = x.
 Proof.
   intros f H x H0.
   unfold inverse in *.
@@ -1682,7 +1682,7 @@ Proof.
     exact H1.
 Qed.
 
-Theorem function_graph_uniqueness : ∀ f x a b, x ∈ domain f → 
+Theorem function_graph_uniqueness : ∀ f x a b, x ∈ domain f →
     (x, a) ∈ graph f → (x, b) ∈ graph f → a = b.
 Proof.
   intros f x a b H H0 H1.
@@ -1725,4 +1725,76 @@ Proof.
   intros f b H a H0.
   unfold inverse_image_of_element in H0.
   apply Specify_classification in H0; tauto.
+Qed.
+
+Theorem function_graph_equality : ∀ A B g1 g2,
+    is_function g1 A B → is_function g2 A B → g1 ⊂ g2 → g1 = g2.
+Proof.
+  intros A B g1 g2 H H0 H1.
+  apply Subset_equality_iff.
+  split; auto.
+  intros z H2.
+  set (f1 := mkFunc A B g1 H).
+  set (f2 := mkFunc A B g2 H0).
+  unfold is_function in *.
+  replace g2 with (graph f2) in H2 by auto.
+  apply Graph_classification in H2 as [z1 [H2 H3]].
+  subst.
+  replace g1 with (graph f1) by auto.
+  apply Graph_classification.
+  exists z1.
+  simpl in *.
+  split; auto.
+  assert ((z1, f1 z1) ∈ g2) as H3.
+  { apply H1.
+    replace g1 with (graph f1) by auto.
+    apply Graph_classification.
+    exists z1.
+    now simpl. }
+  assert ((z1, f2 z1) ∈ g2) as H4.
+  { replace g2 with (graph f2) by auto.
+    apply Graph_classification.
+    exists z1.
+    now simpl. }
+  pose proof H0 as H5.
+  apply H5 in H2 as H6.
+  destruct H6 as [z1' [[H6 H7] H8]].
+  rewrite <-? (H8 (f1 z1)), <-? (H8 (f2 z1)); split; auto;
+    [ replace B with (range f2) by auto | replace B with (range f1) by auto ];
+    apply function_maps_domain_to_range; now simpl.
+Qed.
+
+Theorem singleton_products : ∀ x y, {x,x} × {y,y} = {(x,y), (x,y)}.
+Proof.
+  intros x y.
+  apply Extensionality.
+  split; intros H.
+  - apply Product_classification in H as [a [b [H H0]]].
+    rewrite Singleton_classification in *.
+    intuition; congruence.
+  - apply Product_classification.
+    exists x, y.
+    now rewrite ? Singleton_classification in *.
+Qed.
+
+Theorem singleton_functions :
+  ∀ f x y, domain f = {x,x} → range f = {y,y} → graph f = {(x,y),(x,y)}.
+Proof.
+  intros f x y H H0.
+  apply (function_graph_equality {x,x} {y,y}).
+  - pose proof (func_hyp f).
+    congruence.
+  - split.
+    + rewrite singleton_products.
+      apply Set_is_subset.
+    + intros a H2.
+      exists y.
+      split.
+      * rewrite ? Singleton_classification in *.
+        now subst.
+      * intros x' H4.
+        rewrite ? Singleton_classification, Ordered_pair_iff in *.
+        intuition; congruence.
+  - pose proof func_hyp f as [H1].
+    now rewrite H, H0, singleton_products in *.
 Qed.
