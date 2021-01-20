@@ -958,6 +958,22 @@ Section Function_evaluation.
     exact g.
   Defined.
 
+  Theorem functionify_domain : ∀ g, domain (functionify g) = A.
+  Proof.
+    intros g.
+    unfold functionify.
+    destruct constructive_indefinite_description.
+    tauto.
+  Qed.
+
+  Theorem functionify_range : ∀ g, range (functionify g) = B.
+  Proof.
+    intros g.
+    unfold functionify.
+    destruct constructive_indefinite_description.
+    tauto.
+  Qed.
+
 End Function_evaluation.
 
 Notation "f [ x ] " :=
@@ -1640,4 +1656,73 @@ Proof.
       * apply Empty_set_is_subset.
       * intros a H.
         contradiction (Empty_set_classification a).
+Qed.
+
+Theorem Graph_classification :
+  ∀ f z, z ∈ graph f ↔ ∃ a, a ∈ domain f ∧ z = (a, f a).
+Proof.
+  split; intros H.
+  - pose proof (func_hyp f) as [H0 H1].
+    apply H0 in H as H2.
+    apply Product_classification in H2 as [a [b [H2 [H3 H4]]]].
+    exists a.
+    split; auto; subst.
+    pose proof
+         Function_classification (graph f) (domain f) (range f) _ H2 (func_hyp f)
+      as [[H5 H6] H7].
+    apply H1 in H2 as [z [[H4 H8] H9]].
+    assert (z = b) by now apply H9.
+    assert (z = (f a)) by now apply H9.
+    congruence.
+  - destruct H as [a [H H0]].
+    subst.
+    pose proof
+         Function_classification (graph f) (domain f) (range f) _ H (func_hyp f)
+      as [[H0 H1] H2].
+    exact H1.
+Qed.
+
+Theorem function_graph_uniqueness : ∀ f x a b, x ∈ domain f → 
+    (x, a) ∈ graph f → (x, b) ∈ graph f → a = b.
+Proof.
+  intros f x a b H H0 H1.
+  pose proof (func_hyp f) as [H2 H3].
+  apply H2 in H0 as H6.
+  apply Product_classification in H6 as [x' [a' [H6 [H7 H8]]]].
+  apply Ordered_pair_iff in H8 as [H8 H9].
+  subst.
+  apply H2 in H1 as H4.
+  apply Product_classification in H4 as [x [a [H4 [H5 H8]]]].
+  apply Ordered_pair_iff in H8 as [H8 H9].
+  subst.
+  apply H3 in H4 as [y [[H4 H8] H9]].
+  assert (y = a) by now apply H9.
+  assert (y = a') by now apply H9.
+  congruence.
+Qed.
+
+Definition inverse_image_of_element f y := {x in domain f | f x = y}.
+
+Theorem Inverse_image_classification : ∀ f a b,
+    a ∈ domain f → b ∈ range f → a ∈ inverse_image_of_element f b ↔ f a = b.
+Proof.
+  intros f a b H H0.
+  split; intros H1; unfold inverse_image_of_element in *;
+    rewrite Specify_classification in *; tauto.
+Qed.
+
+Theorem Inverse_image_classification_left : ∀ f a b,
+    b ∈ range f → a ∈ inverse_image_of_element f b → f a = b.
+Proof.
+  intros f a b H H0.
+  unfold inverse_image_of_element in *.
+  apply Specify_classification in H0; tauto.
+Qed.
+
+Theorem Inverse_image_subset : ∀ f b,
+    b ∈ range f → inverse_image_of_element f b ⊂ domain f.
+Proof.
+  intros f b H a H0.
+  unfold inverse_image_of_element in H0.
+  apply Specify_classification in H0; tauto.
 Qed.

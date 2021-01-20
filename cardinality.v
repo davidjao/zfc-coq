@@ -2037,3 +2037,39 @@ Proof.
   eapply (size_of_bijections_wf x0 y0 y) in H0.
   congruence.
 Qed.
+
+Lemma two_sided_inverse_bijective : ∀ A B,
+  (∃ (f : elts A → elts B) (g : elts B → elts A),
+      ((∀ a : elts A, g (f a) = a) ∧ (∀ b : elts B, f (g b) = b))) → A ~ B.
+Proof.
+  intros A B [f [g [H H0]]].
+  exists (functionify _ _ f).
+  set (γ := functionify _ _ g).
+  unfold functionify in *.
+  destruct constructive_indefinite_description as [g'].
+  destruct a as [H1 [H2 H3]].
+  clear γ.
+  destruct constructive_indefinite_description as [f'].
+  destruct a as [H4 [H5 H6]].
+  repeat split; try tauto; subst.
+  - rewrite Injective_classification.
+    intros x y H1 H2 H7.
+    assert (g' (f' x) = g' (f' y)) as H8 by congruence.
+    rewrite H4 in H1, H2.
+    replace x with (proj1_sig (exist (λ x, x ∈ range g') _ H1)) in *
+      by auto.
+    replace y with (proj1_sig (exist (λ x, x ∈ range g') _ H2)) in *
+      by auto.
+    now rewrite ? H6, ? H3, ? H in H8.
+  - rewrite Surjective_classification.
+    intros y H1.
+    exists (g' y).
+    split.
+    + rewrite H4.
+      apply function_maps_domain_to_range.
+      congruence.
+    + rewrite H5 in H1.
+      replace y with (proj1_sig (exist (λ x, x ∈ domain g') _ H1)) in *
+        by auto.
+      now rewrite H3, H6, H0.
+Qed.
