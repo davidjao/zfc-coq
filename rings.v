@@ -737,4 +737,50 @@ Section Ring_theorems.
   Definition sum f a b := iterate_with_bounds add f 0 a b.
   Definition prod f a b := iterate_with_bounds mul f 1 a b.
 
+  Theorem iterate_succ_lower_limit : ∀ op f start a b,
+      a ≤ S b → op start (f (S b)) = f (S b) →
+      iterate_with_bounds op f start a (S b) =
+      op (iterate_with_bounds op f start a b) (f (S b)).
+  Proof.
+    intros op f start a b H H0.
+    destruct (classic (a ≤ b)) as [H1 | H1]; auto using iterate_succ.
+    assert (a = S b).
+    { destruct H as [c H].
+      apply NNPP.
+      contradict H1.
+      assert (c ≠ 0%N).
+      { contradict H0.
+        subst.
+        now rewrite add_0_r in H. }
+      apply succ_0 in H2 as [d H2].
+      subst.
+      rewrite add_succ_r in H.
+      apply PA5 in H.
+      now exists d. }
+    subst.
+    rewrite iterate_0.
+    unfold iterate_with_bounds.
+    destruct excluded_middle_informative; auto.
+    exfalso.
+    rewrite le_not_gt in l.
+    contradict l.
+    apply succ_lt.
+  Qed.
+
+  Theorem sum_succ : ∀ f a b,
+      a ≤ S b → (sum f a (S b)) = (sum f a b) + (f (S b)).
+  Proof.
+    intros f a b H.
+    apply iterate_succ_lower_limit; auto.
+    now rewrite A3.
+  Qed.
+
+  Theorem prod_succ : ∀ f a b,
+      a ≤ S b → (prod f a (S b)) = (prod f a b) * (f (S b)).
+  Proof.
+    intros f a b H.
+    apply iterate_succ_lower_limit; auto.
+    now rewrite M3.
+  Qed.
+
 End Ring_theorems.

@@ -824,35 +824,12 @@ Proof.
   apply singleton_card_1.
 Qed.
 
-Theorem bijections_of_one :
-  (bijection_set 1%N 1%N = {{(∅,∅),(∅,∅)},{(∅,∅),(∅,∅)}}).
+Theorem bijections_of_one : (bijection_set 1%N 1%N ~ 1%N)%set.
 Proof.
+  rewrite permutation_succ, bijections_of_empty_set.
   simpl.
   unfold succ.
-  rewrite Union_comm, Union_empty.
-  apply Extensionality.
-  split; intros H; rewrite Singleton_classification in *; subst.
-  - apply Specify_classification in H as [H [f [H0 [H1 [H2 H3]]]]];
-      subst; auto using singleton_functions.
-  - apply Specify_classification.
-    split.
-    + rewrite Powerset_classification, singleton_products.
-      apply Set_is_subset.
-    + destruct (function_construction {∅,∅} {∅,∅} (λ x, x)) as [f]; try tauto.
-      exists f.
-      repeat split; intuition; try congruence; auto using singleton_functions.
-      * rewrite Injective_classification.
-        intros x y H1 H3 H4.
-        now rewrite ? H0, ? H, ? Singleton_classification, ? H1, ? H3 in *.
-      * rewrite Surjective_classification.
-        intros y H1.
-        exists ∅.
-        split; try now rewrite H0, Singleton_classification.
-        rewrite H, Singleton_classification in *.
-        subst.
-        apply function_maps_domain_to_graph;
-          now rewrite ? (singleton_functions f ∅ ∅),
-          ? H0, ? H, ? Singleton_classification.
+  now rewrite Union_comm, Union_empty, singleton_products, ? singleton_card_1.
 Qed.
 
 Theorem permutations_are_finite : ∀ n : N, finite (bijection_set n n).
@@ -884,41 +861,27 @@ Qed.
 
 Theorem size_of_bijections_of_one : size_of_bijections 1%N 1%N = 1%N.
 Proof.
-  unfold size_of_bijections, finite_cardinality.
-  destruct excluded_middle_informative.
-  - destruct constructive_definite_description.
-    apply natural_cardinality_uniqueness.
-    rewrite <-e, bijections_of_one.
-    apply singleton_card_1.
-  - contradict n.
-    apply permutations_are_finite.
+  unfold size_of_bijections.
+  now rewrite bijections_of_one, card_of_natural.
 Qed.
 
 Theorem number_of_permutations : ∀ n, factorial n = permutations n.
 Proof.
   intros n.
-  induction n using Induction.
-  { unfold factorial, prod, iterate_with_bounds.
+  induction n using Induction; unfold factorial in *.
+  - unfold prod, iterate_with_bounds.
     destruct excluded_middle_informative.
-    - exfalso.
+    + exfalso.
       rewrite naturals.le_not_gt in l.
       contradict l.
       apply naturals.lt_succ.
-    - unfold permutations.
-      now rewrite size_of_bijections_of_empty_set. }
-  destruct (classic (n = 0%N)) as [H | H].
-  { subst.
-    unfold factorial, prod.
-    rewrite iterate_0.
-    unfold permutations.
-    now rewrite size_of_bijections_of_one. }
-  unfold factorial, prod in *.
-  rewrite iterate_succ, IHn.
-  - simpl.
-    unfold permutations, size_of_bijections.
-    rewrite permutation_succ, finite_products_card, card_of_natural,
-    mul_comm, INZ_mul; auto using naturals_are_finite, permutations_are_finite.
-  - rewrite naturals.le_not_gt.
-    contradict H.
-    now apply lt_1_eq_0 in H.
+    + unfold permutations.
+      now rewrite size_of_bijections_of_empty_set.
+  - rewrite prod_succ, IHn.
+    + simpl.
+      unfold permutations, size_of_bijections.
+      rewrite permutation_succ, finite_products_card, card_of_natural,
+      mul_comm, INZ_mul; auto using naturals_are_finite, permutations_are_finite.
+    + exists n.
+      now rewrite add_comm, add_1_r.
 Qed.
