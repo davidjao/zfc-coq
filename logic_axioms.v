@@ -1,18 +1,7 @@
-Require Export Utf8 Constructive_sets IndefiniteDescription
-        FunctionalExtensionality PropExtensionality ChoiceFacts.
+Require Export Utf8 IndefiniteDescription FunctionalExtensionality
+        PropExtensionality ChoiceFacts.
 
 (* See https://github.com/coq/coq/wiki/CoqAndAxioms for explanations. *)
-
-(* Lambda calculus version of ∀ A B, A ⊂ B ∧ B ⊂ A → A = B. *)
-Theorem Extensionality_Ensembles :
-  ∀ (U : Type) (A B : Ensemble U), Same_set U A B → A = B.
-Proof.
-  intros U A B [H H0].
-  apply functional_extensionality_dep.
-  intros x.
-  apply propositional_extensionality.
-  firstorder.
-Qed.
 
 (* Diaconescu's theorem: Axiom of choice implies law of the excluded middle. *)
 Lemma classic : ∀ (P : Prop), P ∨ ¬ P.
@@ -24,8 +13,9 @@ Proof.
   (proj2_sig (constructive_indefinite_description _ H2)); auto.
   right.
   intros HP.
-  assert ((λ b, b = true ∨ P) = (λ b, b = false ∨ P)) as EB
-      by firstorder using Extensionality_Ensembles.
+  assert ((λ b, b = true ∨ P) = (λ b, b = false ∨ P)) as EB.
+  { extensionality x.
+    firstorder using propositional_extensionality. }
   destruct EB.
   rewrite (proof_irrelevance _ H1 H2) in *.
   congruence.

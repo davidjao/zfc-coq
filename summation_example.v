@@ -55,7 +55,6 @@ Proof.
   - pose proof IZQ_sum as H0.
     unfold compose in *.
     rewrite <-M2, inv_l, (M1 _ 1), M3, M1, H0, IZQ_mul, Gauss; auto.
-  - apply functional_extensionality.
-    intros x.
+  - extensionality x.
     now rewrite <-IZQ_add.
 Qed.

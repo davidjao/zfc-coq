@@ -2,7 +2,7 @@ Require Export logic_axioms Basics.
 
 (* Beginning of axioms. *)
 
-Definition set := Set.
+Parameter set : Type.
 Parameter IN: set → set → Prop.
 Delimit Scope set_scope with set.
 Open Scope set_scope.
@@ -209,12 +209,19 @@ Proof.
   split; intros H; now contradict H.
 Qed.
 
-Theorem Specify_classification : ∀ A P x, x ∈ (specify A P) ↔ x ∈ A ∧ P x.
+Theorem Specify_classification : ∀ A P x, x ∈ {x in A | P x} ↔ x ∈ A ∧ P x.
 Proof.
   intros A P x.
   unfold specify in *.
   repeat destruct constructive_indefinite_description.
   split; intros H; now apply i.
+Qed.
+
+Theorem Specify_subset : ∀ A P, {x in A | P x} ⊂ A.
+Proof.
+  intros A P x H.
+  apply Specify_classification in H.
+  tauto.
 Qed.
 
 Lemma Pairing_classification : ∀ x y z, z ∈ {x,y} ↔ (z = x ∨ z = y).
@@ -1308,6 +1315,17 @@ Proof.
   now repeat destruct a.
 Qed.
 
+Theorem inverse_shift_right :
+  ∀ f, bijective f → ∀ x y,
+      x ∈ range f → y ∈ domain f → inverse f x = y ↔ x = f y.
+Proof.
+  intros f H x y H0 H1.
+  split; intros H2.
+  - rewrite <-H2, right_inverse; auto.
+    now rewrite inverse_domain.
+  - rewrite H2, left_inverse; auto.
+Qed.
+
 Theorem inverse_bijective : ∀ f, bijective f → bijective (inverse f).
 Proof.
   intros f H.
@@ -1565,6 +1583,22 @@ Proof.
     tauto.
 Qed.
 
+Theorem complement_disjoint_union : ∀ E F, E ∩ F = ∅ → (E ∪ F) \ F = E.
+Proof.
+  intros E F H.
+  apply Extensionality.
+  split; intros H0.
+  - apply Complement_classification in H0 as [H0 H1].
+    apply Pairwise_union_classification in H0 as [H0 | H0]; tauto.
+  - apply Complement_classification.
+    split.
+    + apply Pairwise_union_classification; tauto.
+    + intros H1.
+      contradiction (Empty_set_classification z).
+      rewrite <-H.
+      now apply Pairwise_intersection_classification.
+Qed.
+
 Theorem disjoint_intersection_complement : ∀ E F, E ∩ (F \ E) = ∅.
 Proof.
   intros E F.
@@ -1709,6 +1743,14 @@ Proof.
   intros f a b H H0.
   split; intros H1; unfold inverse_image_of_element in *;
     rewrite Specify_classification in *; tauto.
+Qed.
+
+Theorem Inverse_image_classification_domain : ∀ f a b,
+    b ∈ range f → a ∈ inverse_image_of_element f b → a ∈ domain f.
+Proof.
+  intros f a b H H0.
+  unfold inverse_image_of_element in *.
+  apply Specify_classification in H0; tauto.
 Qed.
 
 Theorem Inverse_image_classification_left : ∀ f a b,
