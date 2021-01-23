@@ -6,7 +6,7 @@ Definition factorial (n : N) := (prod integers (λ x, x : Z) 1 n) : Z.
 
 Notation "n !" := (factorial n) (at level 35, format "n '!'") : Z_scope.
 
-Definition set_of_combinations (n k : N) := {x in P n | #x = k}.
+Definition set_of_combinations (n k : N) := {x in P n | # x = k}.
 
 Definition binomial n k := # set_of_combinations n k.
 
@@ -1088,15 +1088,10 @@ Section Combinations_orbit_stabilizer.
             rewrite H12; auto.
             destruct excluded_middle_informative; split; congruence. }
     split; auto.
-    unfold combinations_proj.
-    destruct constructive_indefinite_description as [φ' [H14 [H15 H16]]].
-    rewrite H16.
-    2: { now rewrite <-cp_domain. }
-    unfold combinations_proj_helper.
-    destruct excluded_middle_informative.
-    2: { contradict n0.
-         now rewrite <-cp_domain. }
-    unfold φ.
+    rewrite cp_domain in H13.
+    replace (graph h)
+      with (proj1_sig (exist _ _ H13 : elts (bijection_set n n))) by auto.
+    rewrite cp_action.
     apply Extensionality.
     split; intros H17.
     + apply Specify_classification in H17 as [H17 H18].
@@ -1149,33 +1144,11 @@ Section Combinations_orbit_stabilizer.
       → x ∈ n → x ∈ (proj1_sig y) ↔ (functionify n n f) x ∈ k.
   Proof.
     split; intros H1.
-    - unfold combinations_proj in H.
-      destruct constructive_indefinite_description as [φ' [H2 [H3 H4]]].
-      rewrite H4 in H.
-      2: { apply (proj2_sig f). }
-      unfold combinations_proj_helper in H.
-      destruct excluded_middle_informative.
-      2: { contradict n0; apply (proj2_sig f). }
-      unfold φ in H.
-      rewrite <-H in H1.
-      apply Specify_classification in H1 as [H1 H5].
-      destruct f as [f' F].
-      simpl proj1_sig in *.
-      now replace F with i by now apply proof_irrelevance.
-    - unfold combinations_proj in H.
-      destruct constructive_indefinite_description as [φ' [H2 [H3 H4]]].
-      rewrite H4 in H.
-      2: { apply (proj2_sig f). }
-      rewrite <-H.
-      unfold combinations_proj_helper.
-      destruct excluded_middle_informative.
-      2: { contradict n0; apply (proj2_sig f). }
-      unfold φ.
+    - rewrite <-H, cp_action in H1.
+      now apply Specify_classification in H1 as [H1 H5].
+    - rewrite <-H, cp_action.
       apply Specify_classification.
       split; auto.
-      destruct f as [f' F].
-      simpl proj1_sig in *.
-      now replace i with F by now apply proof_irrelevance.
   Qed.
 
   Lemma combinations_left_helper_k_construction_1 :
@@ -1241,43 +1214,19 @@ Section Combinations_orbit_stabilizer.
       → x ∈ n → x ∈ n \ (proj1_sig y) ↔ (functionify n n f) x ∈ n \ k.
   Proof.
     split; intros H1.
-    - unfold combinations_proj in H.
-      destruct constructive_indefinite_description as [φ' [H2 [H3 H4]]].
-      rewrite H4 in H.
-      2: { apply (proj2_sig f). }
-      unfold combinations_proj_helper in H.
-      destruct excluded_middle_informative.
-      2: { contradict n0; apply (proj2_sig f). }
-      unfold φ in H.
-      rewrite <-H in H1.
-      apply Specify_classification in H1 as [H1 H5].
-      destruct f as [f' F].
-      simpl proj1_sig in *.
+    - rewrite <-H, cp_action in H1.
+      apply Complement_classification in H1 as [H1 H5].
       apply Complement_classification.
       split.
-      + rewrite <-(functionify_range _ _ (exist _ _ F)).
+      + rewrite <-(functionify_range _ _ f).
         apply function_maps_domain_to_range.
         now rewrite functionify_domain.
       + contradict H5.
-        apply Specify_classification.
-        now replace i with F by now apply proof_irrelevance.
-    - unfold combinations_proj in H.
-      destruct constructive_indefinite_description as [φ' [H2 [H3 H4]]].
-      rewrite H4 in H.
-      2: { apply (proj2_sig f). }
-      rewrite <-H.
-      unfold combinations_proj_helper.
-      destruct excluded_middle_informative.
-      2: { contradict n0; apply (proj2_sig f). }
+        now apply Specify_classification.
+    - rewrite <-H, cp_action.
       unfold φ.
-      rewrite Complement_classification, Specify_classification.
-      split; auto.
-      apply Complement_classification in H1 as [H1 H5].
-      contradict H5.
-      destruct H5 as [H5 H6].
-      destruct f as [f' F].
-      simpl proj1_sig in H6.
-      now replace F with i by now apply proof_irrelevance.
+      rewrite Complement_classification, Specify_classification in *.
+      split; auto; tauto.
   Qed.
 
   Lemma combinations_left_helper_k_construction_2 :
@@ -1533,21 +1482,16 @@ Section Combinations_orbit_stabilizer.
   Lemma combinations_right_helper_0 :
     ∀ x, x ∈ n → x ∈ proj1_sig y ↔ comb_inverse_image_incl h x ∈ k.
   Proof.
-    destruct h as [h H].
+    pose proof proj2_sig h as H.
     apply Inverse_image_classification_left in H as H1;
       apply Inverse_image_classification_domain in H as H0;
       try (rewrite cp_range; apply (proj2_sig y)).
     rewrite cp_domain in H0.
-    unfold combinations_proj in H1.
-    destruct constructive_indefinite_description as [φ'].
-    destruct a as [H2 [H3 H4]].
-    rewrite H4 in H1; auto.
-    unfold combinations_proj_helper in H1.
-    destruct excluded_middle_informative; try tauto.
-    unfold φ in H1.
-    split; intros H6.
-    - simpl.
-      destruct Specify_classification, a,
+    replace (proj1_sig h)
+      with (proj1_sig (exist _ _ H0 : elts (bijection_set n n))) in H1 by auto.
+    rewrite cp_action in H1.
+    split; intros H6; destruct h; simpl in *.
+    - destruct Specify_classification, a,
       constructive_indefinite_description as [h'].
       clear a i0 i1 e.
       destruct a0 as [H7 [H8 [H9 H10]]].
@@ -1560,8 +1504,7 @@ Section Combinations_orbit_stabilizer.
       replace h' with h''; auto.
       destruct a0 as [H12 [H13 [H14 H15]]].
       apply function_record_injective; congruence.
-    - simpl in H6.
-      destruct Specify_classification, a,
+    - destruct Specify_classification, a,
       constructive_indefinite_description as [h'].
       clear a i0 i1 e.
       destruct a0 as [H7 [H8 [H9 H10]]].
@@ -1821,22 +1764,20 @@ Section Combinations_orbit_stabilizer.
     split.
     - rewrite cp_domain.
       apply combinations_right_construction_proto.
-    - unfold combinations_proj.
-      destruct constructive_indefinite_description as [g].
-      destruct a as [H [H0 H1]].
-      rewrite H1; auto using combinations_right_construction_proto.
-      unfold combinations_proj_helper.
-      destruct excluded_middle_informative.
-      2: { contradict n0.
-           apply combinations_right_construction_proto. }
-      unfold φ.
+    - set (g := (inverse (sets.functionify
+                            n n (combinations_right_helper z1 z2)))).
+      assert (graph g ∈ bijection_set n n).
+      { apply combinations_right_construction_proto. }
+      replace (graph g)
+        with (proj1_sig (exist _ _ H : elts (bijection_set n n))) by auto.
+      rewrite cp_action.
       apply Extensionality.
       split; intros H2.
       + apply Specify_classification in H2 as [H2 H3].
         unfold functionify in H3.
         destruct Specify_classification, a, constructive_indefinite_description
           as [crh_inv].
-        clear a i0 i1 e.
+        clear a i0 i e.
         destruct a0 as [H4 [H5 [H6 H7]]].
         assert
           (crh_inv =
@@ -1861,15 +1802,15 @@ Section Combinations_orbit_stabilizer.
         apply combinatorics_right_construction_helper_2; auto.
       + apply Specify_classification.
         assert (z ∈ n) as H9.
-        { pose proof proj2_sig y; simpl in *.
-          apply Specify_classification in H3 as [H3 H4].
-          apply Powerset_classification in H3.
-          now apply H3. }
+        { pose proof proj2_sig y as H0; simpl in *.
+          apply Specify_classification in H0 as [H0 H1].
+          apply Powerset_classification in H0.
+          now apply H0. }
         split; auto.
         unfold functionify.
         destruct Specify_classification, a, constructive_indefinite_description
           as [crh_inv].
-        clear a i0 i1 e.
+        clear a i0 i e.
         destruct a0 as [H4 [H5 [H6 H7]]].
         assert
           (crh_inv =
@@ -2282,7 +2223,7 @@ Proof.
   replace y with (proj1_sig γ) in * by auto.
   apply two_sided_inverse_bijective.
   exists (combinations_left n k H γ), (combinations_right n k H γ).
-  split; auto using combinations_left_right, combinations_right_left.
+  auto using combinations_left_right, combinations_right_left.
 Qed.
 
 Theorem binomials_are_finite : ∀ n k, finite (set_of_combinations n k).
@@ -2292,22 +2233,18 @@ Proof.
   powerset_finite, naturals_are_finite.
 Qed.
 
-Theorem binomial_coefficient : ∀ m k : N,
-    factorial (m+k) = (binomial (m+k) k) * (factorial k) * (factorial m).
+Theorem binomial_coefficient : ∀ n m, (n + m)! = binomial (n + m) m * m! * n!.
 Proof.
-  intros m k.
-  assert (k ⊂ m+k)%N as H.
-  { rewrite <-le_is_subset.
-    exists m.
-    now rewrite add_comm. }
-  pose proof (combinations_orbit_stabilizer (m+k) k) H as H0.
-  rewrite add_comm, (naturals_sum_diff m k), add_comm in H0.
-  rewrite ? number_of_permutations_n.
+  intros n m.
+  assert (m ⊂ n + m)%N as H.
+  { rewrite <-le_is_subset, add_comm.
+    now exists n. }
+  pose proof (combinations_orbit_stabilizer (n+m) m) H as H0.
+  rewrite add_comm, (naturals_sum_diff n m), add_comm in H0.
   apply equinumerous_cardinality in H0.
-  unfold permutations, size_of_bijections, binomial.
   rewrite ? finite_products_card in H0;
     auto using permutations_are_finite, binomials_are_finite,
     finite_products_are_finite.
-  rewrite ? INZ_mul, <-mul_assoc.
+  rewrite ? number_of_permutations_n, ? INZ_mul, <-mul_assoc.
   now apply INZ_eq.
 Qed.
