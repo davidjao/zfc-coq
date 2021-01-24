@@ -1,6 +1,6 @@
 Require Export rationals.
 
-Theorem Gauss : ∀ n, (2 * (sum integers INZ 1 n) = n * (n + 1))%Z.
+Example Gauss : ∀ n, (2 * (sum integers INZ 1 n) = n * (n + 1))%Z.
 Proof.
   intros n.
   induction n using Induction; unfold sum.
@@ -28,7 +28,7 @@ Proof.
         now rewrite add_comm, add_1_r.
 Qed.
 
-Theorem IZQ_sum : ∀ a b f,
+Lemma IZQ_sum : ∀ a b f,
     (sum rational_ring (compose IZQ f) a b) = IZQ (sum integers f a b).
 Proof.
   intros a b f.
@@ -41,7 +41,7 @@ Proof.
   - now rewrite ? iterated_op_succ, IHx, ? IZQ_add.
 Qed.
 
-Theorem Gauss_Q : ∀ n, (sum rational_ring (λ x, x : Q) 1 n) = n * (n + 1) / 2.
+Example Gauss_Q : ∀ n, (sum rational_ring (λ x, x : Q) 1 n) = n * (n + 1) / 2.
 Proof.
   intros n.
   rewrite inv_div; auto using (ordered_rings.zero_ne_2 integer_order).

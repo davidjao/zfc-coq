@@ -1114,3 +1114,74 @@ Proof.
   subst.
   contradiction (lt_irrefl 1).
 Qed.
+
+Definition sub : N → N → N.
+Proof.
+  intros a b.
+  destruct (excluded_middle_informative (b ≤ a)).
+  - destruct (constructive_indefinite_description _ l) as [c].
+    exact c.
+  - exact 0.
+Defined.
+
+Infix "-" := sub : N_scope.
+
+Theorem sub_0_r : ∀ a, a - 0 = a.
+Proof.
+  intros a.
+  unfold sub.
+  destruct excluded_middle_informative.
+  - destruct constructive_indefinite_description.
+    ring [e].
+  - contradict n.
+    exists a.
+    ring.
+Defined.
+
+Theorem sub_0_l : ∀ a, 0 - a = 0.
+Proof.
+  intros a.
+  unfold sub.
+  destruct excluded_middle_informative; auto.
+  destruct constructive_indefinite_description.
+  apply cancellation_0_add in e.
+  tauto.
+Qed.
+
+Theorem sub_diag : ∀ a, a - a = 0.
+Proof.
+  intros a.
+  unfold sub.
+  destruct excluded_middle_informative.
+  - destruct constructive_indefinite_description.
+    rewrite <-(add_0_r a) in e at 2.
+    now apply cancellation_add in e.
+  - contradict n.
+    exists 0.
+    ring.
+Qed.
+
+Theorem sub_abba : ∀ a b, a + b - b = a.
+Proof.
+  intros a b.
+  unfold sub.
+  destruct excluded_middle_informative.
+  - destruct constructive_indefinite_description.
+    rewrite (add_comm a) in e.
+    now apply cancellation_add in e.
+  - contradict n.
+    exists a.
+    ring.
+Qed.
+
+Theorem sub_spec : ∀ a b c, a + c = b → c = b - a.
+Proof.
+  intros a b c H.
+  unfold sub.
+  destruct excluded_middle_informative.
+  - destruct constructive_indefinite_description.
+    rewrite <-e in H.
+    now apply cancellation_add in H.
+  - contradict n.
+    now (exists c).
+Qed.

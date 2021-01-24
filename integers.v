@@ -58,14 +58,13 @@ Proof.
   intros [a A] [b B].
   assert ((a, b) ∈ ω × ω).
   { apply Product_classification.
-    exists a, b.
-    auto. }
+    now exists a, b. }
   exact (quotient_map _ _ (exist _ _ H)).
 Defined.
 
-Infix "-" := embed : N_scope.
+Infix "-" := embed : set_scope.
 
-Theorem Zlift : ∀ z, ∃ a b, a - b = z.
+Theorem Zlift : ∀ z, ∃ a b, (a - b = z)%set.
 Proof.
   intros z.
   destruct (quotient_lift _ _ z) as [y H].
@@ -77,7 +76,7 @@ Proof.
   now rewrite <-H, <-H5, <-H1, <-quotient_image. (* or use "destruct y." *)
 Qed.
 
-Theorem Zequiv : ∀ a b c d, a - b = c - d ↔ a + d = b + c.
+Theorem Zequiv : (∀ a b c d, a - b = c - d ↔ a + d = b + c)%set.
 Proof.
   intros [a A] [b B] [c C] [d D].
   split; intros H; unfold embed in *.
@@ -99,7 +98,7 @@ Proof.
       (exist _ _ C : N), (exist _ _ D : N).
 Qed.
 
-Definition INZ a := a - 0.
+Definition INZ a := (a - 0)%set.
 Coercion INZ : N >-> Z.
 
 Definition add : Z → Z → Z.
@@ -109,7 +108,7 @@ Proof.
   destruct (constructive_indefinite_description _ H) as [b H0].
   destruct (constructive_indefinite_description _ (Zlift y)) as [c H1].
   destruct (constructive_indefinite_description _ H1) as [d H2].
-  exact ((a + c) - (b + d)).
+  exact ((a + c) - (b + d))%set.
 Defined.
 
 Definition mul : Z → Z → Z.
@@ -119,7 +118,7 @@ Proof.
   destruct (constructive_indefinite_description _ H) as [n H0].
   destruct (constructive_indefinite_description _ (Zlift y)) as [p H1].
   destruct (constructive_indefinite_description _ H1) as [q H2].
-  exact ((m * p + n * q) - (n * p + m * q)).
+  exact ((m * p + n * q) - (n * p + m * q))%set.
 Defined.
 
 Definition neg : Z → Z.
@@ -127,11 +126,11 @@ Proof.
   intros x.
   destruct (constructive_indefinite_description _ (Zlift x)) as [a H].
   destruct (constructive_indefinite_description _ H) as [b H0].
-  exact (b - a).
+  exact (b - a)%set.
 Defined.
 
-Definition zero := 0 - 0.
-Definition one := 1 - 0.
+Definition zero := (0 - 0)%set.
+Definition one := (1 - 0)%set.
 
 Infix "+" := add : Z_scope.
 Infix "*" := mul : Z_scope.
@@ -168,7 +167,7 @@ Proof.
   ring [H].
 Qed.
 
-Theorem add_wf : ∀ a b c d, (a - b) + (c - d) = (a + c) - (b + d).
+Theorem add_wf : ∀ a b c d, ((a - b) + (c - d) = (a + c) - (b + d))%set.
 Proof.
   intros a b c d.
   unfold add.
@@ -210,7 +209,7 @@ Proof.
   ring [e0].
 Qed.
 
-Theorem neg_wf : ∀ a b, - (a - b) = b - a.
+Theorem neg_wf : ∀ a b, - (a - b)%set = (b - a)%set.
 Proof.
   intros a b.
   unfold neg.
@@ -238,7 +237,7 @@ Proof.
 Qed.
 
 Theorem mul_wf : ∀ a b c d,
-    (a - b) * (c - d) = (a*c+b*d) - (b*c+a*d).
+    ((a - b) * (c - d) = (a * c + b * d) - (b * c + a * d))%set.
 Proof.
   intros a b c d.
   unfold mul.
@@ -436,6 +435,21 @@ Proof.
     now apply INZ_eq in H.
   - subst.
     auto using INZ_add.
+Qed.
+
+Theorem INZ_le : ∀ a b : N, INZ a ≤ INZ b ↔ (a ≤ b)%N.
+Proof.
+  intros a b.
+  split; intros H.
+  - apply le_def in H as [c H].
+    exists c.
+    rewrite INZ_add in H.
+    now apply INZ_eq in H.
+  - destruct H as [c H].
+    apply le_def.
+    exists c.
+    rewrite INZ_add.
+    now subst.
 Qed.
 
 Theorem lt_0_1 : ∀ a, 0 < a → ¬ a < 1.
@@ -1008,8 +1022,7 @@ Proof.
       unfold INZ, one in H0.
       rewrite A1, A2, ? add_wf, Zequiv, ? add_0_r, ? add_0_l, ? add_1_r in H0.
       now apply PA5, PA4 in H0.
-    + Set Printing Coercions.
-      unfold INZ, one in H.
+    + unfold INZ, one in H.
       rewrite ? add_wf, Zequiv, ? add_0_r, add_0_l, add_1_r in H.
       now apply PA5, eq_sym, PA4 in H.
   - assert (∀ d : Z, 0 < d → d｜2 → unit d ∨ d ~ 2) as H.
@@ -1042,4 +1055,17 @@ Proof.
       unfold zero, one in *.
       rewrite add_wf, Zequiv, ? add_0_l, add_1_r in H0.
       now apply PA4 in H0.
+Qed.
+
+Theorem INZ_sub : ∀ a b : N, b ≤ a → a - b = (a - b)%N.
+Proof.
+  intros a b H.
+  unfold naturals.sub, sub.
+  destruct excluded_middle_informative.
+  - destruct constructive_indefinite_description.
+    subst.
+    rewrite <-INZ_add.
+    ring.
+  - contradict n.
+    now apply INZ_le.
 Qed.

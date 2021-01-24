@@ -2298,3 +2298,10 @@ Proof.
   rewrite <-powerset_powers.
   auto using finite_powers_are_finite, naturals_are_finite.
 Qed.
+
+Theorem powerset_card : ∀ X, finite X → # P X = (2^(# X))%N.
+Proof.
+  intros X H.
+  rewrite <-powerset_powers, finite_power_card, card_of_natural;
+    auto using naturals_are_finite.
+Qed.

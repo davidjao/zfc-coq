@@ -1404,41 +1404,63 @@ Proof.
   rewrite H4; congruence.
 Qed.
 
+Theorem Graph_classification :
+  ∀ f z, z ∈ graph f ↔ ∃ a, a ∈ domain f ∧ z = (a, f a).
+Proof.
+  split; intros H.
+  - pose proof (func_hyp f) as [H0 H1].
+    apply H0 in H as H2.
+    apply Product_classification in H2 as [a [b [H2 [H3 H4]]]].
+    exists a.
+    split; auto; subst.
+    apply H1 in H2 as H4.
+    destruct H4 as [z [[H4 H5] H6]].
+    eapply Function_classification in H2 as [[H2 H7] H8];
+      eauto using (func_hyp f).
+    rewrite <-(H6 b), <-(H6 (f a)); auto.
+  - destruct H as [a [H H0]].
+    subst.
+    eapply Function_classification in H as [[H H1] H2];
+      eauto using (func_hyp f).
+Qed.
+
+Theorem function_graph_uniqueness : ∀ f x a b, x ∈ domain f →
+    (x, a) ∈ graph f → (x, b) ∈ graph f → a = b.
+Proof.
+  intros f x a b H H0 H1.
+  pose proof (func_hyp f) as [H2 H3].
+  apply H2 in H0 as H6.
+  apply Product_classification in H6 as [x' [a' [H6 [H7 H8]]]].
+  apply Ordered_pair_iff in H8 as [H8 H9].
+  subst.
+  apply H2 in H1 as H4.
+  apply Product_classification in H4 as [x [a [H4 [H5 H8]]]].
+  apply Ordered_pair_iff in H8 as [H8 H9].
+  subst.
+  apply H3 in H4 as [y [[H4 H8] H9]].
+  rewrite <-(H9 a), <-(H9 a'); auto.
+Qed.
+
 Lemma func_ext_lemma : ∀ f g,
     domain f = domain g → range f = range g → (∀ x, x ∈ domain f → f x = g x)
     → graph f ⊂ graph g.
 Proof.
   intros f g H H0 H1 z H2.
-  pose proof func_hyp f as H3.
-  pose proof func_hyp g as H4.
-  pose proof func_hyp f as [H5 H6].
-  apply H5 in H2 as H7.
-  apply Product_classification in H7 as [a [b [H7 [H8 H9]]]].
-  pose proof (H1 a) as H10.
-  unfold eval in H10.
-  destruct H, H0.
-  subst.
-  pose proof Function_classification _ _ _ _ H7 H3 as [[H H0] H9].
-  pose proof H9 _ (conj H8 H2) as H11.
-  subst.
-  pose proof Function_classification _ _ _ _ H7 H4 as [[H11 H12] H13].
-  now rewrite H10.
+  apply Graph_classification in H2 as [a [H2 H3]].
+  apply Graph_classification.
+  exists a.
+  rewrite <-H1; repeat split; congruence.
 Qed.
 
 Theorem func_ext : ∀ f g, domain f = domain g → range f = range g
                           → (∀ x, x ∈ domain f → f x = g x) → f = g.
 Proof.
   intros f g H H0 H1.
-  assert (graph f = graph g).
-  { apply Subset_equality_iff.
-    pose proof H1 as H2.
-    rewrite H in H2.
-    split; apply func_ext_lemma; auto using eq_sym. }
-  destruct f, g.
-  simpl in *.
-  subst.
-  assert (func_hyp0 = func_hyp1) by apply proof_irrelevance.
-  now subst.
+  apply function_record_injective; try congruence.
+  apply Subset_equality_iff.
+  pose proof H1 as H2.
+  rewrite H in H2.
+  split; apply func_ext_lemma; auto using eq_sym.
 Qed.
 
 Theorem function_inv_inv : ∀ f, bijective f → inverse (inverse f) = f.
@@ -1690,49 +1712,6 @@ Proof.
       * apply Empty_set_is_subset.
       * intros a H.
         contradiction (Empty_set_classification a).
-Qed.
-
-Theorem Graph_classification :
-  ∀ f z, z ∈ graph f ↔ ∃ a, a ∈ domain f ∧ z = (a, f a).
-Proof.
-  split; intros H.
-  - pose proof (func_hyp f) as [H0 H1].
-    apply H0 in H as H2.
-    apply Product_classification in H2 as [a [b [H2 [H3 H4]]]].
-    exists a.
-    split; auto; subst.
-    pose proof
-         Function_classification (graph f) (domain f) (range f) _ H2 (func_hyp f)
-      as [[H5 H6] H7].
-    apply H1 in H2 as [z [[H4 H8] H9]].
-    assert (z = b) by now apply H9.
-    assert (z = (f a)) by now apply H9.
-    congruence.
-  - destruct H as [a [H H0]].
-    subst.
-    pose proof
-         Function_classification (graph f) (domain f) (range f) _ H (func_hyp f)
-      as [[H0 H1] H2].
-    exact H1.
-Qed.
-
-Theorem function_graph_uniqueness : ∀ f x a b, x ∈ domain f →
-    (x, a) ∈ graph f → (x, b) ∈ graph f → a = b.
-Proof.
-  intros f x a b H H0 H1.
-  pose proof (func_hyp f) as [H2 H3].
-  apply H2 in H0 as H6.
-  apply Product_classification in H6 as [x' [a' [H6 [H7 H8]]]].
-  apply Ordered_pair_iff in H8 as [H8 H9].
-  subst.
-  apply H2 in H1 as H4.
-  apply Product_classification in H4 as [x [a [H4 [H5 H8]]]].
-  apply Ordered_pair_iff in H8 as [H8 H9].
-  subst.
-  apply H3 in H4 as [y [[H4 H8] H9]].
-  assert (y = a) by now apply H9.
-  assert (y = a') by now apply H9.
-  congruence.
 Qed.
 
 Definition inverse_image_of_element f y := {x in domain f | f x = y}.
