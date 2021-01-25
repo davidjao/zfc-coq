@@ -318,82 +318,70 @@ Proof.
   intros m n H.
   revert m H.
   induction n using Induction; intros m H.
-  - apply proper_subset_inhab in H as [z [H H0]].
-    contradiction (Empty_set_classification z).
-  - intros [f [H0 [H1 [H2 H3]]]].
-    assert (S n \ {n,n} = n) as H4.
-    { apply Extensionality.
-      split; intros H4.
-      - apply Complement_classification in H4 as [H4 H5].
-        rewrite <-S_is_succ in H4.
-        apply Pairwise_union_classification in H4 as [H4 | H4]; tauto.
-      - apply Complement_classification.
-        split.
-        + rewrite <-S_is_succ.
-          apply Pairwise_union_classification.
-          tauto.
-        + rewrite Singleton_classification.
-          intros H5.
-          subst.
-          contradiction (no_quines n). }
-    destruct (classic (n ∈ m)) as [H5 | H5].
-    + apply (IHn (m \ {n,n})); repeat split.
+  { apply proper_subset_inhab in H as [z [H H0]].
+    contradiction (Empty_set_classification z). }
+  intros [f [H0 [H1 [H2 H3]]]].
+  assert (S n \ {n,n} = n) as H4.
+  { rewrite <-S_is_succ.
+    apply complement_disjoint_union, disjoint_succ. }
+  destruct (classic (n ∈ m)) as [H5 | H5].
+  - apply (IHn (m \ {n,n})); repeat split.
+    + intros x H6.
+      apply Complement_classification in H6 as [H6 H7].
+      destruct H as [H H8].
+      apply H in H6.
+      rewrite <-S_is_succ in H6.
+      apply Pairwise_union_classification in H6 as [H6 | H6]; tauto.
+    + intros H6.
+      rewrite <-S_is_succ in H.
+      unfold succ in H.
+      rewrite <-H6 in H at 1.
+      destruct H as [H H7].
+      contradiction H7.
+      apply Extensionality; split; intros H8.
+      * apply Pairwise_union_classification.
+        destruct (classic (z = n)) as [H9 | H9].
+        -- right.
+           now apply Singleton_classification.
+        -- left.
+           apply Complement_classification.
+           now rewrite Singleton_classification.
+      * apply Pairwise_union_classification in H8 as [H8 | H8].
+        -- apply Complement_classification in H8; now (subst; intuition).
+        -- apply Singleton_classification in H8; now (subst; intuition).
+    + rewrite <-H4 at 1.
+      apply equivalence_minus_element; auto.
+      * exists f.
+        repeat split; auto.
+      * apply lt_is_in, succ_lt.
+  - apply (IHn (m \ {f n, f n})).
+    + apply (subsetneq_subset_trans _ m); repeat split.
       * intros x H6.
-        apply Complement_classification in H6 as [H6 H7].
-        destruct H as [H H8].
-        apply H in H6.
-        rewrite <-S_is_succ in H6.
-        apply Pairwise_union_classification in H6 as [H6 | H6]; tauto.
+        now apply Complement_classification in H6 as [H6 H7].
       * intros H6.
-        rewrite <-S_is_succ in H.
-        unfold succ in H.
-        rewrite <-H6 in H at 1.
-        destruct H as [H H7].
-        contradiction H7.
-        apply Extensionality; split; intros H8.
-        -- apply Pairwise_union_classification.
-           destruct (classic (z = n)) as [H9 | H9].
-           ++ right.
-              now apply Singleton_classification.
-           ++ left.
-              apply Complement_classification.
-              now rewrite Singleton_classification.
-        -- apply Pairwise_union_classification in H8 as [H8 | H8].
-           ++ apply Complement_classification in H8; now (subst; intuition).
-           ++ apply Singleton_classification in H8; now (subst; intuition).
-      * rewrite <-H4 at 1.
-        apply equivalence_minus_element; auto.
-        -- exists f.
-           repeat split; auto.
-        -- apply lt_is_in, succ_lt.
-    + apply (IHn (m \ {f n, f n})).
-      * apply (subsetneq_subset_trans _ m); repeat split.
-        -- intros x H6.
-           now apply Complement_classification in H6 as [H6 H7].
-        -- intros H6.
-           assert (f n ∈ m \ {f n, f n}) as H7.
-           { rewrite H6, <-H1.
-             apply function_maps_domain_to_range.
-             rewrite H0.
-             apply lt_is_in, succ_lt. }
-           apply Complement_classification in H7 as [H7 H8].
-           now rewrite Singleton_classification in H8.
-        -- destruct H as [H H6].
-           intros x H7.
-           apply H in H7 as H8.
-           rewrite <-S_is_succ in H8.
-           apply Pairwise_union_classification in H8 as [H8 | H8]; auto.
-           apply Singleton_classification in H8.
-           now subst.
-      * rewrite <-H4 at 1.
-        apply equivalence_minus_element.
-        ++ exists f.
-           repeat split; auto.
-        ++ apply lt_is_in, succ_lt.
-        ++ rewrite <-H1.
-           apply function_maps_domain_to_range.
-           rewrite H0.
-           apply lt_is_in, succ_lt.
+        assert (f n ∈ m \ {f n, f n}) as H7.
+        { rewrite H6, <-H1.
+          apply function_maps_domain_to_range.
+          rewrite H0.
+          apply lt_is_in, succ_lt. }
+        apply Complement_classification in H7 as [H7 H8].
+        now rewrite Singleton_classification in H8.
+      * destruct H as [H H6].
+        intros x H7.
+        apply H in H7 as H8.
+        rewrite <-S_is_succ in H8.
+        apply Pairwise_union_classification in H8 as [H8 | H8]; auto.
+        apply Singleton_classification in H8.
+        now subst.
+    + rewrite <-H4 at 1.
+      apply equivalence_minus_element.
+      * exists f.
+        repeat split; auto.
+      * apply lt_is_in, succ_lt.
+      * rewrite <-H1.
+        apply function_maps_domain_to_range.
+        rewrite H0.
+        apply lt_is_in, succ_lt.
 Qed.
 
 Theorem equiv_proper_subset_ω : ∃ S, S ⊊ ω ∧ S ~ ω.
@@ -993,6 +981,7 @@ Proof.
     split.
     + now rewrite H, Singleton_classification.
     + rewrite H1; try now apply Singleton_classification.
+      unfold one in *.
       rewrite H0, <-S_is_succ in H2.
       apply Pairwise_union_classification in H2 as [H2 | H2].
       * contradiction (Empty_set_classification y).

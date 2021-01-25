@@ -362,6 +362,7 @@ Section Ring_theorems.
   Theorem pow_1_r : ∀ x, x^1 = x.
   Proof.
     intros x.
+    unfold naturals.one.
     now rewrite pow_succ_r, pow_0_r, M3.
   Qed.
 
@@ -734,6 +735,50 @@ Section Ring_theorems.
       now rewrite add_succ_r, H.
   Qed.
 
+  Theorem iterate_extensionality : ∀ op f g start a b,
+      (∀ k, a ≤ k ≤ b → f k = g k) →
+      iterate_with_bounds op f start a b =
+      iterate_with_bounds op g start a b.
+  Proof.
+    intros op f g start a b H.
+    destruct (classic (a ≤ b)) as [[c H0] | H0].
+    2: { unfold iterate_with_bounds.
+         destruct excluded_middle_informative; tauto. }
+    subst.
+    induction c using Induction.
+    - rewrite add_0_r, ? iterate_0.
+      apply H.
+      rewrite add_0_r.
+      split; auto using le_refl.
+    - rewrite add_succ_r, ? iterate_succ; try now (exists c).
+      rewrite IHc, H; auto.
+      + split.
+        * exists (S c).
+          now rewrite add_succ_r.
+        * exists 0%N.
+          now rewrite add_0_r, add_succ_r.
+      + intros k [H0 [d H1]].
+        rewrite H; auto.
+        split; auto.
+        exists (S d).
+        rewrite ? add_succ_r.
+        now f_equal.
+  Qed.
+
+  Theorem iterate_lower : ∀ op f start a c,
+      (∀ x y z, op x (op y z) = op (op x y) z) →
+      iterate_with_bounds op f start a (S a+c) =
+      op (f a) (iterate_with_bounds op f start (S a) (S a+c)).
+  Proof.
+    intros op f start a c H.
+    induction c using Induction.
+    - rewrite ? add_0_r, iterate_succ, ? iterate_0; auto using le_refl.
+    - rewrite ? add_succ_r, ? iterate_succ, IHc, H; auto.
+      + now (exists c).
+      + exists (c+1)%N.
+        now rewrite add_assoc, (add_comm a), add_1_r, <-add_succ_r, add_comm.
+  Qed.
+
   Definition sum f a b := iterate_with_bounds add f 0 a b.
   Definition prod f a b := iterate_with_bounds mul f 1 a b.
 
@@ -781,6 +826,73 @@ Section Ring_theorems.
     intros f a b H.
     apply iterate_succ_lower_limit; auto.
     now rewrite M3.
+  Qed.
+
+  Theorem sum_dist :
+    ∀ f g a b, sum (λ n, (f n) + (g n)) a b = sum f a b + sum g a b.
+  Proof.
+    intros f g a b.
+    destruct (classic (a ≤ b)) as [[c H] | H].
+    2: { unfold sum, iterate_with_bounds.
+         repeat destruct excluded_middle_informative; try tauto.
+         now rewrite A3. }
+    subst.
+    induction c using Induction.
+    - rewrite add_0_r.
+      unfold sum.
+      now rewrite ? iterate_0.
+    - rewrite add_succ_r, ? sum_succ, IHc; try ring;
+        exists (c+1)%N; now rewrite add_1_r, add_succ_r.
+  Qed.
+
+  Theorem sum_mul : ∀ f a b c, c * sum f a b = sum (λ n, c * (f n)) a b.
+  Proof.
+    intros f a b c.
+    destruct (classic (a ≤ b)) as [[d H] | H].
+    2: { unfold sum, iterate_with_bounds.
+         repeat destruct excluded_middle_informative; try tauto.
+         now rewrite mul_0_r. }
+    subst.
+    induction d using Induction.
+    - rewrite add_0_r.
+      unfold sum.
+      now rewrite ? iterate_0.
+    - now rewrite add_succ_r, ? sum_succ, D1_l, IHd;
+        try (exists (d+1)%N; now rewrite add_1_r, add_succ_r).
+  Qed.
+
+  Theorem prod_dist :
+    ∀ f g a b, prod (λ n, (f n) * (g n)) a b = prod f a b * prod g a b.
+  Proof.
+    intros f g a b.
+    destruct (classic (a ≤ b)) as [[c H] | H].
+    2: { unfold prod, iterate_with_bounds.
+         repeat destruct excluded_middle_informative; try tauto.
+         now rewrite M3. }
+    subst.
+    induction c using Induction.
+    - rewrite add_0_r.
+      unfold prod.
+      now rewrite ? iterate_0.
+    - rewrite add_succ_r, ? prod_succ, IHc; try ring;
+        exists (c+1)%N; now rewrite add_1_r, add_succ_r.
+  Qed.
+
+  Theorem prod_mul : ∀ f a b c,
+      a ≤ b → c^(S (b-a)) * prod f a b = prod (λ n, c * (f n)) a b.
+  Proof.
+    intros f a b c [d H].
+    subst.
+    induction d using Induction.
+    - rewrite add_0_r, sub_diag, pow_1_r.
+      unfold prod.
+      now rewrite ? iterate_0.
+    - rewrite ? (add_comm a), sub_abba, ? pow_succ_r in *.
+      rewrite ? (add_comm _ a), add_succ_r.
+      rewrite ? prod_succ;
+        try (exists (d+1)%N; rewrite <-? add_1_r; ring).
+      rewrite (add_comm a), <-IHd.
+      ring.
   Qed.
 
 End Ring_theorems.

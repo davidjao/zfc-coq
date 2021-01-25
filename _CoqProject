@@ -6,6 +6,7 @@ russell.v
 naturals.v
 cardinality.v
 rings.v
+power_series.v
 integral_domains.v
 ordered_rings.v
 integers.v

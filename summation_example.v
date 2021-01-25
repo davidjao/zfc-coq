@@ -13,7 +13,7 @@ Proof.
   - destruct (classic (n = 0%N)).
     + subst.
       rewrite iterate_0.
-      replace (1%N : Z) with 1%Z by auto.
+      replace (S 0 : Z) with 1%Z by auto.
       ring.
     + apply succ_0 in H as [c H].
       subst.

@@ -396,7 +396,8 @@ Proof.
 Defined.
 
 Notation "0" := zero : N_scope.
-Notation "1" := (S 0) : N_scope.
+Definition one := S 0.
+Notation "1" := one : N_scope.
 Notation "2" := (S 1) : N_scope.
 
 Theorem S_is_succ : ∀ n : N, succ n = S n.
@@ -562,6 +563,7 @@ Qed.
 Theorem add_1_r : ∀ a, a + 1 = S a.
 Proof.
   intros a.
+  unfold one.
   now rewrite add_succ_r, add_0_r.
 Qed.
 
@@ -605,6 +607,7 @@ Qed.
 Theorem mul_1_r : ∀ a, a * 1 = a.
 Proof.
   intros a.
+  unfold one.
   now rewrite mul_succ_r, mul_0_r, add_0_l.
 Qed.
 
@@ -725,6 +728,7 @@ Qed.
 Theorem pow_1_r : ∀ x, x^1 = x.
 Proof.
   intros x.
+  unfold one.
   now rewrite pow_succ_r, pow_0_r, mul_comm, mul_1_r.
 Qed.
 
@@ -782,6 +786,9 @@ Definition lt a b := a ≤ b ∧ a ≠ b.
 Infix "<" := lt : N_scope.
 Notation "a > b" := (b < a) (only parsing) : N_scope.
 Notation "a < b < c" := (a < b ∧ b < c) : N_scope.
+Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level): N_scope.
+Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): N_scope.
+Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): N_scope.
 
 Theorem le_is_subset : ∀ a b, a ≤ b ↔ a ⊂ b.
 Proof.
@@ -1058,6 +1065,7 @@ Proof.
   intros m.
   rewrite lt_def.
   exists 1.
+  unfold one.
   split; auto using PA4, add_1_r.
 Qed.
 
@@ -1184,4 +1192,29 @@ Proof.
     now apply cancellation_add in H.
   - contradict n.
     now (exists c).
+Qed.
+
+Theorem sub_0_le : ∀ a b, a - b = 0 → a ≤ b.
+Proof.
+  intros a b H.
+  unfold sub in H.
+  destruct excluded_middle_informative.
+  - destruct constructive_indefinite_description.
+    subst.
+    now rewrite add_0_r in *.
+  - rewrite <-lt_not_ge in n.
+    apply lt_def in n as [c [H0 H1]].
+    now (exists c).
+Qed.
+
+Theorem sub_ne_0_lt : ∀ a b, a - b ≠ 0 → b < a.
+Proof.
+  intros a b H.
+  unfold sub in H.
+  destruct excluded_middle_informative; try tauto.
+  destruct constructive_indefinite_description.
+  subst.
+  rewrite lt_def.
+  exists x.
+  split; auto.
 Qed.

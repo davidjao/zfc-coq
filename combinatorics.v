@@ -807,6 +807,7 @@ Qed.
 
 Theorem bijections_of_one : bijection_set 1%N 1%N ~ 1%N.
 Proof.
+  unfold naturals.one.
   rewrite permutation_succ, bijections_of_empty_set.
   simpl.
   unfold succ.
@@ -2242,7 +2243,7 @@ Proof.
 Qed.
 
 Theorem binomial_coefficient_Q :
-  ∀ n k, (k ≤ n)%N → (n! / (k! * (n - k)!))%Q = (binomial n k)%Z.
+  ∀ n k, (k ≤ n)%N → (n! / (k! * (n - k)!))%Q = binomial n k.
 Proof.
   intros n k H.
   assert ((k! * (n - k)!)%Z ≠ 0%Z) as H0.
