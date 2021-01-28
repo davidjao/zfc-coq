@@ -1,5 +1,5 @@
 Require Export naturals Ring.
-Set Warnings "-notation-bound-to-variable".
+Set Warnings "-notation-bound-to-variable,-notation-overridden".
 
 Record ring :=
   mkRing {
@@ -20,6 +20,7 @@ Record ring :=
     }.
 
 Section Ring_theorems.
+
   Variable Ring : ring.
   Definition R := elts (set_R Ring).
   Definition zero := zero_R Ring : R.
@@ -27,11 +28,14 @@ Section Ring_theorems.
   Definition add (a b : R) := (add_R Ring a b) : R.
   Definition mul (a b : R) := (mul_R Ring a b) : R.
   Definition neg (a : R) := (neg_R Ring a) : R.
-  Notation "0" := zero.
-  Notation "1" := one.
-  Infix "+" := add.
-  Infix "*" := mul.
-  Notation "- a" := (neg a).
+  Delimit Scope Ring_scope with ring.
+  Open Scope Ring_scope.
+  Bind Scope Ring_Scope with R.
+  Notation "0" := zero : Ring_scope.
+  Notation "1" := one : Ring_scope.
+  Infix "+" := add : Ring_scope.
+  Infix "*" := mul : Ring_scope.
+  Notation "- a" := (neg a) : Ring_scope.
   Definition A1 := (A1_R Ring) : ∀ a b, a + b = b + a.
   Definition A2 := (A2_R Ring) : ∀ a b c, a + (b + c) = (a + b) + c.
   Definition A3 := (A3_R Ring) : ∀ a, 0 + a = a.
@@ -51,15 +55,15 @@ Section Ring_theorems.
 
   Definition sub (a b : R) := a + (-b) : R.
 
-  Infix "-" := sub.
+  Infix "-" := sub : Ring_scope.
 
-  Lemma sub_neg : ∀ a b, a - b = a + -b.
+  Lemma sub_is_neg : ∀ a b, a - b = a + -b.
   Proof.
     auto.
   Qed.
 
   Add Ring generic_ring :
-    (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1 sub_neg A4).
+    (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1 sub_is_neg A4).
 
   Theorem mul_0_r : ∀ a, a * 0 = 0.
   Proof.
@@ -123,7 +127,8 @@ Section Ring_theorems.
 
   Definition divide x y := ∃ z, y = z * x.
 
-  Notation "x ｜ y" := (divide x y) (at level 60, format "x '｜' y").
+  Notation "x ｜ y" :=
+    (divide x y) (at level 60, format "x '｜' y") : Ring_scope.
 
   Theorem div_mul_r : ∀ a b c, a｜b → a｜b*c.
   Proof.
@@ -217,7 +222,7 @@ Section Ring_theorems.
   Qed.
 
   Definition assoc a b := a｜b ∧ b｜a.
-  Infix "~" := assoc (at level 70).
+  Infix "~" := assoc (at level 70) : Ring_scope.
   Definition unit a := a｜1.
 
   Theorem assoc_refl : ∀ a, a ~ a.
@@ -334,7 +339,7 @@ Section Ring_theorems.
     exact (exist _ (pow_b b) H7).
   Defined.
 
-  Infix "^" := pow.
+  Infix "^" := pow : Ring_scope.
 
   Theorem pow_0_r : ∀ x, x^0 = 1.
   Proof.
@@ -408,7 +413,7 @@ Section Ring_theorems.
     Variable f : function.
     Variable n : N.
 
-    Infix "·" := op (at level 40, left associativity).
+    Infix "·" := op (at level 40, left associativity) : Ring_scope.
 
     Hypothesis dom_f : domain f = n.
     Hypothesis ran_f : range f = (set_R Ring).
@@ -426,16 +431,17 @@ Section Ring_theorems.
           apply (proj2_sig start). }
         exists g.
         repeat split; eauto.
-        + apply H1.
+        - apply H1.
           apply lt_is_in, lt_succ.
-        + intros m H2.
+        - intros m H2.
           apply lt_is_in in H2.
           unfold INS in H2.
           simpl in H2.
           contradiction (Empty_set_classification m). }
       intros f dom_f ran_f.
       clear n; rename n0 into n; rename IHn0 into IHn.
-      destruct (function_construction n (range f) (λ x, (f x))) as [f_n [H [H0 H1]]].
+      destruct (function_construction n (range f) (λ x, (f x)))
+        as [f_n [H [H0 H1]]].
       { intros a H.
         apply function_maps_domain_to_range.
         rewrite dom_f.
@@ -473,55 +479,55 @@ Section Ring_theorems.
           now apply Singleton_classification in H8. }
       exists g.
       repeat split; auto.
-      - rewrite H10.
-        + destruct excluded_middle_informative; auto.
+      { rewrite H10.
+        - destruct excluded_middle_informative; auto.
           apply set_proj_injective in e.
           contradiction (PA4 n).
-        + apply lt_is_in, lt_succ.
-      - intros m H11.
-        rewrite lt_is_in, <-S_is_succ in H11.
-        apply Pairwise_union_classification in H11 as [H11 | H11].
-        + apply lt_is_in in H11.
-          pose proof H11 as H12.
-          apply H5 in H12 as [r [s [t [H12 [H13 [H14 H15]]]]]].
-          exists r, s, t.
-          repeat split; auto.
-          * rewrite H10.
-            -- destruct excluded_middle_informative; auto.
-               apply set_proj_injective, PA5 in e.
-               subst.
-               contradiction (lt_irrefl n).
-            -- rewrite <-lt_is_in, <-S_lt.
-               apply (lt_trans _ n); auto using succ_lt.
-          * rewrite H10.
-            -- destruct excluded_middle_informative; auto.
-               apply set_proj_injective in e.
-               subst.
-               contradiction (lt_antisym n (S n)).
-               apply succ_lt.
-            -- rewrite <-lt_is_in.
-               apply (lt_trans _ n); auto.
-               apply (lt_trans _ (S n)); auto using succ_lt.
-          * rewrite <-H1; auto.
-            now apply lt_is_in.
-        + rewrite Singleton_classification in H11.
-          apply set_proj_injective in H11.
-          subst.
-          exists (((exist _ _ H6) · (exist _ _ H7)) : R), (exist _ _ H6 : R),
-          (exist _ _ H7 : R).
-          repeat split; auto.
-          * rewrite H10.
-            -- now destruct excluded_middle_informative.
-            -- rewrite <-lt_is_in, <-S_lt.
-               apply succ_lt.
-          * rewrite H10.
-            -- destruct excluded_middle_informative; auto.
-               apply set_proj_injective in e.
-               contradiction (lt_irrefl n).
-               rewrite e at 2.
-               apply succ_lt.
-            -- rewrite <-lt_is_in.
-               apply (lt_trans _ (S n)); auto using succ_lt.
+        - apply lt_is_in, lt_succ. }
+      intros m H11.
+      rewrite lt_is_in, <-S_is_succ in H11.
+      apply Pairwise_union_classification in H11 as [H11 | H11].
+      - apply lt_is_in in H11.
+        pose proof H11 as H12.
+        apply H5 in H12 as [r [s [t [H12 [H13 [H14 H15]]]]]].
+        exists r, s, t.
+        repeat split; auto.
+        + rewrite H10.
+          * destruct excluded_middle_informative; auto.
+            apply set_proj_injective, PA5 in e.
+            subst.
+            contradiction (lt_irrefl n).
+          * rewrite <-lt_is_in, <-S_lt.
+            apply (lt_trans _ n); auto using succ_lt.
+        + rewrite H10.
+          * destruct excluded_middle_informative; auto.
+            apply set_proj_injective in e.
+            subst.
+            contradiction (lt_antisym n (S n)).
+            apply succ_lt.
+          * rewrite <-lt_is_in.
+            apply (lt_trans _ n); auto.
+            apply (lt_trans _ (S n)); auto using succ_lt.
+        + rewrite <-H1; auto.
+          now apply lt_is_in.
+      - rewrite Singleton_classification in H11.
+        apply set_proj_injective in H11.
+        subst.
+        exists (((exist _ _ H6) · (exist _ _ H7)) : R), (exist _ _ H6 : R),
+        (exist _ _ H7 : R).
+        repeat split; auto.
+        + rewrite H10.
+          * now destruct excluded_middle_informative.
+          * rewrite <-lt_is_in, <-S_lt.
+            apply succ_lt.
+        + rewrite H10.
+          * destruct excluded_middle_informative; auto.
+            apply set_proj_injective in e.
+            contradiction (lt_irrefl n).
+            rewrite e at 2.
+            apply succ_lt.
+          * rewrite <-lt_is_in.
+            apply (lt_trans _ (S n)); auto using succ_lt.
     Qed.
 
     Definition proto_iterop : R.
@@ -549,7 +555,7 @@ Section Ring_theorems.
 
     Variable f : N → R.
 
-    Infix "·" := op (at level 40, left associativity).
+    Infix "·" := op (at level 40, left associativity) : Ring_scope.
 
     Definition iterated_op : N → R.
     Proof.
@@ -600,19 +606,19 @@ Section Ring_theorems.
         destruct (e5 0%N) as [r [s [t [H [H0 [H1 H2]]]]]]; auto using succ_lt.
         unfold IRS in *.
         replace x1 with r.
+        2: { apply set_proj_injective.
+             now rewrite <-H, e6. }
         replace x4 with s.
+        2: { apply set_proj_injective.
+             now rewrite <-H0, e4, <-e12, e14. }
         replace (f 0) with t; auto.
-        + apply set_proj_injective.
-          rewrite <-H1, e1.
-          * unfold functionify.
-            destruct constructive_indefinite_description.
-            destruct a as [H3 [H4 H5]].
-            now rewrite H5.
-          * apply lt_is_in, succ_lt.
-        + apply set_proj_injective.
-          now rewrite <-H0, e4, <-e12, e14.
-        + apply set_proj_injective.
-          now rewrite <-H, e6.
+        apply set_proj_injective.
+        rewrite <-H1, e1.
+        + unfold functionify.
+          destruct constructive_indefinite_description.
+          destruct a as [H3 [H4 H5]].
+          now rewrite H5.
+        + apply lt_is_in, succ_lt.
       - rewrite IHn.
         unfold iterated_op.
         repeat (destruct constructive_indefinite_description;
@@ -894,5 +900,315 @@ Section Ring_theorems.
       rewrite (add_comm a), <-IHd.
       ring.
   Qed.
+
+  Section Subring_construction.
+
+    Variable S : set.
+    Hypothesis subset : S ⊂ (set_R Ring).
+    Definition is_subring S := (∀ a b : R, a ∈ S → b ∈ S → a + b ∈ S) ∧
+                               (∀ a b : R, a ∈ S → b ∈ S → a * b ∈ S) ∧
+                               (∀ a : R, a ∈ S → -a ∈ S) ∧
+                               (1 ∈ S).
+    Hypothesis SR : is_subring S.
+    Definition sub_R := elts S.
+
+    Definition ISR : sub_R → R.
+    Proof.
+      intros x.
+      pose proof (proj2_sig x) as H; simpl in H.
+      apply subset in H.
+      exact (exist _ _ H).
+    Defined.
+
+    Coercion ISR : sub_R >-> R.
+
+    Definition sub_add : sub_R → sub_R → sub_R.
+    Proof.
+      intros a b.
+      assert (a + b ∈ S) as H.
+      { destruct SR as [H [H0 [H1 H2]]].
+        apply H; try apply (proj2_sig a); apply (proj2_sig b). }
+      exact (exist _ _ H).
+    Defined.
+
+    Definition sub_mul : sub_R → sub_R → sub_R.
+    Proof.
+      intros a b.
+      assert (a * b ∈ S) as H.
+      { destruct SR as [H [H0 [H1 H2]]].
+        apply H0; try apply (proj2_sig a); apply (proj2_sig b). }
+      exact (exist _ _ H).
+    Defined.
+
+    Definition sub_neg : sub_R → sub_R.
+    Proof.
+      intros a.
+      assert (-a ∈ S) as H.
+      { destruct SR as [H [H0 [H1 H2]]].
+        apply H1; try apply (proj2_sig a); apply (proj2_sig b). }
+      exact (exist _ _ H).
+    Defined.
+
+    Delimit Scope Subring_scope with subring.
+    Open Scope Subring_scope.
+    Bind Scope Subring_scope with sub_R.
+
+    Infix "+" := sub_add : Subring_scope.
+    Infix "*" := sub_mul : Subring_scope.
+
+    Notation "- a" := (sub_neg a) : Subring_scope.
+
+    Definition sub_one : sub_R.
+    Proof.
+      destruct SR as [H [H0 [H1 H2]]].
+      exact (exist _ _ H2).
+    Defined.
+    Notation "1" := sub_one : Subring_scope.
+    Definition sub_zero := 1 + -(1) : sub_R.
+    Notation "0" := sub_zero : Subring_scope.
+
+    Theorem ISR_eq : ∀ a b, ISR a = ISR b → a = b.
+    Proof.
+      intros [a A] [b B] H.
+      unfold ISR in H.
+      simpl in *.
+      apply set_proj_injective.
+      now assert (proj1_sig (exist (λ x : set, x ∈ set_R Ring) a (subset a A)) =
+                  proj1_sig (exist (λ x : set, x ∈ set_R Ring) b (subset b B)))
+        as H0 by now rewrite H.
+    Qed.
+
+    Theorem ISR_add : ∀ a b : sub_R, (a + b)%ring = a + b.
+    Proof.
+      intros a b.
+      now apply set_proj_injective.
+    Qed.
+
+    Theorem ISR_mul : ∀ a b : sub_R, (a * b)%ring = a * b.
+    Proof.
+      intros a b.
+      now apply set_proj_injective.
+    Qed.
+
+    Theorem ISR_neg : ∀ a : sub_R, (-a)%ring = -a.
+    Proof.
+      intros a.
+      now apply set_proj_injective.
+    Qed.
+
+    Theorem sub_A1 : ∀ a b, a + b = b + a.
+    Proof.
+      intros a b.
+      apply ISR_eq.
+      now rewrite <-? ISR_add, A1.
+    Qed.
+
+    Theorem sub_A2 : ∀ a b c, a + (b + c) = (a + b) + c.
+    Proof.
+      intros a b c.
+      apply ISR_eq.
+      now rewrite <-? ISR_add, A2.
+    Qed.
+
+    Theorem sub_zero_is_zero : 0%ring = 0.
+    Proof.
+      apply set_proj_injective.
+      simpl.
+      now rewrite <-ISR_neg, A4.
+    Qed.
+
+    Theorem sub_one_is_one : 1%ring = 1.
+    Proof.
+      unfold sub_one.
+      destruct SR as [H [H0 [H1 H2]]].
+      now apply set_proj_injective.
+    Qed.
+
+    Theorem sub_A3 : ∀ a, 0 + a = a.
+    Proof.
+      intros a.
+      apply ISR_eq.
+      now rewrite <-? ISR_add, <-sub_zero_is_zero, A3.
+    Qed.
+
+    Theorem sub_A4 : ∀ a, a + -a = 0.
+    Proof.
+      intros a.
+      apply ISR_eq.
+      now rewrite <-? ISR_add, <-ISR_neg, A4, sub_zero_is_zero.
+    Qed.
+
+    Theorem sub_M1 : ∀ a b, a * b = b * a.
+    Proof.
+      intros a b.
+      apply ISR_eq.
+      now rewrite <-? ISR_mul, M1.
+    Qed.
+
+    Theorem sub_M2 : ∀ a b c, a * (b * c) = (a * b) * c.
+    Proof.
+      intros a b c.
+      apply ISR_eq.
+      now rewrite <-? ISR_mul, M2.
+    Qed.
+
+    Theorem sub_M3 : ∀ a, 1 * a = a.
+    Proof.
+      intros a.
+      apply ISR_eq.
+      now rewrite <-? ISR_mul, <-sub_one_is_one, M3.
+    Qed.
+
+    Theorem sub_D1 : ∀ a b c, (a + b) * c = a * c + b * c.
+    Proof.
+      intros a b c.
+      apply ISR_eq.
+      now rewrite <-? ISR_mul, <-? ISR_add, <-? ISR_mul, D1.
+    Qed.
+
+    Definition subring :=
+      mkRing _ sub_zero sub_one sub_add sub_mul sub_neg sub_A3 sub_A1 sub_A2
+             sub_M3 sub_M1 sub_M2 sub_D1 sub_A4.
+
+  End Subring_construction.
+
+  Definition subring_of_arbitrary_set (S : set) : ring.
+  Proof.
+    destruct (excluded_middle_informative (S ⊂ set_R Ring)).
+    - destruct (excluded_middle_informative (is_subring S)).
+      + exact (mkRing _ (sub_zero S s i) (sub_one S i) (sub_add S s i)
+                      (sub_mul S s i) (sub_neg S s i) (sub_A3 S s i)
+                      (sub_A1 S s i) (sub_A2 S s i) (sub_M3 S s i)
+                      (sub_M1 S s i) (sub_M2 S s i) (sub_D1 S s i)
+                      (sub_A4 S s i)).
+      + exact Ring.
+    - exact Ring.
+  Defined.
+
+  Section Subring_generation.
+
+    Variable S : set.
+
+    Hypothesis subset : S ⊂ (set_R Ring).
+
+    Definition subset_generated_by S :=
+      ⋂ {s in P (set_R Ring) | S ⊂ s ∧ is_subring s}.
+
+    Lemma generated_nonempty : {s in P (set_R Ring) | S ⊂ s ∧ is_subring s} ≠ ∅.
+    Proof.
+      apply Nonempty_classification.
+      exists (set_R Ring).
+      rewrite Specify_classification, Powerset_classification.
+      repeat split; auto using Set_is_subset.
+      - intros a b H H0.
+        apply (proj2_sig (a + b)).
+      - intros a b H H0.
+        apply (proj2_sig (a * b)).
+      - intros a H.
+        apply (proj2_sig (-a)).
+      - apply (proj2_sig 1).
+    Qed.
+
+    Lemma generated_subset : subset_generated_by S ⊂ (set_R Ring).
+    Proof.
+      unfold subset_generated_by.
+      intros x H.
+      rewrite Intersection_classification in H; auto using generated_nonempty.
+      pose proof generated_nonempty as H0.
+      apply Nonempty_classification in H0 as [s H0].
+      apply H in H0 as H1.
+      apply Specify_classification in H0 as [H0 [H2 H3]].
+      apply Powerset_classification in H0.
+      auto.
+    Qed.
+
+    Lemma subring_generation_construction : is_subring (subset_generated_by S).
+    Proof.
+      unfold subset_generated_by.
+      repeat split.
+      - intros a b H H0.
+        rewrite Intersection_classification in *; auto using generated_nonempty.
+        intros s H1.
+        apply H in H1 as H2.
+        apply H0 in H1 as H3.
+        apply Specify_classification in H1 as [H1 [H4 [H5 [H6 [H7 H8]]]]].
+        auto.
+      - intros a b H H0.
+        rewrite Intersection_classification in *; auto using generated_nonempty.
+        intros s H1.
+        apply H in H1 as H2.
+        apply H0 in H1 as H3.
+        apply Specify_classification in H1 as [H1 [H4 [H5 [H6 [H7 H8]]]]].
+        auto.
+      - intros a H.
+        rewrite Intersection_classification in *; auto using generated_nonempty.
+        intros s H1.
+        apply H in H1 as H2.
+        apply Specify_classification in H1 as [H1 [H3 [H4 [H5 [H6 H7]]]]].
+        auto.
+      - rewrite Intersection_classification in *; auto using generated_nonempty.
+        intros s H.
+        now apply Specify_classification in H as [H [H0 [H1 [H2 [H3 H4]]]]].
+    Qed.
+
+    Definition subring_generated_by :=
+      subring (subset_generated_by S) generated_subset
+              subring_generation_construction.
+
+    Theorem subset_generated_by_subring :
+      is_subring S → S = subset_generated_by S.
+    Proof.
+      intros H.
+      unfold subset_generated_by.
+      apply Extensionality.
+      split; intros H0.
+      - apply Intersection_classification; auto using generated_nonempty.
+        intros s H1.
+        apply Specify_classification in H1 as [H1 [H2 H3]].
+        auto.
+      - rewrite Intersection_classification in *; auto using generated_nonempty.
+        assert (S ∈ {s in P (set_R Ring) | S ⊂ s ∧ is_subring s}) as H1; auto.
+        apply Specify_classification.
+        split; auto using Set_is_subset.
+        now apply Powerset_classification.
+    Qed.
+
+  End Subring_generation.
+
+  Theorem subring_wf :
+    ∀ S T, S = T → subring_of_arbitrary_set S = subring_of_arbitrary_set T.
+  Proof.
+    intros S T H.
+    now rewrite H.
+  Qed.
+
+  Section Subrings_match.
+    Variable S : set.
+    Hypothesis subset_S : S ⊂ set_R Ring.
+    Hypothesis subring_S : is_subring S.
+
+    Theorem subrings_match :
+      subring_of_arbitrary_set S = subring S subset_S subring_S.
+    Proof.
+      unfold subring_of_arbitrary_set.
+      repeat destruct excluded_middle_informative; try tauto.
+      unfold subring.
+      replace s with subset_S by now apply proof_irrelevance.
+      now replace i with subring_S by now apply proof_irrelevance.
+    Qed.
+  End Subrings_match.
+
+  Section Subrings_generated_by_subrings.
+    Variable S : set.
+    Hypothesis subset_S : S ⊂ set_R Ring.
+    Hypothesis subring_S : is_subring S.
+
+    Theorem subring_generated_by_subring :
+      subring S subset_S subring_S = subring_generated_by S subset_S.
+    Proof.
+      unfold subring_generated_by.
+      rewrite <-? subrings_match, <-(subset_generated_by_subring S); auto.
+    Qed.
+  End Subrings_generated_by_subrings.
 
 End Ring_theorems.

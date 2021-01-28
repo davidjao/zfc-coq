@@ -31,7 +31,7 @@ Section Integral_domain_theorems.
 
   Add Ring R_ring :
     (mk_rt 0 1 (add R) (mul R) (sub R) (neg R) eq (A3 R) (A1 R)
-           (A2 R) (M3 R) (M1 R) (M2 R) (D1 R) (sub_neg R) (A4 R)).
+           (A2 R) (M3 R) (M1 R) (M2 R) (D1 R) (sub_is_neg R) (A4 R)).
 
   Lemma ne0_cancellation : ∀ a b, a ≠ 0 → b ≠ 0 → a * b ≠ 0.
   Proof.

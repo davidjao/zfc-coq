@@ -55,7 +55,7 @@ Section Ordered_ring_theorems.
 
   Add Ring generic_ordered_ring :
     (mk_rt 0 1 (add R) (mul R) (sub R) (neg R) eq (A3 R) (A1 R)
-           (A2 R) (M3 R) (M1 R) (M2 R) (D1 R) (sub_neg R) (A4 R)).
+           (A2 R) (M3 R) (M1 R) (M2 R) (D1 R) (sub_is_neg R) (A4 R)).
 
   Theorem O1_r : ∀ a b c, b < c → b + a < c + a.
   Proof.

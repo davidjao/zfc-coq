@@ -1218,3 +1218,97 @@ Proof.
   exists x.
   split; auto.
 Qed.
+
+Definition min : N → N → N.
+Proof.
+  intros a b.
+  destruct (excluded_middle_informative (a < b)).
+  - exact a.
+  - exact b.
+Defined.
+
+Theorem min_le_l : ∀ a b, min a b ≤ a.
+Proof.
+  intros a b.
+  unfold min.
+  destruct excluded_middle_informative.
+  - apply le_refl.
+  - now rewrite <-le_not_gt in n.
+Qed.
+
+Theorem min_le_r : ∀ a b, min a b ≤ b.
+Proof.
+  intros a b.
+  unfold min.
+  destruct excluded_middle_informative.
+  - now destruct l.
+  - apply le_refl.
+Qed.
+
+Theorem min_eq : ∀ a b, min a b = a ∨ min a b = b.
+Proof.
+  intros a b.
+  unfold min.
+  destruct excluded_middle_informative.
+  - now left.
+  - now right.
+Qed.
+
+Definition max : N → N → N.
+Proof.
+  intros a b.
+  destruct (excluded_middle_informative (a < b)).
+  - exact b.
+  - exact a.
+Defined.
+
+Theorem max_le_l : ∀ a b, a ≤ max a b.
+Proof.
+  intros a b.
+  unfold max.
+  destruct excluded_middle_informative.
+  - now destruct l.
+  - apply le_refl.
+Qed.
+
+Theorem max_le_r : ∀ a b, b ≤ max a b.
+Proof.
+  intros a b.
+  unfold max.
+  destruct excluded_middle_informative.
+  - apply le_refl.
+  - now rewrite <-le_not_gt in n.
+Qed.
+
+Theorem max_eq : ∀ a b, max a b = a ∨ max a b = b.
+Proof.
+  intros a b.
+  unfold max.
+  destruct excluded_middle_informative.
+  - now right.
+  - now left.
+Qed.
+
+Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
+Proof.
+  intros a b c [d H] [e H0].
+  exists (d + e).
+  subst.
+  ring.
+Qed.
+
+Theorem lt_cross_add : ∀ a b c d, a < b → c < d → a + c < b + d.
+Proof.
+  intros a b c d H H0.
+  apply (O1 _ _ c) in H.
+  apply (O1 _ _ b) in H0.
+  rewrite ? (add_comm _ b) in H0.
+  eauto using lt_trans.
+Qed.
+
+Theorem sub_abab : ∀ a b, a ≤ b → a + (b - a) = b.
+Proof.
+  intros a b [c H].
+  subst.
+  now rewrite (add_comm _ c), sub_abba, add_comm.
+Qed.
