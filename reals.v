@@ -1853,13 +1853,7 @@ Theorem IQR_eq : ∀ a b : Q, (a : R) = (b : R) ↔ a = b.
 Proof.
   split; intros H.
   - destruct (rationals.T a b) as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]];
-      try tauto.
-    + rewrite <-IQR_lt in H0.
-      pose proof (T a b).
-      tauto.
-    + rewrite <-IQR_lt in H0.
-      pose proof (T a b).
-      tauto.
+      try tauto; rewrite <-IQR_lt in H0; pose proof (T a b); tauto.
   - destruct (T a b) as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]]; try tauto;
       now subst.
 Qed.

@@ -639,4 +639,56 @@ Section Power_series_construction.
       + now rewrite sub_diag in n2.
   Qed.
 
+  Theorem coefficient_add : ∀ n f g,
+      coefficient (f + g) n = (coefficient f n + coefficient g n)%ring.
+  Proof.
+    intros n f g.
+    unfold add.
+    now rewrite coefficient_seriesify.
+  Qed.
+
+  Theorem coefficient_neg :
+    ∀ n f, coefficient (-f) n = (- coefficient f n)%ring.
+  Proof.
+    intros n f.
+    unfold neg.
+    now rewrite coefficient_seriesify.
+  Qed.
+
+  Theorem coefficient_mul :
+    ∀ n f g, coefficient (f * g) n =
+             sum R (λ k, (coefficient f k * coefficient g (n-k))%ring) 0 n.
+  Proof.
+    intros n f g.
+    unfold mul.
+    now rewrite coefficient_seriesify.
+  Qed.
+
+  Lemma const_coeff_mul : ∀ (n : N) (c : Rring) f,
+      coefficient ((IRS c) * f) n = (c * coefficient f n)%ring.
+  Proof.
+    intros n c f.
+    unfold IRS, mul at 1.
+    rewrite coefficient_seriesify.
+    assert (∀ r : Rring, sum R (λ k, if (excluded_middle_informative (k = 0%N))
+                                 then r else 0%ring) 0 n = r) as H.
+    { intros r.
+      induction n using Induction.
+      - unfold sum.
+        rewrite iterate_0.
+        now destruct excluded_middle_informative.
+      - rewrite sum_succ, IHn; auto using zero_le.
+        destruct excluded_middle_informative.
+        + now contradiction (PA4 n).
+        + ring. }
+    rewrite <-H.
+    apply iterate_extensionality.
+    intros k H0.
+    rewrite coefficient_seriesify.
+    repeat destruct excluded_middle_informative; try tauto.
+    - subst.
+      now rewrite sub_0_r.
+    - ring.
+  Qed.
+
 End Power_series_construction.

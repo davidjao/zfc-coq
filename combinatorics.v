@@ -2242,6 +2242,26 @@ Proof.
       now rewrite add_comm, add_1_r.
 Qed.
 
+Theorem zero_factorial : 0! = 1%N.
+Proof.
+  unfold factorial, prod, iterate_with_bounds.
+  destruct excluded_middle_informative; auto.
+  exfalso.
+  apply naturals.le_not_gt in l; eauto using naturals.lt_succ.
+Qed.
+
+Theorem binomial_zero : ∀ n : N, binomial n 0 = 1%N.
+Proof.
+  intros n.
+  assert (0 ≤ n)%N as H by auto using zero_le.
+  apply binomial_coefficient in H.
+  rewrite sub_0_r, ? zero_factorial, ? (integers.M1 _ 1%N),
+  integers.M3, <-(integers.M3 (n!)) in H at 1.
+  apply (cancellation_mul_r (integral_domain_OR integer_order)) in H.
+  - now apply INZ_eq.
+  - apply factorial_ne_0.
+Qed.
+
 Theorem binomial_coefficient_Q :
   ∀ n k, (k ≤ n)%N → (n! / (k! * (n - k)!))%Q = binomial n k.
 Proof.
@@ -2254,4 +2274,203 @@ Proof.
   field_simplify; rewrite ? div_inv, ? inv_one; try ring; auto.
   contradict H0.
   now apply IZQ_eq in H0.
+Qed.
+
+Theorem Pascal's_identity_bijection : ∀ n k,
+    (1 ≤ k)%N → set_of_combinations n k ∪ set_of_combinations n (k-1) ~
+                                    set_of_combinations (n+1) k.
+Proof.
+  intros n k H.
+  symmetry.
+  destruct (function_construction
+              (set_of_combinations (n+1) k)
+              (set_of_combinations n k ∪ set_of_combinations n (k-1))
+              (λ x, if (excluded_middle_informative (n ∈ x))
+                    then x \ {n,n} else x)) as [f [H0 [H1 H2]]].
+  { intros a H0.
+    apply Specify_classification in H0 as [H0 H1].
+    apply Powerset_classification in H0.
+    destruct excluded_middle_informative;
+      apply Pairwise_union_classification.
+    - right.
+      apply Specify_classification.
+      split.
+      + rewrite Powerset_classification.
+        intros x H2.
+        rewrite Complement_classification, Singleton_classification in H2.
+        destruct H2 as [H2 H3].
+        rewrite add_1_r, <-S_is_succ in H0.
+        apply H0, Pairwise_union_classification in H2 as [H2 | H2]; auto.
+        now rewrite Singleton_classification in H2.
+      + replace a with ({n,n} ∪ (a \ {n,n})) in H1.
+        2: { rewrite <-disjoint_union_complement, <-Union_subset.
+             intros x H2.
+             rewrite Singleton_classification in H2; congruence. }
+        rewrite finite_union_cardinality, singleton_card in H1;
+          eauto using disjoint_intersection_complement, singletons_are_finite,
+          subsets_of_finites_are_finite, complement_subset, naturals_are_finite.
+        now apply sub_spec in H1.
+    - left.
+      apply Specify_classification.
+      split; auto.
+      rewrite Powerset_classification.
+      intros x H2.
+      rewrite add_1_r, <-S_is_succ in H0.
+      apply H0 in H2 as H3.
+      apply Pairwise_union_classification in H3 as [H3 | H3]; auto.
+      apply Singleton_classification in H3.
+      now subst. }
+  exists f.
+  repeat split; auto.
+  - rewrite Injective_classification.
+    intros x y H3 H4 H5.
+    rewrite ? H2 in H5; try congruence.
+    repeat destruct excluded_middle_informative; auto.
+    + apply Extensionality.
+      split; intros H6; destruct (classic (z = n)) as [H7 | H7];
+        try congruence.
+      * eapply complement_subset.
+        rewrite <-H5.
+        now rewrite Complement_classification, Singleton_classification.
+      * eapply complement_subset.
+        rewrite H5.
+        now rewrite Complement_classification, Singleton_classification.
+    + unfold set_of_combinations in *.
+      rewrite H0, Specify_classification in *.
+      destruct H3 as [H3 H6], H4 as [H4 H7].
+      rewrite Powerset_classification in *.
+      rewrite <-H5 in H7.
+      replace x with ({n,n} ∪ (x \ {n,n})) in H6.
+      2: { rewrite <-disjoint_union_complement, <-Union_subset.
+           intros z H8.
+           rewrite Singleton_classification in H8; congruence. }
+      rewrite finite_union_cardinality, singleton_card, H7,
+      naturals.add_comm, add_1_r in H6;
+          eauto using disjoint_intersection_complement, singletons_are_finite,
+          subsets_of_finites_are_finite, complement_subset, naturals_are_finite.
+      now contradiction (neq_succ k).
+    + unfold set_of_combinations in *.
+      rewrite H0, Specify_classification in *.
+      destruct H3 as [H3 H6], H4 as [H4 H7].
+      rewrite Powerset_classification in *.
+      rewrite H5 in H6.
+      replace y with ({n,n} ∪ (y \ {n,n})) in H7.
+      2: { rewrite <-disjoint_union_complement, <-Union_subset.
+           intros z H8.
+           rewrite Singleton_classification in H8; congruence. }
+      rewrite finite_union_cardinality, singleton_card, H6,
+      naturals.add_comm, add_1_r in H7;
+          eauto using disjoint_intersection_complement, singletons_are_finite,
+          subsets_of_finites_are_finite, complement_subset, naturals_are_finite.
+      now contradiction (neq_succ k).
+  - rewrite Surjective_classification.
+    intros y H3.
+    rewrite H1 in H3.
+    apply Pairwise_union_classification in H3 as [H3 | H3];
+      apply Specify_classification in H3 as [H3 H4];
+      apply Powerset_classification in H3.
+    + exists y.
+      assert (y ∈ domain f) as H5.
+      { rewrite H0.
+        apply Specify_classification.
+        rewrite Powerset_classification.
+        split; auto.
+        intros z H5.
+        apply H3 in H5.
+        assert (n ⊂ n+1)%N.
+        { apply le_is_subset.
+          now exists 1%N. }
+        auto. }
+      split; auto.
+      rewrite H2; try congruence.
+      destruct excluded_middle_informative; auto.
+      apply H3 in i.
+      contradiction (no_quines n).
+    + exists (y ∪ {n,n}).
+      assert (y ∩ {n,n} = ∅) as H5.
+      { apply Extensionality.
+        split; intros H5; try contradiction (Empty_set_classification z).
+        apply Pairwise_intersection_classification in H5 as [H5 H6].
+        rewrite Singleton_classification in H6.
+        subst.
+        apply H3 in H5.
+        contradiction (no_quines n). }
+      assert (y ∪ {n,n} ∈ domain f) as H6.
+      { rewrite H0.
+        apply Specify_classification.
+        rewrite Powerset_classification, add_1_r, <-S_is_succ.
+        split.
+        - intros z H6.
+          apply Pairwise_union_classification.
+          apply Pairwise_union_classification in H6 as [H6 | H6]; try tauto.
+          left.
+          auto.
+        - rewrite finite_union_cardinality, H4, singleton_card, naturals.add_comm,
+          sub_abab; eauto using singletons_are_finite,
+                    subsets_of_finites_are_finite, naturals_are_finite. }
+      split; auto.
+      rewrite H2; try congruence.
+      destruct excluded_middle_informative.
+      * rewrite complement_disjoint_union; auto.
+      * contradiction n0.
+        apply Pairwise_union_classification.
+        right.
+        now apply Singleton_classification.
+Qed.
+
+Theorem Pascal's_identity :
+  ∀ n k, (1 ≤ k → binomial n k + binomial n (k-1) = binomial (n+1) k)%N.
+Proof.
+  intros n k H.
+  unfold binomial.
+  rewrite <-Pascal's_identity_bijection, finite_union_cardinality;
+    auto using binomials_are_finite.
+  apply Extensionality.
+  split; intros H0; try contradiction (Empty_set_classification z).
+  apply Pairwise_intersection_classification in H0 as [H0 H1].
+  apply Specify_classification in H0 as [H0 H2].
+  apply Specify_classification in H1 as [H1 H3].
+  rewrite H2 in H3.
+  unfold naturals.sub in H3.
+  destruct excluded_middle_informative; try tauto.
+  destruct constructive_indefinite_description.
+  subst.
+  rewrite naturals.add_comm, add_1_r in e.
+  now contradiction (neq_succ (# z)).
+Qed.
+
+Theorem combinations_of_empty_set :
+  ∀ k, k ≠ 0%N → set_of_combinations 0 k ~ ∅.
+Proof.
+  intros k H.
+  exists empty_function.
+  unfold empty_function.
+  destruct constructive_indefinite_description.
+  destruct a as [H0 [H1 H2]].
+  repeat split; auto.
+  - rewrite H0.
+    apply Extensionality.
+    split; intros H3; try now contradiction (Empty_set_classification z).
+    apply Specify_classification in H3 as [H3 H4].
+    rewrite Powerset_classification in H3.
+    assert (z = ∅) as H5.
+    { apply Extensionality.
+      split; intros H5; try now contradiction (Empty_set_classification z0);
+        auto. }
+    subst.
+    contradict H.
+    now rewrite <-card_of_natural.
+  - rewrite Injective_classification.
+    intros x0 y H3 H4 H5.
+    contradiction (Empty_set_classification y); congruence.
+  - rewrite Surjective_classification.
+    intros y H3.
+    contradiction (Empty_set_classification y); congruence.
+Qed.
+
+Theorem binomial_empty_set : ∀ k, k ≠ 0%N → binomial 0 k = 0%N.
+Proof.
+  intros k H.
+  unfold binomial.
+  now rewrite combinations_of_empty_set, <-card_of_natural.
 Qed.

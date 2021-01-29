@@ -1306,9 +1306,89 @@ Proof.
   eauto using lt_trans.
 Qed.
 
+Theorem le_cross_add : ∀ a b c d, a ≤ b → c ≤ d → a + c ≤ b + d.
+Proof.
+  intros a b c d [e H] [f H0].
+  exists (e + f).
+  subst.
+  ring.
+Qed.
+
 Theorem sub_abab : ∀ a b, a ≤ b → a + (b - a) = b.
 Proof.
   intros a b [c H].
   subst.
   now rewrite (add_comm _ c), sub_abba, add_comm.
+Qed.
+
+Theorem lub : ∀ P, (∃ n : N, P n) → (∃ m : N, ∀ n : N, P n → n ≤ m)
+                   → ∃ s : N, P s ∧ ∀ n : N, P n → n ≤ s.
+Proof.
+  intros P H [m H0].
+  revert P H H0.
+  induction m using Induction; intros P H H0.
+  - exists 0.
+    split; auto.
+    destruct H as [x H].
+    apply H0 in H as H2.
+    assert (x = 0) by auto using le_antisymm, zero_le.
+    rewrite <-H1; auto.
+  - destruct (classic (P (S m))) as [H1 | H1]; try (now exists (S m)).
+    destruct (IHm P) as [s [H2 H3]]; auto; try now (exists s).
+    intros n H2.
+    apply NNPP.
+    intros H3.
+    apply lt_not_ge in H3.
+    apply H0 in H2 as H4.
+    destruct H4 as [c H4].
+    destruct (classic (c = 0)) as [H5 | H5]; subst.
+    + rewrite add_0_r in H4.
+      now subst.
+    + apply succ_0 in H5 as [d H5].
+      subst.
+      rewrite add_succ_r in H4.
+      apply PA5 in H4.
+      subst.
+      rewrite lt_not_ge in H3.
+      contradict H3.
+      now (exists d).
+Qed.
+
+Theorem Strong_Induction : ∀ P : N → Prop,
+    P 0 → (∀ n : N, (∀ k : N, 0 ≤ k < n → P k) → P n) → ∀ n : N, P n.
+Proof.
+  intros P H H0 n.
+  set (S := {x in ω | ∃ n : N, x = n ∧ ¬ P n}).
+  assert (S ⊂ ω) as H1.
+  { intros x H1.
+    apply Specify_classification in H1.
+    tauto. }
+  destruct (classic (S = ∅)) as [H2 | H2].
+  { apply NNPP.
+    intros H3.
+    contradict H2.
+    apply Nonempty_classification.
+    exists n.
+    apply Specify_classification.
+    split.
+    - apply (proj2_sig n).
+    - now exists n. }
+  apply ω_WOP in H2 as [s [H2 H3]]; auto.
+  apply Specify_classification in H2 as [H2 [σ [H4 H5]]].
+  subst.
+  contradict H5.
+  apply H0.
+  intros k [H4 H5].
+  apply NNPP.
+  intros H6.
+  assert (k ∈ S) as H7.
+  { apply Specify_classification.
+    split.
+    - apply (proj2_sig k).
+    - now exists k. }
+  apply H3, le_is_subset in H7 as [c H7].
+  subst.
+  apply lt_not_ge in H5.
+  contradict H5.
+  now (exists c).
 Qed.

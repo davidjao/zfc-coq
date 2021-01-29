@@ -62,8 +62,9 @@ Section Ring_theorems.
     auto.
   Qed.
 
-  Add Ring generic_ring :
+  Definition ringify :=
     (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1 sub_is_neg A4).
+  Add Ring generic_ring : ringify.
 
   Theorem mul_0_r : ∀ a, a * 0 = 0.
   Proof.
@@ -315,7 +316,7 @@ Section Ring_theorems.
     - now destruct b.
   Qed.
 
-  Definition pow : (elts (set_R Ring)) → N → (elts (set_R Ring)).
+  Definition pow : R → N → R.
   Proof.
     intros a b.
     assert (∀ x : set, x ∈ (set_R Ring) → mul_right a x ∈ (set_R Ring)) as H.
@@ -785,6 +786,34 @@ Section Ring_theorems.
         now rewrite add_assoc, (add_comm a), add_1_r, <-add_succ_r, add_comm.
   Qed.
 
+  Theorem iterate_shift : ∀ op f start a c,
+      iterate_with_bounds op f start a (a+c) =
+      iterate_with_bounds op (λ n, (f (n+a)%N)) start 0 c.
+  Proof.
+    intros op f start a c.
+    induction c using Induction.
+    - now rewrite add_0_r, ? iterate_0, add_0_l.
+    - rewrite add_succ_r, ? iterate_succ, IHc, <-add_succ_r; auto using zero_le.
+      + do 2 f_equal.
+        now rewrite add_comm.
+      + now (exists c).
+  Qed.
+
+  Theorem iterate_1 : ∀ op f start,
+      iterate_with_bounds op f start 0 1 = op (f 0%N) (f 1%N).
+  Proof.
+    intros op f start.
+    unfold naturals.one.
+    rewrite iterate_succ, iterate_0; auto using zero_le.
+  Qed.
+
+  Theorem iterate_2 : ∀ op f start,
+      iterate_with_bounds op f start 0 2 = op (op (f 0%N) (f 1%N)) (f 2).
+  Proof.
+    intros op f start.
+    rewrite iterate_succ, iterate_1; auto using zero_le.
+  Qed.
+
   Definition sum f a b := iterate_with_bounds add f 0 a b.
   Definition prod f a b := iterate_with_bounds mul f 1 a b.
 
@@ -901,6 +930,35 @@ Section Ring_theorems.
       ring.
   Qed.
 
+  Theorem sum_of_0 : ∀ d, (sum (λ n, 0) 0 d) = 0.
+  Proof.
+    induction d using Induction.
+    - unfold sum.
+      now rewrite iterate_0.
+    - rewrite sum_succ, IHd; auto using zero_le.
+      ring.
+  Qed.
+
+  Definition INR (n : N) := sum (λ n, 1) 1 n.
+  Coercion INR : N >-> R.
+
+  Theorem INR_add : ∀ a b : N, ((a + b)%N : R) = (a : R) + (b : R).
+  Proof.
+    intros a b.
+    unfold INR.
+    induction b using Induction.
+    { unfold sum at 3.
+      unfold iterate_with_bounds.
+      destruct excluded_middle_informative.
+      - exfalso.
+        apply le_not_gt in l.
+        eauto using succ_lt.
+      - now rewrite A1, A3, naturals.add_0_r. }
+    rewrite add_succ_r, ? sum_succ, IHb; try ring;
+      [ exists b | exists (a+b)%N ];
+      now rewrite <-add_1_r, naturals.add_comm.
+  Qed.
+
   Section Subring_construction.
 
     Variable S : set.
@@ -964,8 +1022,6 @@ Section Ring_theorems.
       exact (exist _ _ H2).
     Defined.
     Notation "1" := sub_one : Subring_scope.
-    Definition sub_zero := 1 + -(1) : sub_R.
-    Notation "0" := sub_zero : Subring_scope.
 
     Theorem ISR_eq : ∀ a b, ISR a = ISR b → a = b.
     Proof.
@@ -996,6 +1052,15 @@ Section Ring_theorems.
       now apply set_proj_injective.
     Qed.
 
+    Lemma zero_construction : 0 ∈ S.
+    Proof.
+      destruct SR as [H [H0 [H1 H2]]].
+      rewrite <-(A4 (1%ring)).
+      auto.
+    Qed.
+
+    Definition sub_zero := (exist _ _ zero_construction) : sub_R.
+    Notation "0" := sub_zero : Subring_scope.
     Theorem sub_A1 : ∀ a b, a + b = b + a.
     Proof.
       intros a b.
@@ -1012,9 +1077,7 @@ Section Ring_theorems.
 
     Theorem sub_zero_is_zero : 0%ring = 0.
     Proof.
-      apply set_proj_injective.
-      simpl.
-      now rewrite <-ISR_neg, A4.
+      now apply set_proj_injective.
     Qed.
 
     Theorem sub_one_is_one : 1%ring = 1.
@@ -1076,7 +1139,7 @@ Section Ring_theorems.
   Proof.
     destruct (excluded_middle_informative (S ⊂ set_R Ring)).
     - destruct (excluded_middle_informative (is_subring S)).
-      + exact (mkRing _ (sub_zero S s i) (sub_one S i) (sub_add S s i)
+      + exact (mkRing _ (sub_zero S i) (sub_one S i) (sub_add S s i)
                       (sub_mul S s i) (sub_neg S s i) (sub_A3 S s i)
                       (sub_A1 S s i) (sub_A2 S s i) (sub_M3 S s i)
                       (sub_M1 S s i) (sub_M2 S s i) (sub_D1 S s i)

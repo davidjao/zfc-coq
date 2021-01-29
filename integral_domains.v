@@ -29,9 +29,7 @@ Section Integral_domain_theorems.
   Notation "- a" := (neg R a).
   Infix "^" := (pow R).
 
-  Add Ring R_ring :
-    (mk_rt 0 1 (add R) (mul R) (sub R) (neg R) eq (A3 R) (A1 R)
-           (A2 R) (M3 R) (M1 R) (M2 R) (D1 R) (sub_is_neg R) (A4 R)).
+  Add Ring R_ring : (ringify R).
 
   Lemma ne0_cancellation : ∀ a b, a ≠ 0 → b ≠ 0 → a * b ≠ 0.
   Proof.
@@ -56,7 +54,8 @@ Section Integral_domain_theorems.
   Theorem pow_ne_0 : ∀ a b, a ≠ 0 → a^b ≠ 0.
   Proof.
     induction b using Induction; intros H.
-    - rewrite (pow_0_r R); auto using nontrivial_ID.
+    - rewrite (pow_0_r R).
+      auto using (nontrivial_ID ID).
     - rewrite pow_succ_r.
       intros H0.
       contradiction (IHb H).

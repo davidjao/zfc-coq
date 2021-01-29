@@ -273,6 +273,16 @@ Proof.
   split; intros H; subst; firstorder using Subset_equality, Set_is_subset.
 Qed.
 
+Theorem Subset_extensionality :
+  ∀ A B, A = B ↔ (∀ X, X ⊂ A ↔ X ⊂ B).
+Proof.
+  split; intros H.
+  - intros X.
+    split; intros H0; now rewrite H in *.
+  - apply Subset_equality_iff.
+    split; apply H; now intros x H0.
+Qed.
+
 Theorem subset_subsetneq_trans : ∀ A B C, A ⊂ B → B ⊊ C → A ⊊ C.
 Proof.
   intros A B C H [H0 H1].
