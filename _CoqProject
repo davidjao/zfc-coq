@@ -7,14 +7,14 @@ naturals.v
 cardinality.v
 rings.v
 power_series.v
-polynomials.v
 integral_domains.v
 ordered_rings.v
 integers.v
-combinatorics.v
 integers_mod_n.v
 fields.v
 ordered_fields.v
 rationals.v
+combinatorics.v
+polynomials.v
 summation_example.v
 reals.v

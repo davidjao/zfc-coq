@@ -2198,7 +2198,7 @@ Proof.
   powerset_finite, naturals_are_finite.
 Qed.
 
-Lemma binomial_coefficient_1 :
+Lemma binomial_coefficient_plus_form :
   ∀ n m, (n + m)! = (binomial (n + m) m * m! * n!)%Z.
 Proof.
   intros n m.
@@ -2220,7 +2220,7 @@ Proof.
   intros n k [m H].
   subst.
   rewrite (add_comm k), sub_abba.
-  apply binomial_coefficient_1.
+  apply binomial_coefficient_plus_form.
 Qed.
 
 Lemma factorial_ne_0 : ∀ k, k! ≠ 0%Z.
@@ -2405,9 +2405,10 @@ Proof.
           apply Pairwise_union_classification in H6 as [H6 | H6]; try tauto.
           left.
           auto.
-        - rewrite finite_union_cardinality, H4, singleton_card, naturals.add_comm,
-          sub_abab; eauto using singletons_are_finite,
-                    subsets_of_finites_are_finite, naturals_are_finite. }
+        - rewrite finite_union_cardinality, H4, singleton_card,
+          naturals.add_comm, sub_abab;
+            eauto using singletons_are_finite,
+            subsets_of_finites_are_finite, naturals_are_finite. }
       split; auto.
       rewrite H2; try congruence.
       destruct excluded_middle_informative.

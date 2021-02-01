@@ -633,7 +633,7 @@ Section Power_series_construction.
         apply succ_0 in n1 as [m H1].
         subst.
         contradict n2.
-        apply le_antisymm; split; auto.
+        apply le_antisymm; auto.
         exists m.
         now rewrite naturals.add_comm, add_1_r.
       + now rewrite sub_diag in n2.

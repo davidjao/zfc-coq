@@ -876,9 +876,9 @@ Proof.
   intuition.
 Qed.
 
-Theorem le_antisymm : ∀ a b, a ≤ b ∧ b ≤ a → a = b.
+Theorem le_antisymm : ∀ a b, a ≤ b → b ≤ a → a = b.
 Proof.
-  intros a b H.
+  intros a b H H0.
   rewrite ? le_is_subset in *.
   now apply set_proj_injective, Subset_equality_iff.
 Qed.
@@ -1295,6 +1295,36 @@ Proof.
   exists (d + e).
   subst.
   ring.
+Qed.
+
+Theorem le_lt_trans : ∀ a b c, a ≤ b → b < c → a < c.
+Proof.
+  intros a b c [d H] [[e H0] H1].
+  rewrite lt_def.
+  exists (d + e).
+  split.
+  - intros H2.
+    symmetry in H2.
+    apply cancellation_0_add in H2 as [H2 H3].
+    subst.
+    now rewrite ? add_0_r in *.
+  - subst.
+    now rewrite add_assoc.
+Qed.
+
+Theorem lt_le_trans : ∀ a b c, a < b → b ≤ c → a < c.
+Proof.
+  intros a b c [[d H] H0] [e H1].
+  rewrite lt_def.
+  exists (d + e).
+  split.
+  - intros H2.
+    symmetry in H2.
+    apply cancellation_0_add in H2 as [H2 H3].
+    subst.
+    now rewrite ? add_0_r in *.
+  - subst.
+    now rewrite add_assoc.
 Qed.
 
 Theorem lt_cross_add : ∀ a b c d, a < b → c < d → a + c < b + d.

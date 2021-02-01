@@ -1274,4 +1274,10 @@ Section Ring_theorems.
     Qed.
   End Subrings_generated_by_subrings.
 
+  Theorem zero_ring_degeneracy : 1 = 0 → ∀ a b : R, a = b.
+  Proof.
+    intros H a b.
+    ring [H].
+  Qed.
+
 End Ring_theorems.
