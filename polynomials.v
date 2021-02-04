@@ -82,24 +82,18 @@ Section Polynomials_construction.
       exists (n + m)%N.
       intros x H1.
       unfold power_series.mul.
-      rewrite coefficient_seriesify.
-      replace 0 with (sum R (λ k : N, 0) 0 x).
-      + apply iterate_extensionality.
-        intros k H3.
-        destruct (classic (n ≤ k)%N).
-        * rewrite H2; auto; ring.
-        * rewrite H4, mul_0_r; auto.
-          apply NNPP.
-          intros H6.
-          rewrite <-naturals.lt_not_ge in H5, H6.
-          assert (k + (x - k) < n + m)%N as H7 by
-                now apply naturals.lt_cross_add.
-          rewrite sub_abab, naturals.lt_not_ge in H7; intuition.
-      + clear.
-        induction x using Induction.
-        * unfold sum.
-          now rewrite iterate_0.
-        * rewrite sum_succ, IHx, rings.A3; auto using zero_le.
+      rewrite coefficient_seriesify, <-(sum_of_0 _ x).
+      apply iterate_extensionality.
+      intros k H3.
+      destruct (classic (n ≤ k)%N).
+      + rewrite H2; auto; ring.
+      + rewrite H4, mul_0_r; auto.
+        apply NNPP.
+        intros H6.
+        rewrite <-naturals.lt_not_ge in H5, H6.
+        eapply naturals.lt_cross_add in H5; eauto.
+        rewrite naturals.add_comm, sub_abab, naturals.lt_not_ge,
+        naturals.add_comm in H5; intuition.
     - intros [a A] H.
       apply Specify_classification in H as [H [[a' A'] [H0 [n H1]]]].
       unfold rings.IRS, ISS in *.
@@ -432,26 +426,20 @@ Section Polynomial_theorems.
     rewrite pow_succ_r, IPS_mul, <-IPS_pow in *.
     simpl.
     unfold power_series.mul, coefficient.
-    rewrite coefficient_seriesify.
-    replace 0%R with (sum Ring (λ k : N, 0%R) 0 m).
-    - apply iterate_extensionality.
-      intros k [H0 [c H1]].
-      destruct (classic (n = k)).
-      + subst.
-        replace (power_series.coefficient _ (x : power_series) (k + c - k))
-          with 0%R; try ring.
-        symmetry.
-        apply coeffs_of_x.
-        contradict H.
-        rewrite naturals.add_comm, sub_abba in H.
-        subst.
-        now rewrite add_1_r.
-      + rewrite IHn, rings.mul_0_l; auto.
-    - clear.
-      induction m using Induction.
-      + unfold sum.
-        now rewrite iterate_0.
-      + rewrite sum_succ, IHm, rings.A3; auto using zero_le.
+    rewrite coefficient_seriesify, <-(sum_of_0 _ m).
+    apply iterate_extensionality.
+    intros k [H0 [c H1]].
+    destruct (classic (n = k)).
+    - subst.
+      replace (power_series.coefficient _ (x : power_series) (k + c - k))
+        with 0%R; try ring.
+      symmetry.
+      apply coeffs_of_x.
+      contradict H.
+      rewrite naturals.add_comm, sub_abba in H.
+      subst.
+      now rewrite add_1_r.
+    - rewrite IHn, rings.mul_0_l; auto.
   Qed.
 
   Lemma degree_bound : ∀ n (f : polynomial),
@@ -498,20 +486,6 @@ Section Polynomial_theorems.
     now rewrite <-power_series.const_coeff_mul, IPS_mul, IPS_IRP.
   Qed.
 
-  Lemma neg_coeff_mul : ∀ (n : N) (f : polynomial),
-      coefficient (- f) n = (- coefficient f n)%R.
-  Proof.
-    intros n f.
-    replace (-f)%poly with (((-(1) : R)%R : polynomial) * f) at 1.
-    { rewrite const_coeff_mul.
-      now ring_simplify. }
-    apply IPS_eq.
-    rewrite IPS_mul, IPS_IRP, IPS_neg.
-    unfold IRS; rewrite IRS_neg; fold IRS.
-    replace (power_series.neg Ring (IRS 1)) with ((-(1))%series) by auto.
-    now ring_simplify.
-  Qed.
-
   Lemma coeffs_of_x_to_n : ∀ n, coefficient (x^n) n = 1%R.
   Proof.
     intros n.
@@ -529,59 +503,18 @@ Section Polynomial_theorems.
     unfold coefficient, IPS.
     rewrite <-ISR_mul; simpl in *.
     unfold power_series.mul, coefficient in *.
-    rewrite coefficient_seriesify.
-    replace 1%R with
-        (sum Ring (λ k : N, if (excluded_middle_informative (k = n))
-                            then 1%R else 0%R) 0 (S n)).
-    - apply iterate_extensionality.
-      intros k [H0 [c H1]].
-      destruct excluded_middle_informative.
-      + subst.
-        rewrite <-IHn, <-add_1_r, naturals.add_comm, sub_abba.
-        fold IPS (coefficient x 1).
-        rewrite x_coeff_of_x.
-        ring.
-      + fold IPS (coefficient (x^n) k).
-        rewrite coeffs_of_x_ne_n; auto; ring.
-    - clear IHn.
-      induction n using Induction.
-      + unfold sum.
-        rewrite iterate_succ, iterate_0; auto using le_refl.
-        repeat destruct excluded_middle_informative; try tauto.
-        * now contradiction (PA4 0).
-        * ring.
-      + rewrite sum_succ; auto using zero_le.
-        destruct excluded_middle_informative;
-          try now contradiction (neq_succ (S n)).
-        ring_simplify.
-        rewrite <-IHn, ? sum_succ, rings.A1 at 1; auto using zero_le.
-        repeat destruct excluded_middle_informative; try tauto;
-          try now contradiction (neq_succ n).
-        assert (∀ m, sum Ring (λ k, if excluded_middle_informative (k = S m)
-                                 then 1%R else 0%R) 0 m = 0%R) as H.
-        { clear.
-          intros m.
-          replace 0%R with (sum _ (λ k, 0%R) 0 m) at 1.
-          - apply iterate_extensionality.
-            intros k [H H0].
-            destruct excluded_middle_informative; auto.
-            subst.
-            rewrite naturals.le_not_gt in H0.
-            contradict H0.
-            apply naturals.succ_lt.
-          - induction m using Induction.
-            + unfold sum.
-              now rewrite iterate_0.
-            + rewrite sum_succ, IHm, rings.A3; auto using zero_le. }
-        f_equal; auto.
-        destruct (classic (n = 0%N)) as [H0 | H0]; subst.
-        * unfold sum.
-          rewrite iterate_0.
-          destruct excluded_middle_informative; tauto.
-        * apply succ_0 in H0 as [m H0].
-          subst.
-          rewrite sum_succ, H, rings.A3; auto using zero_le.
-          destruct excluded_middle_informative; tauto.
+    rewrite coefficient_seriesify, <-(singleton_sum Ring n (S n) 1%R).
+    2: { exists 1%N; now rewrite add_1_r. }
+    apply iterate_extensionality.
+    intros k [H0 [c H1]].
+    destruct excluded_middle_informative.
+    - subst.
+      rewrite <-IHn, <-add_1_r, naturals.add_comm, sub_abba.
+      fold IPS (coefficient x 1).
+      rewrite x_coeff_of_x.
+      ring.
+    - fold IPS (coefficient (x^n) k).
+      rewrite coeffs_of_x_ne_n; auto; ring.
   Qed.
 
   Theorem coefficient_add : ∀ n (f g : polynomial),
@@ -697,24 +630,16 @@ Section Polynomial_theorems.
       + replace (-0)%R with 0%R by ring.
         now rewrite rings.A1, rings.A3.
       + rewrite const_coeff_mul, coeffs_of_x_ne_n.
-        * now replace (coefficient f (S d) * 0)%R with 0%R by ring.
+        * ring.
         * intros H3.
           rewrite H3, naturals.le_not_gt in H2.
           contradict H2.
           apply naturals.succ_lt.
     - rewrite <-(rings.A3 _ f), rings.A1, sum_succ at 1; auto using zero_le.
       f_equal.
-      + apply IHd.
-        destruct H as [c H].
-        assert (c ≠ 0%N) as H1.
-        { contradict H0.
-          subst.
-          now rewrite naturals.add_0_r in H. }
-        apply succ_0 in H1 as [k H1].
-        subst.
-        exists k.
-        apply PA5.
-        now rewrite <-add_succ_r.
+      + apply IHd, naturals.le_not_gt.
+        intros H1.
+        eauto using squeeze_upper.
       + rewrite coeffs_above_degree; repeat split; auto.
         replace (IRP 0%R) with 0 by now apply set_proj_injective.
         ring.
@@ -759,52 +684,14 @@ Section Polynomial_theorems.
   Proof.
     intros d k a H.
     rewrite coefficient_sum_add.
-    replace (a k) with (sum _ (λ n, (if (excluded_middle_informative (n = k))
-                                     then (a k) else 0%R)) 0 d).
-    { apply iterate_extensionality.
-      intros z H0.
-      destruct excluded_middle_informative.
-      - subst.
-        rewrite const_coeff_mul, coeffs_of_x_to_n.
-        ring.
-      - rewrite const_coeff_mul, coeffs_of_x_ne_n; auto; ring. }
-    induction d using Induction.
-    { unfold sum.
-      rewrite iterate_0.
-      destruct excluded_middle_informative; auto.
-      contradict n.
-      apply naturals.le_antisymm; auto using zero_le. }
-    destruct (classic (k ≤ d)%N) as [H0 | H0].
-    { rewrite sum_succ, IHd; auto using zero_le.
-      destruct excluded_middle_informative; try ring.
-      subst.
-      rewrite naturals.le_not_gt in H0.
-      contradict H0.
-      auto using naturals.succ_lt. }
-    - apply naturals.lt_not_ge in H0 as [[c1 H0] H1].
-      destruct H as [c2 H].
-      rewrite <-H0, <-add_1_r, <-naturals.add_assoc in H.
-      pose proof H as H2.
-      apply naturals.cancellation_add, cancellation_1_add in H2
-        as [H2 | H2]; subst; try (contradict H1; ring).
-      apply naturals.cancellation_add in H.
-      ring_simplify in H.
-      subst.
-      rewrite sum_succ; auto using zero_le.
-      rewrite <-(rings.A3 _ (a (d + 1)%N)) at 1.
-      f_equal.
-      + rewrite <-(sum_of_0 _ d) at 1.
-        apply iterate_extensionality.
-        intros k H.
-        destruct excluded_middle_informative; auto.
-        subst.
-        destruct H as [H H0].
-        rewrite naturals.le_not_gt, add_1_r in H0.
-        contradict H0.
-        apply naturals.succ_lt.
-      + destruct excluded_middle_informative; auto.
-        contradict n.
-        now rewrite add_1_r.
+    rewrite <-(singleton_sum _ k d (a k)); auto.
+    apply iterate_extensionality.
+    intros z H0.
+    destruct excluded_middle_informative.
+    - subst.
+      rewrite const_coeff_mul, coeffs_of_x_to_n.
+      ring.
+    - rewrite const_coeff_mul, coeffs_of_x_ne_n; auto; ring.
   Qed.
 
   Theorem coeff_of_x_mul : ∀ n k f,
@@ -904,82 +791,6 @@ Section Polynomial_theorems.
     contradict H.
     rewrite (naturals.add_comm z), sub_abba.
     now (exists z).
-  Qed.
-
-  Definition INR := (INR Ring) : N → R.
-  Coercion INR : N >-> R.
-
-  Lemma binomial_theorem_zero :
-    ∀ n, coefficient ((1 + x)^n) 0 = binomial n 0.
-  Proof.
-    intros n.
-    induction n using Induction.
-    - subst.
-      rewrite rings.pow_0_r, <-(rings.pow_0_r _ x), coeffs_of_x_to_n,
-      binomial_zero.
-      unfold INR, rings.INR, sum.
-      now rewrite iterate_0.
-    - rewrite pow_succ_r, D1_l, coefficient_add, rings.M1, rings.M3, IHn.
-      rewrite <-(rings.pow_1_r _ x) at 2.
-      rewrite coeff_of_x_mul_overflow, ? binomial_zero;
-          eauto using naturals.succ_lt.
-      now ring_simplify.
-  Qed.
-
-  Theorem binomial_theorem :
-    ∀ n k, coefficient ((1 + x)^n) k = binomial n k.
-  Proof.
-    intros n k.
-    revert k.
-    induction n using Induction; intros k.
-    { destruct (classic (k = 0%N)) as [H | H].
-      - subst; apply binomial_theorem_zero.
-      - rewrite rings.pow_0_r, <-(rings.pow_0_r _ x),
-        coeffs_of_x_ne_n, binomial_empty_set; auto.
-        unfold INR, rings.INR, sum, iterate_with_bounds.
-        destruct excluded_middle_informative; auto.
-        exfalso.
-        apply naturals.le_not_gt in l.
-        eauto using naturals.succ_lt. }
-    destruct (classic (k = 0%N)) as [H | H].
-    { subst; apply binomial_theorem_zero. }
-    assert (1 ≤ k)%N as H0.
-    { apply succ_0 in H as [m H].
-      exists m.
-      now rewrite naturals.add_comm, add_1_r. }
-    rewrite pow_succ_r, D1_l, rings.M1, rings.M3, coefficient_add, IHn;
-      auto using zero_le, naturals.succ_lt.
-    rewrite <-(rings.pow_1_r _ x) at 2.
-    rewrite coeff_of_x_mul, IHn, <-add_1_r, <-INR_add, Pascal's_identity; auto.
-  Qed.
-
-  Theorem binomial_sum : ∀ n,
-      (1 + x)^n = sum _ (λ k, (binomial n k : polynomial) * x^k) 0 n.
-  Proof.
-    intros n.
-    rewrite (polynomial_sum_lemma n ((1+x)^n)).
-    { apply iterate_extensionality.
-      intros k H.
-      now rewrite binomial_theorem. }
-    induction n using Induction.
-    - rewrite rings.pow_0_r.
-      apply degree_bound.
-      intros m H.
-      rewrite <-(rings.pow_0_r _ x), coeffs_of_x_ne_n; auto.
-      intros H0.
-      subst.
-      contradiction (naturals.lt_irrefl 0).
-    - rewrite pow_succ_r, <-add_1_r.
-      eapply naturals.le_trans; eauto using mul_degree.
-      apply naturals.le_cross_add, degree_bound; auto.
-      intros m H.
-      rewrite coefficient_add, <-(rings.pow_1_r _ x),
-      <-(rings.pow_0_r _ x), ? coeffs_of_x_ne_n; try (now ring_simplify);
-        intros H0; subst.
-      + contradiction (naturals.lt_irrefl 1).
-      + apply naturals.lt_not_ge in H.
-        contradict H.
-        apply zero_le.
   Qed.
 
   Definition eval f a := (sum _ (λ n, (coefficient f n) * a^n)%R 0 (degree f)).
@@ -1085,6 +896,28 @@ Section Polynomial_theorems.
     rewrite <-(rings.M3 _ (c : polynomial)), rings.M1, const_coeff_mul,
     <-(rings.pow_0_r _ x), coeffs_of_x_to_n.
     now ring_simplify.
+  Qed.
+
+  Lemma degree_lower_bound : ∀ n f, coefficient f n ≠ 0%R → (n ≤ degree f)%N.
+  Proof.
+    intros n f H.
+    unfold degree.
+    destruct excluded_middle_informative.
+    - contradict H.
+      subst.
+      replace 0 with (IRP 0) by now apply set_proj_injective.
+      destruct (classic (n = 0%N)) as [H | H].
+      + now rewrite H, coeff_const.
+      + rewrite coeffs_above_degree; auto.
+        rewrite degree_const.
+        apply succ_0 in H as [m H].
+        subst.
+        now apply naturals.lt_succ.
+    - destruct constructive_indefinite_description as [d].
+      destruct a as [H0 H1].
+      apply naturals.le_not_gt.
+      intros H2.
+      now apply H1 in H2.
   Qed.
 
   Lemma eval_mul_const : ∀ (c α : R) f,
@@ -1196,6 +1029,338 @@ Section Polynomial_theorems.
       auto using naturals.le_refl.
     do 2 f_equal; try extensionality n;
       rewrite <-polynomial_sum_lemma; auto using naturals.le_refl.
+  Qed.
+
+  Definition linear f := (degree f = 1%N).
+
+  Theorem linear_classification : ∀ f, linear f ↔ ∃ a b : R,
+          f = (a : polynomial) + (b : polynomial) * x ∧ b ≠ 0%R.
+  Proof.
+    intros f.
+    split; intros H.
+    - unfold linear in H.
+      rewrite (polynomial_sum_lemma 1 f).
+      2: { rewrite H.
+           auto using le_refl. }
+      exists (coefficient f 0), (coefficient f 1).
+      split.
+      + unfold naturals.one.
+        rewrite sum_succ; auto using zero_le.
+        unfold sum.
+        rewrite iterate_0, rings.pow_0_r.
+        f_equal; try now ring_simplify.
+        fold naturals.one.
+        now rewrite rings.pow_1_r.
+      + intros H0.
+        contradiction (PA4 0).
+        fold naturals.one.
+        rewrite <-H.
+        symmetry.
+        apply naturals.le_antisymm; auto using zero_le.
+        apply degree_bound.
+        intros m [H1 H2].
+        assert (m ≠ 0%N) as H3 by auto.
+        apply succ_0 in H3 as [k H3].
+        subst.
+        destruct (classic ((S k) = 1%N)) as [H3 | H3]; try congruence.
+        rewrite coeffs_above_degree; auto.
+        rewrite H, naturals.lt_def.
+        exists k.
+        rewrite naturals.add_comm, naturals.add_1_r.
+        split; auto.
+        contradict H3.
+        now rewrite <-H3.
+    - destruct H as [a [b [H H0]]].
+      subst.
+      unfold linear.
+      apply naturals.le_antisymm.
+      + apply degree_bound.
+        intros m H.
+        rewrite coefficient_add, const_coeff_mul, ? coeffs_above_degree;
+          try now ring_simplify.
+        * rewrite <-(rings.pow_1_r _ x), degree_x_to_n; auto.
+          contradict H0.
+          now apply zero_ring_degeneracy.
+        * rewrite degree_const.
+          eapply naturals.lt_trans; eauto using naturals.succ_lt.
+      + apply degree_lower_bound.
+        rewrite coefficient_add, coeffs_above_degree, const_coeff_mul.
+        2: { rewrite degree_const; eauto using naturals.succ_lt. }
+        rewrite <-(rings.pow_1_r _ x), coeffs_of_x_to_n.
+        contradict H0.
+        ring_simplify in H0.
+        now subst.
+  Qed.
+
+  Theorem IRP_1 : ((1%R : R) : polynomial) = 1.
+  Proof.
+    unfold IRP.
+    apply set_proj_injective.
+    simpl.
+    unfold ISS, power_series.IRS, sub_one.
+    destruct polynomials_are_subring.
+    now repeat destruct a.
+  Qed.
+
+  Theorem degree_of_1_plus_x : 1%R ≠ 0%R → degree (1+x) = 1%N.
+  Proof.
+    intros H.
+    apply linear_classification.
+    exists 1%R, 1%R.
+    rewrite IRP_1.
+    split; auto; ring.
+  Qed.
+
+  Definition monic f := (coefficient f (degree f) = 1%R).
+
+  Theorem leading_term_prod : ∀ f g,
+      (coefficient f (degree f) * coefficient g (degree g))%R =
+      coefficient (f * g) (degree f + degree g)%N.
+  Proof.
+    intros f g.
+    rewrite coefficient_mul.
+    replace (coefficient f (degree f) * coefficient g (degree g))%R
+      with (sum _ (λ k, if (excluded_middle_informative (k = degree f)) then
+                          (coefficient f (degree f) *
+                           coefficient g (degree g))%R else 0%R)
+                0 (degree f + degree g)%N).
+    2: { rewrite singleton_sum; auto.
+         now exists (degree g). }
+    apply iterate_extensionality.
+    intros k H.
+    destruct (lt_trichotomy k (degree f)) as [H0 | [H0 | H0]].
+    - destruct excluded_middle_informative.
+      { subst; contradiction (naturals.lt_irrefl (degree f)). }
+      rewrite (coeffs_above_degree _ g); try ring.
+      destruct H0 as [[c H0] H2].
+      rewrite <-H0, <-naturals.add_assoc, naturals.add_comm, sub_abba,
+      naturals.add_comm, naturals.lt_def.
+      exists c.
+      split; auto.
+      contradict H2.
+      subst.
+      ring [H0].
+    - subst.
+      destruct excluded_middle_informative; try tauto.
+      now rewrite naturals.add_comm, sub_abba.
+    - destruct excluded_middle_informative.
+      { subst; contradiction (naturals.lt_irrefl (degree f)). }
+      rewrite coeffs_above_degree; auto; ring.
+  Qed.
+
+  Theorem zero_ring_degree : 1%R = 0%R → ∀ f, degree f = 0%N.
+  Proof.
+    intros H f.
+    apply naturals.le_antisymm; auto using zero_le.
+    apply degree_bound.
+    intros m H0.
+    now apply zero_ring_degeneracy.
+  Qed.
+
+  Theorem zero_ring_monic : 1%R = 0%R → ∀ f, monic f.
+  Proof.
+    intros H f.
+    unfold monic.
+    now apply zero_ring_degeneracy.
+  Qed.
+
+  Theorem monic_prod_degree :
+    ∀ f g, monic f → monic g → degree (f * g) = (degree f + degree g)%N.
+  Proof.
+    intros f g H H0.
+    destruct (classic (1%R = 0%R)) as [H1 | H1].
+    { rewrite ? zero_ring_degree; auto; ring. }
+    apply naturals.le_antisymm; auto using mul_degree.
+    apply degree_lower_bound.
+    unfold monic in *.
+    now rewrite <-leading_term_prod, H, H0, rings.M3.
+  Qed.
+
+  Theorem monic_prod : ∀ f g, monic f → monic g → monic (f * g).
+  Proof.
+    intros f g H H0.
+    unfold monic in *.
+    rewrite monic_prod_degree, <-leading_term_prod, H, H0, rings.M3; auto.
+  Qed.
+
+  Theorem monic_1_plus_x : monic (1 + x).
+  Proof.
+    destruct (classic (1%R = 0%R)) as [H | H]; auto using zero_ring_monic.
+    unfold monic.
+    rewrite degree_of_1_plus_x, coefficient_add, <-IRP_1, coeffs_above_degree,
+    x_coeff_of_x; auto; try now ring_simplify.
+    rewrite degree_const.
+    apply naturals.lt_succ.
+  Qed.
+
+  Theorem monic_powers : ∀ n f, monic f → monic (f^n).
+  Proof.
+    intros n f H.
+    induction n using Induction.
+    - rewrite rings.pow_0_r.
+      unfold monic.
+      now rewrite <-IRP_1, degree_const, coeff_const.
+    - rewrite pow_succ_r.
+      now apply monic_prod.
+  Qed.
+
+  Theorem monic_pow_degree : ∀ n f, monic f → degree (f^n) = (n * degree f)%N.
+  Proof.
+    intros n f H.
+    induction n using Induction.
+    - rewrite rings.pow_0_r, <-IRP_1, degree_const.
+      ring.
+    - rewrite pow_succ_r, monic_prod_degree, IHn, <-add_1_r;
+        auto using monic_powers; ring.
+  Qed.
+
+  Theorem degree_of_1_plus_x_to_n : 1%R ≠ 0%R → ∀ n, degree ((1 + x)^n) = n.
+  Proof.
+    intros H n.
+    rewrite monic_pow_degree, degree_of_1_plus_x;
+      auto using monic_1_plus_x; ring.
+  Qed.
+
+  Definition INR := (INR Ring) : N → R.
+  Coercion INR : N >-> R.
+
+  Lemma binomial_theorem_zero :
+    ∀ n, coefficient ((1 + x)^n) 0 = binomial n 0.
+  Proof.
+    intros n.
+    induction n using Induction.
+    - subst.
+      rewrite rings.pow_0_r, <-(rings.pow_0_r _ x), coeffs_of_x_to_n,
+      binomial_zero.
+      unfold INR, rings.INR, sum.
+      now rewrite iterate_0.
+    - rewrite pow_succ_r, D1_l, coefficient_add, rings.M1, rings.M3, IHn.
+      rewrite <-(rings.pow_1_r _ x) at 2.
+      rewrite coeff_of_x_mul_overflow, ? binomial_zero;
+          eauto using naturals.succ_lt.
+      now ring_simplify.
+  Qed.
+
+  Theorem binomial_theorem :
+    ∀ n k, coefficient ((1 + x)^n) k = binomial n k.
+  Proof.
+    intros n k.
+    revert k.
+    induction n using Induction; intros k.
+    { destruct (classic (k = 0%N)) as [H | H].
+      - subst; apply binomial_theorem_zero.
+      - rewrite rings.pow_0_r, <-(rings.pow_0_r _ x),
+        coeffs_of_x_ne_n, binomial_empty_set; auto.
+        unfold INR, rings.INR, sum, iterate_with_bounds.
+        destruct excluded_middle_informative; auto.
+        apply naturals.le_not_gt in l as H0.
+        exfalso; eauto using naturals.succ_lt. }
+    destruct (classic (k = 0%N)) as [H | H].
+    { subst; apply binomial_theorem_zero. }
+    rewrite pow_succ_r, D1_l, rings.M1, rings.M3, coefficient_add, IHn;
+      auto using zero_le, naturals.succ_lt.
+    rewrite <-(rings.pow_1_r _ x) at 2.
+    apply succ_0 in H as [c H].
+    rewrite coeff_of_x_mul, IHn, <-add_1_r, <-INR_add, Pascal's_identity;
+      auto; subst; exists c; now rewrite <-add_1_r, naturals.add_comm.
+  Qed.
+
+  Theorem binomial_sum : ∀ n,
+      (1 + x)^n = sum _ (λ k, (binomial n k : polynomial) * x^k) 0 n.
+  Proof.
+    intros n.
+    rewrite (polynomial_sum_lemma n ((1+x)^n)).
+    - apply iterate_extensionality.
+      intros k H.
+      now rewrite binomial_theorem.
+    - destruct (classic (1%R = 0%R)).
+      + rewrite zero_ring_degree; auto using zero_le.
+      + rewrite degree_of_1_plus_x_to_n; auto using le_refl.
+  Qed.
+
+  Definition leading_coefficient f := coefficient f (degree f).
+
+  Lemma leading_coefficient_nonzero : ∀ f, leading_coefficient f = 0%R → f = 0.
+  Proof.
+    intros f H.
+    unfold leading_coefficient in H.
+    apply NNPP.
+    intros H0.
+    pose proof (eq_refl (degree f)) as H1.
+    eapply (degree_spec f) in H0.
+    intuition.
+  Qed.
+
+  Lemma const_mul_monic : ∀ a f,
+      a ≠ 0%R → monic f → degree (((a : R) : polynomial) * f) = degree f.
+  Proof.
+    intros a f H H0.
+    apply naturals.le_antisymm.
+    - apply degree_bound.
+      intros m H1.
+      rewrite const_coeff_mul, coeffs_above_degree; auto; now ring_simplify.
+    - apply degree_lower_bound.
+      unfold monic in *.
+      now rewrite const_coeff_mul, H0, rings.M1, rings.M3.
+  Qed.
+
+  Theorem monic_division_algorithm : 1%R ≠ 0%R → ∀ a b n,
+        monic b → (0 < degree b)%N → (degree a ≤ n)%N →
+        ∃ q r, a = b * q + r ∧ (degree r < degree b)%N.
+  Proof.
+    intros H a b n H0 H1 H2.
+    revert n a H2.
+    induction n using Induction; intros a H2.
+    { exists 0, a.
+      split; try ring.
+      eauto using naturals.le_lt_trans. }
+    destruct (classic (degree a ≤ n)%N) as [H3 | H3]; try now apply IHn in H3.
+    destruct (classic (degree a < degree b)%N) as [H4 | H4].
+    { exists 0, a.
+      split; auto; ring. }
+    apply naturals.le_not_gt in H4 as [c H4].
+    assert (degree a = S n) as H5.
+    { apply naturals.lt_not_ge in H3.
+      now apply squeeze_upper. }
+    assert (1 ≤ degree a)%N as H6.
+    { exists n.
+      now rewrite H5, <-add_1_r, naturals.add_comm. }
+    destruct (IHn (a - (leading_coefficient a : polynomial) * x^c * b))
+      as [q [r [H7 H8]]].
+    2: { exists (q + (leading_coefficient a : polynomial) * x^c), r.
+         split; auto.
+         ring_simplify [H7].
+         rewrite <-rings.A2, <-H7.
+         ring. }
+    apply degree_bound.
+    intros m H7.
+    rewrite rings.sub_is_neg, coefficient_add, coefficient_neg.
+    destruct (classic (S n < m)%N) as [H8 | H8].
+    - rewrite ? coeffs_above_degree; try now ring_simplify; try congruence.
+      eapply naturals.le_lt_trans; eauto.
+      rewrite <-H5, <-H4.
+      eapply naturals.le_trans; eauto using mul_degree.
+      exists 0%N.
+      rewrite add_0_r, naturals.add_comm.
+      f_equal.
+      rewrite const_mul_monic; auto using degree_x_to_n.
+      + intros H9.
+        apply leading_coefficient_nonzero in H9.
+        subst.
+        unfold degree in H5.
+        destruct excluded_middle_informative.
+        * contradiction (PA4 n).
+        * now contradiction n0.
+      + unfold monic.
+        rewrite degree_x_to_n, coeffs_of_x_to_n; auto.
+    - apply naturals.le_not_gt in H8.
+      replace m with (S n) by now apply eq_sym, squeeze_upper.
+      unfold leading_coefficient, monic in *.
+      rewrite <-H5, <-rings.M2, const_coeff_mul, (rings.M1 PR),
+      coeff_of_x_mul, <-H4, sub_abba, H0.
+      + now ring_simplify.
+      + exists (degree b).
+        now rewrite <-H4, naturals.add_comm.
   Qed.
 
 End Polynomial_theorems.

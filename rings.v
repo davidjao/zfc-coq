@@ -1280,4 +1280,50 @@ Section Ring_theorems.
     ring [H].
   Qed.
 
+  Theorem singleton_sum : ∀ m n a,
+      m ≤ n →
+      sum (λ k, if (excluded_middle_informative (k = m)) then a else 0) 0 n = a.
+  Proof.
+    intros m n a H.
+    induction n using Induction.
+    { unfold sum.
+      rewrite iterate_0.
+      destruct excluded_middle_informative; auto.
+      assert (m ≠ 0%N) as H0 by auto.
+      apply succ_0 in H0 as [k H0].
+      subst.
+      rewrite le_not_gt in H.
+      contradict H.
+      now apply lt_succ. }
+    destruct (classic (m = S n)) as [H0 | H0].
+    - subst.
+      rewrite sum_succ; auto using zero_le.
+      rewrite <-(A3 a) at 1.
+      f_equal.
+      + rewrite <-(sum_of_0 n).
+        apply iterate_extensionality.
+        intros k H0.
+        destruct excluded_middle_informative; auto using sum_of_0.
+        subst.
+        destruct H0 as [H0 H1].
+        apply le_not_gt in H1.
+        contradict H1.
+        auto using succ_lt.
+      + destruct excluded_middle_informative; tauto.
+    - rewrite sum_succ, IHn; auto using zero_le.
+      + destruct excluded_middle_informative.
+        * contradict H0.
+          congruence.
+        * ring.
+      + destruct H as [c H].
+        rewrite <-H in H0.
+        assert (c ≠ 0%N) as H1.
+        { contradict H0.
+          ring [H0]. }
+        apply succ_0 in H1 as [d H1].
+        exists d.
+        rewrite H1, add_succ_r in H.
+        now apply PA5.
+  Qed.
+
 End Ring_theorems.

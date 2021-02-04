@@ -1422,3 +1422,37 @@ Proof.
   contradict H5.
   now (exists c).
 Qed.
+
+Theorem squeeze_upper : ∀ n m, n < m → m ≤ S n → m = S n.
+Proof.
+  intros n m H [c H0].
+  assert (c = 0).
+  { apply NNPP.
+    intros H1.
+    apply succ_0 in H1 as [d H1].
+    subst.
+    rewrite add_succ_r in H0.
+    apply PA5 in H0.
+    subst.
+    contradiction (lt_irrefl m).
+    eapply le_lt_trans; eauto.
+    now exists d. }
+  subst.
+  ring [H0].
+Qed.
+
+Theorem squeeze_lower : ∀ n m, n ≤ m → m < S n → m = n.
+Proof.
+  intros n m [c H] H0.
+  assert (c = 0).
+  { apply NNPP.
+    intros H1.
+    apply succ_0 in H1 as [d H1].
+    subst.
+    rewrite add_succ_r, <-S_lt in H0.
+    contradiction (lt_irrefl n).
+    eapply le_lt_trans; eauto.
+    now exists d. }
+  subst.
+  ring.
+Qed.
