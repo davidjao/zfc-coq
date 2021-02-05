@@ -1102,11 +1102,12 @@ Section Polynomial_theorems.
     now repeat destruct a.
   Qed.
 
-  Theorem degree_of_1_plus_x : 1%R ≠ 0%R → degree (1+x) = 1%N.
+  Theorem degree_of_a_plus_x :
+    1%R ≠ 0%R → ∀ α : R, degree ((α : polynomial) + x) = 1%N.
   Proof.
-    intros H.
+    intros H α.
     apply linear_classification.
-    exists 1%R, 1%R.
+    exists α, 1%R.
     rewrite IRP_1.
     split; auto; ring.
   Qed.
@@ -1183,11 +1184,12 @@ Section Polynomial_theorems.
     rewrite monic_prod_degree, <-leading_term_prod, H, H0, rings.M3; auto.
   Qed.
 
-  Theorem monic_1_plus_x : monic (1 + x).
+  Theorem monic_a_plus_x : ∀ α : R, monic ((α : polynomial) + x).
   Proof.
+    intros α.
     destruct (classic (1%R = 0%R)) as [H | H]; auto using zero_ring_monic.
     unfold monic.
-    rewrite degree_of_1_plus_x, coefficient_add, <-IRP_1, coeffs_above_degree,
+    rewrite degree_of_a_plus_x, coefficient_add, coeffs_above_degree,
     x_coeff_of_x; auto; try now ring_simplify.
     rewrite degree_const.
     apply naturals.lt_succ.
@@ -1214,68 +1216,137 @@ Section Polynomial_theorems.
         auto using monic_powers; ring.
   Qed.
 
-  Theorem degree_of_1_plus_x_to_n : 1%R ≠ 0%R → ∀ n, degree ((1 + x)^n) = n.
+  Theorem degree_of_a_plus_x_to_n :
+    1%R ≠ 0%R → ∀ n (α : R), degree (((α : polynomial) + x)^n) = n.
   Proof.
-    intros H n.
-    rewrite monic_pow_degree, degree_of_1_plus_x;
-      auto using monic_1_plus_x; ring.
+    intros H n α.
+    rewrite monic_pow_degree, degree_of_a_plus_x;
+      auto using monic_a_plus_x; ring.
   Qed.
 
   Definition INR := (INR Ring) : N → R.
   Coercion INR : N >-> R.
 
-  Lemma binomial_theorem_zero :
-    ∀ n, coefficient ((1 + x)^n) 0 = binomial n 0.
+  Lemma binomial_theorem_zero : ∀ n (α : R),
+      coefficient (((α : polynomial) + x)^n) 0 = ((binomial n 0 : R) * α^n)%R.
   Proof.
-    intros n.
-    induction n using Induction.
+    induction n using Induction; intros α.
     - subst.
-      rewrite rings.pow_0_r, <-(rings.pow_0_r _ x), coeffs_of_x_to_n,
-      binomial_zero.
+      rewrite ? rings.pow_0_r, <-(rings.pow_0_r _ x), coeffs_of_x_to_n,
+      binomial_zero, rings.M1, rings.M3.
       unfold INR, rings.INR, sum.
       now rewrite iterate_0.
-    - rewrite pow_succ_r, D1_l, coefficient_add, rings.M1, rings.M3, IHn.
+    - rewrite pow_succ_r, D1_l, coefficient_add, binomial_zero,
+      (rings.M1 _ _ (α : polynomial)), const_coeff_mul, IHn.
       rewrite <-(rings.pow_1_r _ x) at 2.
-      rewrite coeff_of_x_mul_overflow, ? binomial_zero;
-          eauto using naturals.succ_lt.
+      rewrite coeff_of_x_mul_overflow, binomial_zero, pow_succ_r;
+        eauto using naturals.succ_lt.
       now ring_simplify.
   Qed.
 
-  Theorem binomial_theorem :
-    ∀ n k, coefficient ((1 + x)^n) k = binomial n k.
+  Lemma INR_0 : (0%R : R) = 0%N.
+  Proof.
+    unfold INR, rings.INR, sum, iterate_with_bounds.
+    destruct excluded_middle_informative; auto.
+    exfalso; apply naturals.le_not_gt in l.
+    eauto using naturals.succ_lt.
+  Qed.
+
+  Theorem generalized_binomial_theorem : ∀ n k (α : R),
+      coefficient (((α : polynomial) + x)^n) k =
+      ((binomial n k : R) * α^(n-k))%R.
   Proof.
     intros n k.
     revert k.
-    induction n using Induction; intros k.
+    induction n using Induction; intros k α.
     { destruct (classic (k = 0%N)) as [H | H].
-      - subst; apply binomial_theorem_zero.
+      - now subst; rewrite binomial_theorem_zero, sub_diag.
       - rewrite rings.pow_0_r, <-(rings.pow_0_r _ x),
         coeffs_of_x_ne_n, binomial_empty_set; auto.
         unfold INR, rings.INR, sum, iterate_with_bounds.
         destruct excluded_middle_informative; auto.
-        apply naturals.le_not_gt in l as H0.
-        exfalso; eauto using naturals.succ_lt. }
+        + apply naturals.le_not_gt in l as H0.
+          exfalso; eauto using naturals.succ_lt.
+        + now rewrite mul_0_l. }
     destruct (classic (k = 0%N)) as [H | H].
-    { subst; apply binomial_theorem_zero. }
-    rewrite pow_succ_r, D1_l, rings.M1, rings.M3, coefficient_add, IHn;
-      auto using zero_le, naturals.succ_lt.
+    { now subst; rewrite binomial_theorem_zero, sub_0_r. }
+    rewrite pow_succ_r, D1_l, rings.M1, coefficient_add, const_coeff_mul, IHn.
     rewrite <-(rings.pow_1_r _ x) at 2.
     apply succ_0 in H as [c H].
-    rewrite coeff_of_x_mul, IHn, <-add_1_r, <-INR_add, Pascal's_identity;
-      auto; subst; exists c; now rewrite <-add_1_r, naturals.add_comm.
+    rewrite coeff_of_x_mul, IHn, (rings.M1 _ α), <-rings.M2.
+    2: { exists c; now rewrite H, <-add_1_r, naturals.add_comm. }
+    rewrite <-(rings.pow_1_r _ α) at 2.
+    rewrite <-rings.pow_add_r.
+    subst.
+    destruct (classic (n = 0%N)) as [H | H].
+    { subst.
+      rewrite binomial_empty_set, sub_0_l, <-INR_0, rings.mul_0_l, rings.A3.
+      2: { intros H.
+           symmetry in H.
+           contradiction (PA4 c). }
+      rewrite <-sub_succ, ? sub_0_l.
+      f_equal.
+      destruct (classic (c = 0%N)) as [H | H].
+      - subst.
+        fold naturals.one.
+        now rewrite sub_diag, binomial_one, binomial_zero.
+      - rewrite binomial_empty_set, binomial_overflow; auto.
+        + rewrite naturals.lt_def.
+          exists c.
+          split; auto.
+          now rewrite naturals.add_comm, add_succ_r, add_0_r.
+        + contradict H.
+          now rewrite <-add_1_r, sub_abba in H. }
+    apply succ_0 in H as [m H].
+    subst.
+    rewrite <-? sub_succ, <-(add_1_r c), sub_abba.
+    destruct (lt_trichotomy c (S m)) as [H | [H | H]].
+    - apply le_lt_succ in H as [d H].
+      subst.
+      rewrite <-? add_1_r, <-(add_assoc c), ? (add_comm c), ? sub_abba,
+      <-rings.D1, <-Pascal's_identity, (add_comm 1%N), sub_abba,
+      <-rings.INR_add; auto.
+      now exists c.
+    - subst.
+      rewrite sub_diag, ? rings.pow_0_r, ? (rings.M1 _ _ 1%R), ? rings.M3,
+      ? add_1_r, binomial_overflow, ? binomial_n_n, <-INR_0, mul_0_l, rings.A3;
+        auto using naturals.succ_lt.
+    - rewrite ? binomial_overflow, <-INR_0; try now ring_simplify.
+      + now rewrite add_1_r, <-S_lt.
+      + rewrite add_1_r.
+        eauto using naturals.lt_trans, naturals.succ_lt.
+  Qed.
+
+  Theorem binomial_theorem : ∀ n k, coefficient ((1 + x)^n) k = binomial n k.
+  Proof.
+    intros n k.
+    rewrite <-IRP_1, (generalized_binomial_theorem n k 1%R), rings.pow_1_l.
+    now ring_simplify.
+  Qed.
+
+  Theorem generalized_binomial_sum : ∀ n (α : R),
+      ((α : polynomial) + x)^n =
+      sum _ (λ k, ((((binomial n k : R) * α^(n-k))%R : R) : polynomial) * x^k)
+          0 n.
+  Proof.
+    intros n α.
+    rewrite (polynomial_sum_lemma n (((α : polynomial) + x)^n)).
+    - apply iterate_extensionality.
+      intros k H.
+      now rewrite generalized_binomial_theorem.
+    - destruct (classic (1%R = 0%R)).
+      + rewrite zero_ring_degree; auto using zero_le.
+      + rewrite degree_of_a_plus_x_to_n; auto using le_refl.
   Qed.
 
   Theorem binomial_sum : ∀ n,
       (1 + x)^n = sum _ (λ k, (binomial n k : polynomial) * x^k) 0 n.
   Proof.
     intros n.
-    rewrite (polynomial_sum_lemma n ((1+x)^n)).
-    - apply iterate_extensionality.
-      intros k H.
-      now rewrite binomial_theorem.
-    - destruct (classic (1%R = 0%R)).
-      + rewrite zero_ring_degree; auto using zero_le.
-      + rewrite degree_of_1_plus_x_to_n; auto using le_refl.
+    rewrite <-IRP_1, generalized_binomial_sum.
+    apply iterate_extensionality.
+    intros k H.
+    now rewrite rings.pow_1_l, (rings.M1 _ _ 1%R), rings.M3.
   Qed.
 
   Definition leading_coefficient f := coefficient f (degree f).

@@ -2440,38 +2440,60 @@ Proof.
   now contradiction (neq_succ (# z)).
 Qed.
 
-Theorem combinations_of_empty_set :
-  ∀ k, k ≠ 0%N → set_of_combinations 0 k ~ ∅.
+Theorem combinations_overflow : ∀ n k, (n < k)%N → set_of_combinations n k = ∅.
 Proof.
-  intros k H.
-  exists empty_function.
-  unfold empty_function.
-  destruct constructive_indefinite_description.
-  destruct a as [H0 [H1 H2]].
-  repeat split; auto.
-  - rewrite H0.
-    apply Extensionality.
-    split; intros H3; try now contradiction (Empty_set_classification z).
-    apply Specify_classification in H3 as [H3 H4].
-    rewrite Powerset_classification in H3.
-    assert (z = ∅) as H5.
-    { apply Extensionality.
-      split; intros H5; try now contradiction (Empty_set_classification z0);
-        auto. }
-    subst.
-    contradict H.
-    now rewrite <-card_of_natural.
-  - rewrite Injective_classification.
-    intros x0 y H3 H4 H5.
-    contradiction (Empty_set_classification y); congruence.
-  - rewrite Surjective_classification.
-    intros y H3.
-    contradiction (Empty_set_classification y); congruence.
+  intros n k H.
+  apply Extensionality; split; intros H0;
+    try now contradiction (Empty_set_classification z).
+  apply Specify_classification in H0 as [H0 H1].
+  apply Powerset_classification in H0.
+  apply finite_subsets, naturals.le_not_gt in H0;
+    eauto using naturals_are_finite, subsets_of_finites_are_finite.
+  subst.
+  now rewrite <-(card_of_natural n) in H.
+Qed.
+
+Theorem binomial_overflow : ∀ n k, (n < k)%N → binomial n k = 0%N.
+Proof.
+  intros n k H.
+  unfold binomial.
+  rewrite combinations_overflow, <-card_of_natural; auto.
 Qed.
 
 Theorem binomial_empty_set : ∀ k, k ≠ 0%N → binomial 0 k = 0%N.
 Proof.
   intros k H.
-  unfold binomial.
-  now rewrite combinations_of_empty_set, <-card_of_natural.
+  apply binomial_overflow.
+  rewrite naturals.lt_def.
+  exists k.
+  split; auto.
+  ring.
+Qed.
+
+Theorem one_factorial : 1! = 1%N.
+Proof.
+  unfold factorial, prod.
+  now rewrite iterate_0.
+Qed.
+
+Theorem binomial_one : binomial 1 1 = 1%N.
+Proof.
+  pose proof binomial_coefficient 1 1 as H.
+  rewrite ? one_factorial, sub_diag, zero_factorial in H.
+  replace (1%N : Z) with (1%Z) in H by auto.
+  rewrite ? (integers.M1 _ 1), ? integers.M3 in H.
+  pose proof (le_refl 1) as H0.
+  now apply H, INZ_eq in H0.
+Qed.
+
+Theorem binomial_n_n : ∀ n, binomial n n = 1%N.
+Proof.
+  intros n.
+  pose proof binomial_coefficient n n as H.
+  rewrite sub_diag, zero_factorial in H.
+  replace (1%N : Z) with (1%Z) in H by auto.
+  rewrite ? (integers.M1 _ 1), ? integers.M3, <-(integers.M3 (n!)) in H at 1.
+  pose proof (le_refl n) as H0.
+  apply H, (cancellation_mul_r (integral_domain_OR integer_order)),
+  INZ_eq in H0; auto using factorial_ne_0.
 Qed.

@@ -1456,3 +1456,38 @@ Proof.
   subst.
   ring.
 Qed.
+
+Theorem succ_le : ∀ a b, a ≤ b ↔ S a ≤ S b.
+Proof.
+  intros a b.
+  split; intros [c H]; exists c; subst.
+  - now rewrite add_comm, add_succ_r, add_comm.
+  - apply PA5.
+    now rewrite add_comm, add_succ_r, add_comm in H.
+Qed.
+
+Theorem sub_succ : ∀ a b, a - b = S a - S b.
+Proof.
+  intros a b.
+  unfold sub.
+  repeat destruct excluded_middle_informative;
+    repeat destruct constructive_indefinite_description; auto;
+      try now apply succ_le in l.
+  rewrite <-e, add_comm, add_succ_r, add_comm in e0.
+  now apply PA5, cancellation_add in e0.
+Qed.
+
+Theorem le_lt_succ : ∀ n m, m ≤ n ↔ m < S n.
+Proof.
+  split; rewrite lt_def; intros [c H].
+  - exists (S c).
+    rewrite add_succ_r.
+    split; auto using PA4; congruence.
+  - destruct H as [H H0].
+    assert (c ≠ 0) as H1 by auto.
+    apply succ_0 in H1 as [d H1].
+    subst.
+    exists d.
+    rewrite add_succ_r in H0.
+    now apply PA5.
+Qed.
