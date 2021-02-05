@@ -275,6 +275,39 @@ Section Polynomial_theorems.
     now apply set_proj_injective.
   Qed.
 
+
+  Theorem IRP_add : ∀ a b : R,
+      (a : polynomial) + (b : polynomial) = (((a + b)%R : R) : polynomial).
+  Proof.
+    intros a b.
+    unfold IRP; apply set_proj_injective; simpl.
+    rewrite (IRS_add Ring).
+    unfold ISR, rings.IRS, ISS.
+    simpl.
+    do 2 f_equal; now apply set_proj_injective.
+  Qed.
+
+  Theorem IRP_mul : ∀ a b : R,
+      (a : polynomial) * (b : polynomial) = (((a * b)%R : R) : polynomial).
+  Proof.
+    intros a b.
+    unfold IRP; apply set_proj_injective; simpl.
+    rewrite (IRS_mul Ring).
+    unfold ISR, rings.IRS, ISS.
+    simpl.
+    do 2 f_equal; now apply set_proj_injective.
+  Qed.
+
+  Theorem IRP_neg : ∀ a : R, -(a : polynomial) = (((-a)%R : R) : polynomial).
+  Proof.
+    intros a.
+    unfold IRP; apply set_proj_injective; simpl.
+    rewrite (IRS_neg Ring).
+    unfold ISR, rings.IRS, ISS.
+    simpl.
+    do 2 f_equal; now apply set_proj_injective.
+  Qed.
+
   Theorem nonzero_coefficients :
     ∀ f, f ≠ 0 ↔ ∃ m, coefficient f m ≠ 0%R.
   Proof.
@@ -1084,9 +1117,9 @@ Section Polynomial_theorems.
         * rewrite degree_const.
           eapply naturals.lt_trans; eauto using naturals.succ_lt.
       + apply degree_lower_bound.
-        rewrite coefficient_add, coeffs_above_degree, const_coeff_mul.
+        rewrite coefficient_add, coeffs_above_degree, const_coeff_mul,
+        x_coeff_of_x.
         2: { rewrite degree_const; eauto using naturals.succ_lt. }
-        rewrite <-(rings.pow_1_r _ x), coeffs_of_x_to_n.
         contradict H0.
         ring_simplify in H0.
         now subst.
@@ -1344,8 +1377,8 @@ Section Polynomial_theorems.
   Proof.
     intros n.
     rewrite <-IRP_1, generalized_binomial_sum.
-    apply iterate_extensionality.
-    intros k H.
+    f_equal.
+    extensionality k.
     now rewrite rings.pow_1_l, (rings.M1 _ _ 1%R), rings.M3.
   Qed.
 
@@ -1375,11 +1408,16 @@ Section Polynomial_theorems.
       now rewrite const_coeff_mul, H0, rings.M1, rings.M3.
   Qed.
 
-  Theorem monic_division_algorithm : 1%R ≠ 0%R → ∀ a b n,
-        monic b → (0 < degree b)%N → (degree a ≤ n)%N →
-        ∃ q r, a = b * q + r ∧ (degree r < degree b)%N.
+  Lemma monic_division_algorithm_helper : ∀ a b n,
+      monic b → (0 < degree b)%N → (degree a ≤ n)%N →
+      ∃ q r, a = b * q + r ∧ (degree r < degree b)%N.
   Proof.
-    intros H a b n H0 H1 H2.
+    destruct (classic (1%R = 0%R)) as [H | H]; intros a b n H0 H1 H2.
+    { exists 0, 0.
+      split; try apply zero_ring_degeneracy;
+        replace 0 with ((0%R : R) : polynomial) by now apply set_proj_injective.
+      - now rewrite <-IRP_1, H.
+      - now rewrite degree_const. }
     revert n a H2.
     induction n using Induction; intros a H2.
     { exists 0, a.
@@ -1432,6 +1470,97 @@ Section Polynomial_theorems.
       + now ring_simplify.
       + exists (degree b).
         now rewrite <-H4, naturals.add_comm.
+  Qed.
+
+  Theorem monic_division_algorithm : ∀ a b,
+      monic b → (0 < degree b)%N → ∃ q r,
+          a = b * q + r ∧ (degree r < degree b)%N.
+  Proof.
+    intros a b H H0.
+    eapply monic_division_algorithm_helper; eauto using le_refl.
+  Qed.
+
+  Definition const f := degree f = 0%N.
+
+  Theorem const_classification : ∀ f, const f ↔ ∃ c : R, f = (c : polynomial).
+  Proof.
+    split; unfold const; intros H.
+    - exists (coefficient f 0).
+      rewrite (polynomial_sum_lemma 0 f) at 1.
+      unfold sum.
+      rewrite iterate_0, rings.pow_0_r.
+      ring.
+      rewrite H.
+      auto using le_refl.
+    - destruct H as [c H].
+      subst.
+      now rewrite degree_const.
+  Qed.
+
+  Theorem eval_const : ∀ a b : R, ((a : polynomial) b) = a.
+  Proof.
+    intros a b.
+    rewrite <-(rings.M3 _ (a : polynomial)), rings.M1, <-(rings.pow_0_r _ x),
+    eval_mul_const, eval_x, rings.pow_0_r.
+    ring.
+  Qed.
+
+  Theorem eval_neg :
+    ∀ (f : polynomial) a, ((-f : polynomial) a) = (- (f a))%R.
+  Proof.
+    intros f a.
+    rewrite <-rings.mul_neg_1_l, eval_mul, <-IRP_1, IRP_neg, eval_const.
+    ring.
+  Qed.
+
+  Infix "｜" := (rings.divide PR).
+
+  Theorem roots_classification :
+    ∀ f (a : R), root f a ↔ (x - (a : polynomial))｜f.
+  Proof.
+    destruct (classic (1%R = 0%R)) as [H | H]; split; intros H0;
+      try now apply zero_ring_degeneracy.
+    { exists 1.
+      apply zero_ring_degeneracy.
+      replace 0 with ((0%R : R) : polynomial) by now apply set_proj_injective.
+      now rewrite <-IRP_1, H. }
+    - assert (linear (x - (a : polynomial))) as H1; try unfold linear in H1.
+      { rewrite linear_classification.
+        exists (-a)%R, 1%R.
+        split; auto.
+        rewrite IRP_1, <-IRP_neg.
+        ring. }
+      destruct (monic_division_algorithm f (x - (a : polynomial)))
+        as [q [r [H2 H3]]]; try rewrite H1 in *; eauto using naturals.succ_lt.
+      + replace (x - (a : polynomial)) with (((-a : R)%R : polynomial) + x);
+          auto using monic_a_plus_x.
+        rewrite sub_is_neg, IRP_neg.
+        ring.
+      + exists q.
+        rewrite rings.M1, H2.
+        replace r with 0; try ring.
+        assert (const r) as H4.
+        { unfold const.
+          apply NNPP.
+          intros H4.
+          apply succ_0 in H4 as [c H4].
+          rewrite H4, naturals.lt_not_ge, <-add_1_r, naturals.add_comm in H3.
+          contradict H3.
+          now (exists c). }
+        apply const_classification in H4 as [c H4].
+        subst.
+        symmetry.
+        unfold root in H0.
+        replace 0 with ((0%R : R) : polynomial) by now apply set_proj_injective.
+        now rewrite <-H0, eval_add, eval_mul, sub_is_neg, eval_add, eval_neg,
+        <-(rings.pow_1_r _ x), eval_x, ? eval_const, rings.pow_1_r, rings.A4,
+        mul_0_l, rings.A3.
+    - destruct H0 as [q H0].
+      subst.
+      unfold root.
+      rewrite eval_mul, sub_is_neg, eval_add, <-(rings.pow_1_r _ x), eval_neg,
+      eval_x, ? eval_const, rings.pow_1_r.
+      ring.
   Qed.
 
 End Polynomial_theorems.
