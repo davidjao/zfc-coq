@@ -525,11 +525,10 @@ Qed.
 
 Theorem add_succ_r : ∀ x y, x + S y = S (x + y).
 Proof.
-  intros x y.
+  intros x [y Y].
   unfold add.
   repeat (destruct constructive_indefinite_description; repeat destruct a).
   apply set_proj_injective.
-  destruct y.
   simpl.
   rewrite e5, e1; auto.
   rewrite <-e3.

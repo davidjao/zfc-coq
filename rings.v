@@ -84,6 +84,11 @@ Section Ring_theorems.
     ring.
   Qed.
 
+  Theorem neg_0 : 0 = -0.
+  Proof.
+    ring.
+  Qed.
+
   Theorem mul_0_l : ∀ a, 0 * a = 0.
   Proof.
     intros a.

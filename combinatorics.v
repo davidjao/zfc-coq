@@ -2266,14 +2266,14 @@ Theorem binomial_coefficient_Q :
   ∀ n k, (k ≤ n)%N → (n! / (k! * (n - k)!))%Q = binomial n k.
 Proof.
   intros n k H.
-  assert ((k! * (n - k)!)%Z ≠ 0%Z) as H0.
-  { apply (ne0_cancellation (integral_domain_OR integer_order));
-      auto using factorial_ne_0. }
   apply binomial_coefficient in H.
+  assert (k! * (n - k)! ≠ 0)%Z as H0 by
+      auto using factorial_ne_0,
+      (ne0_cancellation (integral_domain_OR integer_order)).
   rewrite H, <-integers.M2, inv_div, <-IZQ_mul; auto.
-  field_simplify; rewrite ? div_inv, ? inv_one; try ring; auto.
+  field_simplify; rewrite ? div_inv, ? inv_one; try ring.
   contradict H0.
-  now apply IZQ_eq in H0.
+  now apply IZQ_eq.
 Qed.
 
 Theorem Pascal's_identity_bijection : ∀ n k,

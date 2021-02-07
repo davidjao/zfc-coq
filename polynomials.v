@@ -190,93 +190,107 @@ Section Polynomial_theorems.
   Definition R := (rings.R Ring).
   Notation SR := (power_series_ring Ring).
   Notation PR := (polynomial_ring Ring).
-  Notation series := (rings.R SR).
-  Notation poly := (rings.R (polynomial_ring Ring)).
-  Definition power_series := (rings.R SR).
-  Definition polynomial := (rings.R (polynomial_ring Ring)).
-  Add Ring base_ring : (ringify Ring).
-  Add Ring series_ring : (ringify (power_series_ring Ring)).
-  Add Ring poly_ring : (ringify (polynomial_ring Ring)).
+  Definition series := (rings.R SR).
+  Definition poly := (rings.R PR).
   Definition IPS :=
     ISR (power_series_ring Ring) (polynomial_set Ring)
-        (polynomials_are_subset Ring) : polynomial → power_series.
-  Definition IRS := (power_series.IRS Ring) : R → power_series.
-  Coercion IPS : polynomial >-> power_series.
+        (polynomials_are_subset Ring) : poly → series.
+  Definition IRS := (power_series.IRS Ring) : R → series.
+  Coercion IPS : poly >-> series.
 
   Delimit Scope R_scope with R.
   Bind Scope R_scope with R.
   Delimit Scope Series_scope with series.
-  Bind Scope Series_scope with power_series.
+  Bind Scope Series_scope with series.
   Delimit Scope Poly_scope with poly.
-  Bind Scope Poly_scope with polynomial.
+  Bind Scope Poly_scope with poly.
 
   Open Scope R_scope.
   Infix "+" := (rings.add Ring) : R_scope.
+  Notation "a + b" := (rings.add Ring (a : R) (b : R) : R) : R_scope.
   Infix "*" := (rings.mul Ring) : R_scope.
+  Notation "a * b" := (rings.mul Ring (a : R) (b : R) : R) : R_scope.
   Infix "-" := (rings.sub Ring) : R_scope.
+  Notation "a - b" := (rings.sub Ring (a : R) (b : R) : R) : R_scope.
   Notation "- a" := (rings.neg Ring a) : R_scope.
+  Notation "- a" := (rings.neg Ring (a : R) : R) : R_scope.
   Infix "^" := (rings.pow Ring) : R_scope.
+  Notation "a ^ b" := (rings.pow Ring (a : R) (b : N) : R) : R_scope.
   Notation "0" := (rings.zero Ring) : R_scope.
+  Notation "0" := (rings.zero Ring : R) : R_scope.
   Notation "1" := (rings.one Ring) : R_scope.
+  Notation "1" := (rings.one Ring : R) : R_scope.
+  Add Ring base_ring : (ringify Ring : ring_theory 0 _ _ _ _ _ eq).
+  Add Ring base_ring_raw : (ringify Ring).
 
   Open Scope Series_scope.
   Infix "+" := (rings.add SR) : Series_scope.
+  Notation "a + b" := (rings.add _ (a:series) (b:series):series) : Series_scope.
   Infix "*" := (rings.mul SR) : Series_scope.
+  Notation "a * b" := (rings.mul _ (a:series) (b:series):series) : Series_scope.
   Infix "-" := (rings.sub SR) : Series_scope.
+  Notation "a - b" := (rings.sub _ (a:series) (b:series):series) : Series_scope.
   Notation "- a" := (rings.neg SR a) : Series_scope.
+  Notation "- a" := (rings.neg _ (a:series) : series) : Series_scope.
   Infix "^" := (rings.pow SR) : Series_scope.
+  Notation "a ^ b" := (rings.pow _ (a:series) (b : N) : series) : Series_scope.
   Notation "0" := (rings.zero SR) : Series_scope.
+  Notation "0" := (rings.zero SR : series) : Series_scope.
   Notation "1" := (rings.one SR) : Series_scope.
+  Notation "1" := (rings.one SR : series) : Series_scope.
+  Add Ring series_ring : (ringify SR : ring_theory 0 _ _ _ _ _ eq).
+  Add Ring series_ring_raw : (ringify SR).
 
   Open Scope Poly_scope.
   Infix "+" := (rings.add PR) : Poly_scope.
+  Notation "a + b" := (rings.add PR (a : poly) (b : poly) : poly) : Poly_scope.
   Infix "*" := (rings.mul PR) : Poly_scope.
+  Notation "a * b" := (rings.mul PR (a : poly) (b : poly) : poly) : Poly_scope.
   Infix "-" := (rings.sub PR) : Poly_scope.
+  Notation "a - b" := (rings.sub PR (a : poly) (b : poly) : poly) : Poly_scope.
   Notation "- a" := (rings.neg PR a) : Poly_scope.
+  Notation "- a" := (rings.neg PR (a : poly) : poly) : Poly_scope.
   Infix "^" := (rings.pow PR) : Poly_scope.
+  Notation "a ^ b" := (rings.pow PR (a : poly) (b : N) : poly) : Poly_scope.
   Notation "0" := (rings.zero PR) : Poly_scope.
+  Notation "0" := (rings.zero PR : poly) : Poly_scope.
   Notation "1" := (rings.one PR) : Poly_scope.
+  Notation "1" := (rings.one PR : poly) : Poly_scope.
+  Add Ring poly_ring : (ringify PR : ring_theory 0 _ _ _ _ _ eq).
+  Add Ring poly_ring_raw : (ringify PR).
 
-  Definition IRP (c : R) := (exist _ _ (consts_are_polys _ c)) : polynomial.
-  Coercion IRP : R >-> polynomial.
+  Definition IRP (c : R) := (exist _ _ (consts_are_polys _ c)) : poly.
+  Coercion IRP : R >-> poly.
 
-  Definition coefficient (f : polynomial) n :=
-    power_series.coefficient _ (f : power_series) n : R.
-  Definition x := (exist _ _ (x_is_poly _)) : polynomial.
+  Definition coefficient (f : poly) n := coefficient _ (f : series) n : R.
+  Definition x := (exist _ _ (x_is_poly _)) : poly.
 
-  Theorem IPS_eq : ∀ f g : polynomial,
-      (f : power_series) = (g : power_series) ↔ f = g.
+  Theorem IPS_eq : ∀ f g : poly, (f : series) = (g : series) ↔ f = g.
   Proof.
     intros f g.
     split; intros H; try congruence.
     now apply ISR_eq in H.
   Qed.
 
-  Theorem IPS_add : ∀ f g : polynomial,
-      ((f + g : polynomial) : power_series) =
-      ((f : power_series) + (g : power_series))%series.
+  Theorem IPS_add : ∀ f g : poly, ((f : series) + (g : series))%series = f + g.
   Proof.
     intros f g.
     now apply set_proj_injective.
   Qed.
 
-  Theorem IPS_neg : ∀ f : polynomial,
-      ((-f : polynomial) : power_series) = (-(f : power_series))%series.
+  Theorem IPS_neg : ∀ f : poly, (-f : series)%series = -f.
   Proof.
     intros f.
     now apply set_proj_injective.
   Qed.
 
-  Theorem IPS_mul : ∀ f g : polynomial,
-      ((f * g : polynomial) : power_series) =
-      ((f : power_series) * (g : power_series))%series.
+  Theorem IPS_mul : ∀ f g : poly, ((f : series) * (g : series))%series = f * g.
   Proof.
     intros f g.
     now apply set_proj_injective.
   Qed.
 
-  Theorem IRP_add : ∀ a b : R,
-      (a : polynomial) + (b : polynomial) = (((a + b)%R : R) : polynomial).
+  Theorem IRP_add : ∀ a b : R, (a : poly) + (b : poly) = (a + b)%R.
   Proof.
     intros a b.
     unfold IRP; apply set_proj_injective; simpl.
@@ -286,8 +300,7 @@ Section Polynomial_theorems.
     do 2 f_equal; now apply set_proj_injective.
   Qed.
 
-  Theorem IRP_mul : ∀ a b : R,
-      (a : polynomial) * (b : polynomial) = (((a * b)%R : R) : polynomial).
+  Theorem IRP_mul : ∀ a b : R, (a : poly) * (b : poly) = (a * b)%R.
   Proof.
     intros a b.
     unfold IRP; apply set_proj_injective; simpl.
@@ -297,7 +310,7 @@ Section Polynomial_theorems.
     do 2 f_equal; now apply set_proj_injective.
   Qed.
 
-  Theorem IRP_neg : ∀ a : R, -(a : polynomial) = (((-a)%R : R) : polynomial).
+  Theorem IRP_neg : ∀ a : R, (-a : poly) = (-a)%R.
   Proof.
     intros a.
     unfold IRP; apply set_proj_injective; simpl.
@@ -307,8 +320,25 @@ Section Polynomial_theorems.
     do 2 f_equal; now apply set_proj_injective.
   Qed.
 
-  Theorem nonzero_coefficients :
-    ∀ f, f ≠ 0 ↔ ∃ m, coefficient f m ≠ 0%R.
+  Theorem IRP_1 : 1 = 1%R.
+  Proof.
+    unfold IRP.
+    apply set_proj_injective.
+    simpl.
+    unfold ISS, power_series.IRS, sub_one.
+    destruct polynomials_are_subring.
+    now repeat destruct a.
+  Qed.
+
+  Theorem IRP_pow : ∀ (n : N) (a : R), (a : poly)^n = (a^n)%R.
+  Proof.
+    intros n a.
+    induction n using Induction.
+    - now rewrite ? rings.pow_0_r, IRP_1.
+    - now rewrite ? rings.pow_succ_r, IHn, IRP_mul.
+  Qed.
+
+  Theorem nonzero_coefficients : ∀ f, f ≠ 0 ↔ ∃ m, coefficient f m ≠ 0%R.
   Proof.
     intros f.
     split; intros H.
@@ -343,9 +373,9 @@ Section Polynomial_theorems.
       destruct excluded_middle_informative; tauto.
   Qed.
 
-  Theorem degree_construction : ∀ f : polynomial,
-      f ≠ 0 → ∃ m, coefficient f m ≠ 0%R ∧
-                   ∀ n, (m < n)%N → coefficient f n = 0%R.
+  Theorem degree_construction :
+    ∀ f, f ≠ 0 →
+         ∃ m, coefficient f m ≠ 0%R ∧ ∀ n, (m < n)%N → coefficient f n = 0%R.
   Proof.
     intros [f F] H.
     apply nonzero_coefficients in H as [m H].
@@ -353,7 +383,7 @@ Section Polynomial_theorems.
     apply Specify_classification in H0 as [H0 [f' [H1 [n H2]]]].
     subst.
     set (f := exist _ _ F : poly) in *.
-    assert (f' = IPS f) as H3 by now apply set_proj_injective.
+    assert (f' = (f : series)) as H3 by now apply set_proj_injective.
     rewrite H3 in *.
     destruct (lub (λ x, coefficient f x ≠ 0%R)) as [s [H1 H4]];
       try now (exists m).
@@ -381,7 +411,7 @@ Section Polynomial_theorems.
       exact d.
   Defined.
 
-  Theorem degree_spec : ∀ (f : polynomial) m,
+  Theorem degree_spec : ∀ f m,
       f ≠ 0 → degree f = m ↔ (coefficient f m ≠ 0%R ∧
                               ∀ n, (m < n)%N → coefficient f n = 0%R).
   Proof.
@@ -432,15 +462,13 @@ Section Polynomial_theorems.
       now rewrite sub_diag.
   Qed.
 
-  Lemma IPS_pow : ∀ (n : N) (f : polynomial),
-      ((f : power_series)^n)%series = ((f^n : polynomial) : power_series).
+  Lemma IPS_pow : ∀ n (f : poly), ((f : series)^n)%series = f^n.
   Proof.
     intros n f.
     induction n using Induction.
     - rewrite ? (rings.pow_0_r PR), ? (rings.pow_0_r SR).
       apply sub_one_is_one.
-    - rewrite ? (pow_succ_r PR), ? (pow_succ_r SR), IPS_mul in *.
-      ring [IHn].
+    - now rewrite ? (pow_succ_r PR), ? (pow_succ_r SR), <-IPS_mul, IHn in *.
   Qed.
 
   Lemma coeffs_of_x_ne_n : ∀ m n, m ≠ n → coefficient (x^n) m = 0%R.
@@ -455,7 +483,7 @@ Section Polynomial_theorems.
       unfold power_series.one, IRS, power_series.IRS, coefficient.
       rewrite coefficient_seriesify.
       destruct excluded_middle_informative; tauto. }
-    rewrite pow_succ_r, IPS_mul, <-IPS_pow in *.
+    rewrite pow_succ_r, <-IPS_mul, <-IPS_pow in *.
     simpl.
     unfold power_series.mul, coefficient.
     rewrite coefficient_seriesify, <-(sum_of_0 _ m).
@@ -463,7 +491,7 @@ Section Polynomial_theorems.
     intros k [H0 [c H1]].
     destruct (classic (n = k)).
     - subst.
-      replace (power_series.coefficient _ (x : power_series) (k + c - k))
+      replace (power_series.coefficient _ (x : series) (k + c - k))
         with 0%R; try ring.
       symmetry.
       apply coeffs_of_x.
@@ -471,10 +499,10 @@ Section Polynomial_theorems.
       rewrite naturals.add_comm, sub_abba in H.
       subst.
       now rewrite add_1_r.
-    - rewrite IHn, rings.mul_0_l; auto.
+    - rewrite IHn; auto; ring.
   Qed.
 
-  Lemma degree_bound : ∀ n (f : polynomial),
+  Lemma degree_bound : ∀ n f,
       (∀ m : N, (n < m)%N → coefficient f m = 0%R) → (degree f ≤ n)%N.
   Proof.
     intros n f H.
@@ -486,8 +514,7 @@ Section Polynomial_theorems.
     auto.
   Qed.
 
-  Lemma coeffs_above_degree :
-    ∀ n (f : polynomial), (degree f < n)%N → coefficient f n = 0%R.
+  Lemma coeffs_above_degree : ∀ n f, (degree f < n)%N → coefficient f n = 0%R.
   Proof.
     intros n f H.
     unfold degree in H.
@@ -504,18 +531,18 @@ Section Polynomial_theorems.
       auto.
   Qed.
 
-  Lemma IPS_IRP : ∀ c : R, IPS (IRP c) = IRS c.
+  Lemma IPS_IRP : ∀ c : R, (c : series) = IRS c.
   Proof.
     intros c.
     now apply set_proj_injective.
   Qed.
 
-  Lemma const_coeff_mul : ∀ (n : N) (c : R) (f : polynomial),
-      coefficient ((c : polynomial) * f) n = (c * coefficient f n)%R.
+  Lemma const_coeff_mul :
+    ∀ n f (c : R), coefficient (c * f) n = (c * coefficient f n)%R.
   Proof.
-    intros n c f.
+    intros n f c.
     unfold coefficient.
-    now rewrite <-power_series.const_coeff_mul, IPS_mul, IPS_IRP.
+    now rewrite <-power_series.const_coeff_mul, <-IPS_mul, IPS_IRP.
   Qed.
 
   Lemma coeffs_of_x_to_n : ∀ n, coefficient (x^n) n = 1%R.
@@ -543,46 +570,44 @@ Section Polynomial_theorems.
     - subst.
       rewrite <-IHn, <-add_1_r, naturals.add_comm, sub_abba.
       fold IPS (coefficient x 1).
-      rewrite x_coeff_of_x.
-      ring.
+      now rewrite x_coeff_of_x; ring.
     - fold IPS (coefficient (x^n) k).
       rewrite coeffs_of_x_ne_n; auto; ring.
   Qed.
 
-  Theorem coefficient_add : ∀ n (f g : polynomial),
+  Theorem coefficient_add : ∀ n f g,
       coefficient (f + g) n = (coefficient f n + coefficient g n)%R.
   Proof.
     intros n f g.
     unfold coefficient.
-    rewrite IPS_add.
+    rewrite <-IPS_add.
     simpl.
     now rewrite power_series.coefficient_add.
   Qed.
 
-  Theorem coefficient_neg :
-    ∀ n (f : polynomial), coefficient (-f) n = (- coefficient f n)%R.
+  Theorem coefficient_neg : ∀ n f, coefficient (-f) n = (- coefficient f n)%R.
   Proof.
     intros n f.
     unfold coefficient.
-    rewrite IPS_neg.
+    rewrite <-IPS_neg.
     simpl.
     now rewrite power_series.coefficient_neg.
   Qed.
 
-  Theorem coefficient_mul : ∀ n (f g : polynomial),
+  Theorem coefficient_mul : ∀ n f g,
       coefficient (f * g) n =
       sum Ring (λ k, (coefficient f k * coefficient g (n-k))%R) 0 n.
   Proof.
     intros n f g.
     unfold coefficient.
-    rewrite IPS_mul.
+    rewrite <-IPS_mul.
     simpl.
     now rewrite power_series.coefficient_mul.
   Qed.
 
-  Lemma minus_leading_term : ∀ f : polynomial,
-      (1 ≤ degree f → degree (f - (IRP (coefficient f (degree f))) *
-                                 x^(degree f))%poly ≤ degree f - 1)%N.
+  Lemma minus_leading_term : ∀ f,
+      (1 ≤ degree f → degree (f - (coefficient f (degree f)) *
+                                  x^(degree f))%poly ≤ degree f - 1)%N.
   Proof.
     intros f H.
     apply degree_bound.
@@ -615,9 +640,8 @@ Section Polynomial_theorems.
         ring.
   Qed.
 
-  Lemma polynomial_sum_lemma : ∀ d : N, ∀ f : polynomial,
-        (degree f ≤ d)%N →
-        f = sum PR (λ n, (coefficient f n : polynomial) * x^n) 0 d.
+  Lemma polynomial_sum_lemma : ∀ d : N, ∀ f,
+        (degree f ≤ d)%N → f = sum PR (λ n, coefficient f n * x^n) 0 d.
   Proof.
     intros d.
     induction d using Induction.
@@ -628,11 +652,10 @@ Section Polynomial_theorems.
       rewrite iterate_0.
       apply IPS_eq, power_series_extensionality.
       extensionality n.
-      fold (coefficient f n)
-           (coefficient ((coefficient f 0 : polynomial) * x ^ 0) n).
+      fold (coefficient f n) (coefficient (coefficient f 0 * x ^ 0) n).
       destruct (classic (n = 0%N)) as [H1 | H1].
       - subst.
-        now rewrite const_coeff_mul, coeffs_of_x_to_n, rings.M1, rings.M3.
+        now rewrite const_coeff_mul, coeffs_of_x_to_n; ring_simplify.
       - rewrite const_coeff_mul, coeffs_of_x_ne_n, coeffs_above_degree; auto.
         + ring.
         + rewrite H0, naturals.lt_def.
@@ -642,11 +665,11 @@ Section Polynomial_theorems.
     intros f H.
     destruct (classic (degree f = S d)) as [H0 | H0].
     - rewrite sum_succ, <-(rings.A3 _ f), (rings.A1 _ 0),
-      <-(rings.A4 _ ((coefficient f (S d) : polynomial) * x ^ S d)),
-      (rings.A1 _ ((coefficient f (S d) : polynomial) * x ^ S d)),
+      <-(rings.A4 _ (coefficient f (S d) * x ^ S d)),
+      (rings.A1 _ (coefficient f (S d) * x ^ S d)),
       rings.A2 at 1; auto using zero_le.
       f_equal.
-      rewrite <-sub_is_neg, (IHd (f - (IRP (coefficient f (S d)) * x ^ S d))).
+      rewrite <-sub_is_neg, (IHd (f - (coefficient f (S d) * x ^ S d))).
       2: { replace d with (S d - 1)%N at 3.
            - rewrite <-H0.
              apply minus_leading_term.
@@ -657,12 +680,10 @@ Section Polynomial_theorems.
       apply iterate_extensionality.
       intros k [H1 H2].
       rewrite sub_is_neg, coefficient_add, coefficient_neg.
-      replace (coefficient ((coefficient f (S d) : polynomial) * x ^ S d) k)
-        with 0%R.
-      + replace (-0)%R with 0%R by ring.
-        now rewrite rings.A1, rings.A3.
+      replace (coefficient (coefficient f (S d) * x ^ S d) k) with 0%R.
+      + now rewrite <-neg_0, rings.A1, rings.A3.
       + rewrite const_coeff_mul, coeffs_of_x_ne_n.
-        * ring.
+        * now rewrite mul_0_r.
         * intros H3.
           rewrite H3, naturals.le_not_gt in H2.
           contradict H2.
@@ -673,12 +694,12 @@ Section Polynomial_theorems.
         intros H1.
         eauto using squeeze_upper.
       + rewrite coeffs_above_degree; repeat split; auto.
-        replace (IRP 0%R) with 0 by now apply set_proj_injective.
+        replace (0%R : poly) with 0 by now apply set_proj_injective.
         ring.
   Qed.
 
   Theorem degree_of_sum : ∀ d (a : N → R),
-      (degree (sum PR (λ n, (a n : polynomial) * x^n)%poly 0 d) ≤ d)%N.
+      (degree (sum PR (λ n, a n * x^n)%poly 0 d) ≤ d)%N.
   Proof.
     intros d a.
     apply degree_bound; auto.
@@ -711,12 +732,10 @@ Section Polynomial_theorems.
   Qed.
 
   Theorem coefficient_extraction : ∀ d k (a : N → R),
-      (k ≤ d)%N →
-      coefficient (sum _ (λ n, (a n : polynomial) * x^n) 0 d) k = (a k).
+      (k ≤ d)%N → coefficient (sum _ (λ n, a n * x^n) 0 d) k = (a k).
   Proof.
     intros d k a H.
-    rewrite coefficient_sum_add.
-    rewrite <-(singleton_sum _ k d (a k)); auto.
+    rewrite coefficient_sum_add, <-(singleton_sum _ k d (a k)); auto.
     apply iterate_extensionality.
     intros z H0.
     destruct excluded_middle_informative.
@@ -737,8 +756,8 @@ Section Polynomial_theorems.
       ring. }
     destruct (classic (k ≤ n)%N) as [H0 | H0].
     - unfold coefficient.
-      rewrite pow_succ_r, rings.M2, rings.M1, IPS_mul.
-      replace (IPS x) with (power_series.x Ring)
+      rewrite pow_succ_r, rings.M2, rings.M1, <-IPS_mul.
+      replace (x : series) with (power_series.x Ring)
         by now apply set_proj_injective.
       simpl.
       rewrite mul_x_shift.
@@ -827,9 +846,9 @@ Section Polynomial_theorems.
 
   Definition eval f a := (sum _ (λ n, (coefficient f n) * a^n)%R 0 (degree f)).
 
-  Coercion eval : polynomial >-> Funclass.
+  Coercion eval : poly >-> Funclass.
 
-  Definition root (f : polynomial) r := (f r) = 0%R.
+  Definition root (f : poly) r := (f r) = 0%R.
 
   Lemma sum_beyond_degree : ∀ f a m,
       (degree f ≤ m)%N →
@@ -861,8 +880,7 @@ Section Polynomial_theorems.
         now apply PA5.
   Qed.
 
-  Theorem eval_add :
-    ∀ (f g : polynomial) a, ((f + g : polynomial) a) = (f a + g a)%R.
+  Theorem eval_add : ∀ f g a, (f + g) a = (f a + g a)%R.
   Proof.
     intros f g a.
     unfold eval.
@@ -875,8 +893,8 @@ Section Polynomial_theorems.
     now rewrite coefficient_add, rings.D1.
   Qed.
 
-  Theorem eval_bound : ∀ (f : polynomial) a n,
-      (degree f ≤ n)%N → sum _ (λ n : N, (coefficient f n * a^n)%R) 0 n = (f a).
+  Theorem eval_bound : ∀ f a n,
+      (degree f ≤ n)%N → sum _ (λ n : N, (coefficient f n * a^n)%R) 0 n = f a.
   Proof.
     intros f a n H.
     unfold eval.
@@ -905,27 +923,27 @@ Section Polynomial_theorems.
       rewrite coeffs_of_x_ne_n; auto.
   Qed.
 
-  Lemma degree_const : ∀ c : R, degree (c : polynomial) = 0%N.
+  Lemma degree_const : ∀ c : R, degree c = 0%N.
   Proof.
     intros c.
     apply naturals.le_antisymm; auto using zero_le.
     apply degree_bound.
     intros m H.
-    rewrite <-(rings.M3 _ (c : polynomial)), rings.M1, const_coeff_mul,
+    rewrite <-(rings.M3 _ (c : poly)), rings.M1, const_coeff_mul,
     <-(rings.pow_0_r _ x), coeffs_of_x_ne_n, mul_0_r; auto.
     intros H0.
     subst.
     contradiction (naturals.lt_irrefl 0).
   Qed.
 
-  Lemma coeff_const : ∀ c : R, coefficient (c : polynomial) 0 = c.
+  Lemma coeff_const : ∀ c : R, coefficient c 0 = c.
   Proof.
     intros c.
     destruct (classic (c = 0%R)) as [H | H].
     { subst.
       rewrite <-(rings.M3 _ (IRP 0)), rings.M1, const_coeff_mul.
       now ring_simplify. }
-    rewrite <-(rings.M3 _ (c : polynomial)), rings.M1, const_coeff_mul,
+    rewrite <-(rings.M3 _ (c : poly)), rings.M1, const_coeff_mul,
     <-(rings.pow_0_r _ x), coeffs_of_x_to_n.
     now ring_simplify.
   Qed.
@@ -952,12 +970,11 @@ Section Polynomial_theorems.
       now apply H1 in H2.
   Qed.
 
-  Lemma eval_mul_const : ∀ (c α : R) f,
-      ((c : polynomial) * f : polynomial) α = (c * (f : polynomial) α)%R.
+  Lemma eval_mul_const : ∀ (c α : R) f, (c * f) α = (c * (f α))%R.
   Proof.
     intros c α f.
     unfold eval.
-    rewrite (sum_beyond_degree ((c : polynomial) * f) _ (degree f)).
+    rewrite (sum_beyond_degree (c * f) _ (degree f)).
     - rewrite sum_mul.
       f_equal.
       extensionality n.
@@ -968,47 +985,25 @@ Section Polynomial_theorems.
       auto using naturals.le_refl.
   Qed.
 
-  Lemma eval_x : ∀ n α, ((x^n : polynomial) α) = (α^n)%R.
+  Lemma eval_x : ∀ n α, ((x^n) α) = (α^n)%R.
   Proof.
     intros n α.
     unfold eval.
     destruct (classic (1%R = 0%R)) as [| H]; auto using zero_ring_degeneracy.
-    rewrite degree_x_to_n; auto.
-    replace (α^n)%R with (sum _ (λ k, (if (excluded_middle_informative (k = n))
-                                       then α^n else 0)%R) 0 n) at 1.
-    - apply iterate_extensionality.
-      intros k H0.
-      destruct excluded_middle_informative.
-      + subst.
-        rewrite coeffs_of_x_to_n.
-        ring.
-      + rewrite coeffs_of_x_ne_n; auto; ring.
-    - clear.
-      destruct (classic (n = 0%N)).
-      + subst.
-        unfold sum.
-        rewrite iterate_0, rings.pow_0_r.
-        destruct excluded_middle_informative; tauto.
-      + apply succ_0 in H as [m H].
-        subst.
-        rewrite sum_succ; auto using zero_le.
-        destruct excluded_middle_informative; try tauto.
-        rewrite <-(rings.A3 _ (α^(S m))%R) at 2.
-        f_equal.
-        rewrite <-(sum_of_0 _ m) at 1.
-        apply iterate_extensionality.
-        intros k [H H0].
-        destruct excluded_middle_informative; auto.
-        subst.
-        apply naturals.le_not_gt in H0.
-        contradict H0.
-        auto using naturals.succ_lt.
+    rewrite degree_x_to_n, <-(singleton_sum Ring n n (α^n)%R);
+      auto using le_refl.
+    apply iterate_extensionality.
+    intros k H0.
+    destruct excluded_middle_informative.
+    - subst.
+      rewrite coeffs_of_x_to_n.
+      ring.
+    - rewrite coeffs_of_x_ne_n; auto; ring.
   Qed.
 
   Lemma eval_mul_x_lemma : ∀ m (α : R) (f : N → R) n,
-      (((sum _ (λ i, (f i : polynomial) * x^i) 0 m) * x^n : polynomial) α) =
-      (((sum _ (λ i, (f i : polynomial) * x^i)%poly 0 m : polynomial) α) *
-       α^n)%R.
+      (((sum _ (λ i, f i * x^i) 0 m) * x^n) α) =
+      (((sum _ (λ i, f i * x^i)%poly 0 m : poly) α) * α^n)%R.
   Proof.
     intros m.
     induction m using Induction.
@@ -1027,9 +1022,7 @@ Section Polynomial_theorems.
       auto using zero_le.
   Qed.
 
-  Lemma eval_mul_x_f : ∀ f a n,
-      ((f * x^n : polynomial) a) =
-      (((f : polynomial) a) * (((x^n)%poly : polynomial) a))%R.
+  Lemma eval_mul_x_f : ∀ f a n, (f * x^n) a = (f a * (x^n)%poly a)%R.
   Proof.
     intros f a n.
     now rewrite (polynomial_sum_lemma (degree f) f), ? eval_mul_x_lemma, eval_x;
@@ -1037,14 +1030,14 @@ Section Polynomial_theorems.
   Qed.
 
   Lemma eval_mul_lemma : ∀ n f (a : N → R) α,
-      (((f * (sum PR (λ i, (a i : polynomial) * x^i)) 0%N n) : polynomial) α) =
-      (((f : polynomial) α) * (sum _ (λ i, (a i) * α^i) 0 n))%R.
+      ((f * (sum PR (λ i, (a i) * x^i) 0%N n)) α) =
+      (f α * sum _ (λ i, (a i) * α^i) 0 n)%R.
   Proof.
     intros n f a α.
     induction n using Induction.
     { unfold sum.
       now rewrite ? iterate_0, ? rings.M2,
-      ? (rings.M1 _ _ (a 0%N : polynomial)), ? (rings.M1 _ _ (a 0%N)),
+      ? (rings.M1 _ _ (a 0%N : poly)), ? (rings.M1 _ _ (a 0%N)),
       <-? rings.M2, eval_mul_const, eval_mul_x_f, eval_x. }
     rewrite ? sum_succ, ? rings.D1_l, <-IHn, eval_add; auto using zero_le.
     f_equal.
@@ -1053,8 +1046,7 @@ Section Polynomial_theorems.
     ring.
   Qed.
 
-  Theorem eval_mul :
-    ∀ (f g : polynomial) a, ((f * g : polynomial) a) = (f a * g a)%R.
+  Theorem eval_mul : ∀ f g a, (f * g) a = (f a * g a)%R.
   Proof.
     intros f g a.
     rewrite (polynomial_sum_lemma (degree g) g), eval_mul_lemma, eval_bound;
@@ -1065,8 +1057,8 @@ Section Polynomial_theorems.
 
   Definition linear f := (degree f = 1%N).
 
-  Theorem linear_classification : ∀ f, linear f ↔ ∃ a b : R,
-          f = (a : polynomial) + (b : polynomial) * x ∧ b ≠ 0%R.
+  Theorem linear_classification :
+    ∀ f, linear f ↔ ∃ a b : R, f = a + b * x ∧ b ≠ 0%R.
   Proof.
     intros f.
     split; intros H.
@@ -1080,7 +1072,7 @@ Section Polynomial_theorems.
         rewrite sum_succ; auto using zero_le.
         unfold sum.
         rewrite iterate_0, rings.pow_0_r.
-        f_equal; try now ring_simplify.
+        f_equal; try ring.
         fold naturals.one.
         now rewrite rings.pow_1_r.
       + intros H0.
@@ -1124,24 +1116,14 @@ Section Polynomial_theorems.
         now subst.
   Qed.
 
-  Theorem IRP_1 : ((1%R : R) : polynomial) = 1.
-  Proof.
-    unfold IRP.
-    apply set_proj_injective.
-    simpl.
-    unfold ISS, power_series.IRS, sub_one.
-    destruct polynomials_are_subring.
-    now repeat destruct a.
-  Qed.
-
   Theorem degree_of_a_plus_x :
-    1%R ≠ 0%R → ∀ α : R, degree ((α : polynomial) + x) = 1%N.
+    1%R ≠ 0%R → ∀ α : R, degree (α + x) = 1%N.
   Proof.
     intros H α.
     apply linear_classification.
     exists α, 1%R.
-    rewrite IRP_1.
-    split; auto; ring.
+    rewrite <-IRP_1.
+    split; auto; now ring_simplify.
   Qed.
 
   Definition monic f := (coefficient f (degree f) = 1%R).
@@ -1151,14 +1133,10 @@ Section Polynomial_theorems.
       coefficient (f * g) (degree f + degree g)%N.
   Proof.
     intros f g.
-    rewrite coefficient_mul.
-    replace (coefficient f (degree f) * coefficient g (degree g))%R
-      with (sum _ (λ k, if (excluded_middle_informative (k = degree f)) then
-                          (coefficient f (degree f) *
-                           coefficient g (degree g))%R else 0%R)
-                0 (degree f + degree g)%N).
-    2: { rewrite singleton_sum; auto.
-         now exists (degree g). }
+    rewrite coefficient_mul,
+    <-(singleton_sum _ (degree f) (degree f + degree g)%N
+                     (coefficient f (degree f) * coefficient g (degree g))%R).
+    2: { now exists (degree g). }
     apply iterate_extensionality.
     intros k H.
     destruct (lt_trichotomy k (degree f)) as [H0 | [H0 | H0]].
@@ -1216,7 +1194,7 @@ Section Polynomial_theorems.
     rewrite monic_prod_degree, <-leading_term_prod, H, H0, rings.M3; auto.
   Qed.
 
-  Theorem monic_a_plus_x : ∀ α : R, monic ((α : polynomial) + x).
+  Theorem monic_a_plus_x : ∀ α : R, monic (α + x).
   Proof.
     intros α.
     destruct (classic (1%R = 0%R)) as [H | H]; auto using zero_ring_monic.
@@ -1233,7 +1211,7 @@ Section Polynomial_theorems.
     induction n using Induction.
     - rewrite rings.pow_0_r.
       unfold monic.
-      now rewrite <-IRP_1, degree_const, coeff_const.
+      now rewrite IRP_1, degree_const, coeff_const.
     - rewrite pow_succ_r.
       now apply monic_prod.
   Qed.
@@ -1242,14 +1220,14 @@ Section Polynomial_theorems.
   Proof.
     intros n f H.
     induction n using Induction.
-    - rewrite rings.pow_0_r, <-IRP_1, degree_const.
+    - rewrite rings.pow_0_r, IRP_1, degree_const.
       ring.
     - rewrite pow_succ_r, monic_prod_degree, IHn, <-add_1_r;
         auto using monic_powers; ring.
   Qed.
 
   Theorem degree_of_a_plus_x_to_n :
-    1%R ≠ 0%R → ∀ n (α : R), degree (((α : polynomial) + x)^n) = n.
+    1%R ≠ 0%R → ∀ n (α : R), degree ((α + x)^n) = n.
   Proof.
     intros H n α.
     rewrite monic_pow_degree, degree_of_a_plus_x;
@@ -1259,8 +1237,8 @@ Section Polynomial_theorems.
   Definition INR := (INR Ring) : N → R.
   Coercion INR : N >-> R.
 
-  Lemma binomial_theorem_zero : ∀ n (α : R),
-      coefficient (((α : polynomial) + x)^n) 0 = ((binomial n 0 : R) * α^n)%R.
+  Lemma binomial_theorem_zero :
+    ∀ n (α : R), coefficient ((α + x)^n) 0 = (binomial n 0 * α^n)%R.
   Proof.
     induction n using Induction; intros α.
     - subst.
@@ -1269,7 +1247,7 @@ Section Polynomial_theorems.
       unfold INR, rings.INR, sum.
       now rewrite iterate_0.
     - rewrite pow_succ_r, D1_l, coefficient_add, binomial_zero,
-      (rings.M1 _ _ (α : polynomial)), const_coeff_mul, IHn.
+      (rings.M1 _ _ (α : poly)), const_coeff_mul, IHn.
       rewrite <-(rings.pow_1_r _ x) at 2.
       rewrite coeff_of_x_mul_overflow, binomial_zero, pow_succ_r;
         eauto using naturals.succ_lt.
@@ -1284,9 +1262,8 @@ Section Polynomial_theorems.
     eauto using naturals.succ_lt.
   Qed.
 
-  Theorem generalized_binomial_theorem : ∀ n k (α : R),
-      coefficient (((α : polynomial) + x)^n) k =
-      ((binomial n k : R) * α^(n-k))%R.
+  Theorem generalized_binomial_theorem :
+    ∀ n k (α : R), coefficient ((α + x)^n) k = (binomial n k * α^(n-k))%R.
   Proof.
     intros n k.
     revert k.
@@ -1352,33 +1329,31 @@ Section Polynomial_theorems.
   Theorem binomial_theorem : ∀ n k, coefficient ((1 + x)^n) k = binomial n k.
   Proof.
     intros n k.
-    rewrite <-IRP_1, (generalized_binomial_theorem n k 1%R), rings.pow_1_l.
+    rewrite IRP_1, (generalized_binomial_theorem n k 1%R), rings.pow_1_l.
     now ring_simplify.
   Qed.
 
   Theorem generalized_binomial_sum : ∀ n (α : R),
-      ((α : polynomial) + x)^n =
-      sum _ (λ k, ((((binomial n k : R) * α^(n-k))%R : R) : polynomial) * x^k)
-          0 n.
+      (α + x)^n = sum _ (λ k, binomial n k * α^(n-k) * x^k) 0 n.
   Proof.
     intros n α.
-    rewrite (polynomial_sum_lemma n (((α : polynomial) + x)^n)).
+    rewrite (polynomial_sum_lemma n ((α + x)^n)).
     - apply iterate_extensionality.
       intros k H.
-      now rewrite generalized_binomial_theorem.
+      now rewrite IRP_pow, IRP_mul, generalized_binomial_theorem.
     - destruct (classic (1%R = 0%R)).
       + rewrite zero_ring_degree; auto using zero_le.
       + rewrite degree_of_a_plus_x_to_n; auto using le_refl.
   Qed.
 
-  Theorem binomial_sum : ∀ n,
-      (1 + x)^n = sum _ (λ k, (binomial n k : polynomial) * x^k) 0 n.
+  Theorem binomial_sum : ∀ n, (1 + x)^n = sum _ (λ k, binomial n k * x^k) 0 n.
   Proof.
     intros n.
-    rewrite <-IRP_1, generalized_binomial_sum.
+    rewrite IRP_1, generalized_binomial_sum.
     f_equal.
     extensionality k.
-    now rewrite rings.pow_1_l, (rings.M1 _ _ 1%R), rings.M3.
+    rewrite IRP_pow, rings.pow_1_l, <-IRP_1.
+    ring.
   Qed.
 
   Definition leading_coefficient f := coefficient f (degree f).
@@ -1394,8 +1369,7 @@ Section Polynomial_theorems.
     intuition.
   Qed.
 
-  Lemma const_mul_monic : ∀ a f,
-      a ≠ 0%R → monic f → degree (((a : R) : polynomial) * f) = degree f.
+  Lemma const_mul_monic : ∀ a f, a ≠ 0%R → monic f → degree (a * f) = degree f.
   Proof.
     intros a f H H0.
     apply naturals.le_antisymm.
@@ -1414,8 +1388,8 @@ Section Polynomial_theorems.
     destruct (classic (1%R = 0%R)) as [H | H]; intros a b n H0 H1 H2.
     { exists 0, 0.
       split; try apply zero_ring_degeneracy;
-        replace 0 with ((0%R : R) : polynomial) by now apply set_proj_injective.
-      - now rewrite <-IRP_1, H.
+        replace 0 with (0%R : poly) by now apply set_proj_injective.
+      - now rewrite IRP_1, H.
       - now rewrite degree_const. }
     revert n a H2.
     induction n using Induction; intros a H2.
@@ -1433,9 +1407,8 @@ Section Polynomial_theorems.
     assert (1 ≤ degree a)%N as H6.
     { exists n.
       now rewrite H5, <-add_1_r, naturals.add_comm. }
-    destruct (IHn (a - (leading_coefficient a : polynomial) * x^c * b))
-      as [q [r [H7 H8]]].
-    2: { exists (q + (leading_coefficient a : polynomial) * x^c), r.
+    destruct (IHn (a - (leading_coefficient a) * x^c * b)) as [q [r [H7 H8]]].
+    2: { exists (q + (leading_coefficient a) * x^c), r.
          split; auto.
          ring_simplify [H7].
          rewrite <-rings.A2, <-H7.
@@ -1481,14 +1454,14 @@ Section Polynomial_theorems.
 
   Definition const f := degree f = 0%N.
 
-  Theorem const_classification : ∀ f, const f ↔ ∃ c : R, f = (c : polynomial).
+  Theorem const_classification : ∀ f, const f ↔ ∃ c : R, f = c.
   Proof.
     split; unfold const; intros H.
     - exists (coefficient f 0).
       rewrite (polynomial_sum_lemma 0 f) at 1.
       unfold sum.
       rewrite iterate_0, rings.pow_0_r.
-      ring.
+      now ring_simplify.
       rewrite H.
       auto using le_refl.
     - destruct H as [c H].
@@ -1496,45 +1469,42 @@ Section Polynomial_theorems.
       now rewrite degree_const.
   Qed.
 
-  Theorem eval_const : ∀ a b : R, ((a : polynomial) b) = a.
+  Theorem eval_const : ∀ a b : R, a b = a.
   Proof.
     intros a b.
-    rewrite <-(rings.M3 _ (a : polynomial)), rings.M1, <-(rings.pow_0_r _ x),
+    rewrite <-(rings.M3 _ (a : poly)), rings.M1, <-(rings.pow_0_r _ x),
     eval_mul_const, eval_x, rings.pow_0_r.
     ring.
   Qed.
 
-  Theorem eval_neg :
-    ∀ (f : polynomial) a, ((-f : polynomial) a) = (- (f a))%R.
+  Theorem eval_neg : ∀ f a, (-f) a = (- (f a))%R.
   Proof.
     intros f a.
-    rewrite <-rings.mul_neg_1_l, eval_mul, <-IRP_1, IRP_neg, eval_const.
+    rewrite <-rings.mul_neg_1_l, eval_mul, IRP_1, IRP_neg, eval_const.
     ring.
   Qed.
 
   Infix "｜" := (rings.divide PR).
 
-  Theorem roots_classification :
-    ∀ f (a : R), root f a ↔ (x - (a : polynomial))｜f.
+  Theorem roots_classification : ∀ f a, root f a ↔ x - a｜f.
   Proof.
     destruct (classic (1%R = 0%R)) as [H | H]; split; intros H0;
       try now apply zero_ring_degeneracy.
     { exists 1.
       apply zero_ring_degeneracy.
-      replace 0 with ((0%R : R) : polynomial) by now apply set_proj_injective.
-      now rewrite <-IRP_1, H. }
-    - assert (linear (x - (a : polynomial))) as H1; try unfold linear in H1.
+      replace 0 with (0%R : poly) by now apply set_proj_injective.
+      now rewrite IRP_1, H. }
+    - assert (linear (x - a)) as H1; try unfold linear in H1.
       { rewrite linear_classification.
         exists (-a)%R, 1%R.
         split; auto.
-        rewrite IRP_1, <-IRP_neg.
-        ring. }
-      destruct (monic_division_algorithm f (x - (a : polynomial)))
-        as [q [r [H2 H3]]]; try rewrite H1 in *; eauto using naturals.succ_lt.
-      + replace (x - (a : polynomial)) with (((-a : R)%R : polynomial) + x);
-          auto using monic_a_plus_x.
+        rewrite <-IRP_1, <-IRP_neg.
+        now ring_simplify. }
+      destruct (monic_division_algorithm f (x - a)) as [q [r [H2 H3]]];
+        try rewrite H1 in *; eauto using naturals.succ_lt.
+      + replace (x - a) with ((-a)%R + x); auto using monic_a_plus_x.
         rewrite sub_is_neg, IRP_neg.
-        ring.
+        now ring_simplify.
       + exists q.
         rewrite rings.M1, H2.
         replace r with 0; try ring.
@@ -1550,7 +1520,7 @@ Section Polynomial_theorems.
         subst.
         symmetry.
         unfold root in H0.
-        replace 0 with ((0%R : R) : polynomial) by now apply set_proj_injective.
+        replace 0 with (0%R : poly) by now apply set_proj_injective.
         now rewrite <-H0, eval_add, eval_mul, sub_is_neg, eval_add, eval_neg,
         <-(rings.pow_1_r _ x), eval_x, ? eval_const, rings.pow_1_r, rings.A4,
         mul_0_l, rings.A3.
