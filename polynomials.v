@@ -275,7 +275,6 @@ Section Polynomial_theorems.
     now apply set_proj_injective.
   Qed.
 
-
   Theorem IRP_add : ∀ a b : R,
       (a : polynomial) + (b : polynomial) = (((a + b)%R : R) : polynomial).
   Proof.

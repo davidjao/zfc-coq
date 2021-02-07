@@ -1491,3 +1491,22 @@ Proof.
     rewrite add_succ_r in H0.
     now apply PA5.
 Qed.
+
+Theorem no_quines : ∀ n : N, n ∉ n.
+Proof.
+  intros n H.
+  apply lt_is_in in H.
+  contradiction (lt_irrefl n).
+Qed.
+
+Theorem disjoint_succ : ∀ n : N, n ∩ {n,n} = ∅.
+Proof.
+  intros n.
+  apply Extensionality.
+  split; intros H.
+  - apply Pairwise_intersection_classification in H as [H H0].
+    apply Singleton_classification in H0.
+    subst.
+    contradiction (no_quines n).
+  - contradiction (Empty_set_classification z).
+Qed.

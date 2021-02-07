@@ -769,12 +769,9 @@ Proof.
     + rewrite Injective_classification in *.
       intros x y H7 H8 H9.
       rewrite ? H5 in H9; try congruence.
-      repeat destruct excluded_middle_informative; try congruence; auto.
-      * contradiction (no_quines n).
-        rewrite H9, <-H0 at 1.
-        auto using function_maps_domain_to_range.
-      * contradiction (no_quines n).
-        rewrite <-H9, <-H0 at 1.
+      repeat destruct excluded_middle_informative; try congruence; auto;
+        contradiction (no_quines n);
+        [ rewrite H9, <-H0 at 1 | rewrite <-H9, <-H0 at 1 ];
         auto using function_maps_domain_to_range.
     + rewrite Surjective_classification in *.
       intros y H7.
@@ -2175,7 +2172,7 @@ Section Powerset_powers.
         rewrite <-H1 in H9.
         apply Specify_classification in H9 as [H9 H10].
         rewrite H7 in H10.
-        contradiction (no_quines ∅).
+        contradiction (Empty_set_classification ∅).
         rewrite H10 at 2.
         now rewrite Singleton_classification.
       + assert (z ∈ {x in X | f x = {∅,∅}}) as H9
@@ -2183,7 +2180,7 @@ Section Powerset_powers.
         rewrite H1 in H9.
         apply Specify_classification in H9 as [H9 H10].
         rewrite H8 in H10.
-        contradiction (no_quines ∅).
+        contradiction (Empty_set_classification ∅).
         rewrite H10 at 2.
         now rewrite Singleton_classification.
     - rewrite Surjective_classification.
