@@ -575,7 +575,6 @@ Section permutation_succ_helper_functions.
         destruct a as [H4 [H5 H6]].
         replace (n : set) with (proj1_sig n_in_Sn) by auto.
         now rewrite H6, psrh_n.
-      + now rewrite sets.functionify_domain.
       + now rewrite sets.functionify_range.
   Qed.
 
@@ -656,7 +655,6 @@ Proof.
          apply Graph_classification.
          exists n.
          split; congruence.
-      -- now rewrite functionify_domain.
       -- now rewrite functionify_range.
     * destruct Complement_classification, a0, Specify_classification,
       a1, constructive_indefinite_description as [f'].
@@ -1753,8 +1751,6 @@ Section Combinations_orbit_stabilizer.
         clear a i0 i e.
         destruct a0 as [H4 [H5 [H6 H7]]].
         apply function_record_injective in H6; unfold g in *.
-        2: { rewrite inverse_domain, sets.functionify_range;
-             auto using combinations_right_helper_bijective. }
         2: { rewrite inverse_range, sets.functionify_domain;
              auto using combinations_right_helper_bijective. }
         subst.
@@ -1782,8 +1778,6 @@ Section Combinations_orbit_stabilizer.
         clear a i0 i e.
         destruct a0 as [H4 [H5 [H6 H7]]].
         apply function_record_injective in H6; unfold g in *.
-        2: { rewrite inverse_domain, sets.functionify_range;
-             auto using combinations_right_helper_bijective. }
         2: { rewrite inverse_range, sets.functionify_domain;
              auto using combinations_right_helper_bijective. }
         subst.
@@ -1867,8 +1861,6 @@ Section Combinations_orbit_stabilizer.
       apply Ordered_pair_iff in H18 as [H18 H19].
       subst.
       apply function_record_injective in H16.
-      2: { rewrite H14, inverse_domain, sets.functionify_range;
-           auto using combinations_right_helper_bijective. }
       2: { rewrite H15, inverse_range, sets.functionify_domain;
            auto using combinations_right_helper_bijective. }
       clear H17 i s.
@@ -1971,8 +1963,6 @@ Section Combinations_orbit_stabilizer.
       apply Ordered_pair_iff in H18 as [H18 H19].
       subst.
       apply function_record_injective in H16.
-      2: { rewrite H14, inverse_domain, sets.functionify_range;
-           auto using combinations_right_helper_bijective. }
       2: { rewrite H15, inverse_range, sets.functionify_domain;
            auto using combinations_right_helper_bijective. }
       clear H17 i s.

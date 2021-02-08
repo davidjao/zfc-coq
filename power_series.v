@@ -259,7 +259,9 @@ Section Power_series_construction.
     replace (S n) with (S 0+n)%N at 4.
     2: { now rewrite naturals.add_comm, add_1_r. }
     unfold sum at 2.
-    rewrite iterate_lower, A1, M1, sub_diag, sub_0_r; auto using A2.
+    rewrite iterate_lower, A1, M1, sub_diag, sub_0_r.
+    2: { intros x y z.
+         now ring_simplify. }
     f_equal.
     clear IHn.
     revert f g.
@@ -431,7 +433,7 @@ Section Power_series_construction.
     rewrite <-sum_dist.
     apply iterate_extensionality.
     intros k H.
-    ring.
+    now ring_simplify.
   Qed.
 
   Theorem mul_1_r : ∀ f, f * 1 = f.
@@ -627,7 +629,7 @@ Section Power_series_construction.
       rewrite <-H.
       apply iterate_extensionality.
       intros k H0.
-      repeat destruct excluded_middle_informative; subst; try ring.
+      repeat destruct excluded_middle_informative; subst; try (now ring_simplify).
       + contradiction (PA4 0).
       + apply sub_0_le in e.
         apply succ_0 in n1 as [m H1].
@@ -688,7 +690,7 @@ Section Power_series_construction.
     repeat destruct excluded_middle_informative; try tauto.
     - subst.
       now rewrite sub_0_r.
-    - ring.
+    - now ring_simplify.
   Qed.
 
 End Power_series_construction.

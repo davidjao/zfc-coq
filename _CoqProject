@@ -4,6 +4,7 @@ logic_axioms.v
 sets.v
 russell.v
 naturals.v
+iterated_ops.v
 cardinality.v
 rings.v
 power_series.v
@@ -16,5 +17,6 @@ ordered_fields.v
 rationals.v
 combinatorics.v
 polynomials.v
+strings.v
 summation_example.v
 reals.v

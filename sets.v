@@ -843,17 +843,6 @@ Proof.
   now replace i with i0 by apply proof_irrelevance.
 Qed.
 
-Theorem function_record_injective : ∀ f g,
-    domain f = domain g → range f = range g → graph f = graph g →
-    f = g.
-Proof.
-  intros f g H H0 H1.
-  destruct f, g.
-  simpl in *.
-  subst.
-  now replace func_hyp0 with func_hyp1 by apply proof_irrelevance.
-Qed.
-
 Definition eval_rel : set → set → set → set → set.
 Proof.
   intros f A B x.
@@ -1451,49 +1440,6 @@ Proof.
   rewrite <-(H9 a), <-(H9 a'); auto.
 Qed.
 
-Lemma func_ext_lemma : ∀ f g,
-    domain f = domain g → range f = range g → (∀ x, x ∈ domain f → f x = g x)
-    → graph f ⊂ graph g.
-Proof.
-  intros f g H H0 H1 z H2.
-  apply Graph_classification in H2 as [a [H2 H3]].
-  apply Graph_classification.
-  exists a.
-  rewrite <-H1; repeat split; congruence.
-Qed.
-
-Theorem func_ext : ∀ f g, domain f = domain g → range f = range g
-                          → (∀ x, x ∈ domain f → f x = g x) → f = g.
-Proof.
-  intros f g H H0 H1.
-  apply function_record_injective; try congruence.
-  apply Subset_equality_iff.
-  pose proof H1 as H2.
-  rewrite H in H2.
-  split; apply func_ext_lemma; auto using eq_sym.
-Qed.
-
-Theorem function_inv_inv : ∀ f, bijective f → inverse (inverse f) = f.
-Proof.
-  intros f H.
-  apply func_ext.
-  - rewrite inverse_domain, inverse_range; auto using inverse_bijective.
-  - rewrite inverse_range, inverse_domain; auto using inverse_bijective.
-  - intros x H0.
-    rewrite inverse_domain, inverse_range in H0; auto using inverse_bijective.
-    assert (bijective (inverse f)) as H1 by auto using inverse_bijective.
-    pose proof H1 as [H2 H3].
-    rewrite Injective_classification in H2.
-    apply H2.
-      * rewrite <-inverse_range; auto.
-        apply function_maps_domain_to_range.
-        rewrite inverse_domain, inverse_range; auto.
-      * rewrite inverse_domain; auto.
-        now apply function_maps_domain_to_range.
-      * rewrite left_inverse, right_inverse; auto.
-        rewrite inverse_domain, inverse_range; auto.
-Qed.
-
 Section Quotient_maps.
 
   Variable X R : set.
@@ -1809,7 +1755,7 @@ Proof.
 Qed.
 
 Theorem singleton_functions :
-  ∀ f x y, domain f = {x,x} → range f = {y,y} → graph f = {(x,y),(x,y)}.
+  ∀ f x y, domain f = {x,x} → range f = {y,y} → graph f = {(x,y), (x,y)}.
 Proof.
   intros f x y H H0.
   apply (function_graph_equality {x,x} {y,y}).
@@ -1828,4 +1774,86 @@ Proof.
         intuition; congruence.
   - pose proof func_hyp f as [H1].
     now rewrite H, H0, singleton_products in *.
+Qed.
+
+Theorem domain_uniqueness : ∀ f A1 A2 B,
+    is_function f A1 B → is_function f A2 B → A1 = A2.
+Proof.
+  intros f A1 A2 B [H H0] [H1 H2].
+  apply Extensionality.
+  split; intros H3.
+  - apply H0 in H3 as [y [[H3 H4] H5]].
+    apply H1 in H4.
+    apply Specify_classification in H4 as [H4 [a [b [H6 [H7 H8]]]]].
+    apply Ordered_pair_iff in H8 as [H8 H9].
+    now subst.
+  - apply H2 in H3 as [y [[H3 H4] H5]].
+    apply H in H4.
+    apply Specify_classification in H4 as [H4 [a [b [H6 [H7 H8]]]]].
+    apply Ordered_pair_iff in H8 as [H8 H9].
+    now subst.
+Qed.
+
+Theorem function_record_injective : ∀ f g,
+    range f = range g → graph f = graph g → f = g.
+Proof.
+  intros f g H H0.
+  destruct f, g.
+  simpl in *.
+  subst.
+  assert (domain0 = domain1) by eauto using domain_uniqueness.
+  subst.
+  now replace func_hyp0 with func_hyp1 by apply proof_irrelevance.
+Qed.
+
+Lemma func_ext_lemma : ∀ f g,
+    range f = range g → (∀ x, x ∈ domain f → f x = g x)
+    → graph f ⊂ graph g.
+Proof.
+  intros f g H H0 z H1.
+  apply Graph_classification in H1 as [a [H1 H2]].
+  apply Graph_classification.
+  exists a.
+  rewrite <-H0; repeat split; try congruence.
+  apply NNPP.
+  intros H3.
+  apply H0 in H1 as H4.
+  unfold eval in H4 at 2.
+  unfold eval_rel in H4.
+  destruct excluded_middle_informative; try tauto.
+  contradiction (no_quines (range f)).
+  rewrite H, <-H4 at 1.
+  now apply function_maps_domain_to_range.
+Qed.
+
+Theorem func_ext : ∀ f g, domain f = domain g → range f = range g
+                          → (∀ x, x ∈ domain f → f x = g x) → f = g.
+Proof.
+  intros f g H H0 H1.
+  apply function_record_injective; try congruence.
+  apply Subset_equality_iff.
+  pose proof H1 as H2.
+  rewrite H in H2.
+  split; apply func_ext_lemma; auto using eq_sym.
+Qed.
+
+Theorem function_inv_inv : ∀ f, bijective f → inverse (inverse f) = f.
+Proof.
+  intros f H.
+  apply func_ext.
+  - rewrite inverse_domain, inverse_range; auto using inverse_bijective.
+  - rewrite inverse_range, inverse_domain; auto using inverse_bijective.
+  - intros x H0.
+    rewrite inverse_domain, inverse_range in H0; auto using inverse_bijective.
+    assert (bijective (inverse f)) as H1 by auto using inverse_bijective.
+    pose proof H1 as [H2 H3].
+    rewrite Injective_classification in H2.
+    apply H2.
+      * rewrite <-inverse_range; auto.
+        apply function_maps_domain_to_range.
+        rewrite inverse_domain, inverse_range; auto.
+      * rewrite inverse_domain; auto.
+        now apply function_maps_domain_to_range.
+      * rewrite left_inverse, right_inverse; auto.
+        rewrite inverse_domain, inverse_range; auto.
 Qed.

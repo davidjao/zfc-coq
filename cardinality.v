@@ -1867,8 +1867,7 @@ Proof.
     rewrite <-(function_inv_inv x0), <-(function_inv_inv x1); auto.
     f_equal.
       apply function_record_injective; auto.
-    + rewrite ? inverse_domain; congruence.
-    + rewrite ? inverse_range; congruence.
+    rewrite ? inverse_range; congruence.
   - rewrite Surjective_classification.
     intros y H2.
     rewrite H0 in H2.
@@ -1896,8 +1895,7 @@ Proof.
     replace h with (inverse g).
     + rewrite function_inv_inv; auto.
     + apply function_record_injective; auto.
-      * rewrite inverse_domain; congruence.
-      * rewrite inverse_range; congruence.
+      rewrite inverse_range; congruence.
 Qed.
 
 Theorem size_of_bijections_sym :
@@ -2034,7 +2032,6 @@ Proof.
         apply function_maps_domain_to_range.
         congruence.
     + apply function_record_injective; try congruence.
-      rewrite H7, inverse_domain; auto.
 Qed.
   
 Lemma size_of_bijections_wf : ∀ A B C,
