@@ -2421,13 +2421,8 @@ Proof.
   apply Pairwise_intersection_classification in H0 as [H0 H1].
   apply Specify_classification in H0 as [H0 H2].
   apply Specify_classification in H1 as [H1 H3].
-  rewrite H2 in H3.
-  unfold naturals.sub in H3.
-  destruct excluded_middle_informative; try tauto.
-  destruct constructive_indefinite_description.
-  subst.
-  rewrite naturals.add_comm, add_1_r in e.
-  now contradiction (neq_succ (# z)).
+  erewrite H2, <-sub_abab, (naturals.add_comm 1), add_1_r in H3 at 1; auto.
+  now contradiction (neq_succ (k-1)).
 Qed.
 
 Theorem combinations_overflow : ∀ n k, (n < k)%N → set_of_combinations n k = ∅.

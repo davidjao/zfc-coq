@@ -298,6 +298,9 @@ Proof.
   contradiction (Empty_set_classification a).
 Qed.
 
+(* Lightly adapted from
+   https://www.seas.upenn.edu/~cis500/current/sf/lf-current/IndProp.html *)
+
 Inductive reg_exp : Type :=
 | EmptySet
 | Char (t : σ)
@@ -305,10 +308,11 @@ Inductive reg_exp : Type :=
 | Or (r1 r2 : reg_exp)
 | Star (r : reg_exp).
 
+Notation "[]" := EmptySet : String_scope.
 Notation "[ x ]" := (Char x) : String_scope.
 Infix "⌣" := Or (at level 60) : String_scope.
 Infix "||" := Concat : String_scope.
-Notation "A '⃰' " := (Star A) (at level 30, format "A '⃰'") : String_scope.
+Notation "A '⃰' " := (Star A) (at level 30) : String_scope.
 
 Inductive exp_match : σ → reg_exp → Prop :=
 | MChar x : x =~ [x]
@@ -589,8 +593,8 @@ Proof.
 Qed.
 
 Inductive unambiguous : reg_exp → Prop :=
-| unambiguous_empty : unambiguous EmptySet
-| unambiguous_char x : unambiguous (Char x)
+| unambiguous_empty : unambiguous []
+| unambiguous_char x : unambiguous [x]
 | unambiguous_union A B :
     unambiguous A → unambiguous B → A ∩ B = ∅ → unambiguous (A ⌣ B)
 | unambiguous_prod A B :
@@ -598,9 +602,31 @@ Inductive unambiguous : reg_exp → Prop :=
     unambiguous (A || B)
 | unambiguous_star A :
     unambiguous A →
-    (∀ n m : N, n ≠ m → (pow A n) ∩ (pow A m) = ∅)%str →
+    (∀ n m : N, n ≠ m → (A^n)%str ∩ (A^m)%str = ∅) →
     injective (concat_product A (A ⃰)) →
     unambiguous (A ⃰).
+
+Parameter star_func : (power_series integers) → (power_series integers).
+
+Fixpoint gen_func (f : reg_exp) :=
+  match f with
+  | [] => IRS integers 1%Z
+  | [a] => power_series.x integers
+  | A || B => power_series.mul integers (gen_func A) (gen_func B)
+  | A ⌣ B => power_series.add integers (gen_func A) (gen_func B)
+  | A ⃰ => star_func (gen_func A)
+  end.
+
+Goal (gen_func [0]) = power_series.x integers.
+Proof.
+  now simpl.
+Qed.
+
+Goal gen_func ([0] ⌣ [1]) =
+power_series.add _ (power_series.x integers) (power_series.x integers).
+Proof.
+  now simpl.
+Qed.
 
 Theorem singleton_unambiguous : ∀ x, unambiguous [x].
 Proof.
@@ -628,13 +654,7 @@ Proof.
     f_equal.
     apply Specify_classification in H1 as [H1 [y [H2 H3]]].
     apply set_proj_injective in H2.
-    inversion H3.
-    + inversion H6.
-      subst.
-      apply length_zero.
-    + inversion H6.
-      subst.
-      apply length_one.
+    inversion H3; inversion H6; subst; auto using length_zero, length_one.
 Qed.
 
 Theorem ambiguous_singletons : ∀ x, ¬ unambiguous ([x] ⌣ [x]).
@@ -652,7 +672,7 @@ Proof.
     split; auto using MChar.
 Qed.
 
-Theorem ambiguous_empty_star : ¬ unambiguous ([ε]⃰).
+Theorem ambiguous_empty_star : ¬ unambiguous ([ε] ⃰).
 Proof.
   intros H.
   inversion H.
@@ -807,7 +827,7 @@ Proof.
     apply proof_irrelevance.
 Qed.
 
-Theorem unambiguous_all_strings : unambiguous (([0] ⌣ [1])⃰).
+Theorem unambiguous_all_strings : unambiguous (([0] ⌣ [1]) ⃰).
 Proof.
   apply unambiguous_star.
   - apply unambiguous_union; auto using singleton_unambiguous.

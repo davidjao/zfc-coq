@@ -114,16 +114,14 @@ Section Power_series_construction.
   Proof.
     intros f g H.
     apply set_proj_injective.
-    simpl.
     unfold coefficient in H.
     repeat destruct Specify_classification.
     destruct a, a0.
-    set (f' := {| func_hyp := i2 |}).
-    set (g' := {| func_hyp := i4 |}).
     replace (proj1_sig f) with (graph (mkFunc _ _ _ i2)) by auto.
     replace (proj1_sig g) with (graph (mkFunc _ _ _ i4)) by auto.
+    set (f' := {| func_hyp := i2 |}) in *.
+    set (g' := {| func_hyp := i4 |}) in *.
     f_equal.
-    fold f' g' Rset in H |-*.
     apply func_ext; simpl; auto.
     intros n H0.
     set (η := exist _ _ H0 : N).
