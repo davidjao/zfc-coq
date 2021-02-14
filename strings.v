@@ -578,27 +578,29 @@ Inductive unambiguous : reg_exp → Prop :=
     injective (concat_product A (A ⃰)) →
     unambiguous (A ⃰).
 
-Parameter star_func : (power_series integers) → (power_series integers).
+Section test_generating_series.
+  Variable star_func : (power_series integers) → (power_series integers).
 
-Fixpoint gen_func (f : reg_exp) :=
-  match f with
-  | [] => IRS integers 1%Z
-  | [a] => power_series.x integers
-  | A || B => power_series.mul integers (gen_func A) (gen_func B)
-  | A ⌣ B => power_series.add integers (gen_func A) (gen_func B)
-  | A ⃰ => star_func (gen_func A)
-  end.
+  Fixpoint gen_func (f : reg_exp) :=
+    match f with
+    | [] => IRS integers 1%Z
+    | [a] => power_series.x integers
+    | A || B => power_series.mul integers (gen_func A) (gen_func B)
+    | A ⌣ B => power_series.add integers (gen_func A) (gen_func B)
+    | A ⃰ => star_func (gen_func A)
+    end.
 
-Goal (gen_func [0]) = power_series.x integers.
-Proof.
-  now simpl.
-Qed.
+  Goal (gen_func [0]) = power_series.x integers.
+  Proof.
+    now simpl.
+  Qed.
 
-Goal gen_func ([0] ⌣ [1]) =
-power_series.add _ (power_series.x integers) (power_series.x integers).
-Proof.
-  now simpl.
-Qed.
+  Goal gen_func ([0] ⌣ [1]) =
+  power_series.add _ (power_series.x integers) (power_series.x integers).
+  Proof.
+    now simpl.
+  Qed.
+End test_generating_series.
 
 Theorem singleton_unambiguous : ∀ x, unambiguous [x].
 Proof.
@@ -785,7 +787,7 @@ Proof.
   rewrite H1.
   unfold sets.functionify.
   destruct constructive_indefinite_description as [f'], a0 as [H2 [H3 H4]].
-  assert (proj1_sig x ∈ m+n)%N as H5 by now apply lt_is_in.
+  assert (x ∈ m+n)%N as H5 by now apply lt_is_in.
   set (ξ := exist _ _ H5 : elts (m+n)%N).
   replace (f' x) with (f' ξ) by auto.
   rewrite H4.

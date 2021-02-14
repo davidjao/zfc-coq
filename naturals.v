@@ -389,8 +389,7 @@ Coercion INS : N >-> set.
 
 Theorem N_in_ω : ∀ a : N, a ∈ ω.
 Proof.
-  intros a.
-  apply (proj2_sig a).
+  eauto using elts_in_set.
 Qed.
 
 Definition zero := (exist _ _ PA1_ω) : N. (* PA1 : Zero is a natural. *)
@@ -418,7 +417,7 @@ Proof.
   destruct (constructive_indefinite_description
               _ (function_construction ω ω succ PA2_ω)) as [X [H0 [H1 H2]]].
   destruct (constructive_indefinite_description
-              _ (recursion X _ _ (proj2_sig a) H0 H1))
+              _ (recursion X _ _ (elts_in_set _ a) H0 H1))
     as [u_a [H3 [H4 [H5 H6]]]].
   assert (u_a b ∈ ω) as H7.
   { rewrite <-H4.
@@ -690,7 +689,7 @@ Proof.
               _ (function_construction ω ω (mul_right a) H))
     as [add_a [H0 [H1 H2]]].
   destruct (constructive_indefinite_description
-              _ (recursion add_a _ _ (proj2_sig 1) H0 H1))
+              _ (recursion add_a _ _ (elts_in_set _ 1) H0 H1))
     as [pow_b [H3 [H4 [H5 H6]]]].
   assert (pow_b b ∈ ω) as H7.
   { rewrite <-H4.

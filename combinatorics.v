@@ -311,11 +311,11 @@ Section permutation_succ_helper_functions.
       apply H0 in H.
       + contradiction (no_quines n).
         rewrite <-H at 1.
-        apply (proj2_sig x).
+        auto using elts_in_set.
       + rewrite functionify_domain, <-S_is_succ.
         apply Pairwise_union_classification.
         left.
-        apply (proj2_sig x).
+        auto using elts_in_set.
       + rewrite functionify_domain, <-lt_is_in.
         apply naturals.succ_lt.
   Qed.
@@ -1151,7 +1151,7 @@ Section Combinations_orbit_stabilizer.
     assert (f2_inv x ∈ y) as H9.
     { rewrite image_of_comb_proj, H3; auto using elts_in_set.
       - rewrite functionify_range.
-        apply nontriviality, (proj2_sig x).
+        eauto using elts_in_set.
       - rewrite <-(functionify_domain _ _ f2), <-H2.
         apply function_maps_domain_to_range.
         rewrite H1, functionify_range.
@@ -1224,7 +1224,7 @@ Section Combinations_orbit_stabilizer.
     assert (f2_inv x ∈ n \ y) as H9.
     { rewrite image_of_comb_proj_2, H3; auto using elts_in_set.
       - rewrite functionify_range.
-        apply (complement_subset k n), (proj2_sig x).
+        apply (complement_subset k n); auto using elts_in_set.
       - rewrite <-(functionify_domain _ _ f2), <-H2.
         apply function_maps_domain_to_range.
         rewrite H1, functionify_range.
@@ -1394,7 +1394,7 @@ Section Combinations_orbit_stabilizer.
     intros [f F].
     apply Inverse_image_classification_left in F as H;
       apply Inverse_image_classification_domain in F as H0;
-      try (rewrite cp_range; apply (proj2_sig y)).
+      try (rewrite cp_range; auto using elts_in_set).
     rewrite cp_domain in H0.
     exact (functionify n n (exist _ _ H0)).
   Defined.
@@ -1432,7 +1432,7 @@ Section Combinations_orbit_stabilizer.
       simpl.
       now rewrite <-cp_domain.
     - rewrite cp_range.
-      apply (proj2_sig y).
+      auto using elts_in_set.
   Qed.
 
   Theorem cii_bijective : ∀ f, bijective (comb_inverse_image_incl f).
@@ -1620,24 +1620,20 @@ Section Combinations_orbit_stabilizer.
         pose proof functionify_bijective _ _ z1 as [H7 H8].
         rewrite Injective_classification in H7.
         now apply H7 in H3; try now rewrite functionify_domain.
-      + assert ((inverse (comb_inverse_image_incl h))
-                  ((functionify k k z1) x1) ∈ proj1_sig y) as H7
-            by auto using combinations_right_helper_l_1.
-        assert ((inverse (comb_inverse_image_incl h))
-                  ((functionify (n \ k) (n \ k) z2) x2) ∈ n \ proj1_sig y)
-          as H8 by now apply combinations_right_helper_r_1,
-             Complement_classification.
-        rewrite <-H3, Complement_classification in H8.
-        tauto.
-      + assert ((inverse (comb_inverse_image_incl h))
-                  ((functionify k k z1) x2) ∈ proj1_sig y) as H7
-            by auto using combinations_right_helper_l_1.
-        assert ((inverse (comb_inverse_image_incl h))
-                  ((functionify (n \ k) (n \ k) z2) x1) ∈ n \ proj1_sig y)
-          as H8 by now apply combinations_right_helper_r_1,
-             Complement_classification.
-        rewrite H3, Complement_classification in H8.
-        tauto.
+      + assert (inverse (comb_inverse_image_incl h) (functionify _ _ z2 x2) ∈ _)
+          as H7 by now apply combinations_right_helper_r_1,
+                   Complement_classification.
+        rewrite <-H3, Complement_classification in H7.
+        destruct H7 as [H7 H8].
+        contradiction H8.
+        auto using combinations_right_helper_l_1.
+      + assert (inverse (comb_inverse_image_incl h) (functionify _ _ z2 x1) ∈ _)
+          as H7 by now apply combinations_right_helper_r_1,
+                   Complement_classification.
+        rewrite H3, Complement_classification in H7.
+        destruct H7 as [H7 H8].
+        contradiction H8.
+        auto using combinations_right_helper_l_1.
       + apply H in H3.
         2: { rewrite inverse_domain; auto using cii_bijective.
              rewrite cii_range.

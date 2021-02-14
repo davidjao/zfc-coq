@@ -425,8 +425,8 @@ Proof.
         apply set_proj_injective, cancellation_add in H4.
         now f_equal.
       * intros y.
-        assert (elt_to_set _ y ∈ ω) as H2.
-        { pose proof proj2_sig y as H2.
+        assert (y ∈ ω) as H2.
+        { pose proof elts_in_set _ y as H2.
           simpl in H2.
           rewrite H0 in H2.
           apply Complement_classification in H2.
@@ -438,7 +438,7 @@ Proof.
           { rewrite <-H0.
             unfold γ.
             simpl.
-            apply (proj2_sig y). }
+            auto using elts_in_set. }
           rewrite H3 in H4.
           apply Complement_classification in H4.
           rewrite Singleton_classification in H4.
@@ -446,7 +446,7 @@ Proof.
         apply succ_0 in H3 as [m H3].
         assert (m ∈ domain f') as H5.
         { rewrite H.
-          apply (proj2_sig m). }
+          eauto using elts_in_set. }
         exists (exist (λ x, x ∈ domain f') _ H5).
         simpl.
         apply set_proj_injective.
@@ -530,11 +530,11 @@ Proof.
   destruct (lt_trichotomy m n) as [H1 | [H1 | H1]]; auto;
     rewrite lt_is_in in H1.
   - apply (proper_subsets_of_natural_numbers m n); repeat split.
-    + apply elements_of_naturals_are_subsets; auto; apply (proj2_sig n).
+    + apply elements_of_naturals_are_subsets; eauto using elts_in_set.
     + contradict H0; now apply set_proj_injective.
     + eauto using cardinality_trans, cardinality_sym.
   - apply (proper_subsets_of_natural_numbers n m); repeat split.
-    + apply elements_of_naturals_are_subsets; auto; apply (proj2_sig m).
+    + apply elements_of_naturals_are_subsets; eauto using elts_in_set.
     + contradict H0; now apply set_proj_injective.
     + eauto using cardinality_trans, cardinality_sym.
 Qed.

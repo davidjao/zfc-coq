@@ -55,7 +55,7 @@ Section Polynomials_construction.
       set (b := (exist (λ x : set, x ∈ power_series_set R) b' B')).
       fold a b in H2, H4 |-*.
       apply Specify_classification.
-      split; try now apply (proj2_sig (a + b)%series).
+      split; eauto using elts_in_set.
       exists (a + b)%series.
       split; auto.
       exists (naturals.max m n).
@@ -75,7 +75,7 @@ Section Polynomials_construction.
       set (b := (exist (λ x : set, x ∈ power_series_set R) b' B')).
       fold a b in H2, H4 |-*.
       apply Specify_classification.
-      split; try now apply (proj2_sig (a * b)%series).
+      split; eauto using elts_in_set.
       exists (a * b)%series.
       split; auto.
       exists (n + m)%N.
@@ -102,7 +102,7 @@ Section Polynomials_construction.
       set (a := (exist (λ x : set, x ∈ power_series_set R) a' A')).
       fold a in H1 |-*.
       apply Specify_classification.
-      split; try now apply (proj2_sig (-a))%series.
+      split; eauto using elts_in_set.
       exists (-a)%series.
       split; auto.
       exists n.
@@ -111,7 +111,7 @@ Section Polynomials_construction.
       rewrite coefficient_seriesify, H1; auto.
       ring.
     - apply Specify_classification.
-      split; try now apply (proj2_sig 1%series).
+      split; eauto using elts_in_set.
       exists (1%series).
       split; auto.
       exists 1%N.
@@ -145,7 +145,7 @@ Section Polynomials_construction.
   Proof.
     intros c.
     apply Specify_classification.
-    split; try now apply (proj2_sig (power_series.IRS _ c)).
+    split; eauto using elts_in_set.
     exists (power_series.IRS _ c).
     split; auto.
     exists 1%N.
@@ -164,7 +164,7 @@ Section Polynomials_construction.
   Theorem x_is_poly : x R ∈ polynomial_set.
   Proof.
     apply Specify_classification.
-    split; try apply (proj2_sig (x R)).
+    split; eauto using elts_in_set.
     exists (x R).
     split; auto.
     exists 2%N.

@@ -172,7 +172,7 @@ Section Power_series_construction.
     ring.
   Qed.
 
-  Definition ISS (a : power_series) := proj1_sig a.
+  Definition ISS (a : power_series) := elt_to_set _ a.
   Definition IRS a := seriesify (λ n, if (excluded_middle_informative (n = 0%N))
                                       then a else 0%ring).
 

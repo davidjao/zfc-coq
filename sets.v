@@ -31,6 +31,12 @@ Section Set_to_type.
   Coercion elt_to_set : elts >-> set.
 End Set_to_type.
 
+Theorem elts_in_set : ∀ S x, elt_to_set S x ∈ S.
+Proof.
+  intros S x.
+  apply (proj2_sig x).
+Qed.
+
 Theorem Empty_Set : ∃ w, ∀ x, x ∉ w.
 Proof.
   destruct Infinity as [x [[w [H H0]] H1]].
@@ -127,10 +133,7 @@ Proof.
     now (exists s').
   - apply H.
     destruct H0 as [s H0].
-    exists s.
-    split.
-    + apply (proj2_sig s).
-    + now (exists s).
+    eauto using elts_in_set.
 Qed.
 
 Definition replacement (S : set) (f : elts S → set) : set.
@@ -951,33 +954,25 @@ Proof.
   rewrite Specify_classification, proj1_eval, proj2_eval; auto.
 Qed.
 
-Theorem elts_in_set : ∀ S x, elt_to_set S x ∈ S.
-Proof.
-  intros S x.
-  apply (proj2_sig x).
-Qed.
-
 Theorem functionify_construction : ∀ A B (p : elts A → elts B),
   ∃ f, domain f = A ∧ range f = B ∧ ∀ a : elts A, f a = p a.
 Proof.
   intros A B p.
   assert (∀ a : elts A, (a, p a) ∈ A × B) as H.
-  { intros.
+  { intros a.
     rewrite Product_classification.
-    exists a, (p a).
-    repeat split; try apply (proj2_sig a); apply (proj2_sig (p a)). }
+    eauto using elts_in_set. }
   assert (is_function {z in A × B | ∃ a : elts A, z = (a, p a)} A B) as H0.
   { split; intros a H0; try now rewrite Specify_classification in *.
     exists (p (exist _ _ H0)).
-    repeat split; intros; try apply (proj2_sig (p (exist _ _ H0))).
+    repeat split; eauto using elts_in_set.
     - rewrite Specify_classification in *.
       split.
       + apply Product_classification.
-        exists a, (p (exist _ _ H0)).
-        repeat split; auto; apply (proj2_sig (p (exist _ _ H0))).
-      + exists (exist _ _ H0 : elts A).
-        now simpl.
-    - destruct H1 as [H1 H2].
+        eauto using elts_in_set.
+      + now (exists (exist _ _ H0 : elts A)).
+    - intros x' H1.
+      destruct H1 as [H1 H2].
       apply Specify_classification in H2 as [H2 [[a' H3] H4]].
       simpl in *.
       apply Ordered_pair_iff in H4 as [H4 H5].
@@ -987,13 +982,12 @@ Proof.
   exists (mkFunc A B {z in A × B | ∃ a : elts A, z = (a, p a)} H0).
   repeat split; auto.
   intros a.
-  pose proof Function_classification _ _ _ _ (proj2_sig a) H0 as [[H1 H2] H3].
-  destruct (H3 (p a)); try apply H3; split; auto using elts_in_set.
+  destruct (Function_classification _ _ _ _ (elts_in_set _ a) H0)
+    as [[H1 H2] H3], (H3 (p a)); try apply H3; split; auto using elts_in_set.
   rewrite Specify_classification.
   split; try now (exists a).
   rewrite Product_classification.
-  exists a, (p a); repeat split;
-    try apply (proj2_sig a); apply (proj2_sig (p a)).
+  eauto using elts_in_set.
 Qed.
 
 Section Function_evaluation.
@@ -1269,8 +1263,8 @@ Theorem Injective_classification : ∀ f, injective f ↔ ∀ x y,
 Proof.
   split; intros H.
   - intros x y H0 H1 H2.
-    replace x with (proj1_sig (exist (λ x, x ∈ domain f) _ H0)) by auto.
-    replace y with (proj1_sig (exist (λ x, x ∈ domain f) _ H1)) by auto.
+    replace x with ((exist _ _ H0 : elts (domain f)) : set) by auto.
+    replace y with ((exist _ _ H1 : elts (domain f)) : set) by auto.
     auto using f_equal, set_proj_injective.
   - intros [x X] [y Y] H0.
     inversion H0.

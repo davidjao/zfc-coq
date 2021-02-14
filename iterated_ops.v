@@ -25,9 +25,7 @@ Section Iterated_op_construction.
     revert f dom_f ran_f.
     induction n using Induction; try now intuition.
     { destruct (function_construction 1%N X (λ x, start))
-        as [g [H [H0 H1]]].
-      { intros a H.
-        apply (proj2_sig start). }
+        as [g [H [H0 H1]]]; eauto using elts_in_set.
       exists g.
       repeat split; eauto.
       - apply H1.
@@ -67,13 +65,10 @@ Section Iterated_op_construction.
     { intros a H8.
       rewrite <-S_is_succ in H8.
       apply Pairwise_union_classification in H8 as [H8 | H8];
-        destruct excluded_middle_informative.
-      - rewrite e in H8.
-        contradiction (no_quines (S n)).
+        destruct excluded_middle_informative; eauto using elts_in_set.
       - rewrite <-H3.
         apply function_maps_domain_to_range.
         congruence.
-      - apply (proj2_sig (((exist _ _ H6) · (exist _ _ H7)) : R)).
       - contradict n0.
         now apply Singleton_classification in H8. }
     exists g.
@@ -167,7 +162,7 @@ Section Iterated_op.
       rewrite <-H1.
       apply function_maps_domain_to_range.
       rewrite H0.
-      eapply elements_of_naturals_are_naturals; eauto; apply (proj2_sig n). }
+      eapply elements_of_naturals_are_naturals; eauto using elts_in_set. }
     destruct (constructive_indefinite_description
                 _ (function_construction n X (λ x, (functionify _ _ f x)) H))
       as [h [H0 [H1 H2]]].

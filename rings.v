@@ -45,11 +45,7 @@ Section Ring_theorems.
   Definition M3 := (M3_R Ring) : ∀ a, 1 * a = a.
   Definition D1 := (D1_R Ring) : ∀ a b c, (a + b) * c = a * c + b * c.
 
-  Definition IRS : R → set.
-  Proof.
-    intros a.
-    exact (proj1_sig a).
-  Defined.
+  Definition IRS (a : R) := elt_to_set _ a : set.
 
   Coercion IRS : R >-> set.
 
@@ -303,14 +299,6 @@ Section Ring_theorems.
     intros a b H; split; contradict H; subst; ring.
   Qed.
 
-  Definition mul_right : R → set → set.
-  Proof.
-    intros a x.
-    destruct (excluded_middle_informative (x ∈ (set_R Ring))).
-    - exact (proj1_sig (mul_R _ (exist _ _ i : R) a)).
-    - exact ∅.
-  Defined.
-
   Definition sum f a b := iterate_with_bounds (set_R Ring) add f 0 a b : R.
   Definition prod f a b := iterate_with_bounds (set_R Ring) mul f 1 a b : R.
 
@@ -505,7 +493,7 @@ Section Ring_theorems.
     Definition ISR : sub_R → R.
     Proof.
       intros x.
-      pose proof (proj2_sig x) as H; simpl in H.
+      pose proof (elts_in_set _ x) as H; simpl in H.
       apply subset in H.
       exact (exist _ _ H).
     Defined.
@@ -517,7 +505,7 @@ Section Ring_theorems.
       intros a b.
       assert (a + b ∈ S) as H.
       { destruct SR as [H [H0 [H1 H2]]].
-        apply H; try apply (proj2_sig a); apply (proj2_sig b). }
+        apply H; apply (elts_in_set S). }
       exact (exist _ _ H).
     Defined.
 
@@ -526,7 +514,7 @@ Section Ring_theorems.
       intros a b.
       assert (a * b ∈ S) as H.
       { destruct SR as [H [H0 [H1 H2]]].
-        apply H0; try apply (proj2_sig a); apply (proj2_sig b). }
+        apply H0; apply (elts_in_set S). }
       exact (exist _ _ H).
     Defined.
 
@@ -535,7 +523,7 @@ Section Ring_theorems.
       intros a.
       assert (-a ∈ S) as H.
       { destruct SR as [H [H0 [H1 H2]]].
-        apply H1; try apply (proj2_sig a); apply (proj2_sig b). }
+        apply H1; apply (elts_in_set S). }
       exact (exist _ _ H).
     Defined.
 
@@ -561,9 +549,7 @@ Section Ring_theorems.
       unfold ISR in H.
       simpl in *.
       apply set_proj_injective.
-      now assert (proj1_sig (exist (λ x : set, x ∈ set_R Ring) a (subset a A)) =
-                  proj1_sig (exist (λ x : set, x ∈ set_R Ring) b (subset b B)))
-        as H0 by now rewrite H.
+      now inversion H.
     Qed.
 
     Theorem ISR_add : ∀ a b : sub_R, (a + b)%ring = a + b.
@@ -694,14 +680,7 @@ Section Ring_theorems.
       apply Nonempty_classification.
       exists (set_R Ring).
       rewrite Specify_classification, Powerset_classification.
-      repeat split; auto using Set_is_subset.
-      - intros a b H H0.
-        apply (proj2_sig (a + b)).
-      - intros a b H H0.
-        apply (proj2_sig (a * b)).
-      - intros a H.
-        apply (proj2_sig (-a)).
-      - apply (proj2_sig 1).
+      repeat split; eauto using Set_is_subset, elts_in_set.
     Qed.
 
     Lemma generated_subset : subset_generated_by S ⊂ (set_R Ring).
