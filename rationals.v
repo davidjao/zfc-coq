@@ -49,7 +49,7 @@ Proof.
     subst.
     apply (cancellation_mul_l (integral_domain_OR integer_order) b'); simpl.
     + apply Specify_classification in H0 as [H0 H4].
-      rewrite proj2_eval in H4; unfold IZS; try now apply proj2_sig.
+      rewrite proj2_eval in H4; unfold IZS; auto using elts_in_set.
       contradict H4.
       now subst.
     + now ring_simplify [H5 H9].
@@ -59,7 +59,7 @@ Definition ℚ := ℤ0 / rational_relation.
 
 Definition Q := elts ℚ.
 
-Definition IQS (a : Q) := proj1_sig a : set.
+Definition IQS (a : Q) := elt_to_set _ a : set.
 Coercion IQS : Q >-> set.
 
 Delimit Scope Q_scope with Q.
@@ -75,7 +75,7 @@ Proof.
       split.
       + apply Product_classification.
         exists 0, 1.
-        unfold IZS; repeat split; auto; now apply proj2_sig.
+        unfold IZS; repeat split; auto using elts_in_set.
       + unfold proj2.
         destruct excluded_middle_informative.
         repeat destruct constructive_indefinite_description.
@@ -88,7 +88,7 @@ Proof.
         * contradiction n.
           apply Product_classification.
           exists 0, 1.
-          unfold IZS; repeat split; auto; now apply proj2_sig. }
+          unfold IZS; repeat split; auto using elts_in_set. }
     exact (quotient_map ℤ0 rational_relation (exist _ _ H)).
   - destruct a as [a' A], b as [b' B].
     assert ((a', b') ∈ ℤ0) as H.
@@ -135,7 +135,7 @@ Proof.
   split; auto.
   apply set_proj_injective.
   unfold ℚ.
-  rewrite quotient_image, H1.
+  rewrite <-quotient_image, <-H1.
   unfold embed; destruct excluded_middle_informative; simpl; intuition.
 Qed.
 

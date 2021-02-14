@@ -46,7 +46,7 @@ Definition ℤ := (ω × ω) / integer_relation.
 
 Definition Z := elts ℤ.
 
-Definition IZS (a : Z) := proj1_sig a : set.
+Definition IZS (a : Z) := elt_to_set _ a : set.
 Coercion IZS : Z >-> set.
 
 Delimit Scope Z_scope with Z.
@@ -73,7 +73,7 @@ Proof.
   exists (exist _ _ H3 : N), (exist _ _ H4 : N).
   apply set_proj_injective.
   simpl in *.
-  now rewrite <-H, <-H5, <-H1, <-quotient_image. (* or use "destruct y." *)
+  now rewrite <-H, <-H5, H1, quotient_image.
 Qed.
 
 Theorem Zequiv : (∀ a b c d, a - b = c - d ↔ a + d = b + c)%set.

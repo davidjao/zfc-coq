@@ -25,7 +25,7 @@ Proof.
     exists y.
     split; try congruence.
     rewrite H0 in H.
-    now replace y with (proj1_sig (exist (λ x, x ∈ domain f) _ H)).
+    now replace y with (elt_to_set _ (exist _ _ H)).
 Qed.
 
 Theorem cardinality_sym : ∀ A B, A ~ B → B ~ A.
@@ -295,10 +295,8 @@ Proof.
     intros x y H1 H2 H7.
     assert (g' (f' x) = g' (f' y)) as H8 by congruence.
     rewrite H4 in H1, H2.
-    replace x with (proj1_sig (exist (λ x, x ∈ range g') _ H1)) in *
-      by auto.
-    replace y with (proj1_sig (exist (λ x, x ∈ range g') _ H2)) in *
-      by auto.
+    replace x with (elt_to_set _ (exist _ _ H1)) in * by auto.
+    replace y with (elt_to_set _ (exist _ _ H2)) in * by auto.
     now rewrite ? H6, ? H3, ? H in H8.
   - rewrite Surjective_classification.
     intros y H1.
@@ -308,8 +306,7 @@ Proof.
       apply function_maps_domain_to_range.
       congruence.
     + rewrite H5 in H1.
-      replace y with (proj1_sig (exist (λ x, x ∈ domain g') _ H1)) in *
-        by auto.
+      replace y with (elt_to_set _ (exist _ _ H1)) in * by auto.
       now rewrite H3, H6, H0.
 Qed.
 
@@ -404,17 +401,16 @@ Proof.
       unfold functionify in f.
       destruct constructive_indefinite_description
         as [f' [H0 [H1 H2]]].
-      replace a with (proj1_sig (exist (λ x, x ∈ ω) _ H)) by auto.
+      replace a with (elt_to_set _ (exist _ _ H)) by auto.
       rewrite H2.
       apply Complement_classification.
-      split.
-      * apply (proj2_sig ((exist (λ x, x ∈ ω) _ H) + 1)).
-      * rewrite Singleton_classification.
-        intros H3.
-        apply set_proj_injective in H3.
-        rewrite add_1_r in H3.
-        symmetry in H3.
-        now apply PA4 in H3.
+      split; auto using elts_in_set.
+      rewrite Singleton_classification.
+      intros H3.
+      apply set_proj_injective in H3.
+      rewrite add_1_r in H3.
+      symmetry in H3.
+      now apply PA4 in H3.
     + exists f'.
       repeat split; auto.
       * apply Injective_classification.
@@ -423,19 +419,19 @@ Proof.
         rewrite ? H1 in H4; auto.
         unfold f, functionify in H4.
         destruct constructive_indefinite_description as [f'' [H5 [H6 H7]]].
-        replace x with (proj1_sig (exist (λ x, x ∈ ω) _ H2)) in * by auto.
-        replace y with (proj1_sig (exist (λ x, x ∈ ω) _ H3)) in * by auto.
+        replace x with (elt_to_set _ (exist _ _ H2)) in * by auto.
+        replace y with (elt_to_set _ (exist _ _ H3)) in * by auto.
         rewrite ? H7, ? (add_comm _ 1) in H4.
         apply set_proj_injective, cancellation_add in H4.
         now f_equal.
       * intros y.
-        assert (proj1_sig y ∈ ω) as H2.
+        assert (elt_to_set _ y ∈ ω) as H2.
         { pose proof proj2_sig y as H2.
           simpl in H2.
           rewrite H0 in H2.
           apply Complement_classification in H2.
           tauto. }
-        set (γ := (exist (λ x, x ∈ ω) _ H2) : N).
+        set (γ := (exist _ _ H2) : N).
         assert (γ ≠ 0) as H3.
         { intros H3.
           assert (γ ∈ ω \ {0,0}) as H4.
@@ -455,8 +451,8 @@ Proof.
         simpl.
         apply set_proj_injective.
         simpl.
-        replace (proj1_sig y) with (proj1_sig γ) by auto.
-        rewrite H1; try apply (proj2_sig m).
+        replace (elt_to_set _ y) with (elt_to_set _ γ) by auto.
+        rewrite H1; auto using N_in_ω.
         unfold f, functionify.
         destruct constructive_indefinite_description as [f'' [H4 [H6 H7]]].
         now rewrite H7, H3, add_1_r.
@@ -2134,8 +2130,8 @@ Section Powerset_powers.
       rewrite functionify_domain in H, H0.
       set (ξ := exist _ _ H : elts (2^X)).
       set (γ := exist _ _ H0 : elts (2^X)).
-      replace x with (proj1_sig ξ) in * by auto.
-      replace y with (proj1_sig γ) in * by auto.
+      replace x with (elt_to_set _ ξ) in * by auto.
+      replace y with (elt_to_set _ γ) in * by auto.
       rewrite ? H4 in H1.
       unfold ξ, γ in H1.
       unfold powerset_bijection_helper in *.
@@ -2244,7 +2240,7 @@ Section Powerset_powers.
       destruct a as [H0 [H1 H2]].
       set (ζ := exist _ _ Z1 : elts (2^X)).
       replace {z in X × 2 | proj2 X 2 z = 1 ↔ proj1 X 2 z ∈ y}
-        with (proj1_sig ζ) by auto.
+        with (elt_to_set _ ζ) by auto.
       rewrite H2.
       unfold ζ, powerset_bijection_helper.
       destruct Specify_classification, a.

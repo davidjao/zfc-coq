@@ -7,13 +7,13 @@ Definition ℝ := {α in P ℚ | α ≠ ∅ ∧ α ≠ ℚ ∧
 
 Definition R := elts ℝ.
 
-Definition IRS (a : R) := proj1_sig a : set.
+Definition IRS (a : R) := elt_to_set _ a : set.
 Coercion IRS : R >-> set.
 
 Lemma Dedekind_cut_0 : ∀ (α : R) (p : set), p ∈ α → p ∈ ℚ.
 Proof.
   intros α p H.
-  pose proof proj2_sig α as H0.
+  pose proof elts_in_set _ α as H0.
   apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
   apply Powerset_classification in H0.
   eauto.
@@ -22,7 +22,7 @@ Qed.
 Lemma Dedekind_cut_1 : ∀ α : R, ∅ ≠ α.
 Proof.
   intros α H.
-  pose proof proj2_sig α as H0.
+  pose proof elts_in_set _ α as H0.
   apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
   now contradict H1.
 Qed.
@@ -30,21 +30,21 @@ Qed.
 Lemma Dedekind_cut_2 : ∀ (α : R) (p q : Q), p ∈ α → q < p → q ∈ α.
 Proof.
   intros α.
-  pose proof proj2_sig α as H1.
+  pose proof elts_in_set _ α as H1.
   now apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
 Qed.
 
 Lemma Dedekind_cut_3 : ∀ (α : R) (p : Q), p ∈ α → ∃ r : Q, p < r ∧ r ∈ α.
 Proof.
   intros α.
-  pose proof proj2_sig α as H0.
+  pose proof elts_in_set _ α as H0.
   now apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
 Qed.
 
 Lemma Dedekind_cut_4 : ∀ α : R, ∀ p q : Q, p ∈ α → q ∉ α → p < q.
 Proof.
   intros α p q H H0.
-  pose proof proj2_sig α as H1.
+  pose proof elts_in_set _ α as H1.
   apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
   destruct (T p q) as [[H6 _] | [[_ [H6 _]] | [_ [_ H6]]]]; subst; try tauto.
   exfalso; eauto.
@@ -53,7 +53,7 @@ Qed.
 Lemma Dedekind_cut_5 : ∀ α : R, ∀ r s : Q, r ∉ α → r < s → s ∉ α.
 Proof.
   intros α r s H H0 H1.
-  pose proof proj2_sig α as H2.
+  pose proof elts_in_set _ α as H2.
   apply Specify_classification in H2 as [H2 [H3 [H4 [H5 H6]]]].
   eauto.
 Qed.
@@ -61,7 +61,7 @@ Qed.
 Lemma Dedekind_cut_6 : ∀ a : R, ∃ q : Q, q ∉ a.
 Proof.
   intros α.
-  pose proof proj2_sig α as H.
+  pose proof elts_in_set _ α as H.
   apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
   apply Powerset_classification in H.
   assert (ℚ ≠ α) as H4 by (now contradict H1).
@@ -119,8 +119,8 @@ Proof.
   split.
   - intros q H4.
     apply Dedekind_cut_0 in H4 as H5.
-    replace q with (proj1_sig (exist _ _ H5 : Q)) in * by auto.
-    replace p with (proj1_sig (exist _ _ H3 : Q)) in * by auto.
+    replace q with ((exist _ _ H5 : Q) : set) in * by auto.
+    replace p with ((exist _ _ H3 : Q) : set) in * by auto.
     eauto using Dedekind_cut_2, Dedekind_cut_4.
   - contradict H0.
     now apply set_proj_injective.
@@ -228,8 +228,8 @@ Proof.
     + intros z H12.
       apply (Dedekind_cut_0 α) in H9 as H13.
       apply Dedekind_cut_0 in H12 as H17.
-      replace s with (proj1_sig (exist _ _ H13 : Q)) in * by auto.
-      replace z with (proj1_sig (exist _ _ H17 : Q)) in * by auto.
+      replace s with ((exist _ _ H13 : Q) : set) in * by auto.
+      replace z with ((exist _ _ H17 : Q) : set) in * by auto.
       eapply Dedekind_cut_2; eauto using Dedekind_cut_4.
     + intros H12.
       rewrite H12 in H8.
@@ -249,14 +249,14 @@ Proof.
   - apply Nonempty_classification.
     exists (q-1).
     apply Specify_classification.
-    split; unfold IQS; try apply proj2_sig.
+    split; unfold IQS; auto using elts_in_set.
     exists (q-1).
     split; auto.
     rewrite lt_shift.
     replace (q+-(q-1)) with 1 by field.
     apply zero_lt_1.
   - intros H.
-    assert (q+1 ∈ ℚ) as H1 by (unfold IQS; apply proj2_sig).
+    assert (q+1 ∈ ℚ) as H1 by (unfold IQS; auto using elts_in_set).
     rewrite <-H in H1.
     unfold iqr_set in *.    
     apply Specify_classification in H1 as [H1 [ξ [H2 H3]]].
@@ -267,7 +267,7 @@ Proof.
   - intros p x H H0.
     apply Specify_classification in H as [H [ξ [H1 H2]]].
     apply Specify_classification.
-    split; unfold IQS; try apply proj2_sig.
+    split; unfold IQS; auto using elts_in_set.
     exists x.
     replace ξ with p in *; eauto using set_proj_injective, rationals.lt_trans.
   - intros p H.
@@ -277,7 +277,7 @@ Proof.
     exists r.
     split; try tauto.
     apply Specify_classification.
-    split; unfold IQS; try apply proj2_sig.
+    split; unfold IQS; auto using elts_in_set.
     now exists r.
 Qed.
 
@@ -302,7 +302,7 @@ Qed.
 Lemma not_Q_eq : ∀ α : R, ℚ ≠ α.
 Proof.
   intros α H.
-  pose proof proj2_sig α as H0.
+  pose proof elts_in_set _ α as H0.
   apply Specify_classification in H0 as [H0 [H1 [H2 H3]]].
   now contradict H2.
 Qed.
@@ -324,7 +324,7 @@ Proof.
     apply Dedekind_cut_0 in H0 as H2.
     exists (exist _ _ H1 + exist _ _ H2).
     apply Specify_classification.
-    split; unfold IQS; try apply proj2_sig; eauto.
+    split; eauto using elts_in_set.
   - destruct (not_proper_subset_inhab ℚ α)
       as [r' [H H0]], (not_proper_subset_inhab ℚ β) as [s' [H1 H2]];
     auto using not_Q_subset, not_Q_eq.
@@ -332,7 +332,7 @@ Proof.
     apply Subset_equality_iff in H3 as [H3 H4].
     set (ρ := exist _ _ H : Q).
     set (σ := exist _ _ H1 : Q).
-    pose proof (proj2_sig (ρ + σ)) as H5.
+    pose proof (elts_in_set _ (ρ + σ)) as H5.
     apply H4, Specify_classification in H5 as [H5 [r [s [H6 [H7 H8]]]]].
     assert (r + s < ρ + σ)%Q.
     { apply (lt_cross_add rational_order); simpl;
@@ -344,7 +344,7 @@ Proof.
     apply set_proj_injective in H1.
     subst.
     apply Specify_classification.
-    split; unfold IQS; try apply proj2_sig.
+    split; unfold IQS; auto using elts_in_set.
     exists (q+-s), s.
     repeat split; auto.
     + f_equal.
@@ -362,7 +362,7 @@ Proof.
     + rewrite ? (rationals.A1 _ s).
       now apply O1.
     + apply Specify_classification.
-      split; unfold IQS; try apply proj2_sig; eauto.
+      split; eauto using elts_in_set.
 Qed.
 
 Definition add : R → R → R.
@@ -403,8 +403,7 @@ Proof.
     exists (r+t)%Q, u.
     repeat split; auto.
     + now rewrite <-rationals.A2.
-    + apply Specify_classification; split;
-        unfold IQS; try apply proj2_sig; eauto.
+    + apply Specify_classification; split; eauto using elts_in_set.
   - apply Specify_classification in H1 as [H1 [t [u [H3 [H4 H5]]]]].
     apply set_proj_injective in H3.
     subst.
@@ -412,8 +411,7 @@ Proof.
     exists t, (u+s)%Q.
     repeat split; auto.
     + now rewrite rationals.A2.
-    + apply Specify_classification; split;
-        unfold IQS; try apply proj2_sig; eauto.
+    + apply Specify_classification; split; eauto using elts_in_set.
 Qed.
 
 Theorem A3 : ∀ a, a + 0 = a.
@@ -426,7 +424,7 @@ Proof.
   apply Extensionality; split; intros H.
   - apply Specify_classification in H as [H [r [s [H0 [H1 H2]]]]].
     apply Specify_classification in H2 as [H2 [ξ [H3 H4]]].
-    replace z with (proj1_sig (exist _ _ H : Q)) in * by auto.
+    replace z with ((exist _ _ H : Q) : set) in * by auto.
     apply set_proj_injective in H0.
     apply set_proj_injective in H3.
     eapply Dedekind_cut_2; eauto.
@@ -436,15 +434,14 @@ Proof.
     apply Dedekind_cut_0 in H as H0.
     split; auto.
     set (ζ := (exist _ _ H0) : Q).
-    replace z with (proj1_sig ζ) in * by auto.
+    replace z with (ζ : set) in * by auto.
     apply Dedekind_cut_3 in H as [r [H H1]].
     exists r, (ζ+-r)%Q.
     repeat split; auto.
     + apply f_equal.
       now ring_simplify.
     + simpl.
-      apply Specify_classification; split;
-        unfold IQS; try apply proj2_sig; eauto.
+      apply Specify_classification; split; eauto using elts_in_set.
       exists (ζ+-r)%Q.
       split; auto.
       rewrite <-(A4 r), ? (rationals.A1 _ (-r)).
@@ -463,7 +460,7 @@ Proof.
     intros z H.
     now apply Specify_classification in H.
   - apply Nonempty_classification.
-    pose proof proj2_sig α as H; simpl in *.
+    pose proof elts_in_set _ α as H; simpl in *.
     apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
     apply Powerset_classification in H.
     destruct (not_proper_subset_inhab ℚ α) as [s [H4 H5]]; auto.
@@ -473,7 +470,7 @@ Proof.
     set (σ := exist _ _ H4 : Q).
     exists (-σ-1).
     apply Specify_classification.
-    split; unfold IQS; try apply proj2_sig.
+    split; unfold IQS; auto using elts_in_set.
     exists (-σ-1), 1.
     repeat split; auto using zero_lt_1.
     now replace (-(-σ-1)-1)%Q with σ by ring.
@@ -483,7 +480,7 @@ Proof.
     apply Dedekind_cut_0 in H as H0.
     set (σ := (exist _ _ H0) : Q).
     intros H1.
-    pose proof (proj2_sig (-σ)) as H2; simpl in *.
+    pose proof (elts_in_set _ (-σ)) as H2; simpl in *.
     rewrite <-H1 in H2.
     pose proof H2 as H3.
     apply Specify_classification in H3 as [H3 [p [r [H4 [H5 H6]]]]].
@@ -497,7 +494,7 @@ Proof.
     apply set_proj_injective in H1.
     subst.
     apply Specify_classification.
-    split; unfold IQS; try apply proj2_sig.
+    split; unfold IQS; auto using elts_in_set.
     exists q, r.
     repeat split; auto.
     contradict H3.
@@ -514,7 +511,7 @@ Proof.
     exists t.
     split; auto.
     apply Specify_classification.
-    split; unfold IQS; try apply proj2_sig.
+    split; unfold IQS; auto using elts_in_set.
     exists t, (ρ+r-t).
     repeat split; auto.
     + apply (O1 (-t)) in H1.
@@ -534,7 +531,7 @@ Theorem cut_archimedean : ∀ (α : R) (b : Q),
     (0 < b)%Q → ∃ n : Z, n * b ∈ α ∧ (n + 1) * b ∉ α.
 Proof.
   intros α b H.
-  pose proof (proj2_sig α) as H0; simpl in *.
+  pose proof (elts_in_set _ α) as H0; simpl in *.
   apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
   apply Nonempty_classification in H1 as [x H1].
   apply Powerset_classification in H0.
@@ -573,7 +570,7 @@ Proof.
     + replace (m-k+1)%Z with (m+1+-k)%Z by ring.
       rewrite <-(ordered_rings.lt_shift integer_order); simpl.
       destruct (integers.T k (m+1)) as [H12 | [H12 | H12]]; intuition;
-        contradict H9; replace z with (proj1_sig ζ); try apply (H3 ξ); auto.
+        contradict H9; replace z with (ζ : set); try apply (H3 ξ); auto.
       * rewrite H12, <-IZQ_add in H6.
         destruct H6 as [H6 | H6]; eauto using rationals.lt_trans.
         now rewrite <-H6.
@@ -584,7 +581,7 @@ Proof.
         now rewrite <-H6.
     + replace (k+(m-k+1))%Z with (m+1)%Z by ring.
       eapply Dedekind_cut_5.
-      * replace z with (proj1_sig ζ) in *; eauto.
+      * replace z with (ζ : set) in *; eauto.
       * now rewrite <-IZQ_add.
   - exists (k+(n+-(1)))%Z.
     rewrite ? IZQ_add.
@@ -650,7 +647,7 @@ Proof.
       rewrite H5 in H0.
       contradiction (ordered_rings.lt_irrefl integer_order 0%Z).
     + apply Specify_classification.
-      split; unfold IQS; try apply proj2_sig.
+      split; unfold IQS; auto using elts_in_set.
       exists (-(n+2)*w), w.
       repeat split; auto.
       replace ((-(-(n+2)*w)-w))%Q with (n*w+2*w+-w)%Q by ring.
@@ -703,7 +700,7 @@ Proof.
   intros a H.
   apply proper_subset_inhab in H as [c [H H0]].
   assert (c ∈ ℚ) as H1.
-  { pose proof (proj2_sig a) as H1; simpl in *.
+  { pose proof (elts_in_set _ a) as H1; simpl in *.
     apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
     apply Powerset_classification in H1.
     now apply H1. }
@@ -716,7 +713,7 @@ Proof.
     now exists γ. }
   destruct (rationals.T γ 0) as [[H3 [H4 H5]] | [[H3 [H4 H5]] | [H3 [H4 H5]]]];
     try tauto; try now (exists γ).
-  pose proof proj2_sig a as H6; simpl in *.
+  pose proof elts_in_set _ a as H6; simpl in *.
   apply Specify_classification in H6 as [H6 [H7 [H8 [H9 H10]]]].
   destruct (H10 γ H) as [x [H11 H12]].
   exists x.
@@ -739,7 +736,7 @@ Proof.
     exists (c*d - 1).
     apply Specify_classification.
     simpl.
-    split; unfold IQS; try now apply proj2_sig.
+    split; unfold IQS; auto using elts_in_set.
     exists c, d, (c*d - 1).
     repeat split; auto.
     left.
@@ -747,9 +744,7 @@ Proof.
   - destruct (Dedekind_cut_6 a) as [c H1], (Dedekind_cut_6 b) as [d H2].
     intros H3.
     apply Subset_equality_iff in H3 as [H3 H4].
-    assert (c*d ∈ mul_pos_set a b) as H5.
-    { unfold IQS.
-      apply H4, proj2_sig. }
+    assert (c*d ∈ mul_pos_set a b) as H5 by eauto using elts_in_set.
     apply Specify_classification in H5
       as [H5 [r [s [ξ [H6 [H7 [H8 [H9 [H10 H11]]]]]]]]].
     apply set_proj_injective in H6.
@@ -761,7 +756,7 @@ Proof.
     apply Specify_classification in H1
       as [H1 [r [s [ξ [H3 [H4 [H5 [H6 [H7 H8]]]]]]]]].
     apply Specify_classification.
-    split; unfold IQS; try now apply proj2_sig.
+    split; unfold IQS; auto using elts_in_set.
     exists r, s, q.
     apply set_proj_injective in H3.
     subst.
@@ -781,7 +776,7 @@ Proof.
       destruct H8 as [H8 | H8]; eauto using rationals.lt_trans.
       congruence.
     + apply Specify_classification.
-      split; unfold IQS; try now apply proj2_sig.
+      split; unfold IQS; auto using elts_in_set.
       exists ρ, σ, (ρ * σ).
       repeat split; eauto using rationals.lt_trans.
       now right.
@@ -840,7 +835,7 @@ Proof.
     assert ((e * f)%Q ∈ 0).
     { rewrite H1.
       apply Specify_classification.
-      split; unfold IQS; try now apply proj2_sig.
+      split; unfold IQS; auto using elts_in_set.
       exists c, d, (e*f)%Q.
       repeat split; eauto using rationals.lt_trans.
       left; simpl in *.
@@ -876,7 +871,7 @@ Proof.
     exists (ρ*s)%Q, t, ξ.
     repeat split; auto using O2.
     + apply Specify_classification.
-      split; unfold IQS; try now apply proj2_sig.
+      split; unfold IQS; auto using elts_in_set.
       exists ρ, s, (ρ*s)%Q.
       repeat split; auto.
       now right.
@@ -902,7 +897,7 @@ Proof.
     exists r, (s*τ)%Q, ξ.
     repeat split; auto using O2.
     + apply Specify_classification.
-      split; unfold IQS; try now apply proj2_sig.
+      split; unfold IQS; auto using elts_in_set.
       exists s, τ, (s*τ)%Q.
       repeat split; auto.
       now right.
@@ -934,8 +929,7 @@ Proof.
   contradiction (rationals.lt_antisym c 0).
   pose proof (H0 c) as H4.
   rewrite ? Specify_classification in H4.
-  destruct H4 as [H4 [ξ [H5 H6]]]; try split; eauto; unfold IQS;
-    try now apply proj2_sig.
+  destruct H4 as [H4 [ξ [H5 H6]]]; try split; eauto using elts_in_set.
   apply set_proj_injective in H5.
   now subst.
 Qed.
@@ -979,7 +973,7 @@ Proof.
       split; eauto using Dedekind_cut_0.
       apply Dedekind_cut_0 in H0 as H1.
       set (ζ := exist _ _ H1 : Q).
-      replace z with (proj1_sig ζ) in * by auto.
+      replace z with (ζ : set) in * by auto.
       destruct (classic (0 < ζ)%Q) as [H2 | H2].
       * apply Dedekind_cut_3 in H0 as [t [H0 H3]].
         exists (ζ * t^-1)%Q, t, ζ.
@@ -987,7 +981,7 @@ Proof.
         repeat split; eauto using rationals.lt_trans.
         -- unfold one, IQR, iqr_set.
            apply Specify_classification.
-           split; unfold IQS; try now apply proj2_sig.
+           split; unfold IQS; auto using elts_in_set.
            exists (ζ * t^-1)%Q.
            split; auto.
            rewrite <-(inv_l t), (M1 ζ); auto.
@@ -1026,14 +1020,14 @@ Proof.
   - apply Nonempty_classification.
     exists 0%Q.
     apply Specify_classification.
-    split; unfold IQS; try now apply proj2_sig.
+    split; unfold IQS; auto using elts_in_set.
     exists 0%Q, 2.
     repeat split; eauto using zero_lt_1, one_lt_2, rationals.lt_trans.
     now left; right.
   - pose proof H as H0.
     apply pos_nonempty in H0 as [c [H0 H1]].
     intros H2.
-    assert (c^-1 ∈ ℚ) by (unfold IQS; apply proj2_sig).
+    assert (c^-1 ∈ ℚ) by (unfold IQS; auto using elts_in_set).
     rewrite <-H2 in H3.
     apply Specify_classification in H3
       as [H3 [p [r [H4 [H5 [[H6 | H6] | [H6 H7]]]]]]];
@@ -1068,7 +1062,7 @@ Proof.
   - intros p q H0 H1.
     apply Specify_classification in H0 as [H0 [ρ [r [H2 [H3 [H4 | [H4 H5]]]]]]];
       apply set_proj_injective in H2; subst; apply Specify_classification;
-        split; unfold IQS; try (now apply proj2_sig); exists q, r;
+        split; unfold IQS; auto using elts_in_set; exists q, r;
           repeat split; auto.
     + left.
       destruct H4 as [H4 | H4]; left; simpl in *;
@@ -1090,7 +1084,7 @@ Proof.
     + exists 0%Q.
       split; auto.
       apply Specify_classification.
-      split; unfold IQS; try now apply proj2_sig.
+      split; unfold IQS; auto using elts_in_set.
       exists 0%Q, 2%Q.
       repeat split; auto using one_lt_2.
       now left; right.
@@ -1108,7 +1102,7 @@ Proof.
       split.
       * repeat apply O2; now apply (inv_lt rational_field_order).
       * apply Specify_classification.
-        split; unfold IQS; try now apply proj2_sig.
+        split; unfold IQS; auto using elts_in_set.
         exists (c^-1 * r^-1 * r^-1)%Q, r.
         repeat split; auto.
         right.
@@ -1127,7 +1121,7 @@ Proof.
         apply (O3 ρ) in H5; auto.
         now rewrite M1, M3, M2 in H5.
       * apply Specify_classification.
-        split; unfold IQS; try now apply proj2_sig.
+        split; unfold IQS; auto using elts_in_set.
         exists (ρ * r * c^-1)%Q, c.
         repeat split; auto.
         right.
@@ -1190,7 +1184,7 @@ Proof.
     unfold inv_pos, inv_pos_set.
     destruct excluded_middle_informative; try tauto.
     apply Specify_classification.
-    split; unfold IQS; try now apply proj2_sig.
+    split; unfold IQS; auto using elts_in_set.
     exists (x^-1 * 2^-1)%Q, 2%Q.
     repeat split; auto using one_lt_2.
     right.
@@ -1328,7 +1322,7 @@ Proof.
     + unfold inv_pos.
       destruct excluded_middle_informative; try tauto.
       apply Specify_classification.
-      split; unfold IQS; try now apply proj2_sig.
+      split; unfold IQS; auto using elts_in_set.
       exists (r^(-(n+2))), r.
       repeat split; auto.
       right.
@@ -1375,7 +1369,7 @@ Proof.
         as [H10 | H10].
     + exists (ξ+-s'*s)%Q, (s'*s)%Q.
       repeat split; try (apply f_equal; ring); apply Specify_classification;
-        split; unfold IQS; try now apply proj2_sig.
+        split; unfold IQS; auto using elts_in_set.
       * exists r', s, (ξ+-s'*s)%Q.
         repeat split; auto.
         destruct H9 as [H9 | H9]; simpl in *.
@@ -1391,8 +1385,7 @@ Proof.
       destruct (lt_dense2 t (r'+s')) as [k [H15 [H16 H17]]]; auto.
       exists (ξ+-k*s)%Q, (k*s)%Q.
       repeat split; simpl; try (apply f_equal; ring);
-        apply Specify_classification; split; unfold IQS;
-          try now apply proj2_sig.
+        apply Specify_classification; split; eauto using elts_in_set.
       * exists (r'+s'+-k)%Q, s, (ξ+-k*s)%Q.
         repeat split; auto.
         -- eapply Dedekind_cut_2; eauto.
@@ -1413,8 +1406,7 @@ Proof.
       destruct (lt_dense2 t (r'+s')) as [k [H15 [H16 H17]]]; auto.
       exists (k*s)%Q, (ξ+-k*s)%Q.
       repeat split; simpl; try (apply f_equal; ring);
-        apply Specify_classification; split; unfold IQS;
-          try now apply proj2_sig.
+        apply Specify_classification; split; eauto using elts_in_set.
       * exists k, s, (k*s)%Q.
         repeat split; eauto using Dedekind_cut_2.
         now right.
@@ -1447,7 +1439,7 @@ Proof.
     exists (a'+b')%Q, (ordered_rings.max rational_order c' c''), ζ.
     repeat split; auto using O0.
     + apply Specify_classification.
-      split; unfold IQS; eauto; apply proj2_sig.
+      split; eauto using elts_in_set.
     + destruct (max_eq rational_order c' c'') as [H19 | H19]; now rewrite H19.
     + destruct (max_eq rational_order c' c'') as [H19 | H19]; now rewrite H19.
     + rewrite H4, rationals.D1.
@@ -1798,7 +1790,7 @@ Proof.
     apply lt_dense in H1 as [c [H1 H2]].
     exists (r+-c)%Q, (c+ρ+-r)%Q.
     repeat split; f_equal; try ring; apply Specify_classification;
-      split; unfold IQS; try apply proj2_sig.
+      split; unfold IQS; auto using elts_in_set.
     + exists (r+-c)%Q.
       split; auto.
       rewrite (ordered_rings.lt_shift rational_order); simpl.
@@ -1841,7 +1833,7 @@ Proof.
       { rewrite H0.
         unfold IQR.
         apply Specify_classification.
-        split; eauto; unfold IQS; apply proj2_sig. }
+        split; eauto using elts_in_set. }
       unfold IQR in H1.
       apply Specify_classification in H1 as [H1 [α [H2 H3]]].
       apply set_proj_injective in H2.
@@ -1898,7 +1890,7 @@ Proof.
       apply (square_ge_1 rational_order) in H7; simpl in *;
         repeat split; auto.
       * apply Specify_classification.
-        split; unfold IQS; try apply proj2_sig.
+        split; unfold IQS; auto using elts_in_set.
         exists (a*z^-1)%Q.
         split; auto.
         rewrite <-(rationals.M3 a) at 2.
@@ -1906,7 +1898,7 @@ Proof.
         apply rationals.O3; auto.
         now apply (inv_lt_1 rational_field_order).
       * apply Specify_classification.
-        split; unfold IQS; try apply proj2_sig. 
+        split; unfold IQS; auto using elts_in_set.
         exists (b*z^-1)%Q.
         split; auto.
         rewrite <-(rationals.M3 b) at 2.

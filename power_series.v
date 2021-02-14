@@ -27,11 +27,11 @@ Section Power_series_construction.
   Definition coefficient : power_series → N → Rring.
   Proof.
     intros f n.
-    pose proof proj2_sig f as H; simpl in H.
+    pose proof elts_in_set _ f as H; simpl in H.
     apply Specify_classification in H as [H H0].
     set (F := mkFunc _ _ _ H0).
-    assert (F (proj1_sig n) ∈ Rset) as H1
-        by apply function_maps_domain_to_range, proj2_sig.
+    assert (F n ∈ Rset) as H1
+        by apply function_maps_domain_to_range, elts_in_set.
     exact (exist _ _ H1).
   Defined.
 
@@ -70,7 +70,7 @@ Section Power_series_construction.
     apply func_ext; simpl; auto.
     intros x H3.
     assert (x ∈ ω) as H4 by congruence.
-    replace x with (proj1_sig (exist _ _ H4 : elts ω)) by auto.
+    replace x with ((exist _ _ H4 : elts ω) : set) by auto.
     now rewrite H2.
   Qed.
 
@@ -100,7 +100,7 @@ Section Power_series_construction.
       apply func_ext; rewrite ? sets.functionify_domain,
                       ? sets.functionify_range; try congruence.
       intros z H4.
-      replace z with (proj1_sig (exist _ _ H4 : elts ω)) by auto.
+      replace z with ((exist _ _ H4 : elts ω) : set) by auto.
       rewrite H3.
       simpl.
       unfold functionify.
@@ -117,24 +117,24 @@ Section Power_series_construction.
     unfold coefficient in H.
     repeat destruct Specify_classification.
     destruct a, a0.
-    replace (proj1_sig f) with (graph (mkFunc _ _ _ i2)) by auto.
-    replace (proj1_sig g) with (graph (mkFunc _ _ _ i4)) by auto.
+    replace (elt_to_set _ f) with (graph (mkFunc _ _ _ i2)) by auto.
+    replace (elt_to_set _ g) with (graph (mkFunc _ _ _ i4)) by auto.
     set (f' := {| func_hyp := i2 |}) in *.
     set (g' := {| func_hyp := i4 |}) in *.
     f_equal.
     apply func_ext; simpl; auto.
     intros n H0.
     set (η := exist _ _ H0 : N).
-    replace n with (proj1_sig η) by auto.
+    replace n with (η : set) by auto.
     set (f'' := (λ n : N, exist _ _ (function_maps_domain_to_range
-                                       f' (proj1_sig n) (proj2_sig n))
+                                       f' n (elts_in_set (domain f') n))
                  : elts Rset)).
     set (g'' := (λ n : N, exist _ _ (function_maps_domain_to_range
-                                       g' (proj1_sig n) (proj2_sig n))
+                                       g' n (elts_in_set (domain g') n))
                  : elts Rset)).
     fold f'' g'' in H.
-    replace (f' (proj1_sig η)) with (proj1_sig (f'' η)) by auto.
-    replace (g' (proj1_sig η)) with (proj1_sig (g'' η)) by auto.
+    replace (f' η : set) with (f'' η : set) by auto.
+    replace (g' η : set) with (g'' η : set) by auto.
     congruence.
   Qed.
 

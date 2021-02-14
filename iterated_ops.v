@@ -6,7 +6,7 @@ Section Iterated_op_construction.
   Definition R := (elts X).
   Variable op : R → R → R.
   Variable start : R.
-  Definition IRS (r : R) := (proj1_sig r) : set.
+  Definition IRS (r : R) := (elt_to_set _ r) : set.
   Coercion IRS : R >-> set.
 
   Variable f : function.
