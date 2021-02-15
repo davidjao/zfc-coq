@@ -310,6 +310,36 @@ Proof.
       now rewrite H3, H6, H0.
 Qed.
 
+Theorem two_sided_inverse_bijective_set:
+  ∀ A B, (∃ f g, (∀ a, a ∈ A → (f a ∈ B ∧ g (f a) = a)) ∧
+                 (∀ b, b ∈ B → (g b ∈ A ∧ f (g b) = b))) → A ~ B.
+Proof.
+  intros A B [f [g [H H0]]].
+  destruct (function_construction A B f) as [f' [H1 [H2 H3]]].
+  { intros a H1.
+    apply H in H1.
+    tauto. }
+  exists f'.
+  repeat split; auto.
+  - apply Injective_classification.
+    intros x y H4 H5 H6.
+    rewrite H1 in *.
+    rewrite ? H3 in H6; auto.
+    apply (f_equal g) in H6.
+    apply H in H4 as [H4 H7].
+    apply H in H5 as [H5 H8].
+    now rewrite H7, H8 in H6.
+  - apply Surjective_classification.
+    intros y H4.
+    rewrite H1, H2 in *.
+    exists (g y).
+    split.
+    + apply H0 in H4; tauto.
+    + rewrite H3.
+      * now apply H0 in H4 as [H4 H5].
+      * apply H0 in H4; tauto.
+Qed.
+
 Theorem proper_subsets_of_natural_numbers : ∀ m (n : N), m ⊊ n → ¬ n ~ m.
 Proof.
   intros m n H.

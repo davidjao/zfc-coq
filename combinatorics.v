@@ -2467,3 +2467,97 @@ Proof.
   apply H, (cancellation_mul_r (integral_domain_OR integer_order)),
   INZ_eq in H0; auto using factorial_ne_0.
 Qed.
+
+Theorem sum_card : ∀ n X f,
+    finite X → (∀ k, 0 ≤ k ≤ n → f k ⊂ X)%N →
+    (∀ x, x ∈ X ↔ exists ! k : N, 0 ≤ k ≤ n ∧ x ∈ f k)%N →
+    sum integers (λ k, # (f k) : Z) 0 n = (# X : Z).
+Proof.
+  induction n using Induction; intros X f H H0 H1.
+  - unfold sum.
+    rewrite iterate_0.
+    repeat f_equal.
+    apply Extensionality.
+    split; intros H2.
+    + apply H1.
+      exists 0%N.
+      repeat split; eauto using le_refl.
+      intros x' [[H3 H4] H5].
+      auto using naturals.le_antisymm.
+    + apply H1 in H2 as [y [[[H2 H3] H4] H5]].
+      replace 0%N with y by now apply naturals.le_antisymm.
+      auto.
+  - rewrite sum_succ; auto using zero_le.
+    simpl.
+    rewrite (IHn (X \ (f (S n))) f);
+      eauto using subsets_of_finites_are_finite, complement_subset,
+      subsets_of_finites_are_finite.
+    + rewrite INZ_add, <-finite_union_cardinality;
+        eauto using subsets_of_finites_are_finite, complement_subset,
+        subsets_of_finites_are_finite, zero_le, le_refl.
+      * rewrite Union_comm, <-disjoint_union_complement.
+        do 2 f_equal.
+        apply Union_subset, H0.
+        split; eauto using zero_le, le_refl.
+      * apply NNPP.
+        intros H2.
+        apply Nonempty_classification in H2 as [x H2].
+        apply Pairwise_intersection_classification in H2 as [H2 H3].
+        now apply Complement_classification in H2 as [H2 H4].
+    + intros k [H2 H3] x H4.
+      apply Complement_classification.
+      split.
+      * apply H0 in H4; auto.
+        split; auto.
+        eapply naturals.le_lt_trans; eauto using naturals.succ_lt.
+      * intros H5.
+        assert (x ∈ X).
+        { apply H0 in H4; auto.
+          split; auto.
+          eapply naturals.le_lt_trans; eauto using naturals.succ_lt. }
+        apply H1 in H6 as [y [[[H6 H7] H8] H9]].
+        assert (y = S n).
+        { apply H9.
+          repeat split; auto using zero_le, le_refl. }
+        assert (y = k).
+        { apply H9.
+          repeat split; auto.
+          eapply naturals.le_lt_trans; eauto using naturals.succ_lt. }
+        subst.
+        rewrite naturals.le_not_gt in H3.
+        contradict H3.
+        auto using naturals.succ_lt.
+    + split; intros H2.
+      * apply Complement_classification in H2 as [H2 H3].
+        apply H1 in H2 as [y [[[H2 H4] H5] H6]].
+        exists y.
+        repeat split; auto.
+        -- rewrite naturals.le_not_gt.
+           intros H7.
+           apply squeeze_upper in H4; auto.
+           now subst.
+        -- intros x' [[H7 H8] H9].
+           apply H6.
+           repeat split; auto.
+           eapply naturals.le_lt_trans; eauto using naturals.succ_lt.
+      * destruct H2 as [y [[[H2 H3] H4] H5]].
+        apply Complement_classification.
+        assert (x ∈ X).
+        { apply H0 in H4; auto.
+          split; auto.
+          eapply naturals.le_lt_trans; eauto using naturals.succ_lt. }
+        split; auto.
+        intros H7.
+        apply H1 in H6 as [z [[[H6 H8] H9] H10]].
+        assert (z = S n).
+        { apply H10.
+          repeat split; auto using zero_le, le_refl. }
+        assert (z = y).
+        { apply H10.
+          repeat split; auto.
+          eapply naturals.le_lt_trans; eauto using naturals.succ_lt. }
+        subst.
+        rewrite naturals.le_not_gt in H3.
+        contradict H3.
+        auto using naturals.succ_lt.
+Qed.
