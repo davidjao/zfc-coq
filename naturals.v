@@ -1010,6 +1010,38 @@ Proof.
   subst; ring.
 Qed.
 
+Theorem O1_iff : ∀ a b c, a < b ↔ a + c < b + c.
+Proof.
+  intros a b c.
+  split; intros H; auto using O1.
+  rewrite lt_def in *.
+  destruct H as [x [H H0]].
+  exists x.
+  split; auto.
+  apply (cancellation_add c).
+  rewrite (add_comm _ b), <-H0.
+  ring.
+Qed.
+
+Theorem O1_le : ∀ a b c, a ≤ b → a + c ≤ b + c.
+Proof.
+  intros a b c [x H].
+  exists x.
+  subst.
+  ring.
+Qed.
+
+Theorem O1_le_iff : ∀ a b c, a ≤ b ↔ a + c ≤ b + c.
+Proof.
+  intros a b c.
+  split; intros H; auto using O1_le.
+  destruct H as [x H].
+  exists x.
+  apply (cancellation_add c).
+  rewrite (add_comm _ b), <-H.
+  ring.
+Qed.
+
 Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
 Proof.
   intros a b H H0.
@@ -1382,38 +1414,37 @@ Proof.
 Qed.
 
 Theorem Strong_Induction : ∀ P : N → Prop,
-    P 0 → (∀ n : N, (∀ k : N, 0 ≤ k < n → P k) → P n) → ∀ n : N, P n.
+    (∀ n : N, (∀ k : N, k < n → P k) → P n) → ∀ n : N, P n.
 Proof.
-  intros P H H0 n.
+  intros P H n.
   set (S := {x in ω | ∃ n : N, x = n ∧ ¬ P n}).
-  assert (S ⊂ ω) as H1.
-  { intros x H1.
-    apply Specify_classification in H1.
+  assert (S ⊂ ω) as H0.
+  { intros x H0.
+    apply Specify_classification in H0.
     tauto. }
-  destruct (classic (S = ∅)) as [H2 | H2].
+  destruct (classic (S = ∅)) as [H1 | H1].
   { apply NNPP.
-    intros H3.
-    contradict H2.
+    intros H2.
+    contradict H1.
     apply Nonempty_classification.
     exists n.
     apply Specify_classification.
     eauto using N_in_ω. }
-  apply ω_WOP in H2 as [s [H2 H3]]; auto.
-  apply Specify_classification in H2 as [H2 [σ [H4 H5]]].
+  apply ω_WOP in H1 as [s [H1 H2]]; auto.
+  apply Specify_classification in H1 as [H1 [σ [H3 H4]]].
   subst.
-  contradict H5.
-  apply H0.
-  intros k [H4 H5].
+  contradict H4.
+  apply H.
+  intros k [H3 H4].
   apply NNPP.
-  intros H6.
-  assert (k ∈ S) as H7.
+  intros H5.
+  assert (k ∈ S) as H6.
   { apply Specify_classification.
     eauto using N_in_ω. }
-  apply H3, le_is_subset in H7 as [c H7].
-  subst.
-  apply lt_not_ge in H5.
-  contradict H5.
-  now (exists c).
+  apply H2, le_is_subset in H6 as [c H6].
+  contradict H4.
+  apply le_antisymm; eauto.
+  now exists c.
 Qed.
 
 Theorem squeeze_upper : ∀ n m, n < m → m ≤ S n → m = S n.
