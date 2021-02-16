@@ -1387,6 +1387,28 @@ Proof.
   now rewrite elements_of_Astar.
 Qed.
 
+Theorem union_smile : ∀ A B, (A ⌣ B : set) = A ∪ B.
+Proof.
+  intros A B.
+  apply Extensionality.
+  split; intros H.
+  - apply Specify_classification in H as [H [y [H0 H1]]].
+    apply Pairwise_union_classification.
+    inversion H1; subst.
+    + left.
+      apply Specify_classification; eauto.
+    + right.
+      apply Specify_classification; eauto.
+  - apply Specify_classification.
+    apply Pairwise_union_classification in H as [H | H];
+      split; apply reg_exps_are_strings in H as H0; auto;
+        replace z with ((exist _ _ H0 : σ) : set) in *; auto;
+          exists (exist _ _ H0 : σ); split; auto;
+            [ apply MUnionL | apply MUnionR ];
+            apply Specify_classification in H as [H [y [H1 H2]]];
+            apply set_proj_injective in H1; congruence.
+Qed.
+
 (* This theorem is too hard to prove for now. The standard proof uses DFAs,
    and requires (in the worst case) a doubly exponential construction.
 Theorem regular_complement : ∀ A, regular A → regular (STR \ A). Admitted. *)
@@ -1597,4 +1619,49 @@ Proof.
         exists (a ++ b)%set.
         rewrite concat_length, H7, H8.
         now apply sub_abab in H2.
+Qed.
+
+Theorem sum_lemma : ∀ A B,
+    unambiguous (A ⌣ B) → gen_series (A ⌣ B) = gen_series A + gen_series B.
+Proof.
+  intros A B H.
+  apply power_series_extensionality.
+  extensionality n.
+  unfold gen_series.
+  rewrite power_series.coefficient_add, ? coefficient_seriesify.
+  simpl.
+  rewrite INZ_add.
+  f_equal.
+  rewrite <-finite_union_cardinality; try eapply finite_length_subsets.
+  2: { intros x H0.
+       apply Specify_classification in H0 as [H0 H3]; eauto. }
+  2: { intros x H0.
+       apply Specify_classification in H0 as [H0 H3]; eauto. }
+  - f_equal.
+    apply Extensionality.
+    split; intros H0.
+    + apply Specify_classification in H0 as [H0 [ζ [H1 H2]]].
+      subst.
+      rewrite union_smile in H0.
+      rewrite Pairwise_union_classification in *.
+      destruct H0 as [H0 | H0].
+      * left.
+        apply Specify_classification; eauto.
+      * right.
+        apply Specify_classification; eauto.
+    + apply Specify_classification.
+      rewrite union_smile, Pairwise_union_classification in *.
+      destruct H0 as [H0 | H0]; apply Specify_classification in H0
+        as [H0 [ζ [H1 H2]]]; subst; split; eauto.
+  - apply NNPP.
+    intros H0.
+    apply Nonempty_classification in H0 as [z H0].
+    apply Pairwise_intersection_classification in H0 as [H0 H1].
+    inversion H.
+    contradict H6.
+    apply Nonempty_classification.
+    exists z.
+    apply Pairwise_intersection_classification.
+    rewrite Specify_classification in *.
+    tauto.
 Qed.
