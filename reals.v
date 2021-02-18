@@ -555,7 +555,7 @@ Proof.
         apply O2; auto.
         now rewrite IZQ_lt, lt_neg_0 in H8.
     + subst.
-      rewrite ℤ.(A3_r).
+      rewrite (A3_r ℤ).
       destruct H6 as [H6 | H6].
       * apply (H3 ξ); auto.
       * rewrite H6; auto.
@@ -596,7 +596,7 @@ Proof.
       apply integers.zero_lt_1.
     + replace (1) with (IZQ 1) by auto.
       now rewrite IZQ_add, <-? integers.A2, (integers.A1 _ 1), integers.A4,
-      ℤ.(A3_r).
+      (A3_r ℤ).
 Qed.
 
 Theorem A4 : ∀ a, a + -a = 0.
@@ -1042,7 +1042,7 @@ Proof.
       unfold rationals.zero, IZQ in H6.
       apply Qequiv in H6; eauto using integers.zero_ne_1.
       * replace (x*0)%Z with 0%Z in * by ring.
-        rewrite ℤ.(M3_r) in H6.
+        rewrite (M3_r ℤ) in H6.
         contradiction.
       * intros H7.
         subst.

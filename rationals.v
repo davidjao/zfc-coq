@@ -943,7 +943,7 @@ Proof.
   repeat destruct constructive_indefinite_description.
   destruct a.
   unfold zero in e0.
-  rewrite Qequiv, ℤ.(M3_r) in e0; auto using integers.zero_ne_1.
+  rewrite Qequiv, (M3_r ℤ) in e0; auto using integers.zero_ne_1.
   replace (x0*0)%Z with 0%Z in e0 by ring.
   subst.
   clear e n.
