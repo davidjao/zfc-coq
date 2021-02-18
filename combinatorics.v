@@ -2,7 +2,7 @@ Require Export cardinality rationals.
 
 Definition permutations (n : N) := size_of_bijections n n.
 
-Definition factorial (n : N) := (prod integers (λ x, x : Z) 1 n) : Z.
+Definition factorial (n : N) := (prod ℤ (λ x, x : Z) 1 n) : Z.
 
 Notation "n !" := (factorial n) (at level 35, format "n '!'") : Z_scope.
 
@@ -2210,7 +2210,7 @@ Proof.
       apply naturals.succ_lt.
     + contradiction integers.zero_ne_1.
   - rewrite prod_succ in H.
-    + apply (cancellation_0_mul integer_order) in H as [H | H]; auto.
+    + apply (cancellation_0_mul ℤ_order) in H as [H | H]; auto.
       apply INZ_eq in H.
       now contradiction (PA4 k).
     + exists k.
@@ -2232,7 +2232,7 @@ Proof.
   apply binomial_coefficient in H.
   rewrite sub_0_r, ? zero_factorial, ? (integers.M1 _ 1%N),
   integers.M3, <-(integers.M3 (n!)) in H at 1.
-  apply (cancellation_mul_r (integral_domain_OR integer_order)) in H.
+  apply (cancellation_mul_r ℤ_ID) in H.
   - now apply INZ_eq.
   - apply factorial_ne_0.
 Qed.
@@ -2243,8 +2243,7 @@ Proof.
   intros n k H.
   apply binomial_coefficient in H.
   assert (k! * (n - k)! ≠ 0)%Z as H0 by
-      auto using factorial_ne_0,
-      (ne0_cancellation (integral_domain_OR integer_order)).
+      auto using factorial_ne_0, (ne0_cancellation ℤ_ID).
   rewrite H, <-integers.M2, inv_div, <-IZQ_mul; auto.
   field_simplify; rewrite ? div_inv, ? inv_one; try ring.
   contradict H0.
@@ -2464,14 +2463,14 @@ Proof.
   replace (1%N : Z) with (1%Z) in H by auto.
   rewrite ? (integers.M1 _ 1), ? integers.M3, <-(integers.M3 (n!)) in H at 1.
   pose proof (le_refl n) as H0.
-  apply H, (cancellation_mul_r (integral_domain_OR integer_order)),
-  INZ_eq in H0; auto using factorial_ne_0.
+  apply H, (cancellation_mul_r ℤ_ID), INZ_eq in H0;
+    auto using factorial_ne_0.
 Qed.
 
 Theorem sum_card : ∀ n X f,
     finite X → (∀ k, 0 ≤ k ≤ n → f k ⊂ X)%N →
     (∀ x, x ∈ X ↔ exists ! k : N, 0 ≤ k ≤ n ∧ x ∈ f k)%N →
-    sum integers (λ k, # (f k) : Z) 0 n = (# X : Z).
+    sum ℤ (λ k, # (f k) : Z) 0 n = (# X : Z).
 Proof.
   induction n using Induction; intros X f H H0 H1.
   - unfold sum.

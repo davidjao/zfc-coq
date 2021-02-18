@@ -499,4 +499,18 @@ Section Ordered_ring_theorems.
     exact zero_lt_2.
   Qed.
 
+  Theorem le_lt_trans : ∀ a b c, a ≤ b → b < c → a < c.
+  Proof.
+    intros a b c [H | H] H0.
+    - eauto using lt_trans.
+    - subst; auto.
+  Qed.
+
+  Theorem lt_le_trans : ∀ a b c, a < b → b ≤ c → a < c.
+  Proof.
+    intros a b c H [H0 | H0].
+    - eauto using lt_trans.
+    - subst; auto.
+  Qed.
+
 End Ordered_ring_theorems.

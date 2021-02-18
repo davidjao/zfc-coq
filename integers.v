@@ -42,9 +42,9 @@ Proof.
       ring.
 Qed.
 
-Definition ℤ := (ω × ω) / integer_relation.
+Definition Zset := (ω × ω) / integer_relation.
 
-Definition Z := elts ℤ.
+Definition Z := elts Zset.
 
 Definition IZS (a : Z) := elt_to_set _ a : set.
 Coercion IZS : Z >-> set.
@@ -284,11 +284,11 @@ Qed.
 Definition sub a b := (a + -b).
 Infix "-" := sub : Z_scope.
 
-Definition integers := mkRing _ zero one add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
+Definition ℤ := mkRing _ zero one add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
 
 Add Ring integer_ring :
   (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1
-         (sub_is_neg integers : ∀ a b : Z, a + -b = a - b) A4).
+         (sub_is_neg ℤ : ∀ a b : Z, a + -b = a - b) A4).
 
 Definition lt : Z → Z → Prop.
 Proof.
@@ -394,10 +394,11 @@ Proof.
   tauto.
 Qed.
 
-Definition integer_order := mkOring integers lt lt_trans T O1 O2 zero_ne_1.
-Definition O0 := O0 integer_order : ∀ a b, 0 < a → 0 < b → 0 < a + b.
-Definition le := le integer_order : Z → Z → Prop.
-Definition O3 := O3 integer_order : ∀ a b c, 0 < a → b < c → a * b < a * c.
+Definition ℤ_order := mkOring ℤ lt lt_trans T O1 O2 zero_ne_1.
+Definition ℤ_ID := integral_domain_OR ℤ_order.
+Definition O0 := O0 ℤ_order : ∀ a b, 0 < a → 0 < b → 0 < a + b.
+Definition le := le ℤ_order : Z → Z → Prop.
+Definition O3 := O3 ℤ_order : ∀ a b c, 0 < a → b < c → a * b < a * c.
 
 Hint Unfold le ordered_rings.le : Z.
 
@@ -514,7 +515,7 @@ Proof.
       auto.
 Qed.
 
-Definition divide := divide integers : Z → Z → Prop.
+Definition divide := divide ℤ : Z → Z → Prop.
 Hint Unfold divide : Z.
 
 Notation "x ｜ y" := (divide x y) (at level 60, format "x '｜' y") : Z_scope.
@@ -531,10 +532,10 @@ Proof.
 Qed.
 
 Definition mul_pos_pos :=
-  mul_pos_pos integer_order : ∀ a b, 0 < a → 0 < b → 0 < a * b.
+  mul_pos_pos ℤ_order : ∀ a b, 0 < a → 0 < b → 0 < a * b.
 Definition square_ne0 :=
-  square_ne0 integer_order : ∀ a, a ≠ 0 → 0 < a * a.
-Definition one_lt := one_lt integer_order : ∀ a, 1 < a → 0 < a.
+  square_ne0 ℤ_order : ∀ a, a ≠ 0 → 0 < a * a.
+Definition one_lt := one_lt ℤ_order : ∀ a, 1 < a → 0 < a.
 
 Theorem lt_0_le_1 : ∀ a, 0 < a ↔ 1 ≤ a.
 Proof.
@@ -549,13 +550,13 @@ Proof.
   intros a b H [d H0].
   destruct (T a b); unfold le, ordered_rings.le; intuition; subst; simpl in *.
   assert (0 < a) by eauto using lt_trans.
-  eapply (pos_div_r integer_order), lt_0_le_1, mul_le_r in H;
+  eapply (pos_div_r ℤ_order), lt_0_le_1, mul_le_r in H;
     try rewrite M3 in H; eauto.
 Qed.
 
-Definition assoc := assoc integers : Z → Z → Prop.
+Definition assoc := assoc ℤ : Z → Z → Prop.
 Infix "~" := assoc (at level 70) : Z_scope.
-Definition unit := unit integers : Z → Prop.
+Definition unit := unit ℤ : Z → Prop.
 
 Definition pm a b := (a = b ∨ a = -b).
 Notation " a = ± b " := (pm a b) (at level 60) : Z_scope.
@@ -565,8 +566,8 @@ Theorem assoc_N : ∀ a b : N, a ~ b → a = b.
 Proof.
   intros a b [H H0]; apply INZ_eq; fold divide in *.
   destruct (N_ge_0 a), (N_ge_0 b); simpl in *; try rewrite <-H1 in *;
-    try rewrite <-H2 in *; try rewrite (div_0_l integers) in *; auto;
-      apply (le_antisymm integer_order); now apply div_le.
+    try rewrite <-H2 in *; try rewrite (div_0_l ℤ) in *; auto;
+      apply (le_antisymm ℤ_order); now apply div_le.
 Qed.
 
 Theorem assoc_pos : ∀ a b, 0 < a → 0 < b → a ~ b → a = b.
@@ -584,13 +585,13 @@ Proof.
   intros a b [[c H] [d H0]];
     destruct (classic (b = 0)); simpl in *; subst.
   - exists 1.
-    split; auto using (one_unit integers) with Z.
+    split; auto using (one_unit ℤ) with Z.
     rewrite H0, H1.
     ring.
   - exists c.
     split; try ring.
     exists d; simpl.
-    apply (cancellation_mul_r (integral_domain_OR integer_order) a); simpl.
+    apply (cancellation_mul_r ℤ_ID a); simpl.
     + contradict H1; subst; ring.
     + now rewrite M3, <-M2.
 Qed.
@@ -598,18 +599,18 @@ Qed.
 Theorem assoc_pm : ∀ a b, a ~ b → a = ± b.
 Proof.
   intros a b H.
-  destruct (T a 0), (T b 0); intuition; rewrite (lt_neg_0 integer_order) in *;
-    subst; try (now (destruct H; rewrite (div_0_l integers) in *; intuition));
+  destruct (T a 0), (T b 0); intuition; rewrite (lt_neg_0 ℤ_order) in *;
+    subst; try (now (destruct H; rewrite (div_0_l ℤ) in *; intuition));
       [ assert (-a = -b → a = b) by (intro M; ring [M]); left |
         assert (-a = b → a = -b) by (intro M; ring [M]); right | right | left ];
-      eauto 8 using assoc_pos, (assoc_sign integers),
-      (assoc_sym integers), (assoc_sign integers) with Z.
+      eauto 8 using assoc_pos, (assoc_sign ℤ),
+      (assoc_sym ℤ), (assoc_sign ℤ) with Z.
 Qed.
 
 Theorem unit_pm_1 : ∀ a, unit a → a = ± 1.
 Proof.
   intros a H.
-  apply assoc_pm; split; auto using (div_1_l integers) with Z.
+  apply assoc_pm; split; auto using (div_1_l ℤ) with Z.
 Qed.
 
 Theorem division_algorithm_N : ∀ a b,
@@ -621,13 +622,13 @@ Proof.
     [ exists 0, a | exists 1, 0 | ];
     repeat split; auto; subst; try ring.
   assert (0 < a + -b) as H3
-      by (rewrite <-(A4 a); now apply O1, (neg_neg_lt integer_order)).
+      by (rewrite <-(A4 a); now apply O1, (neg_neg_lt ℤ_order)).
   destruct (IHa (a + -b)) as [q [r [H5 H6]]]; repeat split; auto.
-  - rewrite <-(A3_r integers a) at 2.
-    now apply O1, (neg_lt_0 integer_order).
+  - rewrite <-(A3_r ℤ a) at 2.
+    now apply O1, (neg_lt_0 ℤ_order).
   - exists (q+1), r.
     split; auto.
-    rewrite (D1_l integers), <-A2, (A1 _ r), A2; simpl.
+    rewrite (D1_l ℤ), <-A2, (A1 _ r), A2; simpl.
     rewrite H5; ring.
 Qed.
 
@@ -636,16 +637,16 @@ Proof.
   intros a b H.
   destruct (T a 0) as [[H0 [H1 H2]] | [[H0 [H1 H2]] | [H0 [H1 H2]]]];
     auto using division_algorithm_N.
-  - rewrite (lt_neg_0 integer_order) in H0; simpl in *.
+  - rewrite (lt_neg_0 ℤ_order) in H0; simpl in *.
     destruct (division_algorithm_N (-a) b) as [q [r [H3 [[H4 | H4] H5]]]]; auto.
     + exists (-q-1), (b+-r).
       repeat split.
       * replace a with (--a); try ring; rewrite <-H3; ring.
       * rewrite <-(A4 r), ? (A1 _ (-r)).
         now apply or_introl, O1.
-      * rewrite A1, <-(A3_r integers b), A1, <-A2.
+      * rewrite A1, <-(A3_r ℤ b), A1, <-A2.
         apply O1.
-        now rewrite A3, <-(neg_lt_0 integer_order).
+        now rewrite A3, <-(neg_lt_0 ℤ_order).
     + exists (-q), 0.
       subst.
       repeat split; auto with Z.
@@ -666,23 +667,21 @@ Proof.
   intros b H0 [H1 [H2 H3]].
   destruct (division_algorithm b a) as [q [r [H4 [[H5 | H5] H6]]]]; subst; auto.
   - destruct (IHa r (conj H5 H6) H5 a) as [x [y H4]]; repeat split;
-      auto using (div_1_l integers), (div_add integers),
-      (div_mul_r integers) with Z.
+      auto using (div_1_l ℤ), (div_add ℤ), (div_mul_r ℤ) with Z.
     exists (y+-(q*x)), x.
     rewrite H4.
     ring.
   - exists 1, 0.
     ring_simplify.
     apply assoc_pos; auto using zero_lt_1.
-    split; fold divide;
-      auto using zero_lt_1, (div_refl integers), (div_add integers),
-      (div_mul_r integers), (div_0_r integers) with Z.
+    split; fold divide; auto using zero_lt_1, (div_refl ℤ), (div_add ℤ),
+                        (div_mul_r ℤ), (div_0_r ℤ) with Z.
 Qed.
 
 Lemma gcd_zero_l : ∀ a d, gcd (0,a) = d → a ~ d.
 Proof.
   intros a d [H [H0 H1]].
-  split; fold divide; auto using (div_0_r integers), (div_refl integers) with Z.
+  split; fold divide; auto using (div_0_r ℤ), (div_refl ℤ) with Z.
 Qed.
 
 Lemma gcd_sym : ∀ a b d, gcd (a,b) = d → gcd(b,a) = d.
@@ -701,13 +700,13 @@ Lemma gcd_neg : ∀ a b d, gcd (a,b) = d ↔ gcd(a,-b) = d.
 Proof.
   intros a b d.
   split; intros [H [H0 H1]].
-  - repeat split; try rewrite <-(div_sign_r integers); auto.
+  - repeat split; try rewrite <-(div_sign_r ℤ); auto.
     intros x H2 H3.
-    rewrite <-(div_sign_r integers) in *.
+    rewrite <-(div_sign_r ℤ) in *.
     auto.
-  - repeat split; try rewrite <-(div_sign_r integers) in H0; auto.
+  - repeat split; try rewrite <-(div_sign_r ℤ) in H0; auto.
     intros x H2 H3.
-    rewrite (div_sign_r integers) in H3.
+    rewrite (div_sign_r ℤ) in H3.
     auto.
 Qed.
 
@@ -721,11 +720,11 @@ Proof.
                 simpl in *; fold Z in x; rewrite H; ring));
       try (now (destruct H as [[x H]]; exists 0, x;
                 simpl in *; fold Z in x; rewrite H; ring));
-      destruct H; intuition; rewrite (lt_neg_0 integer_order) in *; simpl in *;
+      destruct H; intuition; rewrite (lt_neg_0 ℤ_order) in *; simpl in *;
         [ set (c := -a) | set (c := -a) | set (c := a) | set (c := a) ];
         [ set (d := -b) | set (d := b) | set (d := -b) | set (d := b) ];
         destruct (Euclidean_algorithm_N c d) as [x [y Z]]; try split;
-          auto using (div_1_l integers), (div_sign_neg_r integers) with Z;
+          auto using (div_1_l ℤ), (div_sign_neg_r ℤ) with Z;
           unfold c, d in *;
           [ exists (-x), (-y) | exists (-x), y | exists x, (-y) | exists x, y ];
           rewrite Z; ring.
@@ -733,7 +732,7 @@ Qed.
 
 Theorem FTA : ∀ a b c, gcd (a,b) = 1 → a｜b * c → a｜c.
 Proof.
-  intros a b c H [d H0]; simpl in *; unfold rings.R, set_R, integers in *;
+  intros a b c H [d H0]; simpl in *; unfold rings.R, set_R, ℤ in *;
     fold Z in *.
   destruct (Euclidean_algorithm a b H) as [x [y H1]].
   rewrite <-(M3 c), H1.
@@ -779,31 +778,31 @@ Proof.
   - intros d H2.
     apply NNPP; contradict H0;
       destruct (T d 0) as [[H3 [H4 H5]] | [[H3 [H4 H5]] | [H5 [H4 H3]]]];
-      rewrite (lt_neg_0 integer_order) in *;
-      try (now (subst; apply (div_0_l integers) in H2; subst;
-                contradiction (lt_irrefl integer_order 0);
+      rewrite (lt_neg_0 ℤ_order) in *;
+      try (now (subst; apply (div_0_l ℤ) in H2; subst;
+                contradiction (lt_irrefl ℤ_order 0);
                 eapply lt_trans; eauto using zero_lt_1));
       [ exists (-d) | exists d ]; repeat split;
-        auto using (div_sign_l_neg integers) with Z.
+        auto using (div_sign_l_neg ℤ) with Z.
     * apply lt_0_le_1 in H3 as [H3 | H3]; simpl in *; auto.
       contradict H0.
       symmetry in H3.
       replace d with (- (1)) by (rewrite <-H3; ring).
-      eauto using (unit_sign_r integers), (one_unit integers) with Z.
+      eauto using (unit_sign_r ℤ), (one_unit ℤ) with Z.
     * apply div_sign_l_neg, div_le in H2 as [H2 | H2];
         eauto using lt_trans, zero_lt_1; simpl in *.
       contradict H0.
       rewrite <-H2.
-      auto using (assoc_sign integers), (assoc_refl integers) with Z.
+      auto using (assoc_sign ℤ), (assoc_refl ℤ) with Z.
     * apply lt_0_le_1 in H3 as [H3 | H3]; auto; simpl in *.
       contradict H0.
       rewrite <-H3.
-      eauto using (one_unit integers) with Z.
+      eauto using (one_unit ℤ) with Z.
     * apply div_le in H2 as [H2 | H2];
         eauto using lt_trans, zero_lt_1.
       contradict H0.
       rewrite H2.
-      eauto using (assoc_refl integers) with Z.
+      eauto using (assoc_refl ℤ) with Z.
 Qed.
 
 Theorem exists_prime_divisor :
@@ -813,10 +812,10 @@ Proof.
   induction n as [n H0] using strong_induction.
   destruct (classic (prime n)) as [H1 | H1].
   - exists n; split;
-      eauto using (div_refl integers), lt_trans, zero_lt_1 with Z.
+      eauto using (div_refl ℤ), lt_trans, zero_lt_1 with Z.
   - destruct (not_prime_divide n H H1) as [x [[H2 H3] H4]].
     apply H0 in H2 as [p [H5 [H6 H7]]];
-      eauto 6 using (div_trans integers), lt_trans, zero_lt_1 with Z.
+      eauto 6 using (div_trans ℤ), lt_trans, zero_lt_1 with Z.
 Qed.
 
 Lemma prime_factors_in_interval :
@@ -824,15 +823,15 @@ Lemma prime_factors_in_interval :
 Proof.
   intros p x H H0 [H1 H2] [k H3].
   subst.
-  assert (0 < k) as H4 by (eapply (pos_div_r integer_order) in H0; eauto).
+  assert (0 < k) as H4 by (eapply (pos_div_r ℤ_order) in H0; eauto).
   exists k.
   repeat split; auto.
   assert (k ≤ k * p) as [H3 | H3];
-    eauto using div_le, (div_mul_r integers), (div_refl integers) with Z.
+    eauto using div_le, (div_mul_r ℤ), (div_refl ℤ) with Z.
   rewrite <-(M3_r _ k) in H3 at 1.
-  apply (cancellation_mul_l (integral_domain_OR integer_order)) in H3.
-  - contradict H1; subst; eauto using (one_unit integers) with Z.
-  - intro; subst; contradiction (lt_irrefl integer_order 0).
+  apply (cancellation_mul_l ℤ_ID) in H3.
+  - contradict H1; subst; eauto using (one_unit ℤ) with Z.
+  - intro; subst; contradiction (lt_irrefl ℤ_order 0).
 Qed.
 
 Theorem exists_prime_factorization : ∀ n, 0 < n → ∃ L : list Z, n = ∏' L.
@@ -854,10 +853,10 @@ Qed.
 Lemma prime_rel_prime : ∀ p a, prime p → ¬ p｜a → gcd (p,a) = 1.
 Proof.
   intros p a H H0.
-  repeat split; auto using (div_1_l integers) with Z.
+  repeat split; auto using (div_1_l ℤ) with Z.
   intros d H1 H2.
   apply H in H1 as [H1 | [H1 H3]]; auto.
-  exfalso; eauto using (div_trans integers) with Z.
+  exfalso; eauto using (div_trans ℤ) with Z.
 Qed.
 
 Theorem Euclid's_lemma : ∀ a b p, prime p → p｜a * b → p｜a ∨ p｜b.
@@ -876,9 +875,9 @@ Proof.
   destruct (Euclid's_lemma a (∏ L) p) as [H8 | H8]; repeat split; auto.
   - apply H7 in H8 as [H8 | H8]; try contradiction.
     apply assoc_pm in H8 as [H8 | H8]; subst; try now left.
-    rewrite <-(lt_neg_0 integer_order) in H.
-    contradiction (lt_antisym integer_order 0 a).
-  - assert (0 < (∏ L)) as H9 by (eapply (pos_div_l integer_order) in H0; eauto).
+    rewrite <-(lt_neg_0 ℤ_order) in H.
+    contradiction (lt_antisym ℤ_order 0 a).
+  - assert (0 < (∏ L)) as H9 by (eapply (pos_div_l ℤ_order) in H0; eauto).
     apply in_cons.
     eapply IHL; unfold prime; try split; eauto using in_cons.
 Qed.
@@ -904,15 +903,15 @@ Proof.
     now rewrite (one_has_unique_factorization _ (conj H3 H4)).
   - destruct (H2 q) as [H5 H6]; try apply in_eq.
     assert (q｜x) as H7 by
-          (subst; eauto using (div_mul_r integers), (div_refl integers) with Z).
+          (subst; eauto using (div_mul_r ℤ), (div_refl ℤ) with Z).
     eapply divisors_are_factors in H as H8; eauto; try (split; eauto).
     apply in_split in H8 as [l1 [l2 H8]].
     subst.
     apply prime_factors_in_interval in H7 as [k [H8 H9]]; auto.
     rewrite (M1 k), <-H8, prod_lemma in *.
-    apply (cancellation_mul_l (integral_domain_OR integer_order)) in H3;
-      apply (cancellation_mul_l (integral_domain_OR integer_order)) in H8;
-      try now (intro; subst; contradiction (lt_irrefl integer_order 0)).
+    apply (cancellation_mul_l ℤ_ID) in H3;
+      apply (cancellation_mul_l ℤ_ID) in H8;
+      try now (intro; subst; contradiction (lt_irrefl ℤ_order 0)).
     apply Permutation_cons_app, (H0 k); intuition; split; auto.
     intros p H9.
     apply H4.
@@ -951,43 +950,43 @@ Proof.
     repeat split; auto.
     + destruct (division_algorithm a d) as [q [r [H4 [[H5 | H5] H6]]]]; auto.
       replace a with (d*q + (a - d*q)) in H4 by ring.
-      apply (cancellation_add integers) in H4.
+      apply (cancellation_add ℤ) in H4.
       * destruct (H3 r); auto.
         -- split; auto.
            exists (1-x*q), (-y*q).
            rewrite H4, H2.
            ring.
-        -- contradiction (lt_antisym integer_order d r).
+        -- contradiction (lt_antisym ℤ_order d r).
         -- rewrite H7 in *.
-           contradiction (lt_irrefl integer_order r).
+           contradiction (lt_irrefl ℤ_order r).
       * rewrite <-H5 in *.
         exists q; simpl.
         rewrite <-H4.
         now ring_simplify.
     + destruct (division_algorithm b d) as [q [r [H4 [[H5 | H5] H6]]]]; auto.
       replace b with (d*q + (b - d*q)) in H4 by ring.
-      apply (cancellation_add integers) in H4.
+      apply (cancellation_add ℤ) in H4.
       * destruct (H3 r); auto.
         -- split; auto.
            exists (-x*q), (1-y*q).
            rewrite H4, H2.
            ring.
-        -- contradiction (lt_antisym integer_order d r).
+        -- contradiction (lt_antisym ℤ_order d r).
         -- rewrite H7 in *.
-           contradiction (lt_irrefl integer_order r).
+           contradiction (lt_irrefl ℤ_order r).
       * rewrite <-H5 in *.
         exists q; simpl.
         rewrite <-H4.
         now ring_simplify.
     + intros z H4 H5.
       subst.
-      auto using (div_mul_add integers) with Z.
+      auto using (div_mul_add ℤ) with Z.
 Qed.
 
 Theorem common_factor : ∀ a b, b ≠ 0 → ∃ d, 0 < d ∧ gcd (a,b) = d.
 Proof.
   intros a b H.
-  destruct (T a 0), (T b 0); intuition; rewrite (lt_neg_0 integer_order) in *.
+  destruct (T a 0), (T b 0); intuition; rewrite (lt_neg_0 ℤ_order) in *.
   - destruct (common_factor_N (-a) (-b)) as [d [D1 D2]]; auto.
     exists d.
     split; auto.
@@ -997,18 +996,18 @@ Proof.
     split; auto.
     now apply gcd_sym, gcd_neg, gcd_sym.
   - exists (-b).
-    repeat split; subst; auto using (div_0_r integers) with Z.
-    + rewrite <-(div_sign_l integers).
-      auto using (div_refl integers) with Z.
+    repeat split; subst; auto using (div_0_r ℤ) with Z.
+    + rewrite <-(div_sign_l ℤ).
+      auto using (div_refl ℤ) with Z.
     + intros x H3 H5.
-      now rewrite <-(div_sign_r integers).
+      now rewrite <-(div_sign_r ℤ).
   - destruct (common_factor_N a (-b)) as [d [D1 D2]]; auto.
     exists d.
     split; auto.
     now apply gcd_neg.
   - exists b.
     repeat split; subst;
-      auto using (div_0_r integers), (div_refl integers) with Z.
+      auto using (div_0_r ℤ), (div_refl ℤ) with Z.
   - destruct (common_factor_N a b) as [d [D1 D2]]; eauto.
 Qed.
 
@@ -1032,21 +1031,21 @@ Proof.
         + contradiction (lt_0_1 (d+-(1))).
           * rewrite <-(A4 1), ? (A1 _ (-(1))).
             now apply O1.
-          * rewrite <-(A3_r integers 1) at 2; simpl.
+          * rewrite <-(A3_r ℤ 1) at 2; simpl.
             rewrite <-(A4 1), A2, ? (A1 _ (-(1))).
             now apply O1.
         + subst.
           left.
           now apply div_refl.
       - subst.
-        auto using (assoc_refl integers) with Z.
+        auto using (assoc_refl ℤ) with Z.
       - eapply lt_trans; try exact zero_lt_1.
-        rewrite <-(A3_r integers 1) at 1.
+        rewrite <-(A3_r ℤ 1) at 1.
         eauto using O1, zero_lt_1. }
     intros d H0.
     destruct (T d 0) as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]]; auto.
-    + destruct (H (-d)); auto using (div_sign_l_neg integers) with Z.
-      * now rewrite <-(lt_neg_0 integer_order).
+    + destruct (H (-d)); auto using (div_sign_l_neg ℤ) with Z.
+      * now rewrite <-(lt_neg_0 ℤ_order).
       * now apply or_introl, unit_sign.
       * replace d with (--d) by ring.
         now apply or_intror, assoc_sym, assoc_sign, assoc_sym.

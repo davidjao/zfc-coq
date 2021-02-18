@@ -639,24 +639,24 @@ Qed.
 
 Section test_generating_series.
   (* TODO: replace this with the function mapping f to 1/(1-f) *)
-  Variable star_func : (power_series integers) → (power_series integers).
+  Variable star_func : (power_series ℤ) → (power_series ℤ).
 
   Fixpoint gen_func (f : reg_exp) :=
     match f with
-    | [] => IRS integers 1%Z
-    | [a] => power_series.x integers
-    | A || B => power_series.mul integers (gen_func A) (gen_func B)
-    | A ⌣ B => power_series.add integers (gen_func A) (gen_func B)
+    | [] => IRS ℤ 1%Z
+    | [a] => power_series.x ℤ
+    | A || B => power_series.mul ℤ (gen_func A) (gen_func B)
+    | A ⌣ B => power_series.add ℤ (gen_func A) (gen_func B)
     | A ⃰ => star_func (gen_func A)
     end.
 
-  Goal (gen_func [0]) = power_series.x integers.
+  Goal (gen_func [0]) = power_series.x ℤ.
   Proof.
     now simpl.
   Qed.
 
   Goal gen_func ([0] ⌣ [1]) =
-  power_series.add _ (power_series.x integers) (power_series.x integers).
+  power_series.add _ (power_series.x ℤ) (power_series.x ℤ).
   Proof.
     now simpl.
   Qed.
@@ -1414,11 +1414,11 @@ Qed.
 Theorem regular_complement : ∀ A, regular A → regular (STR \ A). Admitted. *)
 
 Definition gen_series (A : Σ) :=
-  seriesify integers (λ n, # {x in A | ∃ ξ : σ, x = ξ ∧ length ξ = n} : Z).
+  seriesify ℤ (λ n, # {x in A | ∃ ξ : σ, x = ξ ∧ length ξ = n} : Z).
 
-Infix "+" := (power_series.add integers) : String_scope.
-Notation "- a" := (power_series.neg integers a) : String_scope.
-Infix "*" := (power_series.mul integers) : String_scope.
+Infix "+" := (power_series.add ℤ) : String_scope.
+Notation "- a" := (power_series.neg ℤ a) : String_scope.
+Infix "*" := (power_series.mul ℤ) : String_scope.
 
 Theorem finite_length_subsets :
   ∀ k A, (∀ x, x ∈ A → ∃ ξ : σ, x = ξ ∧ length ξ = k) → finite A.
@@ -1483,11 +1483,9 @@ Proof.
     apply INZ_mul. }
   rewrite H1.
   replace (# {x in A || B | ∃ ξ : σ, x = ξ ∧ length ξ = n} : Z) with
-      (sum integers
-           (λ k,
-            (# {x in (A || B) | ∃ a b : σ,
-                  x = (a ++ b)%set ∧ a ∈ A ∧ b ∈ B ∧ length a = k
-            ∧ length b = (n - k)%N}) : Z) 0 n).
+      (sum ℤ (λ k, (# {x in (A || B) | ∃ a b : σ,
+                         x = (a ++ b)%set ∧ a ∈ A ∧ b ∈ B ∧ length a = k
+                         ∧ length b = (n - k)%N}) : Z) 0 n).
   - apply iterate_extensionality.
     intros k H2.
     apply INZ_eq.

@@ -168,7 +168,7 @@ Section Ordered_field_theorems.
     replace n with (--n)%Z by ring.
     rewrite neg_pow, <-inv_lt_1; simpl.
     - apply pow_gt_1; auto.
-      now rewrite <-(ordered_rings.lt_neg_0 integer_order).
+      now rewrite <-(ordered_rings.lt_neg_0 ℤ_order).
     - now apply pow_pos.
     - auto using (ordered_rings.lt_neq ordered_ring_from_field).
   Qed.

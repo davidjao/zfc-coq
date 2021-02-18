@@ -155,7 +155,7 @@ Section Field_theorems.
       rewrite integers.A3 in H0.
       exact (a**c).
     - destruct (excluded_middle_informative (b < 0)%Z).
-      + rewrite (ordered_rings.lt_neg_0 integer_order), lt_def in l.
+      + rewrite (ordered_rings.lt_neg_0 ℤ_order), lt_def in l.
         destruct (constructive_indefinite_description _ l) as [c [H H0]].
         rewrite integers.A3 in H0.
         exact ((a^-1**c)).
@@ -169,7 +169,7 @@ Section Field_theorems.
     intros a.
     unfold pow.
     destruct excluded_middle_informative; auto;
-      contradiction (ordered_rings.lt_irrefl integer_order 0%Z).
+      contradiction (ordered_rings.lt_irrefl ℤ_order 0%Z).
   Qed.
 
   Theorem pow_0_l : ∀ a : Z, a > 0%Z → 0^a = 0.
@@ -222,28 +222,28 @@ Section Field_theorems.
     repeat destruct excluded_middle_informative;
       repeat destruct constructive_indefinite_description;
       try destruct a0; try destruct a1; auto; simpl in *.
-    - contradiction (ordered_rings.lt_antisym integer_order 0%Z b); auto.
-      now rewrite (ordered_rings.lt_neg_0 integer_order).
+    - contradiction (ordered_rings.lt_antisym ℤ_order 0%Z b); auto.
+      now rewrite (ordered_rings.lt_neg_0 ℤ_order).
     - rewrite integers.A3 in *; simpl in *.
       assert ((x : Z) = (x0 : Z)) as H0 by congruence.
       subst.
       apply INZ_eq in H0.
       now rewrite inv_inv, H0.
     - contradiction n0.
-      now rewrite (ordered_rings.lt_neg_0 integer_order).
+      now rewrite (ordered_rings.lt_neg_0 ℤ_order).
     - replace (--b)%Z with b in e by ring.
       rewrite integers.A3 in *.
       subst.
       apply INZ_eq in e0.
       now subst.
     - contradiction n0.
-      now rewrite (ordered_rings.neg_lt_0 integer_order).
+      now rewrite (ordered_rings.neg_lt_0 ℤ_order).
     - contradiction n0.
-      now rewrite (ordered_rings.neg_lt_0 integer_order).
+      now rewrite (ordered_rings.neg_lt_0 ℤ_order).
     - contradiction n0.
-      now rewrite <-(ordered_rings.neg_lt_0 integer_order).
+      now rewrite <-(ordered_rings.neg_lt_0 ℤ_order).
     - contradiction n.
-      now rewrite <-(ordered_rings.lt_neg_0 integer_order).
+      now rewrite <-(ordered_rings.lt_neg_0 ℤ_order).
   Qed.
 
   Theorem inv_pow : ∀ a, a ≠ 0 → a^(-(1)) = a^-1.
@@ -266,12 +266,12 @@ Section Field_theorems.
       rewrite INZ_add, INZ_eq in e.
       subst.
       apply (pow_add_r ring_from_field).
-    - contradiction (ordered_rings.lt_antisym integer_order 0%Z (b+c)%Z).
+    - contradiction (ordered_rings.lt_antisym ℤ_order 0%Z (b+c)%Z).
       now apply integers.O0.
     - assert (b + c = 0)%Z as H1.
       { pose proof (integers.T (b+c) 0).
         tauto. }
-      contradiction (ordered_rings.lt_irrefl integer_order 0%Z).
+      contradiction (ordered_rings.lt_irrefl ℤ_order 0%Z).
       rewrite <-H1 at 2.
       now apply integers.O0.
   Qed.
@@ -321,13 +321,13 @@ Section Field_theorems.
     - rewrite INZ_mul, INZ_eq in e0.
       subst.
       apply (pow_mul_r ring_from_field).
-    - contradiction (ordered_rings.lt_antisym integer_order 0%Z (b*x)%Z).
+    - contradiction (ordered_rings.lt_antisym ℤ_order 0%Z (b*x)%Z).
       now apply mul_neg_pos.
     - assert (b = 0%Z) by (pose proof (integers.T b 0); tauto).
       subst.
       replace (0*x)%Z with 0%Z in * by ring.
-      contradiction (ordered_rings.lt_irrefl integer_order 0%Z).
-    - contradiction (ordered_rings.lt_antisym integer_order 0%Z (x1*x)%Z).
+      contradiction (ordered_rings.lt_irrefl ℤ_order 0%Z).
+    - contradiction (ordered_rings.lt_antisym ℤ_order 0%Z (x1*x)%Z).
       now apply mul_pos_pos.
     - replace (-(b*x))%Z with ((-b)*x)%Z in e0 by ring.
       rewrite e1, INZ_mul, INZ_eq in e0.
@@ -336,11 +336,11 @@ Section Field_theorems.
     - assert (b = 0%Z) by (pose proof (integers.T b 0); tauto).
       subst.
       replace (0*x)%Z with 0%Z in * by ring.
-      contradiction (ordered_rings.lt_irrefl integer_order 0%Z).
+      contradiction (ordered_rings.lt_irrefl ℤ_order 0%Z).
     - contradiction n0.
       now apply mul_pos_pos.
     - contradiction n1.
-      now apply (mul_neg_pos integer_order).
+      now apply (mul_neg_pos ℤ_order).
     - now rewrite (rings.pow_1_l ring_from_field).
   Qed.
 
@@ -359,7 +359,7 @@ Section Field_theorems.
       replace ((a ^ b)^-1 ** x) with ((a ^ b)^-1 ^ (-c)).
       + replace (b*c)%Z with ((-b)*(-c))%Z by ring.
         rewrite <-neg_pow; auto.
-        now apply pow_mul_r_pos, (ordered_rings.lt_neg_0 integer_order).
+        now apply pow_mul_r_pos, (ordered_rings.lt_neg_0 ℤ_order).
       + unfold pow at 1.
         repeat destruct excluded_middle_informative;
           repeat destruct constructive_indefinite_description;
@@ -369,9 +369,9 @@ Section Field_theorems.
           apply INZ_eq in H3.
           now subst.
         * contradiction n1.
-          now apply (ordered_rings.lt_neg_0 integer_order).
+          now apply (ordered_rings.lt_neg_0 ℤ_order).
         * contradiction n1.
-          now apply (ordered_rings.lt_neg_0 integer_order).
+          now apply (ordered_rings.lt_neg_0 ℤ_order).
   Qed.
 
   Theorem pow_div_distr : ∀ a b c, a ≠ 0 → b ≠ 0 → (a*b^-1)^c = a^c * (b^c)^-1.
@@ -396,15 +396,14 @@ Section Field_theorems.
       auto using pow_ne_0.
     destruct (integers.T 0 (b+c))
       as [[H2 [H3 H4]] | [[H2 [H3 H4]] | [H2 [H3 H4]]]].
-    - rewrite (ordered_rings.lt_neg_0 integer_order) in H1.
-      rewrite <-pow_add_r_pos_pos, <-integers.A2, integers.A4, integers.(A3_r);
-        auto.
+    - rewrite (ordered_rings.lt_neg_0 ℤ_order) in H1.
+      rewrite <-pow_add_r_pos_pos, <-integers.A2, integers.A4, (A3_r ℤ); auto.
     - rewrite <-(integers.A3 b) at 2.
       now rewrite <-(integers.A4 c), (integers.A1 _ b),
       integers.A2, <-H3, integers.A3, pow_0_r, M3.
     - eapply (cancellation_mul_l integral_domain_from_field (a^(-(b+c))));
         auto using pow_ne_0; simpl.
-      rewrite (ordered_rings.lt_neg_0 integer_order) in H4.
+      rewrite (ordered_rings.lt_neg_0 ℤ_order) in H4.
       rewrite ? M2, ? (M1 (a^(-(b+c)))), pow_add_r_opp, M3,
       <-pow_add_r_pos_pos; auto.
       now replace (b+-(b+c))%Z with (-c)%Z by ring.
@@ -424,7 +423,7 @@ Section Field_theorems.
         replace (--b+--c)%Z with (-(-b+-c))%Z; try ring.
       rewrite ? (pow_neg a); auto.
       apply inv_ne_0 in H.
-      apply pow_add_r_pos_pos; now apply (ordered_rings.lt_neg_0 integer_order).
+      apply pow_add_r_pos_pos; now apply (ordered_rings.lt_neg_0 ℤ_order).
   Qed.
 
   Theorem pow_wf : ∀ a b, a**b = a^b.
