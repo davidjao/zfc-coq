@@ -140,6 +140,14 @@ Proof.
       or_intror, Singleton_classification.
 Qed.
 
+Theorem no_quines_ω : ∀ n, n ∈ ω → ¬ n ∈ n.
+Proof.
+  intros n H H0.
+  apply pigeonhole_precursor in H0; auto.
+  contradict H0.
+  auto using Set_is_subset.
+Qed.
+
 Lemma elements_of_naturals_are_subsets : ∀ n m, n ∈ ω → m ∈ n → m ⊂ n.
 Proof.
   induction n using Induction_ω; intuition.
@@ -274,112 +282,9 @@ Proof.
               congruence.
 Qed.
 
-Theorem recursion : ∀ f X a,
-    a ∈ X → domain f = X → range f = X →
-    ∃ u, domain u = ω ∧ range u = X ∧ u ∅ = a ∧
-         ∀ n, n ∈ ω → u (succ n) = f (u n).
-Proof.
-  intros f X a H H0 H1.
-  set (C := {A in P (ω × X) |
-             (∅,a) ∈ A ∧
-             ∀ x n, x ∈ X → n ∈ ω → (n,x) ∈ A → (succ n, f x) ∈ A}).
-  set (u := ⋂ C).
-  assert (ω × X ∈ C) as H2.
-  { apply Specify_classification.
-    repeat split.
-    - apply Powerset_classification, Set_is_subset.
-    - apply Product_classification.
-      eauto using PA1_ω.
-    - intros x n H2 H3 H4.
-      subst.
-      apply Product_classification.
-      exists (succ n), (f x).
-      repeat split; eauto using PA2_ω.
-      rewrite <-H1.
-      now apply function_maps_domain_to_range. }
-  assert (C ≠ ∅) as H3 by (rewrite Nonempty_classification; now exists (ω × X)).
-  assert (u ∈ C) as H4.
-  { apply Specify_classification.
-    repeat split; unfold u in *.
-    - apply Powerset_classification.
-      intros z H4.
-      rewrite Intersection_classification in H4; auto.
-    - rewrite Intersection_classification; auto.
-      intros z H4.
-      now apply Specify_classification in H4.
-    - intros x n H4 H5 H6.
-      rewrite Intersection_classification in *; auto.
-      intros y H7.
-      pose proof H6 _ H7 as H8.
-      apply Specify_classification in H7 as [H7 [H9 H10]].
-      auto. }
-  apply Specify_classification in H4 as [H4 [H5 H6]].
-  assert (is_function u ω X) as H7.
-  { split; unfold u in *.
-    - intros z H7.
-      rewrite Intersection_classification in H7; auto.
-    - intros n H7.
-      induction n using Induction_ω; intuition.
-      + exists a.
-        repeat split; auto.
-        intros b [H8 H9].
-        apply NNPP.
-        intros H10.
-        assert (u \ {(∅, b), (∅, b)} ∈ C) as H11.
-        { apply Specify_classification.
-          repeat split; unfold u in *; intros;
-            try rewrite Complement_classification, Singleton_classification,
-            Ordered_pair_iff in *; intuition.
-          - rewrite Powerset_classification in *.
-            intros z H11.
-            rewrite Complement_classification, Intersection_classification in *;
-              intuition.
-          - contradiction (PA4_ω n). }
-        rewrite Intersection_classification in *; auto.
-        apply H9, Complement_classification in H11 as [H11 H12].
-        now rewrite Singleton_classification in *.
-      + destruct H9 as [y [[H9 H10] H11]].
-        exists (f y).
-        repeat split; auto.
-        * rewrite <-H1.
-          apply function_maps_domain_to_range.
-          congruence.
-        * intros x' [H12 H13].
-          apply NNPP.
-          intros H14.
-          assert (u \ {(succ n, x'), (succ n, x')} ∈ C) as H15.
-          { apply Specify_classification.
-            repeat split; unfold u in *; intros;
-            try rewrite Complement_classification, Singleton_classification,
-            Ordered_pair_iff in *; intuition.
-            - apply Powerset_classification.
-              intros z H15.
-              rewrite Complement_classification, Powerset_classification in *.
-              intuition.
-            - now apply (PA4_ω n), eq_sym.
-            - apply PA5_ω in H20; subst; eauto using f_equal. }
-          rewrite Intersection_classification in *; auto.
-          apply H13, Specify_classification in H15 as [H15 H16].
-          contradict H16.
-          now apply Singleton_classification. }
-  set (g := (mkFunc ω X u H7)).
-  exists g.
-  repeat split.
-  - apply function_maps_domain_to_graph; auto using PA1_ω.
-  - intros n H8.
-    apply function_maps_domain_to_graph; simpl; auto using PA2_ω.
-    + rewrite <-H1.
-      apply function_maps_domain_to_range.
-      rewrite H0.
-      now apply function_maps_domain_to_range.
-    + apply H6; auto; try now apply function_maps_domain_to_range.
-      replace u with (graph g); auto.
-      apply function_maps_domain_to_graph; auto.
-      now apply function_maps_domain_to_range.
-Qed.
-
 Definition N := elts ω.
 
+Declare Scope N_scope.
 Delimit Scope N_scope with N.
 Open Scope N_scope.
 Bind Scope N_scope with N.
@@ -410,65 +315,6 @@ Proof.
   now intros [n H].
 Qed.
 
-Definition add : N → N → N.
-Proof.
-  intros a b.
-  pose proof PA2_ω.
-  destruct (constructive_indefinite_description
-              _ (function_construction ω ω succ PA2_ω)) as [X [H0 [H1 H2]]].
-  destruct (constructive_indefinite_description
-              _ (recursion X _ _ (elts_in_set _ a) H0 H1))
-    as [u_a [H3 [H4 [H5 H6]]]].
-  assert (u_a b ∈ ω) as H7.
-  { rewrite <-H4.
-    apply function_maps_domain_to_range.
-    rewrite H3.
-    auto using N_in_ω. }
-  exact (exist _ (u_a b) H7).
-Defined.
-
-Infix "+" := add : N_scope.
-
-Definition add_right : N → set → set.
-Proof.
-  intros a x.
-  destruct (excluded_middle_informative (x ∈ ω)).
-  - exact (add (exist _ _ i) a).
-  - exact 0.
-Defined.
-
-Theorem add_right_lemma : ∀ a b : N, add_right a b = b + a.
-Proof.
-  intros a b.
-  unfold add_right.
-  destruct excluded_middle_informative.
-  - replace (exist _ _ i : N) with b; eauto using set_proj_injective.
-  - contradict n; auto using N_in_ω.
-Qed.
-
-Definition mul : N → N → N.
-Proof.
-  intros a b.
-  assert (∀ x : set, x ∈ ω → add_right a x ∈ ω) as H.
-  { intros x H.
-    unfold add_right.
-    destruct excluded_middle_informative; intuition.
-    auto using N_in_ω. }
-  destruct (constructive_indefinite_description
-              _ (function_construction ω ω (add_right a) H))
-    as [add_a [H0 [H1 H2]]].
-  destruct (constructive_indefinite_description
-              _ (recursion add_a ω ∅ PA1_ω H0 H1)) as [mul_b [H3 [H4 [H5 H6]]]].
-  assert (mul_b b ∈ ω) as H7.
-  { rewrite <-H4.
-    apply function_maps_domain_to_range.
-    rewrite H3.
-    auto using N_in_ω. }
-  exact (exist _ (mul_b b) H7).
-Defined.
-
-Infix "*" := mul : N_scope.
-
 Theorem Induction : ∀ P : N → Prop,
     P 0 → (∀ n : N, P n → P (S n)) → ∀ n : N, P n.
 Proof.
@@ -480,6 +326,157 @@ Proof.
 Qed.
 
 Definition PA3 := Induction.
+
+Theorem Strong_Induction_ω : ∀ P : N → Prop,
+    (∀ n : N, (∀ k : N, k ∈ n → P k) → P n) → ∀ n : N, P n.
+Proof.
+  intros P H n.
+  set (S := {x in ω | ∃ n : N, x = n ∧ ¬ P n}).
+  assert (S ⊂ ω) as H0.
+  { intros x H0.
+    apply Specify_classification in H0.
+    tauto. }
+  destruct (classic (S = ∅)) as [H1 | H1].
+  { apply NNPP.
+    intros H2.
+    contradict H1.
+    apply Nonempty_classification.
+    exists n.
+    apply Specify_classification.
+    eauto using N_in_ω. }
+  apply ω_WOP in H1 as [s [H1 H2]]; auto.
+  apply Specify_classification in H1 as [H1 [σ [H3 H4]]].
+  subst.
+  contradict H4.
+  apply H.
+  intros k H3.
+  apply NNPP.
+  intros H4.
+  assert (k ∈ S) as H5.
+  { apply Specify_classification.
+    eauto using N_in_ω. }
+  apply H2 in H5.
+  contradiction (no_quines_ω k); eauto using N_in_ω.
+Qed.
+
+Section Iterated_op_construction.
+
+  Variable X : Type.
+  Variable op : X → X → X.
+  Variable start : X.
+  Variable a : N → X.
+  Infix "·" := op (at level 40, left associativity).
+
+  Theorem iterated_op_construction : ∀ n : N, ∃ g : N → X,
+        (g 0%N) = start ∧ ∀ m : N, m ∈ n → g (S m) = (g m) · (a m).
+  Proof.
+    induction n using Induction.
+    - exists (λ x, start).
+      split; auto.
+      intros m H.
+      contradict H.
+      intros H.
+      contradiction (Empty_set_classification m).
+    - destruct IHn as [g [H H0]].
+      exists (λ x, if (excluded_middle_informative (x = S n)%N)
+                   then ((g n) · (a n)) else g x).
+      split.
+      { destruct excluded_middle_informative; auto.
+        contradiction (PA4_ω n); eauto using N_in_ω.
+        now rewrite S_is_succ, <-e. }
+      intros m H1.
+      repeat destruct excluded_middle_informative; subst;
+        try now contradiction (no_quines_ω (S n)); eauto using N_in_ω.
+      + apply (f_equal INS) in e.
+        rewrite <-? S_is_succ in e.
+        apply PA5_ω, set_proj_injective in e; auto using N_in_ω.
+        now subst.
+      + apply H0.
+        rewrite <-S_is_succ in H1.
+        apply Pairwise_union_classification in H1 as [H1 | H1]; auto.
+        apply Singleton_classification, set_proj_injective in H1.
+        contradict n0.
+        now f_equal.
+  Qed.
+
+  Definition iterated_op : N → X.
+  Proof.
+    intros n.
+    destruct (constructive_indefinite_description
+                _ (iterated_op_construction n)) as [i].
+    exact (i n).
+  Defined.
+
+  Theorem iterated_op_0 : iterated_op 0 = start.
+  Proof.
+    unfold iterated_op.
+    destruct constructive_indefinite_description.
+    tauto.
+  Qed.
+
+  Theorem iterated_op_succ : ∀ n, iterated_op (S n) = (iterated_op n) · (a n).
+  Proof.
+    induction n using Strong_Induction_ω.
+    unfold iterated_op at 1.
+    destruct constructive_indefinite_description, a0 as [H0 H1].
+    rewrite ? H1.
+    2: { rewrite <-S_is_succ.
+         now apply Pairwise_union_classification, or_intror,
+         Singleton_classification. }
+    f_equal.
+    enough (∀ k : N, k ⊂ n → x k = iterated_op k); auto using Set_is_subset.
+    induction k using Induction; intros H2; rewrite <-S_is_succ in *.
+    - now rewrite H0, iterated_op_0.
+    - rewrite H1, H, IHk; auto.
+      + eapply Subset_transitive; eauto.
+        intros z H3.
+        now apply Pairwise_union_classification, or_introl.
+      + now apply H2, Pairwise_union_classification, or_intror,
+        Singleton_classification.
+      + assert (n ⊂ succ n) as H3.
+        * intros z H3.
+          now apply Pairwise_union_classification, or_introl.
+        * now apply H3, H2, Pairwise_union_classification, or_intror,
+          Singleton_classification.
+  Qed.
+
+End Iterated_op_construction.
+
+Definition add a b := (iterated_op N (λ x _, S x) a id b).
+
+Infix "+" := add : N_scope.
+
+Theorem add_0_r : ∀ x, x + 0 = x.
+Proof.
+  intros x.
+  unfold add.
+  now rewrite iterated_op_0.
+Qed.
+
+Theorem add_succ_r : ∀ x y, x + S y = S (x + y).
+Proof.
+  intros x y.
+  unfold add.
+  now rewrite iterated_op_succ.
+Qed.
+
+Definition mul a b := (iterated_op N (λ x _, x + a) 0 id b).
+
+Infix "*" := mul : N_scope.
+
+Theorem mul_0_r : ∀ x, x * 0 = 0.
+Proof.
+  intros x.
+  unfold mul.
+  now rewrite iterated_op_0.
+Qed.
+
+Theorem mul_succ_r : ∀ x y, x * (S y) = x * y + x.
+Proof.
+  intros x y.
+  unfold mul.
+  now rewrite iterated_op_succ.
+Qed.
 
 Theorem PA4 : ∀ n, 0 ≠ S n.
 Proof.
@@ -515,50 +512,6 @@ Proof.
   induction n using Induction; intros H.
   - eapply PA4; eauto.
   - eauto using PA5.
-Qed.
-
-Theorem add_0_r : ∀ x, x + 0 = x.
-Proof.
-  intros x.
-  unfold add.
-  repeat (destruct constructive_indefinite_description; repeat destruct a).
-  now apply set_proj_injective.
-Qed.
-
-Theorem add_succ_r : ∀ x y, x + S y = S (x + y).
-Proof.
-  intros x [y Y].
-  unfold add.
-  repeat (destruct constructive_indefinite_description; repeat destruct a).
-  apply set_proj_injective.
-  simpl.
-  rewrite e5, e1; auto.
-  rewrite <-e3.
-  apply function_maps_domain_to_range.
-  now rewrite e2.
-Qed.
-
-Theorem mul_0_r : ∀ x, x * 0 = 0.
-Proof.
-  intros x.
-  unfold mul.
-  repeat (destruct constructive_indefinite_description; repeat destruct a).
-  now apply set_proj_injective.
-Qed.
-
-Theorem mul_succ_r : ∀ x y, x * (S y) = x * y + x.
-Proof.
-  intros x y.
-  unfold mul.
-  repeat (destruct constructive_indefinite_description; repeat destruct a).
-  apply set_proj_injective.
-  simpl.
-  rewrite <-S_is_succ, e5, e1, <-add_right_lemma;
-    unfold INS; try now simpl; auto using N_in_ω.
-  rewrite <-e3.
-  apply function_maps_domain_to_range.
-  rewrite e2.
-  auto using N_in_ω.
 Qed.
 
 Theorem add_1_r : ∀ a, a + 1 = S a.
@@ -660,44 +613,7 @@ Proof.
   now rewrite mul_comm, mul_1_r.
 Qed.
 
-Definition mul_right : N → set → set.
-Proof.
-  intros a x.
-  destruct (excluded_middle_informative (x ∈ ω)).
-  - exact (mul (exist _ _ i) a).
-  - exact ∅.
-Defined.
-
-Theorem mul_right_lemma : ∀ a b : N, mul_right a b = b * a.
-Proof.
-  intros a b.
-  unfold mul_right.
-  destruct excluded_middle_informative.
-  - replace (exist _ (INS b) i) with b; auto; now apply set_proj_injective.
-  - now destruct b.
-Qed.
-
-Definition pow : N → N → N.
-Proof.
-  intros a b.
-  assert (∀ x : set, x ∈ ω → mul_right a x ∈ ω) as H.
-  { intros x H.
-    unfold mul_right.
-    destruct excluded_middle_informative; intuition.
-    auto using N_in_ω. }
-  destruct (constructive_indefinite_description
-              _ (function_construction ω ω (mul_right a) H))
-    as [add_a [H0 [H1 H2]]].
-  destruct (constructive_indefinite_description
-              _ (recursion add_a _ _ (elts_in_set _ 1) H0 H1))
-    as [pow_b [H3 [H4 [H5 H6]]]].
-  assert (pow_b b ∈ ω) as H7.
-  { rewrite <-H4.
-    apply function_maps_domain_to_range.
-    rewrite H3.
-    auto using N_in_ω. }
-  exact (exist _ (pow_b b) H7).
-Defined.
+Definition pow a b := (iterated_op N (λ x _, x * a) 1 id b).
 
 Infix "^" := pow : N_scope.
 
@@ -705,23 +621,14 @@ Theorem pow_0_r : ∀ x, x^0 = 1.
 Proof.
   intros x.
   unfold pow.
-  repeat (destruct constructive_indefinite_description; repeat destruct a).
-  now apply set_proj_injective.
+  now rewrite iterated_op_0.
 Qed.
 
 Theorem pow_succ_r : ∀ x y, x^(S y) = x^y * x.
 Proof.
   intros x y.
   unfold pow.
-  repeat (destruct constructive_indefinite_description; repeat destruct a).
-  apply set_proj_injective.
-  simpl.
-  rewrite <-S_is_succ, e5, e1, <-mul_right_lemma; unfold INS;
-    try now simpl; auto using N_in_ω.
-  rewrite <-e3.
-  apply function_maps_domain_to_range.
-  rewrite e2.
-  auto using N_in_ω.
+  now rewrite iterated_op_succ.
 Qed.
 
 Theorem pow_1_r : ∀ x, x^1 = x.
@@ -1413,40 +1320,6 @@ Proof.
       now (exists d).
 Qed.
 
-Theorem Strong_Induction : ∀ P : N → Prop,
-    (∀ n : N, (∀ k : N, k < n → P k) → P n) → ∀ n : N, P n.
-Proof.
-  intros P H n.
-  set (S := {x in ω | ∃ n : N, x = n ∧ ¬ P n}).
-  assert (S ⊂ ω) as H0.
-  { intros x H0.
-    apply Specify_classification in H0.
-    tauto. }
-  destruct (classic (S = ∅)) as [H1 | H1].
-  { apply NNPP.
-    intros H2.
-    contradict H1.
-    apply Nonempty_classification.
-    exists n.
-    apply Specify_classification.
-    eauto using N_in_ω. }
-  apply ω_WOP in H1 as [s [H1 H2]]; auto.
-  apply Specify_classification in H1 as [H1 [σ [H3 H4]]].
-  subst.
-  contradict H4.
-  apply H.
-  intros k [H3 H4].
-  apply NNPP.
-  intros H5.
-  assert (k ∈ S) as H6.
-  { apply Specify_classification.
-    eauto using N_in_ω. }
-  apply H2, le_is_subset in H6 as [c H6].
-  contradict H4.
-  apply le_antisymm; eauto.
-  now exists c.
-Qed.
-
 Theorem squeeze_upper : ∀ n m, n < m → m ≤ S n → m = S n.
 Proof.
   intros n m H [c H0].
@@ -1518,9 +1391,7 @@ Qed.
 
 Theorem no_quines : ∀ n : N, n ∉ n.
 Proof.
-  intros n H.
-  apply lt_is_in in H.
-  contradiction (lt_irrefl n).
+  auto using no_quines_ω, N_in_ω.
 Qed.
 
 Theorem disjoint_succ : ∀ n : N, n ∩ {n,n} = ∅.
@@ -1544,4 +1415,37 @@ Proof.
     subst.
     split; eauto using N_in_ω.
   - apply Specify_classification in H as [H [x H0]]; eauto.
+Qed.
+
+Theorem le_lt_or_eq : ∀ a b, a ≤ b ↔ a < b ∨ a = b.
+Proof.
+  split; intros H.
+  unfold le in *; rewrite lt_def in *.
+  - destruct H as [c H].
+    destruct (classic (c = 0)).
+    + right.
+      subst.
+      ring.
+    + left.
+      exists c.
+      split; auto.
+  - destruct H as [[c H] | H]; subst; auto using le_refl.
+Qed.
+
+Theorem le_succ : ∀ n, n ≤ S n.
+Proof.
+  intros n.
+  exists 1.
+  now rewrite add_1_r.
+Qed.
+
+Theorem Strong_Induction : ∀ P : N → Prop,
+    (∀ n : N, (∀ k : N, k < n → P k) → P n) → ∀ n : N, P n.
+Proof.
+  intros P H n.
+  apply Strong_Induction_ω.
+  intros n0 H0.
+  apply H.
+  intros k H1.
+  now apply H0, lt_is_in.
 Qed.

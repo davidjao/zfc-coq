@@ -301,8 +301,8 @@ Section Ring_theorems.
     intros a b H; split; contradict H; subst; ring.
   Qed.
 
-  Definition sum f a b := iterate_with_bounds (set_R Ring) add f 0 a b : R.
-  Definition prod f a b := iterate_with_bounds (set_R Ring) mul f 1 a b : R.
+  Definition sum f a b := iterate_with_bounds _ add f 0 a b : R.
+  Definition prod f a b := iterate_with_bounds _ mul f 1 a b : R.
 
   Theorem sum_succ : ∀ f a b,
       a ≤ S b → (sum f a (S b)) = (sum f a b) + (f (S b)).

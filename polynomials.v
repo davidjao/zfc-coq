@@ -677,8 +677,7 @@ Section Polynomial_theorems.
            - rewrite <-H0.
              apply minus_leading_term.
              rewrite H0.
-             exists d.
-             now rewrite naturals.add_comm, add_1_r.
+             apply (succ_le _ d), zero_le.
            - now rewrite <-add_1_r, sub_abba. }
       apply iterate_extensionality.
       intros k [H1 H2].
@@ -1279,8 +1278,8 @@ Section Polynomial_theorems.
       - rewrite binomial_empty_set, binomial_overflow; auto.
         + rewrite naturals.lt_def.
           exists c.
-          split; auto.
-          now rewrite naturals.add_comm, add_succ_r, add_0_r.
+          rewrite <-? add_1_r.
+          split; auto; ring.
         + contradict H.
           now rewrite <-add_1_r, sub_abba in H. }
     apply succ_0 in H as [m H].

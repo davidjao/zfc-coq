@@ -444,9 +444,28 @@ Qed.
 
 Definition empty_subset := [ε] : Σ.
 
-Definition pow (A : Σ) (n : N) :=
-  iterate_with_bounds (P STR) concat_set (λ x, A) empty_subset 1 n : Σ.
+Definition concat_pow A n := iterate_with_bounds _ concat_set (λ x, A) [ε] 1 n.
+Infix "**" := concat_pow (at level 35) : String_scope.
+
+Definition pow A n := iterate_with_bounds _ Concat (λ x, A) [ε] 1 n.
 Infix "^" := pow : String_scope.
+
+Theorem concat_pow_0_r : ∀ A, A ** 0 = [ε].
+Proof.
+  intros A.
+  unfold concat_pow, iterate_with_bounds.
+  destruct excluded_middle_informative; auto.
+  - exfalso.
+    apply naturals.le_not_gt in l.
+    eauto using naturals.succ_lt.
+Qed.
+
+Theorem concat_pow_1_r : ∀ A, A ** 1 = A.
+Proof.
+  intros A.
+  unfold concat_pow.
+  now rewrite iterate_0.
+Qed.
 
 Theorem pow_0_r : ∀ A, A^0 = [ε].
 Proof.
@@ -529,15 +548,33 @@ Proof.
     now rewrite singleton_realization, Singleton_classification.
 Qed.
 
-Theorem pow_succ_r : ∀ n A, A^(S n) = concat_set (A^n) A.
+Theorem concat_pow_succ_r : (∀ n A, A ** (S n) = concat_set (A ** n) A)%set.
 Proof.
   induction n using Induction; intros A.
-  - now rewrite pow_0_r, pow_1_r, concat_ε_l.
+  - now rewrite concat_pow_0_r, concat_pow_1_r, concat_ε_l.
+  - unfold concat_pow.
+    rewrite iterate_succ; auto.
+    exists n.
+    rewrite <-add_1_r.
+    ring.
+Qed.
+
+Theorem pow_succ_r : ∀ n A, (A^(S n) : Σ) = (A^n || A).
+Proof.
+  induction n using Induction; intros A.
+  - now rewrite pow_0_r, pow_1_r, <-concat_reg_exp, concat_ε_l.
   - unfold pow.
     rewrite iterate_succ; auto.
     exists n.
     rewrite <-add_1_r.
     ring.
+Qed.
+
+Theorem pow_concat_pow : ∀ n A, (A^n : Σ) = A ** n.
+Proof.
+  induction n using Induction; intros A.
+  - now rewrite pow_0_r, concat_pow_0_r.
+  - now rewrite pow_succ_r, concat_pow_succ_r, <-concat_reg_exp, IHn.
 Qed.
 
 Theorem subsetifying_subset : ∀ A, subsetify (subset_of A) = A.
@@ -695,10 +732,8 @@ Proof.
   exists ε.
   apply Pairwise_intersection_classification.
   split.
-  - now rewrite pow_0_r, subsetifying_subset,
-    singleton_realization, Singleton_classification.
-  - now rewrite pow_1_r, subsetifying_subset,
-    singleton_realization, Singleton_classification.
+  - now rewrite pow_0_r, singleton_realization, Singleton_classification.
+  - now rewrite pow_1_r, singleton_realization, Singleton_classification.
 Qed.
 
 Theorem zero_ne_1 : 0 ≠ 1.
@@ -955,30 +990,29 @@ Proof.
   intros A n.
   induction n using Induction.
   - now rewrite pow_0_r, concat_ε_l, concat_ε_r.
-  - now rewrite ? pow_succ_r, IHn, <-concat_assoc, IHn.
+  - now rewrite ? pow_succ_r, <-? concat_reg_exp, IHn, <-concat_assoc, IHn.
 Qed.
 
-Theorem pow_add_r : ∀ n m A, A^(m+n)%N = A^m ++ A^n.
+Theorem pow_add_r : ∀ n m A, (A^(m+n)%N : Σ) = A^m || A^n.
 Proof.
   intros n m A.
   induction m using Induction.
-  - now rewrite pow_0_r, concat_ε_l, add_0_l.
+  - now rewrite pow_0_r, add_0_l, <-concat_reg_exp, concat_ε_l.
   - now rewrite naturals.add_comm, add_succ_r, naturals.add_comm,
-    ? pow_succ_r, IHm, <-? concat_assoc, concat_sym.
+    <-concat_reg_exp, ? pow_succ_r, <-? concat_reg_exp, IHm,
+    <-concat_reg_exp, <-? concat_assoc, concat_sym.
 Qed.
 
 Theorem length_of_n_string :
   ∀ (n : N) (x : σ), x ∈ (([0] ⌣ [1])^n)%str ↔ length x = n.
 Proof.
   induction n using Induction; split; intros H.
-  - rewrite pow_0_r, subsetifying_subset,
-    singleton_realization, Singleton_classification in *.
+  - rewrite pow_0_r, singleton_realization, Singleton_classification in *.
     apply set_proj_injective in H.
     subst.
     apply length_empty.
   - pose proof length_is_domain x.
-    rewrite pow_0_r, subsetifying_subset,
-    singleton_realization, Singleton_classification in *.
+    rewrite pow_0_r, singleton_realization, Singleton_classification in *.
     rewrite H in H0.
     f_equal.
     apply functionify_injective, func_ext; try now rewrite ? string_range.
@@ -986,7 +1020,7 @@ Proof.
     + intros z H1.
       rewrite H0 in H1.
       contradiction (Empty_set_classification z).
-  - rewrite pow_succ_r in H.
+  - rewrite <-subsetifying_subset, pow_succ_r, <-concat_reg_exp in H.
     apply Specify_classification in H as [H [a [b [H0 [H1 H2]]]]].
     apply set_proj_injective in H2.
     subst.
@@ -996,7 +1030,8 @@ Proof.
     apply Specify_classification in H1 as [H1 [y [H2 H3]]].
     apply set_proj_injective in H2.
     inversion H3; inversion H6; subst; auto using length_zero, length_one.
-  - rewrite pow_succ_r, concat_set_classification.
+  - rewrite <-subsetifying_subset, pow_succ_r, <-concat_reg_exp,
+    concat_set_classification.
     assert (x n ∈ {0,1}%N) as X.
     { erewrite <-string_range.
       apply function_maps_domain_to_range.
@@ -1118,7 +1153,8 @@ Proof.
     apply Nonempty_classification in H as [x H].
     apply Pairwise_intersection_classification in H as [H H0].
     assert (x ∈ STR).
-    { pose proof (elts_in_set _ (([0] ⌣ [1]) ^ n)%str) as H1; simpl in H1.
+    { pose proof (elts_in_set _ (([0] ⌣ [1]) ** n)%set) as H1; simpl in H1.
+      rewrite <-subsetifying_subset, pow_concat_pow in H.
       apply Powerset_classification in H1; auto. }
     set (ξ := (exist _ _ H1 : σ)).
     replace x with (ξ : set) in * by auto.
@@ -1218,8 +1254,7 @@ Proof.
       split.
       * apply replacement_classification.
         eauto.
-      * now rewrite pow_0_r, subsetifying_subset, singleton_realization,
-        Singleton_classification.
+      * now rewrite pow_0_r, singleton_realization, Singleton_classification.
     + eapply H in H6; eauto.
       * apply Union_classification in H6 as [X [H6 H7]].
         apply replacement_classification in H6 as [n H6]; subst.
@@ -1227,7 +1262,8 @@ Proof.
         exists (A^(n+1)%N).
         rewrite replacement_classification.
         split; eauto.
-        rewrite add_1_r, pow_succ_r, concat_sym.
+        rewrite add_1_r, <-subsetifying_subset, pow_succ_r,
+        <-concat_reg_exp, concat_sym.
         apply concat_set_classification.
         exists u, v.
         repeat split; auto.
@@ -1246,15 +1282,15 @@ Proof.
     revert z H0.
     induction n using Induction.
     { intros z H0.
-      rewrite pow_0_r, subsetifying_subset, singleton_realization,
-      Singleton_classification in H0.
+      rewrite pow_0_r, singleton_realization, Singleton_classification in H0.
       subst.
       apply Specify_classification.
       split; eauto using elts_in_set.
       exists ε.
       eauto using MStar0. }
     intros z H0.
-    rewrite pow_succ_r, concat_sym in H0.
+    rewrite <-subsetifying_subset, pow_succ_r, <-concat_reg_exp,
+    concat_sym in H0.
     apply concat_set_classification in H0 as [a [b [H0 [H1 H2]]]].
     subst.
     apply Specify_classification.
@@ -1295,11 +1331,11 @@ Proof.
   induction n using Induction; intros x Heqn.
   - apply length_0_empty in Heqn.
     congruence.
-  - rewrite <-length_of_n_string, pow_succ_r, concat_sym,
-    concat_set_classification in *.
+  - rewrite <-length_of_n_string, <-subsetifying_subset, pow_succ_r,
+    <-concat_reg_exp, concat_sym, concat_set_classification in *.
     destruct Heqn as [a [b [H2 [H3 H4]]]].
     apply set_proj_injective in H4; subst.
-    rewrite length_of_n_string in H3.
+    rewrite subsetifying_subset, length_of_n_string in H3.
     apply IHn in H3.
     apply Specify_classification in H2 as [H2 [y [H4 H5]]].
     apply set_proj_injective in H4; subst.
@@ -1316,10 +1352,11 @@ Proof.
   induction n using Induction; intros x Heqn.
   - apply length_0_empty in Heqn.
     congruence.
-  - rewrite <-length_of_n_string, pow_succ_r, concat_set_classification in *.
+  - rewrite <-length_of_n_string, <-subsetifying_subset, pow_succ_r,
+    <-concat_reg_exp, concat_set_classification in *.
     destruct Heqn as [a [b [H2 [H3 H4]]]].
     apply set_proj_injective in H4; subst.
-    rewrite length_of_n_string in H2.
+    rewrite subsetifying_subset, length_of_n_string in H2.
     apply IHn in H2.
     apply Specify_classification in H3 as [H3 [y [H4 H5]]].
     apply set_proj_injective in H4; subst.

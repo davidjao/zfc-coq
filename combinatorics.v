@@ -3,9 +3,9 @@ Require Export cardinality rationals.
 
 Definition permutations (n : N) := size_of_bijections n n.
 
-Definition factorial (n : N) := (prod ℤ (λ x, x : Z) 1 n) : Z.
+Definition factorial n := (prod_N id 1 n).
 
-Notation "n !" := (factorial n) (at level 35, format "n '!'") : Z_scope.
+Notation "n !" := (factorial n) (at level 35, format "n '!'") : N_scope.
 
 Definition set_of_combinations (n k : N) := {x in P n | # x = k}.
 
@@ -838,7 +838,7 @@ Theorem number_of_permutations_n : ∀ n, n! = permutations n.
 Proof.
   intros n.
   induction n using Induction; unfold factorial in *.
-  - unfold prod, iterate_with_bounds.
+  - unfold prod_N, iterate_with_bounds.
     destruct excluded_middle_informative.
     + exfalso.
       rewrite naturals.le_not_gt in l.
@@ -846,12 +846,11 @@ Proof.
       apply naturals.lt_succ.
     + unfold permutations.
       now rewrite size_of_bijections_of_empty_set.
-  - rewrite prod_succ, IHn.
+  - rewrite prod_N_succ, IHn.
     + unfold permutations, size_of_bijections.
-      rewrite permutation_succ, finite_products_card, card_of_natural, mul_comm,
-      INZ_mul; auto using naturals_are_finite, permutations_are_finite.
-    + exists n.
-      now rewrite add_comm, add_1_r.
+      rewrite permutation_succ, finite_products_card, card_of_natural, mul_comm;
+        auto using naturals_are_finite, permutations_are_finite.
+    + apply (succ_le _ n), zero_le.
 Qed.
 
 Theorem number_of_permutations :
@@ -2175,7 +2174,7 @@ Proof.
 Qed.
 
 Lemma binomial_coefficient_plus_form :
-  ∀ n m, (n + m)! = (binomial (n + m) m * m! * n!)%Z.
+  ∀ n m, (n + m)! = (binomial (n + m) m * m! * n!)%N.
 Proof.
   intros n m.
   assert (m ⊂ n + m)%N as H.
@@ -2184,14 +2183,13 @@ Proof.
   pose proof (combinations_orbit_stabilizer (n+m) m) H as H0.
   rewrite add_comm, (naturals_sum_diff n m), add_comm in H0.
   apply equinumerous_cardinality in H0.
-  rewrite ? finite_products_card, ? number_of_permutations_n, ? INZ_mul,
-  <-mul_assoc in *; auto using permutations_are_finite, binomials_are_finite,
-                    finite_products_are_finite.
-  now apply INZ_eq.
+  rewrite ? finite_products_card, ? number_of_permutations_n, <-mul_assoc
+    in *; auto using permutations_are_finite, binomials_are_finite,
+          finite_products_are_finite.
 Qed.
 
 Theorem binomial_coefficient :
-  ∀ n k, (k ≤ n)%N → n! = (binomial n k * k! * (n - k)!)%Z.
+  ∀ n k, (k ≤ n → n! = binomial n k * k! * (n - k)!)%N.
 Proof.
   intros n k [m H].
   subst.
@@ -2199,28 +2197,26 @@ Proof.
   apply binomial_coefficient_plus_form.
 Qed.
 
-Lemma factorial_ne_0 : ∀ k, k! ≠ 0%Z.
+Lemma factorial_ne_0 : ∀ k, k! ≠ 0%N.
 Proof.
   intros k H.
   induction k using Induction; unfold factorial in *.
-  - unfold prod, iterate_with_bounds in H.
+  - unfold prod_N, iterate_with_bounds in H.
     destruct excluded_middle_informative.
-    + pose proof l as H0.
-      rewrite naturals.le_not_gt in H0.
-      contradict H0.
+    + clear H.
+      rewrite naturals.le_not_gt in l.
+      contradict l.
       apply naturals.succ_lt.
-    + contradiction integers.zero_ne_1.
-  - rewrite prod_succ in H.
-    + apply (cancellation_0_mul ℤ_order) in H as [H | H]; auto.
-      apply INZ_eq in H.
+    + now contradiction (PA4 0).
+  - rewrite prod_N_succ in H.
+    + apply naturals.cancellation_0_mul in H as [H | H]; auto.
       now contradiction (PA4 k).
-    + exists k.
-      now rewrite add_comm, add_1_r.
+    + apply (succ_le _ k), zero_le.
 Qed.
 
 Theorem zero_factorial : 0! = 1%N.
 Proof.
-  unfold factorial, prod, iterate_with_bounds.
+  unfold factorial, prod_N, iterate_with_bounds.
   destruct excluded_middle_informative; auto.
   exfalso.
   apply naturals.le_not_gt in l; eauto using naturals.lt_succ.
@@ -2231,11 +2227,8 @@ Proof.
   intros n.
   assert (0 ≤ n)%N as H by auto using zero_le.
   apply binomial_coefficient in H.
-  rewrite sub_0_r, ? zero_factorial, ? (integers.M1 _ 1%N),
-  integers.M3, <-(integers.M3 (n!)) in H at 1.
-  apply (cancellation_mul_r ℤ_ID) in H.
-  - now apply INZ_eq.
-  - apply factorial_ne_0.
+  rewrite sub_0_r, ? zero_factorial, mul_1_r, <-(mul_1_l (n!)) in H at 1.
+  apply cancellation_mul in H; auto using factorial_ne_0.
 Qed.
 
 Theorem binomial_coefficient_Q :
@@ -2243,9 +2236,9 @@ Theorem binomial_coefficient_Q :
 Proof.
   intros n k H.
   apply binomial_coefficient in H.
-  assert (k! * (n - k)! ≠ 0)%Z as H0 by
-      auto using factorial_ne_0, (ne0_cancellation ℤ_ID).
-  rewrite H, <-integers.M2, inv_div, <-IZQ_mul; auto.
+  assert (k! * (n - k)! ≠ 0)%Z as H0.
+  apply (ne0_cancellation ℤ_ID); intro; eapply factorial_ne_0, INZ_eq; eauto.
+  rewrite H, <-? INZ_mul, <-integers.M2, inv_div, <-IZQ_mul; auto.
   field_simplify; rewrite ? div_inv, ? inv_one; try ring.
   contradict H0.
   now apply IZQ_eq.
@@ -2442,7 +2435,7 @@ Qed.
 
 Theorem one_factorial : 1! = 1%N.
 Proof.
-  unfold factorial, prod.
+  unfold factorial, prod_N.
   now rewrite iterate_0.
 Qed.
 
@@ -2450,22 +2443,17 @@ Theorem binomial_one : binomial 1 1 = 1%N.
 Proof.
   pose proof binomial_coefficient 1 1 as H.
   rewrite ? one_factorial, sub_diag, zero_factorial in H.
-  replace (1%N : Z) with (1%Z) in H by auto.
-  rewrite ? (integers.M1 _ 1), ? integers.M3 in H.
-  pose proof (le_refl 1) as H0.
-  now apply H, INZ_eq in H0.
+  rewrite H at 3; try ring.
+  eauto using le_refl.
 Qed.
 
 Theorem binomial_n_n : ∀ n, binomial n n = 1%N.
 Proof.
   intros n.
   pose proof binomial_coefficient n n as H.
-  rewrite sub_diag, zero_factorial in H.
-  replace (1%N : Z) with (1%Z) in H by auto.
-  rewrite ? (integers.M1 _ 1), ? integers.M3, <-(integers.M3 (n!)) in H at 1.
-  pose proof (le_refl n) as H0.
-  apply H, (cancellation_mul_r ℤ_ID), INZ_eq in H0;
-    auto using factorial_ne_0.
+  rewrite sub_diag, zero_factorial, mul_1_r, <-(mul_1_l (n!)) in H at 1.
+  eapply cancellation_mul; eauto using factorial_ne_0.
+  rewrite H; auto using le_refl.
 Qed.
 
 Theorem sum_card : ∀ n X f,
