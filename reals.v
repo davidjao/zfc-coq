@@ -1,5 +1,5 @@
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Export rationals.
-Set Warnings "-notation-overridden".
 
 Definition Rset := {α in P Qset | α ≠ ∅ ∧ α ≠ Qset ∧
                                   (∀ p q : Q, p ∈ α → q < p → q ∈ α) ∧
@@ -72,6 +72,7 @@ Proof.
     now apply Subset_equality_iff.
 Qed.
 
+Declare Scope R_scope.
 Delimit Scope R_scope with R.
 Open Scope R_scope.
 Bind Scope R_scope with R.

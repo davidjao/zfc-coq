@@ -1,5 +1,5 @@
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Export rings.
-Set Warnings "-notation-overridden".
 
 Record integral_domain :=
   mkID {

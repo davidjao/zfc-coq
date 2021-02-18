@@ -1,5 +1,5 @@
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Export naturals rings ordered_rings List Permutation.
-Set Warnings "-notation-overridden".
 
 Definition integer_relation := {z in (ω × ω) × (ω × ω) | ∃ a b c d : N,
                                   z = ((a, b), (c, d)) ∧ a + d = b + c}.
@@ -49,6 +49,7 @@ Definition Z := elts Zset.
 Definition IZS (a : Z) := elt_to_set _ a : set.
 Coercion IZS : Z >-> set.
 
+Declare Scope Z_scope.
 Delimit Scope Z_scope with Z.
 Open Scope Z_scope.
 Bind Scope Z_scope with Z.
@@ -400,7 +401,7 @@ Definition O0 := O0 ℤ_order : ∀ a b, 0 < a → 0 < b → 0 < a + b.
 Definition le := le ℤ_order : Z → Z → Prop.
 Definition O3 := O3 ℤ_order : ∀ a b c, 0 < a → b < c → a * b < a * c.
 
-Hint Unfold le ordered_rings.le : Z.
+Global Hint Unfold le ordered_rings.le : Z.
 
 Infix "≤" := le : Z_scope.
 Notation "a > b" := (b < a) (only parsing) : Z_scope.
@@ -516,7 +517,7 @@ Proof.
 Qed.
 
 Definition divide := divide ℤ : Z → Z → Prop.
-Hint Unfold divide : Z.
+Global Hint Unfold divide : Z.
 
 Notation "x ｜ y" := (divide x y) (at level 60, format "x '｜' y") : Z_scope.
 
@@ -560,7 +561,7 @@ Definition unit := unit ℤ : Z → Prop.
 
 Definition pm a b := (a = b ∨ a = -b).
 Notation " a = ± b " := (pm a b) (at level 60) : Z_scope.
-Hint Unfold assoc unit pm : Z.
+Global Hint Unfold assoc unit pm : Z.
 
 Theorem assoc_N : ∀ a b : N, a ~ b → a = b.
 Proof.

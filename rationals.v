@@ -1,3 +1,4 @@
+Set Warnings "-ambiguous-paths".
 Require Export ordered_fields Field.
 
 Definition Z0 := {z in Zset × Zset | (proj2 Zset Zset z) ≠ 0}.
@@ -62,6 +63,7 @@ Definition Q := elts Qset.
 Definition IQS (a : Q) := elt_to_set _ a : set.
 Coercion IQS : Q >-> set.
 
+Declare Scope Q_scope.
 Delimit Scope Q_scope with Q.
 Open Scope Q_scope.
 Bind Scope Q_scope with Q.

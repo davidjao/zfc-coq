@@ -1,10 +1,11 @@
+Set Warnings "-notation-overridden,-uniform-inheritance,-ambiguous-paths".
 Require Export rings.
-Set Warnings "-notation-overridden,-uniform-inheritance".
 
 Section Power_series_construction.
 
   Variable R : ring.
 
+  Declare Scope Ring_scope.
   Delimit Scope Ring_scope with ring.
   Bind Scope Ring_scope with R.
   Open Scope Ring_scope.
@@ -144,6 +145,7 @@ Section Power_series_construction.
     exact (seriesify (λ n, add _ (coefficient a n) (coefficient b n))).
   Defined.
 
+  Declare Scope Series_scope.
   Delimit Scope Series_scope with series.
   Bind Scope Series_scope with power_series.
   Open Scope Series_scope.

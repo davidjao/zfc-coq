@@ -1,5 +1,6 @@
-Require Export integers Field.
 Set Warnings "-notation-overridden,-notation-bound-to-variable".
+Set Warnings "-ambiguous-paths".
+Require Export integers Field.
 
 Record field :=
   mkField {

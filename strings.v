@@ -1,3 +1,4 @@
+Set Warnings "-ambiguous-paths".
 Require Export polynomials.
 
 Definition STR := (⋃ {({0,1}^n)%set | n in ω})%N.
@@ -77,6 +78,7 @@ Proof.
       now subst.
 Qed.
 
+Declare Scope String_scope.
 Delimit Scope String_scope with str.
 Open Scope String_scope.
 

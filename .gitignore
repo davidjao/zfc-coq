@@ -5,3 +5,5 @@
 .coqdeps.d
 *.aux
 \#*
+Makefile*
+.Makefile.d

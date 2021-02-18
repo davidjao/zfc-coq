@@ -1,12 +1,14 @@
+Set Warnings "-notation-overridden,-uniform-inheritance,-ambiguous-paths".
 Require Export power_series combinatorics.
-Set Warnings "-notation-overridden,-uniform-inheritance".
 
 Section Polynomials_construction.
 
   Variable R : ring.
 
+  Declare Scope R_scope.
   Delimit Scope R_scope with R.
   Bind Scope R_scope with R.
+  Declare Scope Series_scope.
   Delimit Scope Series_scope with series.
   Bind Scope Series_scope with power_series.
   Open Scope R_scope.
@@ -129,6 +131,7 @@ Section Polynomials_construction.
 
   Notation poly := (rings.R polynomial_ring).
 
+  Declare Scope Poly_scope.
   Delimit Scope Poly_scope with poly.
   Bind Scope Poly_scope with poly.
   Open Scope Poly_scope.
@@ -197,10 +200,13 @@ Section Polynomial_theorems.
   Definition IRS := (power_series.IRS Ring) : R → series.
   Coercion IPS : poly >-> series.
 
+  Declare Scope R_scope.
   Delimit Scope R_scope with R.
   Bind Scope R_scope with R.
+  Declare Scope Series_scope.
   Delimit Scope Series_scope with series.
   Bind Scope Series_scope with series.
+  Declare Scope Poly_scope.
   Delimit Scope Poly_scope with poly.
   Bind Scope Poly_scope with poly.
 

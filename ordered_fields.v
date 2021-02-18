@@ -1,5 +1,5 @@
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Export ordered_rings fields.
-Set Warnings "-notation-overridden".
 
 Record ordered_field :=
   mkOfield {

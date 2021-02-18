@@ -1,3 +1,4 @@
+Set Warnings "-ambiguous-paths".
 Require Export combinatorics Setoid.
 
 Open Scope Z_scope.
@@ -168,6 +169,7 @@ Section Modular_arithmetic.
         eauto using eqm_trans.
   Qed.
 
+  Declare Scope Zn_scope.
   Delimit Scope Zn_scope with Zn.
   Open Scope Zn_scope.
 

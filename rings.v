@@ -1,5 +1,6 @@
 Require Export iterated_ops Ring.
 Set Warnings "-notation-bound-to-variable,-notation-overridden".
+Set Warnings "-ambiguous-paths".
 
 Record ring :=
   mkRing {
@@ -28,9 +29,10 @@ Section Ring_theorems.
   Definition add (a b : R) := (add_R Ring a b) : R.
   Definition mul (a b : R) := (mul_R Ring a b) : R.
   Definition neg (a : R) := (neg_R Ring a) : R.
+  Declare Scope Ring_scope.
   Delimit Scope Ring_scope with ring.
   Open Scope Ring_scope.
-  Bind Scope Ring_Scope with R.
+  Bind Scope Ring_scope with R.
   Notation "0" := zero : Ring_scope.
   Notation "1" := one : Ring_scope.
   Infix "+" := add : Ring_scope.
@@ -527,6 +529,7 @@ Section Ring_theorems.
       exact (exist _ _ H).
     Defined.
 
+    Declare Scope Subring_scope.
     Delimit Scope Subring_scope with subring.
     Open Scope Subring_scope.
     Bind Scope Subring_scope with sub_R.

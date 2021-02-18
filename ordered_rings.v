@@ -1,5 +1,5 @@
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Export integral_domains.
-Set Warnings "-notation-overridden".
 
 Record ordered_ring :=
   mkOring {

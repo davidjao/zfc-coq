@@ -4,6 +4,7 @@ Require Export logic_axioms Basics.
 
 Parameter set : Type.
 Parameter IN: set → set → Prop.
+Declare Scope set_scope.
 Delimit Scope set_scope with set.
 Open Scope set_scope.
 Bind Scope set_scope with set.
