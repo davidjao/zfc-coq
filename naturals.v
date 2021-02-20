@@ -359,125 +359,6 @@ Proof.
   contradiction (no_quines_ω k); eauto using N_in_ω.
 Qed.
 
-Section Iterated_op_construction.
-
-  Variable X : Type.
-  Variable op : X → X → X.
-  Variable start : X.
-  Variable a : N → X.
-  Infix "·" := op (at level 40, left associativity).
-
-  Theorem iterated_op_construction : ∀ n : N, ∃ g : N → X,
-        (g 0%N) = start ∧ ∀ m : N, m ∈ n → g (S m) = (g m) · (a m).
-  Proof.
-    induction n using Induction.
-    - exists (λ x, start).
-      split; auto.
-      intros m H.
-      contradict H.
-      intros H.
-      contradiction (Empty_set_classification m).
-    - destruct IHn as [g [H H0]].
-      exists (λ x, if (excluded_middle_informative (x = S n)%N)
-                   then ((g n) · (a n)) else g x).
-      split.
-      { destruct excluded_middle_informative; auto.
-        contradiction (PA4_ω n); eauto using N_in_ω.
-        now rewrite S_is_succ, <-e. }
-      intros m H1.
-      repeat destruct excluded_middle_informative; subst;
-        try now contradiction (no_quines_ω (S n)); eauto using N_in_ω.
-      + apply (f_equal INS) in e.
-        rewrite <-? S_is_succ in e.
-        apply PA5_ω, set_proj_injective in e; auto using N_in_ω.
-        now subst.
-      + apply H0.
-        rewrite <-S_is_succ in H1.
-        apply Pairwise_union_classification in H1 as [H1 | H1]; auto.
-        apply Singleton_classification, set_proj_injective in H1.
-        contradict n0.
-        now f_equal.
-  Qed.
-
-  Definition iterated_op : N → X.
-  Proof.
-    intros n.
-    destruct (constructive_indefinite_description
-                _ (iterated_op_construction n)) as [i].
-    exact (i n).
-  Defined.
-
-  Theorem iterated_op_0 : iterated_op 0 = start.
-  Proof.
-    unfold iterated_op.
-    destruct constructive_indefinite_description.
-    tauto.
-  Qed.
-
-  Theorem iterated_op_succ : ∀ n, iterated_op (S n) = (iterated_op n) · (a n).
-  Proof.
-    induction n using Strong_Induction_ω.
-    unfold iterated_op at 1.
-    destruct constructive_indefinite_description, a0 as [H0 H1].
-    rewrite ? H1.
-    2: { rewrite <-S_is_succ.
-         now apply Pairwise_union_classification, or_intror,
-         Singleton_classification. }
-    f_equal.
-    enough (∀ k : N, k ⊂ n → x k = iterated_op k); auto using Set_is_subset.
-    induction k using Induction; intros H2; rewrite <-S_is_succ in *.
-    - now rewrite H0, iterated_op_0.
-    - rewrite H1, H, IHk; auto.
-      + eapply Subset_transitive; eauto.
-        intros z H3.
-        now apply Pairwise_union_classification, or_introl.
-      + now apply H2, Pairwise_union_classification, or_intror,
-        Singleton_classification.
-      + assert (n ⊂ succ n) as H3.
-        * intros z H3.
-          now apply Pairwise_union_classification, or_introl.
-        * now apply H3, H2, Pairwise_union_classification, or_intror,
-          Singleton_classification.
-  Qed.
-
-End Iterated_op_construction.
-
-Definition add a b := (iterated_op N (λ x _, S x) a id b).
-
-Infix "+" := add : N_scope.
-
-Theorem add_0_r : ∀ x, x + 0 = x.
-Proof.
-  intros x.
-  unfold add.
-  now rewrite iterated_op_0.
-Qed.
-
-Theorem add_succ_r : ∀ x y, x + S y = S (x + y).
-Proof.
-  intros x y.
-  unfold add.
-  now rewrite iterated_op_succ.
-Qed.
-
-Definition mul a b := (iterated_op N (λ x _, x + a) 0 id b).
-
-Infix "*" := mul : N_scope.
-
-Theorem mul_0_r : ∀ x, x * 0 = 0.
-Proof.
-  intros x.
-  unfold mul.
-  now rewrite iterated_op_0.
-Qed.
-
-Theorem mul_succ_r : ∀ x y, x * (S y) = x * y + x.
-Proof.
-  intros x y.
-  unfold mul.
-  now rewrite iterated_op_succ.
-Qed.
-
 Theorem PA4 : ∀ n, 0 ≠ S n.
 Proof.
   intros n H.
@@ -514,6 +395,115 @@ Proof.
   - eauto using PA5.
 Qed.
 
+Section Iterated_op_construction.
+
+  Variable X : Type.
+  Variable op : X → X → X.
+  Variable start : X.
+  Variable f : N → X.
+  Infix "·" := op (at level 40, left associativity).
+
+  Theorem iterated_op_construction : ∀ n : N, ∃ g : N → X,
+        (g 0%N) = start ∧ ∀ m : N, m ∈ n → g (S m) = (g m) · (f m).
+  Proof.
+    induction n using Induction.
+    - exists (λ x, start).
+      split; auto.
+      intros m H.
+      contradict H.
+      intros H.
+      contradiction (Empty_set_classification m).
+    - destruct IHn as [g [H H0]].
+      exists (λ x, if (excluded_middle_informative (x = S n)%N)
+                   then ((g n) · (f n)) else g x).
+      split.
+      { destruct excluded_middle_informative; auto.
+        contradiction (PA4_ω n); eauto using N_in_ω.
+        now rewrite S_is_succ, <-e. }
+      intros m H1.
+      repeat destruct excluded_middle_informative; subst;
+        try now contradiction (no_quines_ω (S n)); eauto using N_in_ω.
+      + apply PA5 in e.
+        now subst.
+      + apply H0.
+        rewrite <-S_is_succ in H1.
+        apply Pairwise_union_classification in H1 as [H1 | H1]; auto.
+        apply Singleton_classification, set_proj_injective in H1.
+        now subst.
+  Qed.
+
+  Definition iterated_op : N → X.
+  Proof.
+    intros n.
+    destruct (constructive_indefinite_description
+                _ (iterated_op_construction n)) as [i].
+    exact (i n).
+  Defined.
+
+  Theorem iterated_op_0 : iterated_op 0 = start.
+  Proof.
+    unfold iterated_op.
+    destruct constructive_indefinite_description.
+    tauto.
+  Qed.
+
+  Theorem iterated_op_succ : ∀ n, iterated_op (S n) = (iterated_op n) · (f n).
+  Proof.
+    induction n using Strong_Induction_ω.
+    unfold iterated_op at 1.
+    destruct constructive_indefinite_description as [g], a as [H0 H1].
+    rewrite ? H1.
+    2: { rewrite <-S_is_succ.
+         now apply Pairwise_union_classification, or_intror,
+         Singleton_classification. }
+    f_equal.
+    enough (∀ k : N, k ⊂ n → g k = iterated_op k); auto using Set_is_subset.
+    induction k using Induction; intros H2; rewrite <-S_is_succ in *.
+    - now rewrite H0, iterated_op_0.
+    - assert (∀ m, m ⊂ succ m) as H3.
+      { intros m z H3.
+        now apply Pairwise_union_classification, or_introl. }
+      assert (k ∈ succ k) as H4.
+      { now apply Pairwise_union_classification, or_intror,
+        Singleton_classification. }
+      rewrite H1, H, IHk; eauto using Subset_transitive.
+      now apply H3, H2.
+  Qed.
+
+End Iterated_op_construction.
+
+Definition add a b := (iterated_op N (λ x _, S x) a id b).
+
+Infix "+" := add : N_scope.
+
+Theorem add_0_r : ∀ x, x + 0 = x.
+Proof.
+  intros x.
+  apply iterated_op_0.
+Qed.
+
+Theorem add_succ_r : ∀ x y, x + S y = S (x + y).
+Proof.
+  intros x y.
+  apply iterated_op_succ.
+Qed.
+
+Definition mul a b := (iterated_op N add 0 (λ x, a) b).
+
+Infix "*" := mul : N_scope.
+
+Theorem mul_0_r : ∀ x, x * 0 = 0.
+Proof.
+  intros x.
+  apply iterated_op_0.
+Qed.
+
+Theorem mul_succ_r : ∀ x y, x * (S y) = x * y + x.
+Proof.
+  intros x y.
+  apply iterated_op_succ.
+Qed.
+
 Theorem add_1_r : ∀ a, a + 1 = S a.
 Proof.
   intros a.
@@ -542,20 +532,19 @@ Proof.
   now rewrite add_comm, add_0_r.
 Qed.
 
-Theorem cancellation_0 : ∀ a b, a + b = a → b = 0.
-Proof.
-  induction a using Induction; intros b H.
-  - now rewrite add_0_l in H.
-  - apply IHa, PA5.
-    now rewrite add_comm, <-add_succ_r, add_comm.
-Qed.
-
 Theorem cancellation_add : ∀ a b c, a + b = a + c → b = c.
 Proof.
   induction a using Induction; intros b c H.
   - now rewrite ? add_0_l in *.
   - apply IHa, PA5.
     now rewrite ? (add_comm a), <-? add_succ_r, ? (add_comm _ (S a)).
+Qed.
+
+Theorem cancellation_0 : ∀ a b, a + b = a → b = 0.
+Proof.
+  intros a b H.
+  rewrite <-(add_0_r a) in H at 2.
+  eauto using cancellation_add.
 Qed.
 
 Theorem mul_1_r : ∀ a, a * 1 = a.
@@ -613,22 +602,20 @@ Proof.
   now rewrite mul_comm, mul_1_r.
 Qed.
 
-Definition pow a b := (iterated_op N (λ x _, x * a) 1 id b).
+Definition pow a b := (iterated_op N mul 1 (λ x, a) b).
 
 Infix "^" := pow : N_scope.
 
 Theorem pow_0_r : ∀ x, x^0 = 1.
 Proof.
   intros x.
-  unfold pow.
-  now rewrite iterated_op_0.
+  apply iterated_op_0.
 Qed.
 
 Theorem pow_succ_r : ∀ x y, x^(S y) = x^y * x.
 Proof.
   intros x y.
-  unfold pow.
-  now rewrite iterated_op_succ.
+  apply iterated_op_succ.
 Qed.
 
 Theorem pow_1_r : ∀ x, x^1 = x.
@@ -641,8 +628,7 @@ Qed.
 Theorem pow_0_l : ∀ x, x ≠ 0 → 0^x = 0.
 Proof.
   intros x H.
-  rewrite succ_0 in *.
-  destruct H as [m H].
+  apply succ_0 in H as [m H].
   subst.
   now rewrite pow_succ_r, mul_0_r.
 Qed.
@@ -804,8 +790,7 @@ Qed.
 Theorem le_refl : ∀ a, a ≤ a.
 Proof.
   intros a.
-  exists 0.
-  now rewrite add_0_r.
+  apply le_is_subset, Set_is_subset.
 Qed.
 
 Add Ring N_semiring :
@@ -1404,17 +1389,6 @@ Proof.
     subst.
     contradiction (no_quines n).
   - contradiction (Empty_set_classification z).
-Qed.
-
-Goal {2*n | n in ω} = {n in ω | ∃ x : N, n = 2*x}.
-Proof.
-  apply Extensionality.
-  split; intros H; rewrite replacement_classification in *.
-  - destruct H as [x H].
-    apply Specify_classification.
-    subst.
-    split; eauto using N_in_ω.
-  - apply Specify_classification in H as [H [x H0]]; eauto.
 Qed.
 
 Theorem le_lt_or_eq : ∀ a b, a ≤ b ↔ a < b ∨ a = b.

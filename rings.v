@@ -342,8 +342,7 @@ Section Ring_theorems.
     intros f a b c.
     destruct (classic (a ≤ b)) as [[d H] | H].
     2: { unfold sum, iterate_with_bounds.
-         repeat destruct excluded_middle_informative; try tauto.
-         now rewrite mul_0_r. }
+         repeat destruct excluded_middle_informative; try tauto; ring. }
     subst.
     induction d using Induction.
     - rewrite add_0_r.
@@ -359,55 +358,44 @@ Section Ring_theorems.
     intros f g a b.
     destruct (classic (a ≤ b)) as [[c H] | H].
     2: { unfold prod, iterate_with_bounds.
-         repeat destruct excluded_middle_informative; try tauto.
-         now rewrite M3. }
+         repeat destruct excluded_middle_informative; try tauto; ring. }
     subst.
     induction c using Induction.
     - rewrite add_0_r.
       unfold prod.
       now rewrite ? iterate_0.
-    - rewrite add_succ_r, ? prod_succ, IHc; try (now ring_simplify);
+    - rewrite add_succ_r, ? prod_succ, IHc; try ring;
         exists (c+1)%N; now rewrite add_1_r, add_succ_r.
   Qed.
 
   Theorem sum_of_0 : ∀ d, (sum (λ n, 0) 0 d) = 0.
   Proof.
     induction d using Induction.
-    - unfold sum.
-      now rewrite iterate_0.
-    - rewrite sum_succ, IHd; auto using zero_le.
-      now ring_simplify.
+    - apply iterate_0.
+    - rewrite sum_succ, IHd; auto using zero_le; ring.
   Qed.
 
-  Definition pow a n := prod (λ n, a) 1 n.
+  Definition pow a n := iterated_op _ mul 1 (λ x, a) n.
 
   Infix "^" := pow : Ring_scope.
 
   Theorem pow_0_r : ∀ x, x^0 = 1.
   Proof.
     intros x.
-    unfold pow, prod, iterate_with_bounds.
-    destruct excluded_middle_informative; auto.
-    exfalso.
-    apply le_not_gt in l.
-    eauto using naturals.succ_lt.
+    apply iterated_op_0.
   Qed.
 
   Theorem pow_succ_r : ∀ x y, x^(S y) = x^y * x.
   Proof.
     intros x y.
-    unfold pow.
-    rewrite prod_succ; auto.
-    exists y.
-    rewrite <-add_1_r.
-    ring.
+    apply iterated_op_succ.
   Qed.
 
   Theorem pow_1_r : ∀ x, x^1 = x.
   Proof.
     intros x.
-    unfold pow, prod.
-    now rewrite iterate_0.
+    unfold naturals.one.
+    now rewrite pow_succ_r, pow_0_r, M3.
   Qed.
 
   Theorem pow_1_l : ∀ x, 1^x = 1.
@@ -453,12 +441,9 @@ Section Ring_theorems.
     - rewrite add_0_r, sub_diag, pow_1_r.
       unfold prod.
       now rewrite ? iterate_0.
-    - rewrite ? (add_comm a), sub_abba, ? pow_succ_r in *.
-      rewrite ? (add_comm _ a), add_succ_r.
-      rewrite ? prod_succ;
-        try (exists (d+1)%N; rewrite <-? add_1_r; ring).
-      rewrite (add_comm a), <-IHd.
-      ring.
+    - rewrite ? (add_comm a), sub_abba, ? pow_succ_r, ? (add_comm _ a),
+      add_succ_r, ? prod_succ, (add_comm a), <-IHd in *;
+        try (exists (d+1)%N; rewrite <-? add_1_r); ring.
   Qed.
 
   Definition INR (n : N) := sum (λ n, 1) 1 n : R.
@@ -477,8 +462,7 @@ Section Ring_theorems.
         eauto using succ_lt.
       - now rewrite A1, A3, naturals.add_0_r. }
     rewrite add_succ_r, ? sum_succ, IHb; try ring;
-      [ exists b | exists (a+b)%N ];
-      now rewrite <-add_1_r, naturals.add_comm.
+      [ exists b | exists (a+b)%N ]; now rewrite <-add_1_r, naturals.add_comm.
   Qed.
 
   Section Subring_construction.
@@ -826,8 +810,7 @@ Section Ring_theorems.
       + destruct excluded_middle_informative; tauto.
     - rewrite sum_succ, IHn; auto using zero_le.
       + destruct excluded_middle_informative.
-        * contradict H0.
-          congruence.
+        * now subst.
         * ring.
       + destruct H as [c H].
         rewrite <-H in H0.

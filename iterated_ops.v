@@ -220,10 +220,9 @@ Qed.
 Theorem sum_of_0 : ∀ d, (sum_N (λ n, 0) 0 d) = 0.
 Proof.
   induction d using Induction.
-  - unfold sum_N.
-    now rewrite iterate_0.
+  - apply iterate_0.
   - rewrite sum_N_succ, IHd; auto using zero_le.
-    now ring_simplify.
+    ring.
 Qed.
 
 Theorem prod_N_mul : ∀ f a b c,
@@ -235,10 +234,7 @@ Proof.
   - rewrite add_0_r, sub_diag, pow_1_r.
     unfold prod_N.
     now rewrite ? iterate_0.
-  - rewrite ? (add_comm a), sub_abba, ? pow_succ_r in *.
-    rewrite ? (add_comm _ a), add_succ_r.
-    rewrite ? prod_N_succ;
-      try (exists (d+1)%N; rewrite <-? add_1_r; ring).
-    rewrite (add_comm a), <-IHd.
-    ring.
+  - rewrite ? (add_comm a), sub_abba, ? pow_succ_r, ? (add_comm _ a),
+    add_succ_r, ? prod_N_succ, (add_comm a), <-IHd in *;
+      try (exists (d+1); rewrite <-? add_1_r); ring.
 Qed.
