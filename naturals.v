@@ -1423,3 +1423,10 @@ Proof.
   intros k H1.
   now apply H0, lt_is_in.
 Qed.
+
+Theorem not_succ_le : ∀ n, ¬ S n ≤ n.
+Proof.
+  intros n H.
+  apply le_not_gt in H.
+  eauto using succ_lt.
+Qed.

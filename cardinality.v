@@ -1106,6 +1106,14 @@ Proof.
   now apply cardinality_sym.
 Qed.
 
+Theorem finite_empty : ∀ S, finite S → # S = 0 → S = ∅.
+Proof.
+  intros S H H0.
+  apply empty_card.
+  apply card_equiv in H.
+  now rewrite H0 in H.
+Qed.
+
 Theorem singleton_card : ∀ n, # {n,n} = 1.
 Proof.
   intros n.
@@ -2315,13 +2323,22 @@ Proof.
     auto using naturals_are_finite.
 Qed.
 
-Theorem complement_card : ∀ E F, E ⊂ F → finite F → # (F \ E) = # F - # E.
+Theorem complement_card : ∀ E F, E ⊂ F → finite E → # (F \ E) = # F - # E.
 Proof.
   intros E F H H0.
   apply Union_subset in H as H1.
-  rewrite <-H1 at 2.
-  rewrite disjoint_union_complement, finite_union_cardinality,
-  naturals.add_comm, sub_abba;
-    eauto using subsets_of_finites_are_finite, complement_subset,
-    disjoint_intersection_complement.
+  destruct (classic (finite F)) as [H2 | H2].
+  - rewrite <-H1 at 2.
+    rewrite disjoint_union_complement, finite_union_cardinality,
+    naturals.add_comm, sub_abba;
+      eauto using subsets_of_finites_are_finite, complement_subset,
+      disjoint_intersection_complement.
+  - unfold finite_cardinality at 2.
+    destruct excluded_middle_informative; try tauto.
+    rewrite sub_0_l.
+    unfold finite_cardinality.
+    destruct excluded_middle_informative; auto.
+    contradict n.
+    rewrite <-H1, disjoint_union_complement.
+    now apply finite_unions_are_finite.
 Qed.
