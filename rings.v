@@ -176,6 +176,7 @@ Section Ring_theorems.
     exists 1.
     ring.
   Qed.
+  Definition divide_refl := div_refl.
 
   Theorem div_trans : ∀ a b c, a｜b → b｜c → a｜c.
   Proof.

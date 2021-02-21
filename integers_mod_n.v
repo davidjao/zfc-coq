@@ -66,6 +66,11 @@ Section Modular_arithmetic.
       symmetry proved by (eqm_sym n)
       transitivity proved by (eqm_trans n) as Z_mod_n.
 
+  Theorem eqm_sym_iff : ∀ a b : Z, a ≡ b (mod n) ↔ b ≡ a (mod n).
+  Proof.
+    split; intros H; now rewrite H.
+  Qed.
+
   Add Morphism integers.add
       with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_add_mod.
   Proof.
@@ -494,6 +499,55 @@ Section Modular_arithmetic.
     Theorem size_of_Z_mod : # Zset_mod = modulus_in_N.
     Proof.
       auto using equivalence_to_card, bijection_of_Zset_mod.
+    Qed.
+
+    Definition Euler_Phi := # {x in Zset_mod | ∃ a : Z,
+                                 x = elt_to_set _ (a : Z_) ∧ gcd(a, n) = 1}.
+
+    Hypothesis prime_modulus : prime n.
+
+    Theorem Prime_Euler_Phi : (Euler_Phi = modulus_in_N - 1)%N.
+    Proof.
+      intros.
+      rewrite <-(singleton_card (elt_to_set _ (0 : Z_))), <-size_of_Z_mod,
+      <-complement_card; auto using finite_Z_mod.
+      2: { intros z H.
+           apply Singleton_classification in H.
+           subst.
+           auto using elts_in_set. }
+      apply f_equal, Extensionality.
+      split; intros H.
+      - apply Specify_classification in H as [H [a [H0 H1]]].
+        subst.
+        apply Complement_classification.
+        split; auto.
+        intros H0.
+        apply Singleton_classification, set_proj_injective, IZn_eq in H0.
+        destruct prime_modulus as [H3 H4].
+        contradict H3.
+        apply H1; try apply rings.divide_refl.
+        symmetry in H0.
+        unfold eqm in H0.
+        now replace a with (a - 0)%Z by ring.
+      - apply Complement_classification in H as [H H0].
+        apply Specify_classification.
+        split; auto.
+        set (ζ := exist _ _ H : Z_).
+        replace z with (elt_to_set _ ζ) in * by auto.
+        exists ζ.
+        split; try now rewrite <-Zproj_eq.
+        repeat split; try apply div_1_l.
+        intros d H1 H2.
+        destruct prime_modulus as [H3 H4].
+        apply H4 in H2 as [H2 | H2]; auto.
+        destruct H2 as [H2 H5]; fold integers.divide in H2, H5.
+        contradict H0.
+        apply Singleton_classification.
+        f_equal.
+        rewrite Zproj_eq, IZn_eq, eqm_sym_iff at 1.
+        unfold eqm.
+        ring_simplify.
+        eapply div_trans; eauto.
     Qed.
 
   End finite_mod.

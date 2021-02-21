@@ -2314,3 +2314,14 @@ Proof.
   rewrite <-powerset_powers, finite_power_card, card_of_natural;
     auto using naturals_are_finite.
 Qed.
+
+Theorem complement_card : ∀ E F, E ⊂ F → finite F → # (F \ E) = # F - # E.
+Proof.
+  intros E F H H0.
+  apply Union_subset in H as H1.
+  rewrite <-H1 at 2.
+  rewrite disjoint_union_complement, finite_union_cardinality,
+  naturals.add_comm, sub_abba;
+    eauto using subsets_of_finites_are_finite, complement_subset,
+    disjoint_intersection_complement.
+Qed.
