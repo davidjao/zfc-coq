@@ -915,13 +915,10 @@ Section Ring_theorems.
     induction n using Induction.
     { intros f i [H H0].
       unfold prod.
-      rewrite ? iterate_0.
       replace i with 0%N by eauto using naturals.le_antisymm.
-      now rewrite swap_refl. }
+      now rewrite ? iterate_0, swap_refl. }
     intros f i [H H0].
-    apply le_lt_or_eq in H0 as [H0 | H0].
-    2: { subst.
-         now rewrite swap_refl. }
+    apply le_lt_or_eq in H0 as [H0 | H0]; try now rewrite H0, swap_refl.
     destruct (classic (1 = S n)%N) as [H1 | H1].
     { rewrite <-H1 in *.
       apply squeeze_lower in H; auto.
@@ -936,9 +933,8 @@ Section Ring_theorems.
     apply succ_0 in H2 as [m H2].
     subst.
     symmetry.
-    destruct (classic (i = (S m))) as [H2 | H2].
-    { subst.
-      now rewrite product_swap_upper_two. }
+    destruct (classic (i = (S m))) as [H2 | H2];
+      try now rewrite H2, product_swap_upper_two.
     rewrite product_swap_upper_two, prod_succ, <-(IHn _ i), ? prod_succ,
     <-? M2; repeat split; auto using zero_le, le_refl.
     2: { now apply le_lt_succ. }
@@ -946,11 +942,10 @@ Section Ring_theorems.
     - apply iterate_extensionality.
       intros k H3.
       unfold swap.
-      repeat destruct excluded_middle_informative; subst; try tauto.
-      + destruct H3.
-        now apply not_succ_le in H4.
-      + destruct H3.
-        contradiction (not_succ_le (S m)).
+      repeat destruct excluded_middle_informative; subst; try tauto;
+        destruct H3.
+      + now apply not_succ_le in H4.
+      + contradiction (not_succ_le (S m)).
         eauto using le_trans, le_succ.
     - rewrite M1.
       f_equal; unfold swap; repeat destruct excluded_middle_informative;
@@ -996,10 +991,8 @@ Section Ring_theorems.
     { intros f g H H0.
       unfold prod.
       rewrite ? iterate_0.
-      destruct (H 0%N) as [j [[[H1 H2] H3] H4]]; repeat split; auto using le_refl.
-      rewrite <-H3.
-      f_equal.
-      now apply le_antisymm. }
+      destruct (H 0%N) as [j [[[H1 H2] H3] H4]]; try split; auto using le_refl.
+      now replace 0%N with j at 1 by now apply le_antisymm. }
     intros f g H H0.
     assert (∀ i1 i2 j, 0 ≤ i1 ≤ S n → 0 ≤ i2 ≤ S n → 0 ≤ j ≤ S n →
                        f i1 = g j → f i2 = g j → i1 = i2) as E1.

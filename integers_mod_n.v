@@ -1,5 +1,5 @@
 Set Warnings "-ambiguous-paths".
-Require Export combinatorics Setoid.
+Require Export polynomials Setoid.
 
 Open Scope Z_scope.
 
@@ -73,6 +73,7 @@ Proof.
 Qed.
 
 Section Modular_arithmetic.
+
   Variable n : Z.
 
   Add Parametric Relation : Z (eqm n)
@@ -192,9 +193,9 @@ Section Modular_arithmetic.
   Delimit Scope Zn_scope with Zn.
   Open Scope Zn_scope.
 
-  Definition Zset_mod := Zset / relation_mod.
+  Definition Z_mod := Zset / relation_mod.
 
-  Definition Z_ := elts (Zset_mod).
+  Definition Z_ := elts (Z_mod).
 
   Bind Scope Zn_scope with Z_.
 
@@ -350,14 +351,15 @@ Section Modular_arithmetic.
     now rewrite <-? Zlift_equiv, integers.D1.
   Qed.
 
-  Definition Z_mod :=
-    mkRing Zset_mod (0 : Z_) (1 : Z_) add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
+  Definition ℤ_ :=
+    mkRing Z_mod (0 : Z_) (1 : Z_) add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
 
-  Add Ring Z_mod_ring : (ringify Z_mod).
+  Add Ring Z_ring_raw : (ringify ℤ_).
+  Add Ring Z_ring : (ringify ℤ_ : ring_theory (0 : Z_) _ _ _ _ _ eq).
 
-  Infix "^" := (rings.pow Z_mod) : Zn_scope.
+  Infix "^" := (rings.pow ℤ_) : Zn_scope.
 
-  Theorem units_in_Z_mod : ∀ a : Z_, rings.unit Z_mod a ↔ gcd (a, n) = 1.
+  Theorem units_in_ℤ_ : ∀ a : Z_, rings.unit ℤ_ a ↔ gcd (a, n) = 1.
   Proof.
     split; intros H.
     - destruct H as [x H].
@@ -453,7 +455,7 @@ Section Modular_arithmetic.
       exact k.
     Defined.
 
-    Theorem size_of_Zset_mod_in_Z : n = modulus_in_N.
+    Theorem modulus_in_Z : n = modulus_in_N.
     Proof.
       unfold modulus_in_N.
       destruct constructive_indefinite_description, a.
@@ -472,7 +474,7 @@ Section Modular_arithmetic.
     Theorem map_to_lt_n : ∀ x, map_to_N x < n.
     Proof.
       intros x.
-      rewrite size_of_Zset_mod_in_Z.
+      rewrite modulus_in_Z.
       apply INZ_lt, lt_is_in.
       simpl.
       auto using elts_in_set.
@@ -490,7 +492,7 @@ Section Modular_arithmetic.
       exact (map_to_N x).
     Defined.
 
-    Theorem bijection_of_Zset_mod : (Zset_mod ~ modulus_in_N)%set.
+    Theorem bijection_of_Z_mod : (Z_mod ~ modulus_in_N)%set.
     Proof.
       symmetry.
       exists (sets.functionify _ _ map_to_mod_n).
@@ -527,7 +529,7 @@ Section Modular_arithmetic.
         exists ξ.
         assert (ξ ∈ modulus_in_N) as H5.
         { apply lt_is_in, INZ_lt.
-          rewrite <-size_of_Zset_mod_in_Z.
+          rewrite <-modulus_in_Z.
           congruence. }
         split; auto.
         replace (ξ : set) with ((exist _ _ H5 : elts _) : set) by auto.
@@ -540,18 +542,18 @@ Section Modular_arithmetic.
         now apply set_proj_injective.
     Qed.
  
-    Theorem finite_Z_mod : finite Zset_mod.
+    Theorem finite_Z_mod : finite Z_mod.
     Proof.
       exists modulus_in_N.
-      auto using bijection_of_Zset_mod.
+      auto using bijection_of_Z_mod.
     Qed.
 
-    Theorem size_of_Z_mod : # Zset_mod = modulus_in_N.
+    Theorem Z_mod_card : # Z_mod = modulus_in_N.
     Proof.
-      auto using equivalence_to_card, bijection_of_Zset_mod.
+      auto using equivalence_to_card, bijection_of_Z_mod.
     Qed.
 
-    Definition Euler_Phi_set := {x in Zset_mod | ∃ a : Z,
+    Definition Euler_Phi_set := {x in Z_mod | ∃ a : Z,
                                    x = elt_to_set _ (a : Z_) ∧ gcd(a, n) = 1}.
 
     Definition Euler_Phi := # Euler_Phi_set.
@@ -589,10 +591,10 @@ Section Modular_arithmetic.
     Qed.
 
     Theorem Euler_Phi_helper : ∀ f,
-        range f = Euler_Phi_set → ∀ x, x ∈ domain f → f x ∈ Zset_mod.
+        range f = Euler_Phi_set → ∀ x, x ∈ domain f → f x ∈ Z_mod.
     Proof.
       intros f H x H0.
-      assert (Euler_Phi_set ⊂ Zset_mod) as H1.
+      assert (Euler_Phi_set ⊂ Z_mod) as H1.
       { intros z H1.
         apply Specify_classification in H1; tauto. }
       apply H1.
@@ -615,14 +617,14 @@ Section Modular_arithmetic.
     Defined.
 
     Lemma Euler_Phi_list_unit :
-      ∀ i, (0 ≤ i ≤ Euler_Phi - 1)%N → rings.unit Z_mod (Euler_Phi_list i).
+      ∀ i, (0 ≤ i ≤ Euler_Phi - 1)%N → rings.unit ℤ_ (Euler_Phi_list i).
     Proof.
       intros i H.
       unfold Euler_Phi_list.
       destruct constructive_indefinite_description, excluded_middle_informative.
       - destruct constructive_indefinite_description as [f].
         repeat destruct a.
-        rewrite units_in_Z_mod.
+        rewrite units_in_ℤ_.
         assert (elt_to_set
                   _ (exist _ (f i)
                            (Euler_Phi_helper
@@ -650,13 +652,13 @@ Section Modular_arithmetic.
     Qed.
 
     Lemma Euler_Phi_list_surj :
-      ∀ a : Z_, rings.unit Z_mod a → ∃ i,
+      ∀ a : Z_, rings.unit ℤ_ a → ∃ i,
           (0 ≤ i ≤ Euler_Phi - 1)%N ∧ a = Euler_Phi_list i.
     Proof.
       intros a H.
       unfold Euler_Phi_list.
       destruct constructive_indefinite_description.
-      rewrite units_in_Z_mod in H.
+      rewrite units_in_ℤ_ in H.
       assert ((elt_to_set _ a) ∈ Euler_Phi_set).
       { apply Specify_classification.
         split; auto using elts_in_set.
@@ -727,7 +729,7 @@ Section Modular_arithmetic.
         rewrite <-add_1_r, add_comm, sub_abab in H3;
           auto using Euler_Phi_ge_1. }
       repeat destruct excluded_middle_informative; try tauto.
-      apply (f_equal (λ x, elt_to_set Zset_mod x)) in H1.
+      apply (f_equal (λ x, elt_to_set Z_mod x)) in H1.
       simpl in H1.
       destruct b as [H4 H5].
       rewrite Injective_classification in H4.
@@ -736,10 +738,10 @@ Section Modular_arithmetic.
 
     Definition Euler_Phi_product : Z_.
     Proof.
-      exact (prod Z_mod Euler_Phi_list 0 (Euler_Phi - 1)).
+      exact (prod ℤ_ Euler_Phi_list 0 (Euler_Phi - 1)).
     Defined.
 
-    Lemma Euler_Phi_product_unit : rings.unit Z_mod Euler_Phi_product.
+    Lemma Euler_Phi_product_unit : rings.unit ℤ_ Euler_Phi_product.
     Proof.
       eauto using unit_prod_closure, Euler_Phi_list_unit.
     Qed.
@@ -747,17 +749,17 @@ Section Modular_arithmetic.
     Section Euler's_Theorem.
 
       Variable a : Z_.
-      Hypothesis unit_a : rings.unit Z_mod a.
+      Hypothesis unit_a : rings.unit ℤ_ a.
 
       Definition Euler_Phi_product_shifted : Z_.
       Proof.
-        exact (prod Z_mod (λ x, a * (Euler_Phi_list x)) 0 (Euler_Phi - 1)).
+        exact (prod ℤ_ (λ x, a * (Euler_Phi_list x)) 0 (Euler_Phi - 1)).
       Defined.
 
       Lemma Euler_Phi_equal : Euler_Phi_product = Euler_Phi_product_shifted.
       Proof.
         unfold Euler_Phi_product, Euler_Phi_product_shifted.
-        apply (product_bijection Z_mod).
+        apply (product_bijection ℤ_).
         - intros j H.
           destruct (Euler_Phi_list_surj (a * Euler_Phi_list j)) as [i [H0 H1]].
           { apply unit_closure; auto using Euler_Phi_list_unit. }
@@ -781,14 +783,14 @@ Section Modular_arithmetic.
             now rewrite <-H2, H4, M2, <-H0, M3.
       Qed.
 
-      Theorem Euler : a^(Euler_Phi) = (1 : Z_).
+      Theorem Euler : a^Euler_Phi = (1 : Z_).
       Proof.
         pose proof Euler_Phi_equal as H.
-        unfold Euler_Phi_product, Euler_Phi_product_shifted in H.
+        unfold Euler_Phi_product_shifted in H.
         rewrite <-prod_mul, sub_0_r, <-(M3 Euler_Phi_product),
         ? (M1 _ Euler_Phi_product), <-add_1_r, naturals.add_comm, sub_abab
           in H at 1; auto using zero_le, Euler_Phi_ge_1.
-        apply (unit_cancel Z_mod) in H; auto using Euler_Phi_product_unit.
+        apply (unit_cancel ℤ_) in H; auto using Euler_Phi_product_unit.
       Qed.
 
     End Euler's_Theorem.
@@ -799,7 +801,7 @@ Section Modular_arithmetic.
 
       Theorem Prime_Euler_Phi : (Euler_Phi = modulus_in_N - 1)%N.
       Proof.
-        rewrite <-(singleton_card (elt_to_set _ (0 : Z_))), <-size_of_Z_mod,
+        rewrite <-(singleton_card (elt_to_set _ (0 : Z_))), <-Z_mod_card,
         <-complement_card; auto using singletons_are_finite.
         2: { intros z H.
              apply Singleton_classification in H.
@@ -842,12 +844,12 @@ Section Modular_arithmetic.
 
       Theorem Prime_Euler_Phi_Z : (n - 1 = Euler_Phi)%Z.
       Proof.
-        rewrite size_of_Zset_mod_in_Z.
+        rewrite modulus_in_Z.
         unfold integers.one.
         fold (INZ 1).
         rewrite INZ_sub.
         - apply INZ_eq, eq_sym, Prime_Euler_Phi.
-        - now rewrite <-lt_0_le_1, <-size_of_Zset_mod_in_Z.
+        - now rewrite <-lt_0_le_1, <-modulus_in_Z.
       Qed.
 
     End Prime_modulus.

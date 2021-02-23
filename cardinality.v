@@ -10,22 +10,15 @@ Infix "~" := equinumerous (at level 70) : set_scope.
 Theorem cardinality_refl : ∀ A, A ~ A.
 Proof.
   intros A.
-  exists (functionify A A (λ x, x)).
-  unfold functionify.
-  destruct constructive_indefinite_description as [f a].
-  destruct a as [H [H0 H1]].
-  subst.
-  repeat split; auto.
-  - intros [a1 A1] [a2 A2] H2.
-    apply set_proj_injective.
-    inversion H2.
-    now rewrite <-(H1 (exist _ _ A1)), <-(H1 (exist _ _ A2)).
-  - apply Surjective_classification.
-    intros y H.
-    exists y.
-    split; try congruence.
-    rewrite H0 in H.
-    now replace y with (elt_to_set _ (exist _ _ H)).
+  exists (functionify A A id).
+  unfold bijective.
+  rewrite Injective_classification, Surjective_classification,
+  functionify_domain, functionify_range.
+  repeat split; auto; intros.
+  - now rewrite ? (functionify_action _ _ _ _ H),
+    ? (functionify_action _ _ _ _ H0) in H1.
+  - exists y.
+    now rewrite (functionify_action _ _ _ _ H).
 Qed.
 
 Theorem cardinality_sym : ∀ A B, A ~ B → B ~ A.
@@ -40,9 +33,7 @@ Proof.
   intros A B C [f [H [H0 [H1 H2]]]] [g [H3 [H4 [H5 H6]]]]; subst.
   destruct (Composition_classification g f) as [H [H0 H4]]; try congruence.
   exists (g ∘ f).
-  repeat split; try congruence.
-  - now apply composition_injective.
-  - now apply composition_surjective.
+  repeat split; auto using composition_injective, composition_surjective.
 Qed.
 
 Theorem cardinality_is_equivalence :

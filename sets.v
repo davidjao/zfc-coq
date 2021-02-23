@@ -1028,6 +1028,15 @@ Section Function_evaluation.
     tauto.
   Qed.
 
+  Theorem functionify_action :
+    ∀ g a (H : a ∈ A), (functionify g) a = g (exist _ _ H : elts A).
+  Proof.
+    intros g a H.
+    unfold functionify.
+    destruct constructive_indefinite_description as [g'], a0 as [H0 [H1 H2]].
+    now rewrite <-H2.
+  Qed.
+
 End Function_evaluation.
 
 Notation "f [ x ] " :=
