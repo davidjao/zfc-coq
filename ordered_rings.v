@@ -513,4 +513,35 @@ Section Ordered_ring_theorems.
     - subst; auto.
   Qed.
 
+  Theorem le_refl : ∀ a, a ≤ a.
+  Proof.
+    intros a.
+    now right.
+  Qed.
+
+  Theorem mul_le_l_nonneg : ∀ a b c, 0 ≤ a → b ≤ c → a * b ≤ a * c.
+  Proof.
+    intros a b c [H | H] H0.
+    - auto using mul_le_l.
+    - subst.
+      ring_simplify.
+      auto using le_refl.
+  Qed.
+
+  Theorem mul_le_r_nonneg : ∀ a b c, a ≤ b → 0 ≤ c → a * c ≤ b * c.
+  Proof.
+    intros a b c H [H0 | H0].
+    - auto using mul_le_r.
+    - subst.
+      ring_simplify.
+      auto using le_refl.
+  Qed.
+
+  Theorem mul_nonneg_nonneg : ∀ a b, 0 ≤ a → 0 ≤ b → 0 ≤ a * b.
+  Proof.
+    intros a b H H0.
+    replace 0 with (a*0) by ring.
+    auto using mul_le_l_nonneg.
+  Qed.
+
 End Ordered_ring_theorems.

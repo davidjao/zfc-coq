@@ -38,19 +38,18 @@ Proof.
   apply H0; auto.
   destruct H as [k H]; simpl in *.
   replace a with (b + (-k)*n).
-  2: { replace ((-k)*n) with (-(k*n)) by ring.
-       rewrite <-H.
-       ring. }
-  apply div_add, div_mul_l; auto.
+  - apply div_add, div_mul_l; auto.
+  - replace ((-k)*n) with (-(k*n)) by ring.
+    rewrite <-H.
+    ring.
 Qed.
 
 Theorem n_mod_n_is_0 : ∀ n, n ≡ 0 (mod n).
 Proof.
   intros n.
-  apply eqm_sym.
-  unfold eqm.
-  ring_simplify.
-  now apply div_refl.
+  apply div_add.
+  - apply div_0_r.
+  - apply div_sign_r_neg, div_refl.
 Qed.
 
 Theorem eqm_trans : ∀ n a b c : Z,
@@ -66,7 +65,6 @@ Theorem eqn_zero : ∀ n, n ≡ 0 (mod n).
 Proof.
   intros n.
   apply eqm_sym.
-  unfold eqm.
   exists 1.
   simpl.
   now ring_simplify.
@@ -127,9 +125,8 @@ Section Modular_arithmetic.
       with signature (eqm n) ==> (eq) ==> (eqm n) as Z_pow_mod.
   Proof.
     intros x y H k.
-    induction k using Induction.
-    - now rewrite ? rings.pow_0_r.
-    - now rewrite ? rings.pow_succ_r, IHk, H.
+    induction k using Induction;
+      now rewrite ? rings.pow_0_r, ? rings.pow_succ_r, ? IHk, ? H.
   Qed.
 
   Definition modulo : Z → Z.
@@ -138,9 +135,7 @@ Section Modular_arithmetic.
     destruct (excluded_middle_informative (0 < n)).
     - pose proof division_algorithm x n l as H.
       destruct (constructive_indefinite_description _ H) as [q H0].
-      clear H.
       destruct (constructive_indefinite_description _ H0) as [r H1].
-      clear H0.
       exact r.
     - exact 0.
   Defined.
@@ -174,8 +169,6 @@ Section Modular_arithmetic.
       + apply Specify_classification in H1 as [H1 [a' [b' [H2 H3]]]].
         apply Ordered_pair_iff in H2 as [H2 H4].
         subst.
-        exists b', a'.
-        split; auto.
         eauto using eqm_sym.
     - intros a b c H H0 H1 H2 H3.
       apply Specify_classification; split.
@@ -198,6 +191,9 @@ Section Modular_arithmetic.
   Definition Z_ := elts (Z_mod).
 
   Bind Scope Zn_scope with Z_.
+
+  Definition IZnS := (elt_to_set Z_mod) : Z_ → set.
+  Coercion IZnS : Z_ >-> set.
 
   Definition Z_to_Z_n : Z → Z_.
   Proof.
@@ -250,18 +246,15 @@ Section Modular_arithmetic.
   Theorem IZn_eq : ∀ a b : Z, (a : Z_) = (b : Z_) ↔ a ≡ b (mod n).
   Proof.
     intros a b.
-    split; intros H.
-    - unfold Z_to_Z_n in H.
-      apply quotient_equiv in H; auto using equivalence_mod.
+    split; intros H; unfold Z_to_Z_n in *.
+    - apply quotient_equiv in H; auto using equivalence_mod.
       apply Specify_classification in H as [H [a' [b' [H0 H1]]]].
       apply Ordered_pair_iff in H0 as [H0 H2].
       simpl in *.
       apply set_proj_injective in H0.
       apply set_proj_injective in H2.
       now subst.
-    - unfold Z_to_Z_n.
-      apply quotient_equiv; auto using equivalence_mod.
-      apply Specify_classification.
+    - apply quotient_equiv, Specify_classification; auto using equivalence_mod.
       split.
       + apply Product_classification; eauto using elts_in_set.
       + now exists a, b.
@@ -273,15 +266,13 @@ Section Modular_arithmetic.
     unfold Z_n_to_Z, Z_to_Z_n.
     destruct constructive_indefinite_description.
     rewrite <-e.
-    f_equal.
-    now apply set_proj_injective.
+    now apply f_equal, set_proj_injective.
   Qed.
 
   Theorem Zlift_equiv : ∀ a : Z, a ≡ (a : Z_) : Z (mod n).
   Proof.
     intros a.
-    apply IZn_eq.
-    now rewrite <-Zproj_eq.
+    now rewrite <-IZn_eq, <-Zproj_eq.
   Qed.
 
   Theorem A1 : ∀ a b : Z_, a + b = b + a.
@@ -295,8 +286,7 @@ Section Modular_arithmetic.
   Proof.
     intros a b c.
     unfold add.
-    apply IZn_eq.
-    now rewrite <-? Zlift_equiv, integers.A2.
+    now rewrite IZn_eq, <-? Zlift_equiv, integers.A2.
   Qed.
 
   Theorem A3 : ∀ a : Z_, 0 + a = a.
@@ -501,45 +491,32 @@ Section Modular_arithmetic.
       - apply Injective_classification.
         intros x y H H0 H1.
         rewrite ? sets.functionify_domain, ? sets.functionify_range in *.
-        unfold sets.functionify in *.
-        destruct constructive_indefinite_description as [f].
-        destruct a as [H2 [H3 H4]].
         set (ξ := (exist _ _ H : elts modulus_in_N)).
         set (γ := (exist _ _ H0 : elts modulus_in_N)).
         replace x with (ξ : set) in *; replace y with (γ : set) in *; auto.
-        rewrite ? H4 in H1.
-        repeat f_equal.
-        apply set_proj_injective in H1.
-        unfold map_to_mod_n in H1.
-        apply IZn_eq, injective_mod_n_on_interval, INZ_eq in H1;
-          auto using map_to_ge_0, map_to_lt_n.
+        rewrite (functionify_action _ _ _ _ H),
+        (functionify_action _ _ _ _ H0) in H1.
+        apply set_proj_injective, IZn_eq, injective_mod_n_on_interval,
+        INZ_eq in H1; auto using map_to_ge_0, map_to_lt_n.
         inversion H1.
         subst.
-        unfold ξ, γ.
-        now replace H with H0 by now apply proof_irrelevance.
+        now replace H with H0 in H1 by now apply proof_irrelevance.
       - apply Surjective_classification.
         intros y H.
         rewrite ? sets.functionify_domain, ? sets.functionify_range in *.
         set (γ := (exist _ _ H : Z_)).
-        replace y with (elt_to_set _ γ) by auto.
+        replace y with (γ : set) by auto.
         destruct (surjective_mod_n_on_interval γ) as [x [[[H0 H1] H2] H3]].
         apply le_def in H0 as H4.
         destruct H4 as [ξ H4].
         ring_simplify in H4.
         exists ξ.
         assert (ξ ∈ modulus_in_N) as H5.
-        { apply lt_is_in, INZ_lt.
-          rewrite <-modulus_in_Z.
-          congruence. }
+        { now rewrite <-lt_is_in, <-INZ_lt, <-modulus_in_Z, <-H4. }
         split; auto.
-        replace (ξ : set) with ((exist _ _ H5 : elts _) : set) by auto.
-        unfold sets.functionify.
-        destruct constructive_indefinite_description as [f], a as [H6 [H7 H8]].
-        rewrite H8, H2, H4.
-        f_equal.
-        apply IZn_eq, eq_eqm.
-        f_equal.
-        now apply set_proj_injective.
+        rewrite (functionify_action _ _ _ _ H5), H2, H4.
+        now apply f_equal, set_proj_injective, f_equal,
+        IZn_eq, eq_eqm, f_equal, set_proj_injective.
     Qed.
  
     Theorem finite_Z_mod : finite Z_mod.
@@ -553,8 +530,8 @@ Section Modular_arithmetic.
       auto using equivalence_to_card, bijection_of_Z_mod.
     Qed.
 
-    Definition Euler_Phi_set := {x in Z_mod | ∃ a : Z,
-                                   x = elt_to_set _ (a : Z_) ∧ gcd(a, n) = 1}.
+    Definition Euler_Phi_set :=
+      {x in Z_mod | ∃ a : Z, x = (a : Z_) ∧ gcd(a, n) = 1}.
 
     Definition Euler_Phi := # Euler_Phi_set.
 
@@ -573,9 +550,9 @@ Section Modular_arithmetic.
       assert (¬ (Euler_Phi_set ≠ ∅)) as H0 by tauto.
       contradict H0.
       apply Nonempty_classification.
-      exists (elt_to_set _ (1 : Z_)).
+      exists (1 : Z_).
       apply Specify_classification.
-      split; auto using elts_in_set.
+      split; auto using (elts_in_set Z_mod).
       exists 1.
       repeat split; auto; try apply div_1_l.
     Qed.
@@ -616,39 +593,38 @@ Section Modular_arithmetic.
       - exact 0.
     Defined.
 
+    Lemma Euler_Phi_set_classification :
+      ∀ a : Z_, a ∈ Euler_Phi_set ↔ gcd(a, n) = 1.
+    Proof.
+      split; intros H.
+      - apply Specify_classification in H as [H [a' [H0 H1]]].
+        apply set_proj_injective in H0.
+        subst.
+        eauto using eqm_gcd, Zlift_equiv.
+      - apply Specify_classification.
+        split; auto using (elts_in_set Z_mod).
+        exists a.
+        rewrite <-Zproj_eq.
+        eauto.
+    Qed.
+
     Lemma Euler_Phi_list_unit :
       ∀ i, (0 ≤ i ≤ Euler_Phi - 1)%N → rings.unit ℤ_ (Euler_Phi_list i).
     Proof.
       intros i H.
       unfold Euler_Phi_list.
       destruct constructive_indefinite_description, excluded_middle_informative.
-      - destruct constructive_indefinite_description as [f].
-        repeat destruct a.
-        rewrite units_in_ℤ_.
-        assert (elt_to_set
-                  _ (exist _ (f i)
-                           (Euler_Phi_helper
-                              f e1 i (eq_ind_r (λ s : set, i ∈ s)
-                                               (Morphisms.iff_impl_subrelation
-                                                  _ _ (lt_is_in i x) l) e0)))
-                  ∈ Euler_Phi_set) as H0.
-        { simpl.
-          rewrite <-e1.
-          apply function_maps_domain_to_range.
-          now rewrite e0, <-lt_is_in. }
-        apply Specify_classification in H0 as [H0 [a [H1 H2]]].
-        apply set_proj_injective in H1.
-        rewrite H1.
-        apply (eqm_gcd n a); auto using Zlift_equiv.
+      - destruct constructive_indefinite_description as [f], a as [e0 [e1 b]].
+        rewrite units_in_ℤ_, <-Euler_Phi_set_classification.
+        simpl.
+        rewrite <-e1.
+        apply function_maps_domain_to_range.
+        now rewrite e0, <-lt_is_in.
       - contradict n0.
         destruct H as [H H0].
         apply le_lt_succ in H0.
         rewrite <-add_1_r, add_comm, sub_abab in H0; auto using Euler_Phi_ge_1.
-        replace x with Euler_Phi; auto.
-        apply natural_cardinality_uniqueness.
-        unfold Euler_Phi.
-        rewrite e.
-        apply card_equiv, naturals_are_finite.
+        replace x with Euler_Phi; eauto using equivalence_to_card.
     Qed.
 
     Lemma Euler_Phi_list_surj :
@@ -659,44 +635,31 @@ Section Modular_arithmetic.
       unfold Euler_Phi_list.
       destruct constructive_indefinite_description.
       rewrite units_in_ℤ_ in H.
-      assert ((elt_to_set _ a) ∈ Euler_Phi_set).
+      assert (a ∈ Euler_Phi_set).
       { apply Specify_classification.
-        split; auto using elts_in_set.
+        split; auto using (elts_in_set Z_mod).
         exists a.
         split; auto.
-        f_equal.
-        apply Zproj_eq. }
+        apply f_equal, Zproj_eq. }
       destruct constructive_indefinite_description as [f].
       repeat destruct a0.
-      assert ((inverse f) (elt_to_set _ a) ∈ ω).
-      { eapply elements_of_naturals_are_naturals.
-        - eauto using (N_in_ω x).
-        - rewrite <-e0, <-inverse_range; auto.
-          apply function_maps_domain_to_range.
-          rewrite inverse_domain, e1; auto. }
-      set (ι := exist _ _ H1 : N).
-      exists ι.
-      assert (ι < x)%N as H4.
-      { unfold ι.
-        apply lt_is_in.
-        simpl.
-        rewrite <-e0, <-inverse_range; auto.
+      assert ((inverse f) a ∈ x) as H1.
+      { rewrite <-e0, <-inverse_range; auto.
         apply function_maps_domain_to_range.
         rewrite inverse_domain, e1; auto. }
-      split.
-      { split; auto using zero_le.
-        apply le_lt_succ.
-        rewrite <-add_1_r, add_comm, sub_abab; auto using Euler_Phi_ge_1.
-        replace Euler_Phi with x; auto.
-        apply natural_cardinality_uniqueness.
-        unfold Euler_Phi.
-        rewrite e.
-        apply cardinality_sym, card_equiv, naturals_are_finite. }
+      assert ((inverse f) a ∈ ω) as H2 by
+            (eapply elements_of_naturals_are_naturals; eauto using N_in_ω).
+      set (ι := exist _ _ H2 : N).
+      exists ι.
+      assert (ι < x)%N as H3 by now apply lt_is_in.
       destruct excluded_middle_informative; try tauto.
-      apply set_proj_injective.
-      simpl.
-      rewrite right_inverse; auto.
-      rewrite inverse_domain, e1; auto.
+      repeat split; auto using zero_le.
+      - apply le_lt_succ.
+        rewrite <-add_1_r, add_comm, sub_abab; auto using Euler_Phi_ge_1.
+        replace Euler_Phi with x; eauto using eq_sym, equivalence_to_card.
+      - apply set_proj_injective.
+        simpl.
+        rewrite right_inverse; rewrite ? inverse_domain, ? e1; auto.
     Qed.
 
     Lemma Euler_Phi_list_inj :
@@ -705,35 +668,24 @@ Section Modular_arithmetic.
     Proof.
       intros i j H H0 H1.
       unfold Euler_Phi_list in H1.
-      destruct constructive_indefinite_description as [m].
-      destruct constructive_indefinite_description as [f].
+      destruct constructive_indefinite_description
+        as [m], constructive_indefinite_description as [f].
       repeat destruct a.
-      assert (i < m)%N as H2.
-      { replace m with Euler_Phi.
-        2: { apply natural_cardinality_uniqueness.
-             unfold Euler_Phi.
-             rewrite e.
-             apply card_equiv, naturals_are_finite. }
+      destruct excluded_middle_informative.
+      - destruct excluded_middle_informative, b as [H2 H3].
+        + inversion H1.
+          rewrite Injective_classification in H2.
+          apply set_proj_injective, H2; auto; now rewrite e0, <-lt_is_in.
+        + contradiction n0.
+          replace m with Euler_Phi by eauto using equivalence_to_card.
+          destruct H0 as [H0 H4].
+          apply le_lt_succ in H4.
+          rewrite <-add_1_r, add_comm, sub_abab in *; auto using Euler_Phi_ge_1.
+      - contradiction n0.
+        replace m with Euler_Phi by eauto using equivalence_to_card.
         destruct H as [H H2].
         apply le_lt_succ in H2.
-        rewrite <-add_1_r, add_comm, sub_abab in H2;
-          auto using Euler_Phi_ge_1. }
-      assert (j < m)%N as H3.
-      { replace m with Euler_Phi.
-        2: { apply natural_cardinality_uniqueness.
-             unfold Euler_Phi.
-             rewrite e.
-             apply card_equiv, naturals_are_finite. }
-        destruct H0 as [H0 H3].
-        apply le_lt_succ in H3.
-        rewrite <-add_1_r, add_comm, sub_abab in H3;
-          auto using Euler_Phi_ge_1. }
-      repeat destruct excluded_middle_informative; try tauto.
-      apply (f_equal (λ x, elt_to_set Z_mod x)) in H1.
-      simpl in H1.
-      destruct b as [H4 H5].
-      rewrite Injective_classification in H4.
-      apply H4, set_proj_injective in H1; auto; now rewrite e0, <-lt_is_in.
+        rewrite <-add_1_r, add_comm, sub_abab in *; auto using Euler_Phi_ge_1.
     Qed.
 
     Definition Euler_Phi_product : Z_.
@@ -801,12 +753,12 @@ Section Modular_arithmetic.
 
       Theorem Prime_Euler_Phi : (Euler_Phi = modulus_in_N - 1)%N.
       Proof.
-        rewrite <-(singleton_card (elt_to_set _ (0 : Z_))), <-Z_mod_card,
+        rewrite <-(singleton_card (0 : Z_)), <-Z_mod_card,
         <-complement_card; auto using singletons_are_finite.
         2: { intros z H.
              apply Singleton_classification in H.
              subst.
-             auto using elts_in_set. }
+             auto using (elts_in_set Z_mod). }
         apply f_equal, Extensionality.
         split; intros H.
         - apply Specify_classification in H as [H [a [H0 H1]]].
@@ -814,18 +766,17 @@ Section Modular_arithmetic.
           apply Complement_classification.
           split; auto.
           intros H0.
-          apply Singleton_classification, set_proj_injective, IZn_eq in H0.
+          apply Singleton_classification, set_proj_injective,
+          IZn_eq, eqm_sym in H0.
           destruct prime_modulus as [H3 H4].
           contradict H3.
           apply H1; try apply rings.divide_refl.
-          symmetry in H0.
-          unfold eqm in H0.
           now replace a with (a - 0)%Z by ring.
         - apply Complement_classification in H as [H H0].
           apply Specify_classification.
           split; auto.
           set (ζ := exist _ _ H : Z_).
-          replace z with (elt_to_set _ ζ) in * by auto.
+          replace z with (ζ : set) in * by auto.
           exists ζ.
           split; try now rewrite <-Zproj_eq.
           repeat split; try apply div_1_l.
@@ -834,8 +785,7 @@ Section Modular_arithmetic.
           apply H4 in H2 as [H2 | H2]; auto.
           destruct H2 as [H2 H5]; fold integers.divide in H2, H5.
           contradict H0.
-          apply Singleton_classification.
-          f_equal.
+          apply Singleton_classification, f_equal.
           rewrite Zproj_eq, IZn_eq, eqm_sym_iff at 1.
           unfold eqm.
           ring_simplify.
@@ -844,10 +794,8 @@ Section Modular_arithmetic.
 
       Theorem Prime_Euler_Phi_Z : (n - 1 = Euler_Phi)%Z.
       Proof.
-        rewrite modulus_in_Z.
-        unfold integers.one.
-        fold (INZ 1).
-        rewrite INZ_sub.
+        replace 1 with (1%N : Z) by auto.
+        rewrite modulus_in_Z, INZ_sub.
         - apply INZ_eq, eq_sym, Prime_Euler_Phi.
         - now rewrite <-lt_0_le_1, <-modulus_in_Z.
       Qed.

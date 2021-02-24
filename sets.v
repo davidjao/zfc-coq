@@ -311,11 +311,10 @@ Proof.
   intros x y H H0.
   apply NNPP.
   contradict H.
-  split; try now contradict H0.
+  split; auto.
   intros z H1.
   apply NNPP.
-  contradict H.
-  now (exists z).
+  eauto.
 Qed.
 
 Theorem Subset_transitive : ∀ X Y Z, X ⊂ Y → Y ⊂ Z → X ⊂ Z.
@@ -379,7 +378,6 @@ Proof.
   split; auto.
   intros z H1.
   apply NNPP.
-  contradict H0.
   eauto.
 Qed.
 
@@ -1549,9 +1547,8 @@ Proof.
   - apply set_proj_injective.
     simpl in *.
     apply Extensionality.
-    split; intros H3; rewrite Specify_classification in *; split; try tauto.
-    + apply (H1 y x z); intuition.
-    + apply (H1 x y z); intuition.
+    split; intros H3; rewrite Specify_classification in *; split; try tauto;
+      [ apply (H1 y x) | eapply H1 ]; eauto; intuition.
 Qed.
 
 Theorem quotient_image :
@@ -1615,6 +1612,22 @@ Proof.
     now apply Complement_classification.
   - apply Complement_classification in H as [H H0].
     tauto.
+Qed.
+
+Lemma in_succ : ∀ s, s ∈ succ s.
+Proof.
+  intros s.
+  unfold succ.
+  rewrite Pairwise_union_classification, Singleton_classification.
+  now right.
+Qed.
+
+Lemma subset_succ : ∀ s, s ⊂ succ s.
+Proof.
+  intros s x H.
+  unfold succ.
+  rewrite Pairwise_union_classification.
+  now left.
 Qed.
 
 Theorem complement_disjoint_union : ∀ E F, E ∩ F = ∅ → (E ∪ F) \ F = E.

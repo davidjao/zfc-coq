@@ -1069,3 +1069,188 @@ Proof.
   - contradict n.
     now apply INZ_le.
 Qed.
+
+Section IZR.
+
+  Variable Ring : ring.
+  Notation R := (rings.R Ring).
+  Add Ring generic_ring : (ringify Ring).
+
+  Definition IZR : Z → R.
+  Proof.
+    intros x.
+    destruct (excluded_middle_informative (0 ≤ x)).
+    - apply le_def in l.
+      destruct (constructive_indefinite_description _ l) as [c H].
+      exact (INR _ c).
+    - apply lt_not_ge, lt_shift in n.
+      simpl in n.
+      rewrite A3 in n.
+      apply lt_def in n.
+      destruct (constructive_indefinite_description _ n) as [c H].
+      exact (rings.neg _ (INR _ c)).
+  Defined.
+
+  Coercion IZR : Z >-> R.
+
+  Theorem IZR_INZ : ∀ n, IZR (INZ n) = INR _ n.
+  Proof.
+    intros n.
+    unfold IZR.
+    destruct excluded_middle_informative;
+      destruct constructive_indefinite_description.
+    - ring_simplify in e.
+      apply INZ_eq in e.
+      congruence.
+    - contradict n0.
+      apply INZ_le, zero_le.
+  Qed.
+
+  Theorem IZR_zero : rings.zero _ = 0.
+  Proof.
+    unfold IZR.
+    destruct excluded_middle_informative, constructive_indefinite_description.
+    - rewrite A3 in e.
+      apply INZ_eq in e.
+      subst.
+      now rewrite INR_zero.
+    - contradict n.
+      apply le_refl.
+  Qed.
+
+  Theorem IZR_one : rings.one _ = 1.
+  Proof.
+    unfold IZR.
+    destruct excluded_middle_informative, constructive_indefinite_description.
+    - rewrite A3 in e.
+      apply INZ_eq in e.
+      subst.
+      now rewrite INR_one.
+    - contradict n.
+      apply or_introl, zero_lt_1.
+  Qed.
+
+  Theorem IZR_add : ∀ a b : Z, rings.add _ (a : R) (b : R) = a + b.
+  Proof.
+    intros a b.
+    unfold IZR.
+    repeat destruct excluded_middle_informative;
+      repeat destruct constructive_indefinite_description; rewrite A3 in *;
+        repeat destruct a0; repeat destruct a1; repeat destruct a2.
+    - subst.
+      rewrite INR_add, INZ_add in *.
+      now apply f_equal, INZ_eq.
+    - contradict n.
+      rewrite <-(A3 0).
+      now apply le_cross_add.
+    - replace (INR _ x) with (rings.add Ring (INR _ x0) (INR _ x1)); try ring.
+      rewrite ? INR_add.
+      f_equal.
+      rewrite <-INZ_eq, <-INZ_add, <-e0, <-e, <-H0 in *.
+      ring.
+    - replace (INR _ x0) with (rings.add Ring (INR _ x) (INR _ x1)); try ring.
+      rewrite ? INR_add.
+      f_equal.
+      rewrite <-INZ_eq, <-INZ_add, <-e, <-H0, <-H2.
+      ring.
+    - replace (INR _ x0) with (rings.add Ring (INR _ x) (INR _ x1)); try ring.
+      rewrite ? INR_add.
+      f_equal.
+      rewrite <-INZ_eq, <-INZ_add, <-H0, <-e, <-e0.
+      ring.
+    - replace (INR _ x) with (rings.add Ring (INR _ x0) (INR _ x1)); try ring.
+      rewrite ? INR_add.
+      f_equal.
+      rewrite <-INZ_eq, <-INZ_add, <-H0, <-e, <-H2.
+      ring.
+    - rewrite <-(ordered_rings.lt_not_ge ℤ_order) in n, n0; simpl in *.
+      apply le_not_gt in l; simpl in *.
+      contradict l.
+      rewrite <-(A3 0).
+      now apply (lt_cross_add ℤ_order).
+    - replace (INR _ x1) with (rings.add Ring (INR _ x) (INR _ x0)); try ring.
+      rewrite ? INR_add.
+      f_equal.
+      rewrite <-INZ_eq, <-INZ_add, <-H0, <-H2, <-H4.
+      ring.
+  Qed.
+
+  Theorem IZR_mul : ∀ a b : Z, rings.mul _ (a : R) (b : R) = a * b.
+  Proof.
+    intros a b.
+    unfold IZR.
+    repeat destruct excluded_middle_informative;
+      repeat destruct constructive_indefinite_description; rewrite A3 in *;
+        repeat destruct a0; repeat destruct a1; repeat destruct a2.
+    - subst.
+      rewrite INR_mul, INZ_mul in *.
+      now apply f_equal, INZ_eq.
+    - contradict n.
+      now apply mul_nonneg_nonneg.
+    - apply lt_not_ge in n; simpl in *.
+      apply le_not_gt in l0; simpl in *.
+      destruct l as [l | l]; simpl in *.
+      + contradict l0.
+        now apply (mul_pos_neg ℤ_order).
+      + subst.
+        rewrite (rings.mul_0_l ℤ) in e0; simpl in *.
+        rewrite <-? IZR_INZ, <-e, <-e0, <-IZR_zero.
+        ring.
+    - rewrite <-mul_neg_1_l, rings.M1, <-rings.M2, mul_neg_1_l, INR_mul.
+      apply f_equal, f_equal, INZ_eq.
+      rewrite <-INZ_mul, <-e, <-H0, <-H2.
+      ring.
+    - apply lt_not_ge in n; simpl in *.
+      apply le_not_gt in l0; simpl in *.
+      destruct l as [l | l]; simpl in *.
+      + contradict l0.
+        now apply (mul_neg_pos ℤ_order).
+      + subst.
+        rewrite (rings.mul_0_r ℤ) in e0; simpl in *.
+        rewrite <-? IZR_INZ, <-e, <-e0, <-IZR_zero.
+        ring.
+    - rewrite <-mul_neg_1_l, <-rings.M2, mul_neg_1_l, INR_mul.
+      apply f_equal, f_equal, INZ_eq.
+      rewrite <-INZ_mul, <-e, <-H0, <-H2.
+      ring.
+    - rewrite rings.mul_neg_neg, INR_mul.
+      apply f_equal, INZ_eq.
+      rewrite <-INZ_mul, <-H0, <-H2, <-e.
+      ring.
+    - contradict n1.
+      left; simpl.
+      apply (ordered_rings.mul_neg_neg ℤ_order); now rewrite lt_not_ge.
+  Qed.
+
+  Theorem IZR_neg : ∀ a : Z, rings.neg _ a = -a.
+  Proof.
+    intros a.
+    unfold IZR.
+    repeat destruct excluded_middle_informative,
+    constructive_indefinite_description.
+    - destruct l as [l | l], l0 as [l0 | l0]; subst; simpl in *.
+      + ring_simplify in e0.
+        apply (lt_neg_0 ℤ_order) in l0; simpl in *.
+        contradiction (lt_antisym ℤ_order 0 (0 + INZ x)).
+      + apply (lt_not_ge ℤ_order) in l.
+        contradict l.
+        right.
+        now rewrite l0, A3, A1, A4 at 1.
+      + contradiction (lt_irrefl ℤ_order 0).
+        now replace 0 with (-0) at 2 by ring.
+      + rewrite A3 in *.
+        replace (-0) with 0 in * by ring.
+        rewrite <-? IZR_INZ, <-e, <-e0, <-IZR_zero.
+        ring.
+    - destruct a0 as [H H0].
+      replace (--a) with a in * by ring.
+      now rewrite A3, <-? IZR_INZ, <-e, <-H0 in *.
+    - destruct a0 as [H H0].
+      rewrite A3, <-? IZR_INZ, <-e, <-H0 in *.
+      ring.
+    - contradict n0.
+      left; simpl.
+      now apply (lt_neg_0 ℤ_order), (lt_not_ge ℤ_order).
+  Qed.
+
+End IZR.

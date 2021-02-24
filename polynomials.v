@@ -972,7 +972,7 @@ Section Polynomial_theorems.
     unfold eval.
     destruct (classic (1%R = 0%R)) as [| H]; auto using zero_ring_degeneracy.
     rewrite degree_x_to_n, <-(singleton_sum Ring n n (α^n)%R);
-      auto using le_refl.
+      auto using naturals.le_refl.
     apply iterate_extensionality.
     intros k H0.
     destruct excluded_middle_informative.
@@ -1007,7 +1007,7 @@ Section Polynomial_theorems.
   Proof.
     intros f a n.
     now rewrite (polynomial_sum_lemma (degree f) f), ? eval_mul_x_lemma, eval_x;
-      auto using le_refl.
+      auto using naturals.le_refl.
   Qed.
 
   Lemma eval_mul_lemma : ∀ n f (a : N → R) α,
@@ -1046,7 +1046,7 @@ Section Polynomial_theorems.
     - unfold linear in H.
       rewrite (polynomial_sum_lemma 1 f).
       2: { rewrite H.
-           auto using le_refl. }
+           auto using naturals.le_refl. }
       exists (coefficient f 0), (coefficient f 1).
       split.
       + unfold naturals.one.
@@ -1290,7 +1290,7 @@ Section Polynomial_theorems.
       subst.
       rewrite <-? add_1_r, <-(add_assoc c), ? (add_comm c), ? sub_abba,
       <-rings.D1, <-Pascal's_identity, (add_comm 1%N), sub_abba,
-      <-rings.INR_add; auto.
+      rings.INR_add; auto.
       now exists c.
     - subst.
       rewrite sub_diag, ? rings.pow_0_r, ? (rings.M1 _ _ 1%R), ? rings.M3,
@@ -1319,7 +1319,7 @@ Section Polynomial_theorems.
       now rewrite IRP_pow, IRP_mul, generalized_binomial_theorem.
     - destruct (classic (1%R = 0%R)).
       + rewrite zero_ring_degree; auto using zero_le.
-      + rewrite degree_of_a_plus_x_to_n; auto using le_refl.
+      + rewrite degree_of_a_plus_x_to_n; auto using naturals.le_refl.
   Qed.
 
   Theorem binomial_sum : ∀ n, (1 + x)^n = sum _ (λ k, binomial n k * x^k) 0 n.
@@ -1422,7 +1422,7 @@ Section Polynomial_theorems.
       monic b → (0 < degree b)%N → ∃ q r,
           a = b * q + r ∧ (degree r < degree b)%N.
   Proof.
-    eauto using monic_division_algorithm_helper, le_refl.
+    eauto using monic_division_algorithm_helper, naturals.le_refl.
   Qed.
 
   Definition const f := degree f = 0%N.
@@ -1436,7 +1436,7 @@ Section Polynomial_theorems.
         rewrite iterate_0, rings.pow_0_r.
         now ring_simplify.
       + rewrite H.
-        auto using le_refl.
+        auto using naturals.le_refl.
     - destruct H as [c H].
       subst.
       now rewrite degree_const.

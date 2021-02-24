@@ -8,21 +8,16 @@ Proof.
   split.
   - replace ∅ with e; auto.
     apply Extensionality.
-    split; intros H2.
-    + contradiction (H z).
-    + contradiction (Empty_set_classification z).
+    split; intros H2; firstorder.
+    contradiction (Empty_set_classification z).
   - intros y H2.
     apply H1 in H2 as [Y [H2 H3]].
     replace (y ∪ {y,y}) with Y; auto.
     apply Extensionality.
-    split; intros H4.
-    + apply Pairwise_union_classification.
-      apply H3 in H4 as [H4 | H4]; intuition.
-      right.
-      apply Pairing_classification; auto.
-    + apply Pairwise_union_classification in H4 as [H4 | H4];
-        apply H3; auto.
-      apply Pairing_classification in H4; intuition.
+    split; intros H4;
+      rewrite Pairwise_union_classification, Singleton_classification in *.
+    + apply H3 in H4 as [H4 | H4]; intuition.
+    + apply H3; auto.
 Qed.
 
 Definition ω : set.
@@ -130,22 +125,16 @@ Proof.
   induction n using Induction_ω; intuition.
   - eapply Empty_set_classification; eauto.
   - apply Pairwise_union_classification in H1 as [H1 | H1].
-    + eapply IHn; eauto.
-      intros z H4.
-      now apply H2, Pairwise_union_classification, or_introl.
+    + eauto using Subset_transitive, subset_succ.
     + apply Singleton_classification in H1.
       subst.
-      eapply IHn, Set_is_subset; eauto.
-      now apply H2, Pairwise_union_classification,
-      or_intror, Singleton_classification.
+      eapply IHn; eauto using Set_is_subset, in_succ.
 Qed.
 
 Theorem no_quines_ω : ∀ n, n ∈ ω → ¬ n ∈ n.
 Proof.
   intros n H H0.
-  apply pigeonhole_precursor in H0; auto.
-  contradict H0.
-  auto using Set_is_subset.
+  apply pigeonhole_precursor in H0; auto using Set_is_subset.
 Qed.
 
 Lemma elements_of_naturals_are_subsets : ∀ n m, n ∈ ω → m ∈ n → m ⊂ n.
@@ -173,45 +162,37 @@ Proof.
   - apply Nonempty_classification in H2 as [x H2].
     apply H1 in H2.
     contradiction (Empty_set_classification x).
-  - destruct (classic (m = n)) as [H4 | H4].
-    + now apply Pairwise_union_classification,
-      or_intror, Singleton_classification.
-    + eapply elements_of_naturals_are_subsets; auto.
-      * now apply Pairwise_union_classification, or_intror,
-        Singleton_classification.
-      * apply IHn; auto.
-        intros x H5.
-        pose proof H2 _ H5 as H6.
-        apply Pairwise_union_classification in H6 as [H6 | H6]; auto.
-        apply Singleton_classification in H6.
-        subst.
-        contradict H3.
-        apply Subset_equality_iff.
-        split; auto.
-        intros x H6.
-        apply Pairwise_union_classification in H6 as [H6 | H6].
-        -- eapply elements_of_naturals_are_subsets; eauto.
-        -- apply Singleton_classification in H6.
-           congruence.
+  - destruct (classic (m = n)) as [H4 | H4]; subst; auto using in_succ.
+    eapply elements_of_naturals_are_subsets; auto.
+    + now apply Pairwise_union_classification, or_intror,
+      Singleton_classification.
+    + apply IHn; auto.
+      intros x H5.
+      pose proof H2 _ H5 as H6.
+      apply Pairwise_union_classification in H6 as [H6 | H6]; auto.
+      apply Singleton_classification in H6.
+      subst.
+      contradict H3.
+      apply Subset_equality_iff.
+      split; auto.
+      intros x H6.
+      apply Pairwise_union_classification in H6 as [H6 | H6].
+      * eapply elements_of_naturals_are_subsets; eauto.
+      * apply Singleton_classification in H6.
+        congruence.
 Qed.
 
 Lemma ω_trichotomy : ∀ n m, n ∈ ω → m ∈ ω → m ⊂ n ∨ n ⊂ m.
 Proof.
   intros n m H H0.
-  induction n using Induction_ω; intuition.
-  - apply or_intror, Empty_set_is_subset.
-  - left.
-    intros x H2.
-    apply Pairwise_union_classification.
-    left.
-    now apply H3.
-  - destruct (classic (n = m)); [ left | right ]; intros x H4.
-    + apply Pairwise_union_classification, or_introl.
-      congruence.
-    + apply subsets_of_naturals_are_elements in H2; auto.
-      apply Pairwise_union_classification in H4 as [H4 | H4]; auto.
-      apply Singleton_classification in H4.
-      congruence.
+  induction n using Induction_ω; intuition;
+    eauto using Empty_set_is_subset, Subset_transitive, subset_succ.
+  destruct (classic (n = m)); [ left | right ]; intros x H4; subst.
+  - now apply subset_succ.
+  - apply subsets_of_naturals_are_elements in H2; auto.
+    apply Pairwise_union_classification in H4 as [H4 | H4]; auto.
+    apply Singleton_classification in H4.
+    congruence.
 Qed.
 
 Lemma ω_irreflexive : ∀ n m, n ∈ ω → m ∈ ω → ¬ (n ∈ m ∧ m ∈ n).
@@ -224,14 +205,14 @@ Qed.
 Theorem PA5_ω : ∀ n m, n ∈ ω → m ∈ ω → succ n = succ m → n = m.
 Proof.
   intros n m H H0 H1.
-  assert (n ∈ succ m) as H2; assert (m ∈ succ n) as H3; unfold succ in *;
-    [ rewrite H1 | rewrite <-H1 | rewrite H1 | ];
-    try now apply Pairwise_union_classification, or_intror,
-    Singleton_classification.
+  pose proof (in_succ n) as H2.
+  pose proof (in_succ m) as H3.
+  rewrite H1 in H2.
+  rewrite <-H1 in H3.
+  unfold succ in *.
   rewrite Pairwise_union_classification, Singleton_classification in *.
   destruct H2, H3; auto.
-  exfalso; eapply pigeonhole_precursor;
-    eauto using elements_of_naturals_are_subsets.
+  now contradiction (ω_irreflexive n m).
 Qed.
 
 Theorem ω_WOP : ∀ X, X ≠ ∅ → X ⊂ ω → ∃ x, x ∈ X ∧ ∀ y, y ∈ X → x ⊂ y.
@@ -240,46 +221,36 @@ Proof.
   apply Nonempty_classification in H as [x H].
   assert (x ∈ ω) as H1 by now apply H0.
   revert x X H0 H1 H.
-  induction x using Induction_ω; intuition.
-  - exists ∅.
-    split; auto using Empty_set_is_subset.
-  - destruct (IHx (X ∪ {x,x})) as [y [H3 H4]]; auto;
-      try now apply Pairwise_union_classification,
-      or_intror, Singleton_classification.
-    { intros y H3.
-      apply Pairwise_union_classification in H3 as [H3 | H3]; eauto.
-      apply Singleton_classification in H3.
-      now subst. }
-    destruct (classic (x ∈ X)) as [H5 | H5].
-    + assert (X ∪ {x,x} = X).
-      { apply Extensionality.
-        split; intros H6.
-        - apply Pairwise_union_classification in H6 as [H6 | H6]; auto.
-          apply Singleton_classification in H6.
-          congruence.
-        - now apply Pairwise_union_classification, or_introl. }
-      rewrite H6 in *.
-      exists y.
-      tauto.
-    + apply Pairwise_union_classification in H3 as [H3 | H3].
-      * exists y.
-        split; auto.
-        intros y0 H7.
-        now apply H4, Pairwise_union_classification, or_introl.
-      * rewrite Singleton_classification in H3.
-        subst.
-        exists (succ x).
-        split; auto.
-        intros y H3 z H6.
-        apply Pairwise_union_classification in H6 as [H6 | H6].
-        -- apply H4; auto.
-           now apply Pairwise_union_classification, or_introl.
-        -- apply Singleton_classification in H6.
-           subst.
-           apply subsets_of_naturals_are_elements; auto.
-           ++ now apply H4, Pairwise_union_classification, or_introl.
-           ++ intros H6.
-              congruence.
+  induction x using Induction_ω; intuition; eauto using Empty_set_is_subset.
+  destruct (IHx (X ∪ {x,x})) as [y [H3 H4]];
+    rewrite ? Pairwise_union_classification, ? Singleton_classification; auto.
+  { intros y H3.
+    rewrite Pairwise_union_classification, Singleton_classification in H3.
+    destruct H3; subst; auto. }
+  destruct (classic (x ∈ X)) as [H5 | H5].
+  - assert (X ∪ {x,x} = X); auto.
+    apply Extensionality.
+    split; intros H6;
+      rewrite Pairwise_union_classification, Singleton_classification in *;
+      try destruct H6; subst; auto.
+  - apply Pairwise_union_classification in H3 as [H3 | H3].
+    + exists y.
+      split; auto.
+      intros y0 H7.
+      now apply H4, Pairwise_union_classification, or_introl.
+    + rewrite Singleton_classification in H3.
+      subst.
+      exists (x ∪ {x,x}).
+      split; auto.
+      intros y H3 z H6.
+      assert (x ⊂ y) as H7.
+      { apply H4; auto.
+        now apply Pairwise_union_classification, or_introl. }
+      rewrite Pairwise_union_classification, Singleton_classification in H6.
+      destruct H6; subst; auto.
+      apply subsets_of_naturals_are_elements; auto.
+      contradict H5.
+      congruence.
 Qed.
 
 Definition N := elts ω.
@@ -334,8 +305,7 @@ Proof.
   set (S := {x in ω | ∃ n : N, x = n ∧ ¬ P n}).
   assert (S ⊂ ω) as H0.
   { intros x H0.
-    apply Specify_classification in H0.
-    tauto. }
+    now apply Specify_classification in H0 as [H0 H1]. }
   destruct (classic (S = ∅)) as [H1 | H1].
   { apply NNPP.
     intros H2.
@@ -361,21 +331,17 @@ Qed.
 
 Theorem PA4 : ∀ n, 0 ≠ S n.
 Proof.
-  intros n H.
-  unfold S, zero in H.
-  destruct n.
-  contradiction (PA4_ω x).
-  congruence.
+  intros [n H] H0.
+  inversion H0.
+  now contradiction (PA4_ω n).
 Qed.
 
 Theorem succ_0 : ∀ n : N, n ≠ 0 ↔ ∃ m, n = S m.
 Proof.
   intros n.
-  induction n using Induction; split; intros H.
-  - now contradict H.
+  induction n using Induction; split; intros H; eauto; try tauto.
   - destruct H as [m H].
     contradiction (PA4 m).
-  - now (exists n).
   - intros H0.
     now contradiction (PA4 n).
 Qed.
@@ -383,9 +349,8 @@ Qed.
 Theorem PA5 : ∀ n m, S n = S m → n = m.
 Proof.
   intros [n A] [m B] H.
-  apply set_proj_injective; auto.
-  simpl in *.
-  apply PA5_ω; congruence.
+  inversion H.
+  now apply set_proj_injective, PA5_ω.
 Qed.
 
 Theorem neq_succ : ∀ n, n ≠ S n.
@@ -452,22 +417,13 @@ Section Iterated_op_construction.
     induction n using Strong_Induction_ω.
     unfold iterated_op at 1.
     destruct constructive_indefinite_description as [g], a as [H0 H1].
-    rewrite ? H1.
-    2: { rewrite <-S_is_succ.
-         now apply Pairwise_union_classification, or_intror,
-         Singleton_classification. }
+    rewrite <-? S_is_succ, ? H1 in *; auto using in_succ.
     f_equal.
     enough (∀ k : N, k ⊂ n → g k = iterated_op k); auto using Set_is_subset.
-    induction k using Induction; intros H2; rewrite <-S_is_succ in *.
+    induction k using Induction; intros H2; rewrite <-? S_is_succ in *.
     - now rewrite H0, iterated_op_0.
-    - assert (∀ m, m ⊂ succ m) as H3.
-      { intros m z H3.
-        now apply Pairwise_union_classification, or_introl. }
-      assert (k ∈ succ k) as H4.
-      { now apply Pairwise_union_classification, or_intror,
-        Singleton_classification. }
-      rewrite H1, H, IHk; eauto using Subset_transitive.
-      now apply H3, H2.
+    - rewrite H1, H, IHk; try eapply Subset_transitive;
+        eauto using in_succ, subset_succ, Set_is_subset, Subset_transitive.
   Qed.
 
 End Iterated_op_construction.
@@ -693,16 +649,12 @@ Proof.
       auto using Set_is_subset.
     + eapply Subset_transitive; eauto.
       rewrite add_succ_r, <-S_is_succ.
-      intros x H0.
-      now apply Pairwise_union_classification, or_introl.
+      apply subset_succ.
   - induction b using Induction.
     + exists 0.
       rewrite add_0_r.
-      apply set_proj_injective, NNPP.
-      intros H0.
-      apply Nonempty_classification in H0 as [x H0].
-      contradiction (Empty_set_classification x).
-      auto.
+      apply set_proj_injective, Extensionality.
+      split; intros H0; contradiction (Empty_set_classification z); eauto.
     + destruct (classic (b ∈ a)).
       * exists 0.
         rewrite add_0_r.
@@ -715,11 +667,11 @@ Proof.
         eapply elements_of_naturals_are_subsets; eauto using N_in_ω.
       * destruct IHb as [x H1].
         { intros x H1.
-          pose proof H _ H1 as H2.
-          rewrite <-S_is_succ in H2.
-          apply Pairwise_union_classification in H2 as [H2 | H2]; auto.
-          apply Singleton_classification in H2.
-          now subst. }
+          rewrite <-S_is_succ in H.
+          unfold succ in H.
+          apply H in H1 as H2.
+          rewrite Pairwise_union_classification, Singleton_classification in H2.
+          destruct H2; subst; tauto. }
         exists (S x).
         now rewrite add_succ_r, H1.
 Qed.
@@ -838,9 +790,7 @@ Proof.
   induction a using Induction; induction b using Induction; auto.
   intros H.
   rewrite mul_succ_r, add_succ_r in H.
-  exfalso.
-  symmetry in H.
-  eapply PA4; eauto.
+  now contradiction (PA4 (S a * b + a)).
 Qed.
 
 Theorem mul_lt_r : ∀ a b c, a ≠ 0 → b < c → a * b < a * c.

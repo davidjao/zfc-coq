@@ -1122,7 +1122,7 @@ Proof.
       * rewrite Singleton_classification in H6.
         rewrite H6, functionify_concat_r, L1, sub_diag.
         2: { rewrite L1, L2, add_1_r.
-             auto using naturals.succ_lt, le_refl. }
+             auto using naturals.succ_lt, naturals.le_refl. }
         symmetry.
         rewrite <-function_maps_domain_to_graph.
         -- unfold functionify at 2.

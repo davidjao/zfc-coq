@@ -82,6 +82,12 @@ Section Ring_theorems.
     ring.
   Qed.
 
+  Theorem mul_neg_neg : ∀ a b, (-a) * (-b) = a * b.
+  Proof.
+    intros a b.
+    ring.
+  Qed.
+
   Theorem neg_0 : 0 = -0.
   Proof.
     ring.
@@ -484,20 +490,48 @@ Section Ring_theorems.
   Definition INR (n : N) := sum (λ n, 1) 1 n : R.
   Coercion INR : N >-> R.
 
-  Theorem INR_add : ∀ a b : N, ((a + b)%N : R) = (a : R) + (b : R).
+  Theorem INR_zero : 0 = 0%N.
+  Proof.
+    unfold INR, sum, iterate_with_bounds.
+    destruct excluded_middle_informative; auto.
+    exfalso.
+    apply le_not_gt in l.
+    eauto using succ_lt.
+  Qed.
+
+  Theorem INR_one : 1 = 1%N.
+  Proof.
+    unfold INR, sum.
+    now rewrite iterate_0.
+  Qed.
+
+  Theorem INR_add : ∀ a b : N, a + b = (a + b)%N.
   Proof.
     intros a b.
     unfold INR.
     induction b using Induction.
-    { unfold sum at 3.
-      unfold iterate_with_bounds.
-      destruct excluded_middle_informative.
-      - exfalso.
-        apply le_not_gt in l.
-        eauto using succ_lt.
-      - now rewrite A1, A3, naturals.add_0_r. }
-    rewrite add_succ_r, ? sum_succ, IHb; try ring;
-      [ exists b | exists (a+b)%N ]; now rewrite <-add_1_r, naturals.add_comm.
+    { fold (INR 0).
+      rewrite <-INR_zero, add_0_r.
+      ring. }
+    rewrite add_succ_r, ? sum_succ, <-IHb; try ring;
+      [ exists (a+b)%N | exists b ]; now rewrite <-add_1_r, naturals.add_comm.
+  Qed.
+
+  Theorem INR_mul : ∀ a b : N, a * b = ((a * b)%N).
+  Proof.
+    intros a b.
+    unfold INR.
+    induction b using Induction.
+    { rewrite naturals.mul_0_r.
+      fold (INR 0).
+      rewrite <-? INR_zero.
+      ring. }
+    rewrite mul_succ_r, sum_succ, D1_l, IHb.
+    - fold (INR (a*b)) (INR a) (INR (a*b+a)).
+      ring_simplify.
+      apply INR_add.
+    - exists b.
+      now rewrite <-add_1_r, naturals.add_comm.
   Qed.
 
   Section Subring_construction.

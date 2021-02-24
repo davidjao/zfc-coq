@@ -2444,7 +2444,7 @@ Proof.
   pose proof binomial_coefficient 1 1 as H.
   rewrite ? one_factorial, sub_diag, zero_factorial in H.
   rewrite H at 3; try ring.
-  eauto using le_refl.
+  eauto using naturals.le_refl.
 Qed.
 
 Theorem binomial_n_n : ∀ n, binomial n n = 1%N.
@@ -2453,7 +2453,7 @@ Proof.
   pose proof binomial_coefficient n n as H.
   rewrite sub_diag, zero_factorial, mul_1_r, <-(mul_1_l (n!)) in H at 1.
   eapply cancellation_mul; eauto using factorial_ne_0.
-  rewrite H; auto using le_refl.
+  rewrite H; auto using naturals.le_refl.
 Qed.
 
 Theorem sum_card : ∀ n X f,
@@ -2469,7 +2469,7 @@ Proof.
     split; intros H2.
     + apply H1.
       exists 0%N.
-      repeat split; eauto using le_refl.
+      repeat split; eauto using naturals.le_refl.
       intros x' [[H3 H4] H5].
       auto using naturals.le_antisymm.
     + apply H1 in H2 as [y [[[H2 H3] H4] H5]].
@@ -2482,11 +2482,10 @@ Proof.
       subsets_of_finites_are_finite.
     + rewrite INZ_add, <-finite_union_cardinality;
         eauto using subsets_of_finites_are_finite, complement_subset,
-        subsets_of_finites_are_finite, zero_le, le_refl.
+        subsets_of_finites_are_finite, zero_le, naturals.le_refl.
       * rewrite Union_comm, <-disjoint_union_complement.
-        do 2 f_equal.
-        apply Union_subset, H0.
-        split; eauto using zero_le, le_refl.
+        apply f_equal, f_equal, Union_subset, H0.
+        split; eauto using zero_le, naturals.le_refl.
       * apply NNPP.
         intros H2.
         apply Nonempty_classification in H2 as [x H2].
@@ -2506,7 +2505,7 @@ Proof.
         apply H1 in H6 as [y [[[H6 H7] H8] H9]].
         assert (y = S n).
         { apply H9.
-          repeat split; auto using zero_le, le_refl. }
+          repeat split; auto using zero_le, naturals.le_refl. }
         assert (y = k).
         { apply H9.
           repeat split; auto.
@@ -2539,7 +2538,7 @@ Proof.
         apply H1 in H6 as [z [[[H6 H8] H9] H10]].
         assert (z = S n).
         { apply H10.
-          repeat split; auto using zero_le, le_refl. }
+          repeat split; auto using zero_le, naturals.le_refl. }
         assert (z = y).
         { apply H10.
           repeat split; auto.
