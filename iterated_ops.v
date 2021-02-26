@@ -22,9 +22,7 @@ Section Iterated_op.
       apply naturals.cancellation_add in e.
       subst.
       now rewrite iterated_op_0.
-    - contradiction n.
-      exists 0%N.
-      now rewrite add_0_r.
+    - exfalso; eauto using le_refl.
   Qed.
 
   Theorem iterate_succ : ∀ op f start a b,
@@ -42,9 +40,7 @@ Section Iterated_op.
       + apply (naturals.cancellation_add a).
         now rewrite add_succ_r, e0, e.
     - contradict n.
-      destruct H as [c H].
-      exists (S c).
-      now rewrite add_succ_r, H.
+      eauto using le_trans, le_succ.
   Qed.
 
   Theorem iterate_extensionality : ∀ op f g start a b,
@@ -58,10 +54,8 @@ Section Iterated_op.
          destruct excluded_middle_informative; tauto. }
     subst.
     induction c using Induction.
-    - rewrite add_0_r, ? iterate_0.
-      apply H.
-      rewrite add_0_r.
-      split; auto using le_refl.
+    - rewrite add_0_r, ? iterate_0 in *.
+      eauto using le_refl.
     - rewrite add_succ_r, ? iterate_succ; try now (exists c).
       rewrite IHc, H; auto.
       + split.
@@ -73,8 +67,7 @@ Section Iterated_op.
         rewrite H; auto.
         split; auto.
         exists (S d).
-        rewrite ? add_succ_r.
-        now f_equal.
+        now rewrite ? add_succ_r, H1.
   Qed.
 
   Theorem iterate_lower : ∀ op f start a c,
@@ -98,10 +91,9 @@ Section Iterated_op.
     intros op f start a c.
     induction c using Induction.
     - now rewrite add_0_r, ? iterate_0, add_0_l.
-    - rewrite add_succ_r, ? iterate_succ, IHc, <-add_succ_r; auto using zero_le.
-      + do 2 f_equal.
-        now rewrite add_comm.
-      + now (exists c).
+    - rewrite add_succ_r, ? iterate_succ, IHc, <-add_succ_r, add_comm;
+        auto using zero_le.
+      now (exists c).
   Qed.
 
   Theorem iterate_1 : ∀ op f start,
@@ -126,27 +118,14 @@ Section Iterated_op.
   Proof.
     intros op f start a b H H0.
     destruct (classic (a ≤ b)) as [H1 | H1]; auto using iterate_succ.
-    assert (a = S b).
-    { destruct H as [c H].
-      apply NNPP.
+    replace a with (S b) in *.
+    - rewrite iterate_0.
+      unfold iterate_with_bounds.
+      destruct excluded_middle_informative; congruence.
+    - eapply le_antisymm; eauto.
+      apply le_not_gt.
       contradict H1.
-      assert (c ≠ 0%N).
-      { contradict H0.
-        subst.
-        now rewrite add_0_r in H. }
-      apply succ_0 in H2 as [d H2].
-      subst.
-      rewrite add_succ_r in H.
-      apply PA5 in H.
-      now exists d. }
-    subst.
-    rewrite iterate_0.
-    unfold iterate_with_bounds.
-    destruct excluded_middle_informative; auto.
-    exfalso.
-    rewrite le_not_gt in l.
-    contradict l.
-    apply succ_lt.
+      now apply le_lt_succ.
   Qed.
 
 End Iterated_op.
@@ -221,8 +200,7 @@ Theorem sum_of_0 : ∀ d, (sum_N (λ n, 0) 0 d) = 0.
 Proof.
   induction d using Induction.
   - apply iterate_0.
-  - rewrite sum_N_succ, IHd; auto using zero_le.
-    ring.
+  - rewrite sum_N_succ, IHd, add_0_r; auto using zero_le.
 Qed.
 
 Theorem prod_N_mul : ∀ f a b c,

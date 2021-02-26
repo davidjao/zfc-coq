@@ -267,7 +267,7 @@ Definition succ w := w ∪ {w, w}.
 
 Definition Inductive X := ∀ y, y ∈ X → succ y ∈ X.
 
-Lemma neq_sym : ∀ a b : set, a ≠ b ↔ b ≠ a.
+Lemma neq_sym : ∀ A (a b : A), a ≠ b ↔ b ≠ a.
 Proof.
   split; intros H; now contradict H.
 Qed.
@@ -756,6 +756,13 @@ Proof.
       repeat destruct H0; intuition; subst; try rewrite Ordered_pair_iff in *;
       exists x, x0; repeat rewrite Pairwise_intersection_classification in *;
       intuition; congruence.
+Qed.
+
+Theorem Product_intersection_distr_l :
+  ∀ A B X, (A ∩ B) × X = (A × X) ∩ (B × X).
+Proof.
+  intros A B X.
+  now rewrite <-Product_intersection, Intersection_idempotent.
 Qed.
 
 Theorem Product_complement : ∀ A B X, (A \ B) × X = (A × X) \ (B × X).

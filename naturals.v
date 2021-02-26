@@ -869,8 +869,7 @@ Theorem O1_le : ∀ a b c, a ≤ b → a + c ≤ b + c.
 Proof.
   intros a b c [x H].
   exists x.
-  subst.
-  ring.
+  subst; ring.
 Qed.
 
 Theorem O1_le_iff : ∀ a b c, a ≤ b ↔ a + c ≤ b + c.
@@ -916,9 +915,8 @@ Proof.
   - eapply lt_irrefl; eauto.
   - rewrite lt_def in *.
     destruct H0 as [c [H0 H1]].
-    rewrite add_comm, add_succ_r in H1.
-    apply PA5, cancellation_0_add in H1.
-    intuition.
+    rewrite add_comm, add_succ_r, neq_sym in *.
+    now apply PA5, cancellation_0_add in H1 as [H1 H2].
 Qed.
 
 Theorem lt_succ : ∀ m, 0 < S m.
@@ -926,9 +924,7 @@ Proof.
   intros m.
   rewrite lt_def.
   exists (S m).
-  split.
-  - apply PA4.
-  - now rewrite add_0_l.
+  split; auto using PA4; ring.
 Qed.
 
 Theorem succ_lt : ∀ m, m < S m.
@@ -946,11 +942,9 @@ Proof.
   - rewrite <-? (add_1_r m), <-? (add_1_r n).
     now apply O1.
   - apply lt_def in H as [c [H H0]].
-    apply lt_def.
-    exists c.
-    split; auto.
     rewrite add_comm, add_succ_r, add_comm in H0.
-    now apply PA5.
+    apply lt_def.
+    eauto using PA5.
 Qed.
 
 Theorem zero_le : ∀ n, 0 ≤ n.
@@ -985,13 +979,10 @@ Qed.
 Theorem lt_1_eq_0 : ∀ n, n < 1 → n = 0.
 Proof.
   intros n H.
-  induction n using Induction; auto.
-  pose proof H as H0.
-  assert (n < 1).
-  { eapply lt_trans; eauto using succ_lt. }
-  apply IHn in H1.
-  subst.
-  contradiction (lt_irrefl 1).
+  induction n as [| n _ ] using Induction; auto.
+  apply le_not_gt in H; intuition.
+  exists n.
+  rewrite <-add_1_r; ring.
 Qed.
 
 Definition sub : N → N → N.
@@ -1012,10 +1003,8 @@ Proof.
   destruct excluded_middle_informative.
   - destruct constructive_indefinite_description.
     ring [e].
-  - contradict n.
-    exists a.
-    ring.
-Defined.
+  - exfalso; eauto using zero_le.
+Qed.
 
 Theorem sub_0_l : ∀ a, 0 - a = 0.
 Proof.
@@ -1023,8 +1012,7 @@ Proof.
   unfold sub.
   destruct excluded_middle_informative; auto.
   destruct constructive_indefinite_description.
-  apply cancellation_0_add in e.
-  tauto.
+  now apply cancellation_0_add in e as [H H0].
 Qed.
 
 Theorem sub_diag : ∀ a, a - a = 0.
@@ -1035,9 +1023,7 @@ Proof.
   - destruct constructive_indefinite_description.
     rewrite <-(add_0_r a) in e at 2.
     now apply cancellation_add in e.
-  - contradict n.
-    exists 0.
-    ring.
+  - exfalso; eauto using le_refl.
 Qed.
 
 Theorem sub_abba : ∀ a b, a + b - b = a.
@@ -1073,9 +1059,7 @@ Proof.
   - destruct constructive_indefinite_description.
     subst.
     now rewrite add_0_r in *.
-  - rewrite <-lt_not_ge in n.
-    apply lt_def in n as [c [H0 H1]].
-    now (exists c).
+  - now apply lt_not_ge in n as [H0 H1].
 Qed.
 
 Theorem sub_ne_0_lt : ∀ a b, a - b ≠ 0 → b < a.
@@ -1120,9 +1104,7 @@ Theorem min_eq : ∀ a b, min a b = a ∨ min a b = b.
 Proof.
   intros a b.
   unfold min.
-  destruct excluded_middle_informative.
-  - now left.
-  - now right.
+  destruct excluded_middle_informative; intuition.
 Qed.
 
 Definition max : N → N → N.
@@ -1155,17 +1137,14 @@ Theorem max_eq : ∀ a b, max a b = a ∨ max a b = b.
 Proof.
   intros a b.
   unfold max.
-  destruct excluded_middle_informative.
-  - now right.
-  - now left.
+  destruct excluded_middle_informative; intuition.
 Qed.
 
 Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
 Proof.
   intros a b c [d H] [e H0].
   exists (d + e).
-  subst.
-  ring.
+  subst; ring.
 Qed.
 
 Theorem le_lt_trans : ∀ a b c, a ≤ b → b < c → a < c.
@@ -1175,12 +1154,10 @@ Proof.
   exists (d + e).
   split.
   - intros H2.
-    symmetry in H2.
-    apply cancellation_0_add in H2 as [H2 H3].
+    apply eq_sym, cancellation_0_add in H2 as [H2 H3].
     subst.
     now rewrite ? add_0_r in *.
-  - subst.
-    now rewrite add_assoc.
+  - subst; ring.
 Qed.
 
 Theorem lt_le_trans : ∀ a b c, a < b → b ≤ c → a < c.
@@ -1190,12 +1167,10 @@ Proof.
   exists (d + e).
   split.
   - intros H2.
-    symmetry in H2.
-    apply cancellation_0_add in H2 as [H2 H3].
+    apply eq_sym, cancellation_0_add in H2 as [H2 H3].
     subst.
     now rewrite ? add_0_r in *.
-  - subst.
-    now rewrite add_assoc.
+  - subst; ring.
 Qed.
 
 Theorem lt_cross_add : ∀ a b c d, a < b → c < d → a + c < b + d.
@@ -1211,8 +1186,7 @@ Theorem le_cross_add : ∀ a b c d, a ≤ b → c ≤ d → a + c ≤ b + d.
 Proof.
   intros a b c d [e H] [f H0].
   exists (e + f).
-  subst.
-  ring.
+  subst; ring.
 Qed.
 
 Theorem sub_abab : ∀ a b, a ≤ b → a + (b - a) = b.
@@ -1227,21 +1201,16 @@ Theorem lub : ∀ P, (∃ n : N, P n) → (∃ m : N, ∀ n : N, P n → n ≤ m
 Proof.
   intros P H [m H0].
   revert P H H0.
-  induction m using Induction; intros P H H0.
-  - exists 0.
-    split; auto.
-    destruct H as [x H].
-    apply H0 in H as H2.
-    assert (x = 0) by auto using le_antisymm, zero_le.
-    rewrite <-H1; auto.
-  - destruct (classic (P (S m))) as [H1 | H1]; try (now exists (S m)).
-    destruct (IHm P) as [s [H2 H3]]; auto; try now (exists s).
+  induction m using Induction; intros P [x H] H0.
+  - replace x with 0 in H; eauto using le_antisymm, zero_le.
+  - destruct (classic (P (S m))) as [H1 | H1]; eauto.
+    destruct (IHm P) as [s [H2 H3]]; eauto.
     intros n H2.
     apply NNPP.
     intros H3.
     apply lt_not_ge in H3.
-    apply H0 in H2 as H4.
-    destruct H4 as [c H4].
+    pose proof H2 as H4.
+    apply H0 in H4 as [c H4].
     destruct (classic (c = 0)) as [H5 | H5]; subst.
     + rewrite add_0_r in H4.
       now subst.
@@ -1250,52 +1219,44 @@ Proof.
       rewrite add_succ_r in H4.
       apply PA5 in H4.
       subst.
-      rewrite lt_not_ge in H3.
-      contradict H3.
+      apply le_not_gt in H3; auto.
       now (exists d).
 Qed.
 
 Theorem squeeze_upper : ∀ n m, n < m → m ≤ S n → m = S n.
 Proof.
   intros n m H [c H0].
-  assert (c = 0).
-  { apply NNPP.
-    intros H1.
-    apply succ_0 in H1 as [d H1].
-    subst.
-    rewrite add_succ_r in H0.
-    apply PA5 in H0.
-    subst.
-    contradiction (lt_irrefl m).
-    eapply le_lt_trans; eauto.
-    now exists d. }
+  replace c with 0 in H0; try ring [H0].
+  apply NNPP.
+  intros H1.
+  apply neq_sym, succ_0 in H1 as [d H1].
   subst.
-  ring [H0].
+  rewrite add_succ_r in H0.
+  apply PA5 in H0.
+  subst.
+  contradiction (lt_irrefl m).
+  eapply le_lt_trans; eauto.
+  now exists d.
 Qed.
 
 Theorem squeeze_lower : ∀ n m, n ≤ m → m < S n → m = n.
 Proof.
   intros n m [c H] H0.
-  assert (c = 0).
-  { apply NNPP.
-    intros H1.
-    apply succ_0 in H1 as [d H1].
-    subst.
-    rewrite add_succ_r, <-S_lt in H0.
-    contradiction (lt_irrefl n).
-    eapply le_lt_trans; eauto.
-    now exists d. }
+  replace c with 0 in H; try ring [H].
+  apply NNPP.
+  intros H1.
+  apply neq_sym, succ_0 in H1 as [d H1].
   subst.
-  ring.
+  rewrite add_succ_r, <-S_lt in H0.
+  contradiction (lt_irrefl n).
+  eapply le_lt_trans; eauto.
+  now exists d.
 Qed.
 
 Theorem succ_le : ∀ a b, a ≤ b ↔ S a ≤ S b.
 Proof.
-  intros a b.
-  split; intros [c H]; exists c; subst.
-  - now rewrite add_comm, add_succ_r, add_comm.
-  - apply PA5.
-    now rewrite add_comm, add_succ_r, add_comm in H.
+  split; intros [c H]; exists c; subst; [ | apply PA5 ];
+    now rewrite add_comm, add_succ_r, add_comm in *.
 Qed.
 
 Theorem sub_succ : ∀ a b, a - b = S a - S b.
@@ -1316,8 +1277,7 @@ Proof.
     rewrite add_succ_r.
     split; auto using PA4; congruence.
   - destruct H as [H H0].
-    assert (c ≠ 0) as H1 by auto.
-    apply succ_0 in H1 as [d H1].
+    apply neq_sym, succ_0 in H as [d H].
     subst.
     exists d.
     rewrite add_succ_r in H0.
@@ -1343,17 +1303,9 @@ Qed.
 
 Theorem le_lt_or_eq : ∀ a b, a ≤ b ↔ a < b ∨ a = b.
 Proof.
-  split; intros H.
-  unfold le in *; rewrite lt_def in *.
-  - destruct H as [c H].
-    destruct (classic (c = 0)).
-    + right.
-      subst.
-      ring.
-    + left.
-      exists c.
-      split; auto.
-  - destruct H as [[c H] | H]; subst; auto using le_refl.
+  split; intros H; unfold lt in *.
+  - destruct (classic (a = b)); tauto.
+  - destruct H as [[H H0] | H]; subst; auto using le_refl.
 Qed.
 
 Theorem le_succ : ∀ n, n ≤ S n.

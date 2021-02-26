@@ -1093,7 +1093,7 @@ Section IZR.
 
   Coercion IZR : Z >-> R.
 
-  Theorem IZR_INZ : ∀ n, IZR (INZ n) = INR _ n.
+  Theorem IZR_INZ : ∀ n : N, INR _ n = (n : Z).
   Proof.
     intros n.
     unfold IZR.
@@ -1130,7 +1130,7 @@ Section IZR.
       apply or_introl, zero_lt_1.
   Qed.
 
-  Theorem IZR_add : ∀ a b : Z, rings.add _ (a : R) (b : R) = a + b.
+  Theorem IZR_add : ∀ a b : Z, rings.add _ a b = a + b.
   Proof.
     intros a b.
     unfold IZR.
@@ -1175,7 +1175,7 @@ Section IZR.
       ring.
   Qed.
 
-  Theorem IZR_mul : ∀ a b : Z, rings.mul _ (a : R) (b : R) = a * b.
+  Theorem IZR_mul : ∀ a b : Z, rings.mul _ a b = a * b.
   Proof.
     intros a b.
     unfold IZR.
@@ -1194,7 +1194,7 @@ Section IZR.
         now apply (mul_pos_neg ℤ_order).
       + subst.
         rewrite (rings.mul_0_l ℤ) in e0; simpl in *.
-        rewrite <-? IZR_INZ, <-e, <-e0, <-IZR_zero.
+        rewrite ? IZR_INZ, <-e, <-e0, <-IZR_zero.
         ring.
     - rewrite <-mul_neg_1_l, rings.M1, <-rings.M2, mul_neg_1_l, INR_mul.
       apply f_equal, f_equal, INZ_eq.
@@ -1207,7 +1207,7 @@ Section IZR.
         now apply (mul_neg_pos ℤ_order).
       + subst.
         rewrite (rings.mul_0_r ℤ) in e0; simpl in *.
-        rewrite <-? IZR_INZ, <-e, <-e0, <-IZR_zero.
+        rewrite ? IZR_INZ, <-e, <-e0, <-IZR_zero.
         ring.
     - rewrite <-mul_neg_1_l, <-rings.M2, mul_neg_1_l, INR_mul.
       apply f_equal, f_equal, INZ_eq.
@@ -1240,13 +1240,13 @@ Section IZR.
         now replace 0 with (-0) at 2 by ring.
       + rewrite A3 in *.
         replace (-0) with 0 in * by ring.
-        rewrite <-? IZR_INZ, <-e, <-e0, <-IZR_zero.
+        rewrite ? IZR_INZ, <-e, <-e0, <-IZR_zero.
         ring.
     - destruct a0 as [H H0].
       replace (--a) with a in * by ring.
-      now rewrite A3, <-? IZR_INZ, <-e, <-H0 in *.
+      now rewrite A3, ? IZR_INZ, <-e, <-H0 in *.
     - destruct a0 as [H H0].
-      rewrite A3, <-? IZR_INZ, <-e, <-H0 in *.
+      rewrite A3, ? IZR_INZ, <-e, <-H0 in *.
       ring.
     - contradict n0.
       left; simpl.
