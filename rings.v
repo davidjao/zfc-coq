@@ -399,21 +399,14 @@ Section Ring_theorems.
   Theorem unit_prod_closure :
     ∀ n f, (∀ i, 0 ≤ i ≤ n → unit (f i)) → unit (prod f 0 n).
   Proof.
-    induction n using Induction.
-    - intros f H.
-      unfold prod.
+    induction n using Induction; intros f H.
+    - unfold prod.
       rewrite iterate_0.
-      apply H.
-      split; auto using le_refl.
-    - intros f H.
-      rewrite prod_succ; auto using zero_le.
-      apply unit_closure.
-      + apply IHn.
-        intros i [H0 H1].
-        apply H.
-        split; eauto using le_trans, le_succ.
-      + apply H.
-        split; eauto using le_refl, zero_le.
+      auto using le_refl.
+    - rewrite prod_succ; try apply unit_closure; eauto using le_refl, zero_le.
+      apply IHn.
+      intros i [H0 H1].
+      eauto using le_trans, le_succ.
   Qed.
 
   Definition pow a n := iterated_op _ mul 1 (λ x, a) n.
@@ -599,7 +592,7 @@ Section Ring_theorems.
     Defined.
     Notation "1" := sub_one : Subring_scope.
 
-    Theorem ISR_eq : ∀ a b, ISR a = ISR b → a = b.
+    Theorem ISR_eq : ∀ a b : sub_R, (a : R) = (b : R) → a = b.
     Proof.
       intros [a A] [b B] H.
       unfold ISR in H.
@@ -864,8 +857,7 @@ Section Ring_theorems.
       now apply lt_succ. }
     destruct (classic (m = S n)) as [H0 | H0].
     - subst.
-      rewrite sum_succ; auto using zero_le.
-      rewrite <-(A3 a) at 1.
+      rewrite sum_succ, <-(A3 a) at 1; auto using zero_le.
       f_equal.
       + rewrite <-(sum_of_0 n).
         apply iterate_extensionality.
@@ -878,14 +870,10 @@ Section Ring_theorems.
         auto using succ_lt.
       + destruct excluded_middle_informative; tauto.
     - rewrite sum_succ, IHn; auto using zero_le.
-      + destruct excluded_middle_informative.
-        * now subst.
-        * ring.
+      + destruct excluded_middle_informative; try congruence; ring.
       + destruct H as [c H].
         rewrite <-H in H0.
-        assert (c ≠ 0%N) as H1.
-        { contradict H0.
-          ring [H0]. }
+        assert (c ≠ 0%N) as H1 by (contradict H0; ring [H0]).
         apply succ_0 in H1 as [d H1].
         exists d.
         rewrite H1, add_succ_r in H.
@@ -923,24 +911,15 @@ Section Ring_theorems.
       prod f 0 (S (S m)) = prod (swap _ _ (S m) (S (S m)) f) 0 (S (S m)).
   Proof.
     intros m f.
-    rewrite ? prod_succ; auto using zero_le.
-    rewrite <-M2, (M1 (f (S m))), M2.
-    do 2 f_equal.
-    - apply iterate_extensionality.
-      intros k [H H0].
-      unfold swap.
-      destruct excluded_middle_informative; subst.
-      + now apply not_succ_le in H0.
-      + destruct excluded_middle_informative; auto; subst.
-        contradiction (not_succ_le (S m)).
-        eauto using naturals.le_trans, le_succ.
-    - unfold swap.
-      destruct excluded_middle_informative; subst; auto.
-      destruct excluded_middle_informative; subst; tauto.
-    - unfold swap.
-      destruct excluded_middle_informative.
-      now apply eq_sym, neq_succ in e.
-      destruct excluded_middle_informative; subst; tauto.
+    rewrite ? prod_succ, <-M2, (M1 (f (S m))), M2; auto using zero_le.
+    do 2 f_equal; unfold swap;
+      try (repeat destruct excluded_middle_informative; subst; congruence).
+    apply iterate_extensionality.
+    intros k [H H0].
+    repeat destruct excluded_middle_informative; auto; subst.
+    - now apply not_succ_le in H0.
+    - contradiction (not_succ_le (S m)).
+      eauto using naturals.le_trans, le_succ.
   Qed.
 
   Lemma product_swap_upper_one : ∀ n f i,
@@ -957,9 +936,8 @@ Section Ring_theorems.
     { rewrite <-H1 in *.
       apply squeeze_lower in H; auto.
       subst.
-      unfold naturals.one, prod.
+      unfold naturals.one, prod, swap.
       rewrite ? iterate_succ, ? iterate_0; auto using zero_le.
-      unfold swap.
       repeat destruct excluded_middle_informative;
         try now contradiction (PA4 0).
       ring. }
@@ -993,16 +971,13 @@ Section Ring_theorems.
     induction n using Induction.
     { intros f i j [H H0] [H1 H2].
       unfold prod.
-      rewrite ? iterate_0.
-      replace i with 0%N by eauto using naturals.le_antisymm.
-      replace j with 0%N by eauto using naturals.le_antisymm.
-      now rewrite swap_refl. }
+      rewrite ? iterate_0, (le_antisymm i 0),
+      (le_antisymm j 0), swap_refl; auto. }
     intros f i j [H H0] [H1 H2].
     apply le_lt_or_eq in H0 as [H0 | H0];
       apply le_lt_or_eq in H2 as [H2 | H2]; subst.
-    - rewrite <-le_lt_succ in H0, H2.
-      rewrite ? prod_succ; auto using zero_le.
-      rewrite ? IHn; repeat split; auto.
+    - rewrite <-le_lt_succ, ? prod_succ, ? IHn in *;
+        repeat split; auto using zero_le.
       repeat f_equal.
       unfold swap.
       destruct excluded_middle_informative; subst;
@@ -1032,16 +1007,12 @@ Section Ring_theorems.
                        f i1 = g j → f i2 = g j → i1 = i2) as E1.
     { intros i1 i2 j H1 H2 H3 H4 H5.
       destruct (H j) as [k [[[H6 H7] H8] H9]]; auto.
-      assert (k = i1) by (apply H9; split; auto).
-      assert (k = i2) by (apply H9; split; auto).
-      now subst. }
+      replace i1 with k; replace i2 with k; try (apply H9; split); auto. }
     assert (∀ i j1 j2, 0 ≤ i ≤ S n → 0 ≤ j1 ≤ S n → 0 ≤ j2 ≤ S n →
                        f i = g j1 → f i = g j2 → j1 = j2) as E2.
     { intros i j1 j2 H1 H2 H3 H4 H5.
       destruct (H0 i) as [k [[[H6 H7] H8] H9]]; auto.
-      assert (k = j1) by (apply H9; split; auto).
-      assert (k = j2) by (apply H9; split; auto).
-      now subst. }
+      replace j1 with k; replace j2 with k; try (apply H9, split); auto. }
     destruct (H (S n)) as [k [[H1 H2] H3]].
     { split; auto using le_refl, zero_le. }
     destruct (classic (k = S n)) as [H4 | H4]; subst.
@@ -1049,37 +1020,27 @@ Section Ring_theorems.
       f_equal; auto.
       apply IHn.
       - intros j [H4 H5].
-        destruct (H j) as [k [[[H6 H7] H8] H9]].
-        { split; eauto using le_trans, le_succ. }
+        destruct (H j) as [k [[[H6 H7] H8] H9]]; eauto using le_trans, le_succ.
         exists k.
         repeat split; auto using zero_le.
         + rewrite le_lt_succ.
           apply le_lt_or_eq in H7 as [H7 | H7]; auto.
           subst.
-          assert (S n = j).
-          { eapply E2; eauto.
-            split; eauto using le_trans, le_succ. }
-          subst.
-          now apply not_succ_le in H5.
+          replace (S n) with j at 1 by eauto using le_trans, le_succ.
+          now apply le_lt_succ.
         + intros x' [[H10 H11] H12].
-          apply H9.
-          repeat split; eauto using le_trans, le_succ.
+          eauto using le_trans, le_succ.
       - intros i [H4 H5].
-        destruct (H0 i) as [k [[[H6 H7] H8] H9]].
-        { split; eauto using le_trans, le_succ. }
+        destruct (H0 i) as [k [[[H6 H7] H8] H9]]; eauto using le_trans, le_succ.
         exists k.
         repeat split; auto using zero_le.
         + rewrite le_lt_succ.
           apply le_lt_or_eq in H7 as [H7 | H7]; auto.
           subst.
-          assert (S n = i).
-          { eapply E1; eauto.
-            split; eauto using le_trans, le_succ. }
-          subst.
-          now apply not_succ_le in H5.
+          replace (S n) with i at 1 by eauto using le_trans, le_succ.
+          now apply le_lt_succ.
         + intros x' [[H10 H11] H12].
-          apply H9.
-          repeat split; eauto using le_trans, le_succ. }
+          eauto using le_trans, le_succ. }
     destruct H1 as [H1 H5].
     apply le_lt_or_eq in H5 as [H5 | H5]; try tauto.
     rewrite <-(product_swap _ f k (S n)); repeat split;
@@ -1091,22 +1052,19 @@ Section Ring_theorems.
          repeat destruct excluded_middle_informative; subst; tauto. }
     apply IHn.
     - intros j [H6 H7].
-      destruct (H j) as [l [[[H8 H9] H10] H11]].
-      { split; eauto using le_trans, le_succ. }
+      destruct (H j) as [l [[[H8 H9] H10] H11]]; eauto using le_trans, le_succ.
       apply le_lt_or_eq in H9 as [H9 | H9].
       + exists l.
         repeat split; auto using zero_le.
         * now apply le_lt_succ.
         * rewrite <-H10.
           unfold swap.
-          repeat destruct excluded_middle_informative; auto; subst.
-          2: { now apply lt_irrefl in H9. }
-          assert (S n = j).
-          { eapply (E2 k); repeat split;
-              eauto using zero_le, le_refl, le_trans, le_succ.
-            eapply lt_le_trans; eauto using le_refl. }
-          subst.
-          now apply not_succ_le in H7.
+          repeat destruct excluded_middle_informative; auto; subst;
+            try now apply lt_irrefl in H9.
+          replace j with (S n) in H7; try now apply not_succ_le in H7.
+          eapply (E2 k); repeat split;
+            eauto using zero_le, le_refl, le_trans, le_succ.
+          eapply lt_le_trans; eauto using le_refl.
         * intros x' [[H12 H13] H14].
           unfold swap in H14.
           repeat destruct excluded_middle_informative; subst.
@@ -1126,15 +1084,15 @@ Section Ring_theorems.
           destruct excluded_middle_informative; tauto.
         * intros x' [[H9 H12] H13].
           unfold swap in H13.
-          repeat destruct excluded_middle_informative; subst; auto.
-          { now apply not_succ_le in H12. }
+          repeat destruct excluded_middle_informative; subst; auto;
+            try now apply not_succ_le in H12.
           contradict n1.
           eapply (E1 _ _ j); repeat split;
             eauto using zero_le, le_refl, le_trans, le_succ.
     - intros i [H6 H7].
-      destruct (classic (i = k)) as [H8 | H8]; subst.
-      + destruct (H0 (S n)) as [l [[[H8 H9] H10] H11]].
-        { split; eauto using zero_le, le_refl. }
+      destruct (classic (i = k)) as [H8 | H8]; subst; unfold swap.
+      + destruct (H0 (S n)) as [l [[[H8 H9] H10] H11]];
+          eauto using zero_le, le_refl.
         exists l.
         repeat split; auto using zero_le.
         * apply le_lt_succ.
@@ -1143,15 +1101,13 @@ Section Ring_theorems.
           contradict H4.
           eapply (E1 _ _ (S n)); repeat split; auto using zero_le, le_refl.
           eapply lt_le_trans; eauto using le_refl.
-        * unfold swap.
-          destruct excluded_middle_informative; tauto.
+        * destruct excluded_middle_informative; tauto.
         * intros x' [[H12 H13] H14].
           apply H11.
           repeat split; eauto using le_trans, le_succ.
-          unfold swap in H14.
           repeat destruct excluded_middle_informative; tauto.
-      + destruct (H0 i) as [l [[[H9 H10] H11] H12]].
-        { split; eauto using le_trans, le_succ. }
+      + destruct (H0 i) as [l [[[H9 H10] H11] H12]];
+          eauto using le_trans, le_succ.
         exists l.
         repeat split; auto.
         * apply le_lt_succ.
@@ -1161,13 +1117,11 @@ Section Ring_theorems.
           eapply (E1 _ _ (S n)); repeat split;
             eauto using zero_le, le_refl, le_trans, le_succ.
           eapply lt_le_trans; eauto using le_refl.
-        * unfold swap.
-          repeat destruct excluded_middle_informative; subst; try tauto.
+        * repeat destruct excluded_middle_informative; subst; try tauto.
           now apply not_succ_le in H7.
         * intros x' [[H13 H14] H15].
           apply H12.
           repeat split; eauto using le_trans, le_succ.
-          unfold swap in H15.
           repeat destruct excluded_middle_informative; subst; try tauto.
           now apply not_succ_le in H7.
   Qed.

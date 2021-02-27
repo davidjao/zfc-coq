@@ -202,17 +202,27 @@ Proof.
   eapply pigeonhole_precursor; eauto using Set_is_subset.
 Qed.
 
+Theorem union_succ : ∀ n, n ∈ ω → ⋃ succ n = n.
+Proof.
+  intros n H.
+  unfold succ.
+  apply Extensionality.
+  split; intros H0; rewrite Union_classification in *; eauto using in_succ.
+  destruct H0 as [x [H0 H1]].
+  rewrite Pairwise_union_classification, Singleton_classification in H0.
+  destruct H0; try congruence.
+  apply (ω_is_transitive _ x); eauto using elements_of_naturals_are_naturals.
+Qed.
+
+Theorem union_ω : ∀ n, n ∈ ω → ⋃ n ∈ ω.
+Proof.
+  induction n using Induction_ω; rewrite ? Empty_union, ? union_succ; tauto.
+Qed.
+
 Theorem PA5_ω : ∀ n m, n ∈ ω → m ∈ ω → succ n = succ m → n = m.
 Proof.
   intros n m H H0 H1.
-  pose proof (in_succ n) as H2.
-  pose proof (in_succ m) as H3.
-  rewrite H1 in H2.
-  rewrite <-H1 in H3.
-  unfold succ in *.
-  rewrite Pairwise_union_classification, Singleton_classification in *.
-  destruct H2, H3; auto.
-  now contradiction (ω_irreflexive n m).
+  now rewrite <-union_succ, <-H1, union_succ.
 Qed.
 
 Theorem ω_WOP : ∀ X, X ≠ ∅ → X ⊂ ω → ∃ x, x ∈ X ∧ ∀ y, y ∈ X → x ⊂ y.
@@ -985,93 +995,98 @@ Proof.
   rewrite <-add_1_r; ring.
 Qed.
 
-Definition sub : N → N → N.
-Proof.
-  intros a b.
-  destruct (excluded_middle_informative (b ≤ a)).
-  - destruct (constructive_indefinite_description _ l) as [c].
-    exact c.
-  - exact 0.
-Defined.
+Definition pred (n : N) := (exist _ _ (union_ω _ (elts_in_set _ n)) : N).
+
+Definition sub a b := (iterated_op N (λ x _, pred x) a id b).
 
 Infix "-" := sub : N_scope.
+
+Theorem pred_0 : pred 0 = 0.
+Proof.
+  apply set_proj_injective; simpl.
+  apply Empty_union.
+Qed.
+
+Theorem pred_succ : ∀ a, pred (S a) = a.
+Proof.
+  intros a.
+  unfold pred.
+  apply set_proj_injective; simpl.
+  rewrite <-S_is_succ, union_succ; auto using N_in_ω.
+Qed.
 
 Theorem sub_0_r : ∀ a, a - 0 = a.
 Proof.
   intros a.
   unfold sub.
-  destruct excluded_middle_informative.
-  - destruct constructive_indefinite_description.
-    ring [e].
-  - exfalso; eauto using zero_le.
+  now rewrite iterated_op_0.
 Qed.
 
 Theorem sub_0_l : ∀ a, 0 - a = 0.
 Proof.
-  intros a.
-  unfold sub.
-  destruct excluded_middle_informative; auto.
-  destruct constructive_indefinite_description.
-  now apply cancellation_0_add in e as [H H0].
+  induction a using Induction; unfold sub in *.
+  - now rewrite iterated_op_0.
+  - now rewrite iterated_op_succ, IHa, pred_0.
+Qed.
+
+Theorem sub_succ_r : ∀ a b, a - S b = pred (a - b).
+Proof.
+  induction b using Induction; unfold sub;
+    now rewrite iterated_op_succ, ? iterated_op_0.
+Qed.
+
+Theorem sub_succ : ∀ a b, S a - S b = a - b.
+Proof.
+  induction b using Induction.
+  - now rewrite sub_succ_r, ? sub_0_r, pred_succ.
+  - now rewrite sub_succ_r, IHb, sub_succ_r.
+Qed.
+
+Theorem sub_abba : ∀ a b, a + b - b = a.
+Proof.
+  induction b using Induction.
+  - now rewrite add_0_r, sub_0_r.
+  - now rewrite add_succ_r, sub_succ.
 Qed.
 
 Theorem sub_diag : ∀ a, a - a = 0.
 Proof.
   intros a.
-  unfold sub.
-  destruct excluded_middle_informative.
-  - destruct constructive_indefinite_description.
-    rewrite <-(add_0_r a) in e at 2.
-    now apply cancellation_add in e.
-  - exfalso; eauto using le_refl.
-Qed.
-
-Theorem sub_abba : ∀ a b, a + b - b = a.
-Proof.
-  intros a b.
-  unfold sub.
-  destruct excluded_middle_informative.
-  - destruct constructive_indefinite_description.
-    rewrite (add_comm a) in e.
-    now apply cancellation_add in e.
-  - contradict n.
-    exists a.
-    ring.
+  now rewrite <-(add_0_l a), sub_abba at 1.
 Qed.
 
 Theorem sub_spec : ∀ a b c, a + c = b → c = b - a.
 Proof.
   intros a b c H.
-  unfold sub.
-  destruct excluded_middle_informative.
-  - destruct constructive_indefinite_description.
-    rewrite <-e in H.
-    now apply cancellation_add in H.
-  - contradict n.
-    now (exists c).
+  now rewrite <-H, add_comm, sub_abba.
 Qed.
 
 Theorem sub_0_le : ∀ a b, a - b = 0 → a ≤ b.
 Proof.
   intros a b H.
-  unfold sub in H.
-  destruct excluded_middle_informative.
-  - destruct constructive_indefinite_description.
-    subst.
-    now rewrite add_0_r in *.
-  - now apply lt_not_ge in n as [H0 H1].
+  destruct (le_trichotomy a b) as [H0 | [c H0]]; auto.
+  apply sub_spec in H0 as H1.
+  rewrite <-H0, H1, H, add_0_r.
+  apply le_refl.
+Qed.
+
+Theorem sub_abab : ∀ a b, a ≤ b → a + (b - a) = b.
+Proof.
+  intros a b [c H].
+  subst.
+  now rewrite (add_comm _ c), sub_abba, add_comm.
 Qed.
 
 Theorem sub_ne_0_lt : ∀ a b, a - b ≠ 0 → b < a.
 Proof.
   intros a b H.
-  unfold sub in H.
-  destruct excluded_middle_informative; try tauto.
-  destruct constructive_indefinite_description.
+  apply lt_not_ge.
+  contradict H.
+  destruct H as [c H].
   subst.
-  rewrite lt_def.
-  exists x.
-  split; auto.
+  induction c using Induction.
+  - now rewrite add_0_r, <-(add_0_l a), sub_abba at 1.
+  - now rewrite add_succ_r, sub_succ_r, IHc, pred_0.
 Qed.
 
 Definition min : N → N → N.
@@ -1189,13 +1204,6 @@ Proof.
   subst; ring.
 Qed.
 
-Theorem sub_abab : ∀ a b, a ≤ b → a + (b - a) = b.
-Proof.
-  intros a b [c H].
-  subst.
-  now rewrite (add_comm _ c), sub_abba, add_comm.
-Qed.
-
 Theorem lub : ∀ P, (∃ n : N, P n) → (∃ m : N, ∀ n : N, P n → n ≤ m)
                    → ∃ s : N, P s ∧ ∀ n : N, P n → n ≤ s.
 Proof.
@@ -1257,17 +1265,6 @@ Theorem succ_le : ∀ a b, a ≤ b ↔ S a ≤ S b.
 Proof.
   split; intros [c H]; exists c; subst; [ | apply PA5 ];
     now rewrite add_comm, add_succ_r, add_comm in *.
-Qed.
-
-Theorem sub_succ : ∀ a b, a - b = S a - S b.
-Proof.
-  intros a b.
-  unfold sub.
-  repeat destruct excluded_middle_informative;
-    repeat destruct constructive_indefinite_description; auto;
-      try now apply succ_le in l.
-  rewrite <-e, add_comm, add_succ_r, add_comm in e0.
-  now apply PA5, cancellation_add in e0.
 Qed.
 
 Theorem le_lt_succ : ∀ n m, m ≤ n ↔ m < S n.

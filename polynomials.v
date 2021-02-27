@@ -1269,7 +1269,7 @@ Section Polynomial_theorems.
       2: { intros H.
            symmetry in H.
            contradiction (PA4 c). }
-      rewrite <-sub_succ, ? sub_0_l.
+      rewrite sub_succ, ? sub_0_l.
       f_equal.
       destruct (classic (c = 0%N)) as [H | H].
       - subst.
@@ -1284,7 +1284,7 @@ Section Polynomial_theorems.
           now rewrite <-add_1_r, sub_abba in H. }
     apply succ_0 in H as [m H].
     subst.
-    rewrite <-? sub_succ, <-(add_1_r c), sub_abba.
+    rewrite ? sub_succ, <-(add_1_r c), sub_abba.
     destruct (lt_trichotomy c (S m)) as [H | [H | H]].
     - apply le_lt_succ in H as [d H].
       subst.

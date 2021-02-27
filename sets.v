@@ -38,6 +38,11 @@ Proof.
   apply (proj2_sig x).
 Qed.
 
+Theorem setify_action : ∀ x S (H : x ∈ S), elt_to_set S (exist _ _ H) = x.
+Proof.
+  auto.
+Qed.
+
 Theorem Empty_Set : ∃ w, ∀ x, x ∉ w.
 Proof.
   destruct Infinity as [x [[w [H H0]] H1]].
@@ -1034,12 +1039,12 @@ Section Function_evaluation.
   Qed.
 
   Theorem functionify_action :
-    ∀ g a (H : a ∈ A), (functionify g) a = g (exist _ _ H : elts A).
+    ∀ (a : elts A) g, (functionify g) a = g a.
   Proof.
-    intros g a H.
+    intros a g.
     unfold functionify.
     destruct constructive_indefinite_description as [g'], a0 as [H0 [H1 H2]].
-    now rewrite <-H2.
+    apply H2.
   Qed.
 
 End Function_evaluation.

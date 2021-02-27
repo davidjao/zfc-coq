@@ -440,8 +440,7 @@ Section Modular_arithmetic.
     Definition modulus_in_N : N.
     Proof.
       apply lt_def in modulus_pos.
-      destruct (constructive_indefinite_description _ modulus_pos) as [k].
-      destruct a.
+      destruct (constructive_indefinite_description _ modulus_pos) as [k], a.
       exact k.
     Defined.
 
@@ -454,10 +453,10 @@ Section Modular_arithmetic.
     Qed.
 
     Definition map_to_N : elts modulus_in_N → N.
+    Proof.
       intros x.
       pose proof (elts_in_set _ x) as H.
-      apply elements_of_naturals_are_naturals in H;
-        auto using (elts_in_set _ modulus_in_N).
+      apply elements_of_naturals_are_naturals in H; auto using N_in_ω.
       exact (exist _ _ H).
     Defined.
 
@@ -482,41 +481,40 @@ Section Modular_arithmetic.
       exact (map_to_N x).
     Defined.
 
-    Theorem bijection_of_Z_mod : (Z_mod ~ modulus_in_N)%set.
+    Theorem bijective_map_to_mod_n :
+      bijective (sets.functionify _ _ map_to_mod_n).
     Proof.
-      symmetry.
-      exists (sets.functionify _ _ map_to_mod_n).
-      rewrite sets.functionify_domain, sets.functionify_range.
-      repeat split; auto.
-      - apply Injective_classification.
-        intros x y H H0 H1.
-        rewrite ? sets.functionify_domain, ? sets.functionify_range in *.
-        set (ξ := (exist _ _ H : elts modulus_in_N)).
-        set (γ := (exist _ _ H0 : elts modulus_in_N)).
-        replace x with (ξ : set) in *; replace y with (γ : set) in *; auto.
-        rewrite (functionify_action _ _ _ _ H),
-        (functionify_action _ _ _ _ H0) in H1.
+      split; rewrite ? Injective_classification, ? Surjective_classification,
+             ? sets.functionify_domain, ? sets.functionify_range.
+      - intros x y H H0 H1.
+        rewrite <-(setify_action _ _ H), <-(setify_action _ _ H0),
+        ? functionify_action in *.
         apply set_proj_injective, IZn_eq, injective_mod_n_on_interval,
         INZ_eq in H1; auto using map_to_ge_0, map_to_lt_n.
         inversion H1.
         subst.
         now replace H with H0 in H1 by now apply proof_irrelevance.
-      - apply Surjective_classification.
-        intros y H.
-        rewrite ? sets.functionify_domain, ? sets.functionify_range in *.
-        set (γ := (exist _ _ H : Z_)).
-        replace y with (γ : set) by auto.
-        destruct (surjective_mod_n_on_interval γ) as [x [[[H0 H1] H2] H3]].
-        apply le_def in H0 as H4.
-        destruct H4 as [ξ H4].
+      - intros y H.
+        rewrite <-(setify_action _ _ H) in *.
+        destruct (surjective_mod_n_on_interval (exist _ _ H))
+          as [x [[[H0 H1] H2] H3]].
+        apply le_def in H0 as [ξ H4].
         ring_simplify in H4.
         exists ξ.
         assert (ξ ∈ modulus_in_N) as H5.
         { now rewrite <-lt_is_in, <-INZ_lt, <-modulus_in_Z, <-H4. }
         split; auto.
-        rewrite (functionify_action _ _ _ _ H5), H2, H4.
+        rewrite <-(setify_action _ _ H5), functionify_action, H2, H4.
         now apply f_equal, set_proj_injective, f_equal,
         IZn_eq, eq_eqm, f_equal, set_proj_injective.
+    Qed.
+
+    Theorem bijection_of_Z_mod : (Z_mod ~ modulus_in_N)%set.
+    Proof.
+      symmetry.
+      exists (sets.functionify _ _ map_to_mod_n).
+      rewrite sets.functionify_domain, sets.functionify_range.
+      auto using bijective_map_to_mod_n.
     Qed.
  
     Theorem finite_Z_mod : finite Z_mod.
@@ -554,7 +552,7 @@ Section Modular_arithmetic.
       apply Specify_classification.
       split; auto using (elts_in_set Z_mod).
       exists 1.
-      repeat split; auto; try apply div_1_l.
+      repeat split; auto; apply div_1_l.
     Qed.
 
     Corollary Euler_Phi_ge_1 : (1 ≤ Euler_Phi)%N.

@@ -1060,14 +1060,12 @@ Qed.
 Theorem INZ_sub : ∀ a b : N, b ≤ a → a - b = (a - b)%N.
 Proof.
   intros a b H.
-  unfold naturals.sub, sub.
-  destruct excluded_middle_informative.
-  - destruct constructive_indefinite_description.
-    subst.
-    rewrite <-INZ_add.
-    ring.
-  - contradict n.
-    now apply INZ_le.
+  unfold sub.
+  replace (a : Z) with ((a-b)%N + b); try ring.
+  rewrite INZ_add.
+  f_equal.
+  apply INZ_le in H.
+  now rewrite add_comm, sub_abab.
 Qed.
 
 Section IZR.
