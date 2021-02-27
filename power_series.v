@@ -1,31 +1,29 @@
-Set Warnings "-notation-overridden,-uniform-inheritance,-ambiguous-paths".
+Set Warnings "-uniform-inheritance,-ambiguous-paths".
 Require Export rings.
 
 Section Power_series_construction.
 
-  Variable R : ring.
+  Variable Ring : ring.
 
   Declare Scope Ring_scope.
   Delimit Scope Ring_scope with ring.
-  Bind Scope Ring_scope with R.
+  Bind Scope Ring_scope with Ring.
   Open Scope Ring_scope.
-  Notation Rset := (set_R R).
-  Notation Rring := (rings.R R).
-  Infix "+" := (add R) : Ring_scope.
-  Infix "*" := (mul R) : Ring_scope.
-  Notation "0" := (zero R : Rring) : Ring_scope.
-  Notation "1" := (one R : Rring) : Ring_scope.
-  Notation "- a" := (neg R a) : Ring_scope.
+  Notation Rset := (Rset Ring).
+  Notation R := (elts Rset).
+  Infix "+" := (add Ring) : Ring_scope.
+  Infix "*" := (mul Ring) : Ring_scope.
+  Notation "0" := (zero Ring) : Ring_scope.
+  Notation "1" := (one Ring) : Ring_scope.
+  Notation "- a" := (neg Ring a) : Ring_scope.
 
-  Add Ring generic_ring :
-    (mk_rt 0 1 (add R) (mul R) (sub R) (neg R) eq (A3 R) (A1 R) (A2 R) (M3 R)
-           (M1 R) (M2 R) (D1 R) (sub_is_neg R) (A4 R)).
+  Add Ring generic_ring : (ringify Ring).
 
   Definition power_series_set := {x in P (ω × Rset) | is_function x ω Rset}.
 
   Definition power_series := elts power_series_set.
 
-  Definition coefficient : power_series → N → Rring.
+  Definition coefficient : power_series → N → R.
   Proof.
     intros f n.
     pose proof elts_in_set _ f as H; simpl in H.
@@ -36,7 +34,7 @@ Section Power_series_construction.
     exact (exist _ _ H1).
   Defined.
 
-  Definition seriesify : (N → Rring) → power_series.
+  Definition seriesify : (N → R) → power_series.
   Proof.
     intros f.
     pose proof func_hyp (functionify _ _ f) as [H _].
@@ -128,11 +126,9 @@ Section Power_series_construction.
     set (η := exist _ _ H0 : N).
     replace n with (η : set) by auto.
     set (f'' := (λ n : N, exist _ _ (function_maps_domain_to_range
-                                       f' n (elts_in_set (domain f') n))
-                 : elts Rset)).
+                                       f' n (elts_in_set (domain f') n)) : R)).
     set (g'' := (λ n : N, exist _ _ (function_maps_domain_to_range
-                                       g' n (elts_in_set (domain g') n))
-                 : elts Rset)).
+                                       g' n (elts_in_set (domain g') n)) : R)).
     fold f'' g'' in H.
     replace (f' η : set) with (f'' η : set) by auto.
     replace (g' η : set) with (g'' η : set) by auto.
@@ -184,7 +180,7 @@ Section Power_series_construction.
   Notation "0" := zero : Series_scope.
   Notation "1" := one : Series_scope.
   Coercion ISS : power_series >-> set.
-  Coercion IRS : Rring >-> power_series.
+  Coercion IRS : R >-> power_series.
 
   Theorem zero_series_const : 0 = seriesify (λ n, 0%ring).
   Proof.
@@ -230,12 +226,12 @@ Section Power_series_construction.
     exact
       (seriesify
          (λ n,
-          sum R (λ k, mul _ (coefficient a k) (coefficient b (n-k))) 0 n)).
+          sum _ (λ k, mul _ (coefficient a k) (coefficient b (n-k))) 0 n)).
   Defined.
 
   Lemma mul_comm_coeff :
-    ∀ n f g, (sum R (λ k, (f k) * (g (n-k))) 0 n) =
-             (sum R (λ k, (g k) * (f (n-k))) 0 n).
+    ∀ n f g, (sum _ (λ k, (f k) * (g (n-k))) 0 n) =
+             (sum _ (λ k, (g k) * (f (n-k))) 0 n).
   Proof.
     induction n using Induction.
     { intros f g.
@@ -243,8 +239,8 @@ Section Power_series_construction.
       now rewrite ? iterate_0, sub_0_l, M1. }
     intros f g.
     rewrite sum_succ; auto using zero_le.
-    replace (sum R (λ k : N, f k * g (S n - k)) 0 n)
-      with (sum R (λ k : N, f k * g (n - k + 1)%N) 0 n).
+    replace (sum _ (λ k : N, f k * g (S n - k)) 0 n)
+      with (sum _ (λ k : N, f k * g (n - k + 1)%N) 0 n).
     2: { unfold sum.
          replace n with (0+n)%N at 1 2 by ring.
          apply iterate_extensionality.
@@ -269,12 +265,12 @@ Section Power_series_construction.
     { unfold sum.
       now rewrite add_0_r, ? iterate_0, ? sub_diag, add_1_r. }
     rewrite sum_succ; auto using zero_le.
-    replace (sum R (λ k : N, g (k + 1)%N * f (S n - k)) 0 n)
-      with (sum R (λ k : N, g (k + 1)%N * f (S n - (n - (n - k)))) 0 n).
+    replace (sum _ (λ k : N, g (k + 1)%N * f (S n - k)) 0 n)
+      with (sum _ (λ k : N, g (k + 1)%N * f (S n - (n - (n - k)))) 0 n).
     - rewrite (IHn (λ k, f (S n - (n - k)))), <-? add_1_r, ? naturals.add_0_l,
       ? (naturals.add_comm 1), ? add_1_r.
-      fold (sum R (λ k : N, g k * f (S n - (n - (S n - k)))) 1 (S n))
-           (sum R (λ k : N, g k * f (S (S n) - k)) 1 (S (S n))).
+      fold (sum _ (λ k : N, g k * f (S n - (n - (S n - k)))) 1 (S n))
+           (sum _ (λ k : N, g k * f (S (S n) - k)) 1 (S (S n))).
       rewrite ? sum_succ, ? sub_diag;
         try (exists n; now rewrite naturals.add_comm, add_1_r).
       2: { exists (n+1)%N.
@@ -329,9 +325,9 @@ Section Power_series_construction.
   Qed.
 
   Lemma mul_assoc_coeff : ∀ n a b c,
-      sum R (λ k, (a k) *
-                  sum R (λ j, (b j) * (c (n - k - j))) 0 (n-k))%ring 0 n =
-      sum R (λ k, (sum R (λ j, (a j) *
+      sum _ (λ k, (a k) *
+                  sum _ (λ j, (b j) * (c (n - k - j))) 0 (n-k))%ring 0 n =
+      sum _ (λ k, (sum _ (λ j, (a j) *
                                (b (k - j))) 0 k) * (c (n - k)))%ring 0 n.
   Proof.
     intros.
@@ -350,9 +346,9 @@ Section Power_series_construction.
       ring. }
     apply succ_0 in H as [m H].
     subst.
-    replace (sum R (λ k : N, a k * sum R (λ j : N, b j * c (S (S m) - k - j))
+    replace (sum _ (λ k : N, a k * sum _ (λ j : N, b j * c (S (S m) - k - j))
                                        0 (S (S m) - k)) 0 (S m))%ring with
-        (sum R (λ k : N, a k * sum R (λ j : N, b j * c (S (S m) - k - j))
+        (sum _ (λ k : N, a k * sum _ (λ j : N, b j * c (S (S m) - k - j))
                                    0 (S ((S m) - k))) 0 (S m))%ring.
     2: { apply iterate_extensionality.
          intros k [H [d H0]].
@@ -361,11 +357,11 @@ Section Power_series_construction.
          now rewrite <-? H0, <-? add_1_r, (naturals.add_comm k), sub_abba,
          (naturals.add_comm _ 1), naturals.add_assoc, sub_abba,
          naturals.add_comm. }
-    replace (sum R (λ k : N, a k * sum R (λ j : N, b j * c (S (S m) - k - j))
+    replace (sum _ (λ k : N, a k * sum _ (λ j : N, b j * c (S (S m) - k - j))
                                        0 (S ((S m) - k))) 0 (S m))%ring with
-        ((sum R (λ k : N, a k * (sum R (λ j : N, b j * c (S (S m) - k - j))
+        ((sum _ (λ k : N, a k * (sum _ (λ j : N, b j * c (S (S m) - k - j))
                                      0 ((S m) - k))) 0 (S m))
-         + (sum R (λ k : N, a k * b (S ((S m) - k)) * (c 0%N)) 0 (S m)))%ring.
+         + (sum _ (λ k : N, a k * b (S ((S m) - k)) * (c 0%N)) 0 (S m)))%ring.
     2: { rewrite <-sum_dist.
          apply iterate_extensionality.
          intros k [H [d H0]].
@@ -378,9 +374,9 @@ Section Power_series_construction.
          naturals.add_comm, sub_diag. }
     pose proof (IHn (λ n, (c (n + 1)%N))) as Z.
     simpl in Z.
-    replace (sum R (λ k : N, a k * sum R (λ j : N, b j * c (S (S m) - k - j))
+    replace (sum _ (λ k : N, a k * sum _ (λ j : N, b j * c (S (S m) - k - j))
                                        0 (S m - k)) 0 (S m))%ring with
-        (sum R (λ k : N, (a k * sum R (λ j : N, b j * c (S m - k - j + 1)%N)
+        (sum _ (λ k : N, (a k * sum _ (λ j : N, b j * c (S m - k - j + 1)%N)
                                     0 (S m - k))%ring) 0 (S m)).
     2: { apply iterate_extensionality.
          intros k [H [d H0]].
@@ -517,9 +513,9 @@ Section Power_series_construction.
     intros a b H.
     unfold IRS in H.
     set (A := (λ n : N, if excluded_middle_informative
-                             (n = 0%N) then a else rings.zero R)).
+                             (n = 0%N) then a else 0%ring)).
     set (B := (λ n : N, if excluded_middle_informative
-                             (n = 0%N) then b else rings.zero R)).
+                             (n = 0%N) then b else 0%ring)).
     assert (A = B).
     - unfold A, B.
       rewrite <-coefficient_seriesify.
@@ -659,20 +655,20 @@ Section Power_series_construction.
 
   Theorem coefficient_mul :
     ∀ n f g, coefficient (f * g) n =
-             sum R (λ k, (coefficient f k * coefficient g (n-k))%ring) 0 n.
+             sum _ (λ k, (coefficient f k * coefficient g (n-k))%ring) 0 n.
   Proof.
     intros n f g.
     unfold mul.
     now rewrite coefficient_seriesify.
   Qed.
 
-  Lemma const_coeff_mul : ∀ (n : N) (c : Rring) f,
-      coefficient ((IRS c) * f) n = (c * coefficient f n)%ring.
+  Lemma const_coeff_mul : ∀ (n : N) (c : R) f,
+      coefficient (IRS c * f) n = (c * coefficient f n)%ring.
   Proof.
     intros n c f.
     unfold IRS, mul at 1.
     rewrite coefficient_seriesify.
-    assert (∀ r : Rring, sum R (λ k, if (excluded_middle_informative (k = 0%N))
+    assert (∀ r, sum _ (λ k, if (excluded_middle_informative (k = 0%N))
                                  then r else 0%ring) 0 n = r) as H.
     { intros r.
       induction n using Induction.

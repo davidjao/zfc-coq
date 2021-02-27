@@ -159,7 +159,7 @@ Section Modular_arithmetic.
   Proof.
     repeat split.
     - intros a H.
-      replace a with ((exist _ _ H : Z) : set) by auto.
+      rewrite <-(setify_action _ _ H).
       apply Specify_classification; split.
       + apply Product_classification; eauto.
       + eauto using eqm_refl.
@@ -353,14 +353,10 @@ Section Modular_arithmetic.
   Proof.
     split; intros H.
     - destruct H as [x H].
-      unfold rings.R, set_R in x.
-      simpl in *.
-      fold Z_ in x.
       apply IZn_eq in H.
       destruct H as [y H].
-      unfold rings.R, set_R in y.
       simpl in *.
-      fold Z in y.
+      fold Z Z_ in x, y.
       assert (1 = a * x + n * (-y))%Z as H0.
       { replace (n*(-y))%Z with (-(y*n))%Z by ring.
         rewrite <-H.
@@ -774,7 +770,7 @@ Section Modular_arithmetic.
           apply Specify_classification.
           split; auto.
           set (ζ := exist _ _ H : Z_).
-          replace z with (ζ : set) in * by auto.
+          rewrite <-(setify_action _ _ H) in *; fold ζ in H0 |-*.
           exists ζ.
           split; try now rewrite <-Zproj_eq.
           repeat split; try apply div_1_l.

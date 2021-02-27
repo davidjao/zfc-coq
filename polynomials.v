@@ -1,40 +1,38 @@
 Set Warnings "-notation-overridden,-uniform-inheritance,-ambiguous-paths".
-Require Export power_series combinatorics.
+Require Export sets power_series combinatorics.
 
 Section Polynomials_construction.
 
-  Variable R : ring.
+  Variable ring : rings.ring.
 
   Declare Scope R_scope.
   Delimit Scope R_scope with R.
-  Bind Scope R_scope with R.
+  Bind Scope R_scope with ring.
   Declare Scope Series_scope.
   Delimit Scope Series_scope with series.
   Bind Scope Series_scope with power_series.
   Open Scope R_scope.
-  Notation Rring := (rings.R R).
-  Infix "+" := (rings.add R) : R_scope.
-  Infix "*" := (rings.mul R) : R_scope.
-  Notation "- a" := (rings.neg R a) : R_scope.
-  Infix "+" := (power_series.add R) : Series_scope.
-  Infix "*" := (power_series.mul R) : Series_scope.
-  Notation "0" := (rings.zero R) : R_scope.
-  Notation "1" := (rings.one R) : R_scope.
-  Notation "0" := (power_series.zero R) : Series_scope.
-  Notation "1" := (power_series.one R) : Series_scope.
-  Notation "- a" := (power_series.neg R a) : Series_scope.
+  Notation R := (elts (Rset ring)).
+  Infix "+" := (rings.add ring) : R_scope.
+  Infix "*" := (rings.mul ring) : R_scope.
+  Notation "- a" := (rings.neg ring a) : R_scope.
+  Infix "+" := (power_series.add ring) : Series_scope.
+  Infix "*" := (power_series.mul ring) : Series_scope.
+  Notation "0" := (rings.zero ring) : R_scope.
+  Notation "1" := (rings.one ring) : R_scope.
+  Notation "0" := (power_series.zero ring) : Series_scope.
+  Notation "1" := (power_series.one ring) : Series_scope.
+  Notation "- a" := (power_series.neg ring a) : Series_scope.
 
-  Add Ring generic_ring :
-    (mk_rt 0 1 (rings.add R) (rings.mul R) (rings.sub R) (rings.neg R) eq
-           (rings.A3 R) (rings.A1 R) (rings.A2 R) (rings.M3 R) (rings.M1 R)
-           (rings.M2 R) (rings.D1 R) (rings.sub_is_neg R) (rings.A4 R)).
+  Add Ring generic_ring : (ringify ring).
 
   Definition polynomial_set :=
-    {f in power_series_set R |
-      ∃ f' : power_series R,
+    {f in power_series_set ring |
+      ∃ f' : power_series _,
        f = f' ∧ ∃ n : N, ∀ m, (n ≤ m)%N → coefficient _ f' m = 0}.
 
-  Theorem polynomials_are_subset : polynomial_set ⊂ set_R (power_series_ring R).
+  Theorem polynomials_are_subset :
+    polynomial_set ⊂ Rset (power_series_ring ring).
   Proof.
     intros f H.
     apply Specify_classification in H as [H H0].
@@ -42,7 +40,7 @@ Section Polynomials_construction.
   Qed.
 
   Theorem polynomials_are_subring :
-    is_subring (power_series_ring R) polynomial_set.
+    is_subring (power_series_ring ring) polynomial_set.
   Proof.
     repeat split.
     - intros [a A] [b B] H H0.
@@ -53,8 +51,8 @@ Section Polynomials_construction.
       subst.
       replace A with A' by now apply proof_irrelevance.
       replace B with B' by now apply proof_irrelevance.
-      set (a := (exist (λ x : set, x ∈ power_series_set R) a' A')).
-      set (b := (exist (λ x : set, x ∈ power_series_set R) b' B')).
+      set (a := (exist (λ x : set, x ∈ power_series_set _) a' A')).
+      set (b := (exist (λ x : set, x ∈ power_series_set _) b' B')).
       fold a b in H2, H4 |-*.
       apply Specify_classification.
       split; eauto using elts_in_set.
@@ -73,8 +71,8 @@ Section Polynomials_construction.
       subst.
       replace A with A' by now apply proof_irrelevance.
       replace B with B' by now apply proof_irrelevance.
-      set (a := (exist (λ x : set, x ∈ power_series_set R) a' A')).
-      set (b := (exist (λ x : set, x ∈ power_series_set R) b' B')).
+      set (a := (exist (λ x : set, x ∈ power_series_set _) a' A')).
+      set (b := (exist (λ x : set, x ∈ power_series_set _) b' B')).
       fold a b in H2, H4 |-*.
       apply Specify_classification.
       split; eauto using elts_in_set.
@@ -101,7 +99,7 @@ Section Polynomials_construction.
       simpl in *.
       subst.
       replace A with A' by now apply proof_irrelevance.
-      set (a := (exist (λ x : set, x ∈ power_series_set R) a' A')).
+      set (a := (exist (λ x : set, x ∈ power_series_set _) a' A')).
       fold a in H1 |-*.
       apply Specify_classification.
       split; eauto using elts_in_set.
@@ -129,7 +127,7 @@ Section Polynomials_construction.
   Definition polynomial_ring :=
     subring _ polynomial_set polynomials_are_subset polynomials_are_subring.
 
-  Notation poly := (rings.R polynomial_ring).
+  Notation poly := (elts (Rset polynomial_ring)).
 
   Declare Scope Poly_scope.
   Delimit Scope Poly_scope with poly.
@@ -144,7 +142,7 @@ Section Polynomials_construction.
   Notation "- f" := (rings.neg polynomial_ring f) : Poly_scope.
 
   Theorem consts_are_polys :
-    ∀ c : Rring, (power_series.IRS _ c) ∈ polynomial_set.
+    ∀ c : R, (power_series.IRS _ c) ∈ polynomial_set.
   Proof.
     intros c.
     apply Specify_classification.
@@ -162,13 +160,13 @@ Section Polynomials_construction.
     apply naturals.succ_lt.
   Qed.
 
-  Notation PS := (power_series R).
+  Notation PS := (power_series ring).
 
-  Theorem x_is_poly : x R ∈ polynomial_set.
+  Theorem x_is_poly : x ring ∈ polynomial_set.
   Proof.
     apply Specify_classification.
     split; eauto using elts_in_set.
-    exists (x R).
+    exists (x _).
     split; auto.
     exists 2%N.
     intros m [c H].
@@ -188,16 +186,16 @@ End Polynomials_construction.
 
 Section Polynomial_theorems.
 
-  Variable Ring : ring.
-  Definition R := (rings.R Ring).
-  Notation SR := (power_series_ring Ring).
-  Notation PR := (polynomial_ring Ring).
-  Definition series := (rings.R SR).
-  Definition poly := (rings.R PR).
+  Variable ring : rings.ring.
+  Definition R := elts (Rset ring).
+  Notation SR := (power_series_ring ring).
+  Notation PR := (polynomial_ring ring).
+  Definition series := elts (Rset SR).
+  Definition poly := elts (Rset PR).
   Definition IPS :=
-    ISR (power_series_ring Ring) (polynomial_set Ring)
-        (polynomials_are_subset Ring) : poly → series.
-  Definition IRS := (power_series.IRS Ring) : R → series.
+    ISR (power_series_ring _) (polynomial_set _)
+        (polynomials_are_subset _) : poly → series.
+  Definition IRS := (power_series.IRS _) : R → series.
   Coercion IPS : poly >-> series.
 
   Declare Scope R_scope.
@@ -211,22 +209,22 @@ Section Polynomial_theorems.
   Bind Scope Poly_scope with poly.
 
   Open Scope R_scope.
-  Infix "+" := (rings.add Ring) : R_scope.
-  Notation "a + b" := (rings.add Ring (a : R) (b : R) : R) : R_scope.
-  Infix "*" := (rings.mul Ring) : R_scope.
-  Notation "a * b" := (rings.mul Ring (a : R) (b : R) : R) : R_scope.
-  Infix "-" := (rings.sub Ring) : R_scope.
-  Notation "a - b" := (rings.sub Ring (a : R) (b : R) : R) : R_scope.
-  Notation "- a" := (rings.neg Ring a) : R_scope.
-  Notation "- a" := (rings.neg Ring (a : R) : R) : R_scope.
-  Infix "^" := (rings.pow Ring) : R_scope.
-  Notation "a ^ b" := (rings.pow Ring (a : R) (b : N) : R) : R_scope.
-  Notation "0" := (rings.zero Ring) : R_scope.
-  Notation "0" := (rings.zero Ring : R) : R_scope.
-  Notation "1" := (rings.one Ring) : R_scope.
-  Notation "1" := (rings.one Ring : R) : R_scope.
-  Add Ring base_ring : (ringify Ring : ring_theory 0 _ _ _ _ _ eq).
-  Add Ring base_ring_raw : (ringify Ring).
+  Infix "+" := (rings.add ring) : R_scope.
+  Notation "a + b" := (rings.add _ (a : R) (b : R) : R) : R_scope.
+  Infix "*" := (rings.mul ring) : R_scope.
+  Notation "a * b" := (rings.mul _ (a : R) (b : R) : R) : R_scope.
+  Infix "-" := (rings.sub ring) : R_scope.
+  Notation "a - b" := (rings.sub _ (a : R) (b : R) : R) : R_scope.
+  Notation "- a" := (rings.neg ring a) : R_scope.
+  Notation "- a" := (rings.neg _ (a : R) : R) : R_scope.
+  Infix "^" := (rings.pow ring) : R_scope.
+  Notation "a ^ b" := (rings.pow _ (a : R) (b : N) : R) : R_scope.
+  Notation "0" := (rings.zero ring) : R_scope.
+  Notation "0" := (rings.zero _ : R) : R_scope.
+  Notation "1" := (rings.one ring) : R_scope.
+  Notation "1" := (rings.one _ : R) : R_scope.
+  Add Ring base_ring : (ringify _ : ring_theory 0 _ _ _ _ _ eq).
+  Add Ring base_ring_raw : (ringify ring).
 
   Open Scope Series_scope.
   Infix "+" := (rings.add SR) : Series_scope.
@@ -240,28 +238,28 @@ Section Polynomial_theorems.
   Infix "^" := (rings.pow SR) : Series_scope.
   Notation "a ^ b" := (rings.pow _ (a:series) (b : N) : series) : Series_scope.
   Notation "0" := (rings.zero SR) : Series_scope.
-  Notation "0" := (rings.zero SR : series) : Series_scope.
+  Notation "0" := (rings.zero _ : series) : Series_scope.
   Notation "1" := (rings.one SR) : Series_scope.
-  Notation "1" := (rings.one SR : series) : Series_scope.
-  Add Ring series_ring : (ringify SR : ring_theory 0 _ _ _ _ _ eq).
+  Notation "1" := (rings.one _ : series) : Series_scope.
+  Add Ring series_ring : (ringify _ : ring_theory 0 _ _ _ _ _ eq).
   Add Ring series_ring_raw : (ringify SR).
 
   Open Scope Poly_scope.
   Infix "+" := (rings.add PR) : Poly_scope.
-  Notation "a + b" := (rings.add PR (a : poly) (b : poly) : poly) : Poly_scope.
+  Notation "a + b" := (rings.add _ (a : poly) (b : poly) : poly) : Poly_scope.
   Infix "*" := (rings.mul PR) : Poly_scope.
-  Notation "a * b" := (rings.mul PR (a : poly) (b : poly) : poly) : Poly_scope.
+  Notation "a * b" := (rings.mul _ (a : poly) (b : poly) : poly) : Poly_scope.
   Infix "-" := (rings.sub PR) : Poly_scope.
-  Notation "a - b" := (rings.sub PR (a : poly) (b : poly) : poly) : Poly_scope.
+  Notation "a - b" := (rings.sub _ (a : poly) (b : poly) : poly) : Poly_scope.
   Notation "- a" := (rings.neg PR a) : Poly_scope.
-  Notation "- a" := (rings.neg PR (a : poly) : poly) : Poly_scope.
+  Notation "- a" := (rings.neg _ (a : poly) : poly) : Poly_scope.
   Infix "^" := (rings.pow PR) : Poly_scope.
-  Notation "a ^ b" := (rings.pow PR (a : poly) (b : N) : poly) : Poly_scope.
+  Notation "a ^ b" := (rings.pow _ (a : poly) (b : N) : poly) : Poly_scope.
   Notation "0" := (rings.zero PR) : Poly_scope.
-  Notation "0" := (rings.zero PR : poly) : Poly_scope.
+  Notation "0" := (rings.zero _ : poly) : Poly_scope.
   Notation "1" := (rings.one PR) : Poly_scope.
-  Notation "1" := (rings.one PR : poly) : Poly_scope.
-  Add Ring poly_ring : (ringify PR : ring_theory 0 _ _ _ _ _ eq).
+  Notation "1" := (rings.one _ : poly) : Poly_scope.
+  Add Ring poly_ring : (ringify _ : ring_theory 0 _ _ _ _ _ eq).
   Add Ring poly_ring_raw : (ringify PR).
 
   Definition IRP (c : R) := (exist _ _ (consts_are_polys _ c)) : poly.
@@ -299,7 +297,7 @@ Section Polynomial_theorems.
   Proof.
     intros a b.
     unfold IRP; apply set_proj_injective; simpl.
-    rewrite (IRS_add Ring).
+    rewrite (IRS_add _).
     unfold ISR, rings.IRS, ISS.
     simpl.
     do 2 f_equal; now apply set_proj_injective.
@@ -309,7 +307,7 @@ Section Polynomial_theorems.
   Proof.
     intros a b.
     unfold IRP; apply set_proj_injective; simpl.
-    rewrite (IRS_mul Ring).
+    rewrite (IRS_mul _).
     unfold ISR, rings.IRS, ISS.
     simpl.
     do 2 f_equal; now apply set_proj_injective.
@@ -319,7 +317,7 @@ Section Polynomial_theorems.
   Proof.
     intros a.
     unfold IRP; apply set_proj_injective; simpl.
-    rewrite (IRS_neg Ring).
+    rewrite (IRS_neg _).
     unfold ISR, rings.IRS, ISS.
     simpl.
     do 2 f_equal; now apply set_proj_injective.
@@ -435,7 +433,7 @@ Section Polynomial_theorems.
     intros n H.
     unfold IPS, x, ISR, ISS.
     simpl in *.
-    replace 0%R with (power_series.coefficient _ (power_series.x Ring) n).
+    replace 0%R with (power_series.coefficient _ (power_series.x ring) n).
     { unfold coefficient.
       f_equal.
       now apply set_proj_injective. }
@@ -455,7 +453,7 @@ Section Polynomial_theorems.
   Proof.
     unfold IPS, x, ISR, ISS.
     simpl in *.
-    replace 1%R with (power_series.coefficient _ (power_series.x Ring) 1).
+    replace 1%R with (power_series.coefficient _ (power_series.x ring) 1).
     { unfold coefficient.
       f_equal.
       now apply set_proj_injective. }
@@ -565,7 +563,7 @@ Section Polynomial_theorems.
     unfold coefficient, IPS.
     rewrite <-ISR_mul; simpl in *.
     unfold power_series.mul, coefficient in *.
-    rewrite coefficient_seriesify, <-(singleton_sum Ring n (S n) 1%R).
+    rewrite coefficient_seriesify, <-(singleton_sum _ n (S n) 1%R).
     2: { exists 1%N; now rewrite add_1_r. }
     apply iterate_extensionality.
     intros k [H0 [c H1]].
@@ -599,7 +597,7 @@ Section Polynomial_theorems.
 
   Theorem coefficient_mul : ∀ n f g,
       coefficient (f * g) n =
-      sum Ring (λ k, (coefficient f k * coefficient g (n-k))%R) 0 n.
+      sum _ (λ k, (coefficient f k * coefficient g (n-k))%R) 0 n.
   Proof.
     intros n f g.
     unfold coefficient.
@@ -615,7 +613,7 @@ Section Polynomial_theorems.
     intros f H.
     apply degree_bound.
     intros m H0.
-    rewrite (sub_is_neg (polynomial_ring Ring)),
+    rewrite (sub_is_neg (polynomial_ring _)),
     coefficient_add, coefficient_neg, const_coeff_mul in *.
     destruct (classic (m = degree f)) as [H1 | H1]; subst.
     - rewrite coeffs_of_x_to_n; auto.
@@ -757,7 +755,7 @@ Section Polynomial_theorems.
     destruct (classic (k ≤ (S k + c))%N) as [H0 | H0].
     - unfold coefficient.
       rewrite pow_succ_r, rings.M2, rings.M1, <-IPS_mul.
-      replace (x : series) with (power_series.x Ring)
+      replace (x : series) with (power_series.x ring)
         by now apply set_proj_injective.
       simpl.
       rewrite mul_x_shift.
@@ -971,7 +969,7 @@ Section Polynomial_theorems.
     intros n α.
     unfold eval.
     destruct (classic (1%R = 0%R)) as [| H]; auto using zero_ring_degeneracy.
-    rewrite degree_x_to_n, <-(singleton_sum Ring n n (α^n)%R);
+    rewrite degree_x_to_n, <-(singleton_sum _ n n (α^n)%R);
       auto using naturals.le_refl.
     apply iterate_extensionality.
     intros k H0.
@@ -1211,7 +1209,7 @@ Section Polynomial_theorems.
       auto using monic_a_plus_x; ring.
   Qed.
 
-  Definition INR := (INR Ring) : N → R.
+  Definition INR := (INR _) : N → R.
   Coercion INR : N >-> R.
 
   Lemma binomial_theorem_zero :

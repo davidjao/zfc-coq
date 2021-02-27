@@ -1,4 +1,5 @@
-Set Warnings "-notation-overridden,-ambiguous-paths".
+Set Warnings "-notation-overridden,-uniform-inheritance".
+Set Warnings "-fragile-hint-constr,-ambiguous-paths".
 Require Export naturals rings ordered_rings List Permutation.
 
 Definition integer_relation := {z in (ω × ω) × (ω × ω) | ∃ a b c d : N,
@@ -43,16 +44,15 @@ Proof.
 Qed.
 
 Definition Zset := (ω × ω) / integer_relation.
-
-Definition Z := elts Zset.
-
-Definition IZS (a : Z) := elt_to_set _ a : set.
-Coercion IZS : Z >-> set.
+Definition Z := (elts Zset).
 
 Declare Scope Z_scope.
 Delimit Scope Z_scope with Z.
 Open Scope Z_scope.
 Bind Scope Z_scope with Z.
+
+Definition IZS (a : Z) := elt_to_set _ a : set.
+Coercion IZS : Z >-> set.
 
 Definition embed : N → N → Z.
 Proof.
@@ -287,9 +287,8 @@ Infix "-" := sub : Z_scope.
 
 Definition ℤ := mkRing _ zero one add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
 
-Add Ring integer_ring :
-  (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1
-         (sub_is_neg ℤ : ∀ a b : Z, a + -b = a - b) A4).
+Add Ring integer_ring_raw : (ringify ℤ).
+Add Ring integer_ring : (ringify ℤ : ring_theory 0 1 add mul sub neg eq).
 
 Definition lt : Z → Z → Prop.
 Proof.
@@ -395,13 +394,9 @@ Proof.
   tauto.
 Qed.
 
-Definition ℤ_order := mkOring ℤ lt lt_trans T O1 O2 zero_ne_1.
-Definition ℤ_ID := integral_domain_OR ℤ_order.
-Definition O0 := O0 ℤ_order : ∀ a b, 0 < a → 0 < b → 0 < a + b.
-Definition le := le ℤ_order : Z → Z → Prop.
-Definition O3 := O3 ℤ_order : ∀ a b c, 0 < a → b < c → a * b < a * c.
-
-Global Hint Unfold le ordered_rings.le : Z.
+Definition ℤ_order := mkOR ℤ lt lt_trans T O1 O2 zero_ne_1.
+Definition ℤ_ID := integral_domain ℤ_order.
+Definition le := (le ℤ_order) : Z → Z → Prop.
 
 Infix "≤" := le : Z_scope.
 Notation "a > b" := (b < a) (only parsing) : Z_scope.
@@ -517,7 +512,6 @@ Proof.
 Qed.
 
 Definition divide := divide ℤ : Z → Z → Prop.
-Global Hint Unfold divide : Z.
 
 Notation "x ｜ y" := (divide x y) (at level 60, format "x '｜' y") : Z_scope.
 
@@ -532,18 +526,12 @@ Proof.
       now apply zero_lt_1.
 Qed.
 
-Definition mul_pos_pos :=
-  mul_pos_pos ℤ_order : ∀ a b, 0 < a → 0 < b → 0 < a * b.
-Definition square_ne0 :=
-  square_ne0 ℤ_order : ∀ a, a ≠ 0 → 0 < a * a.
-Definition one_lt := one_lt ℤ_order : ∀ a, 1 < a → 0 < a.
-
 Theorem lt_0_le_1 : ∀ a, 0 < a ↔ 1 ≤ a.
 Proof.
   intros a.
   destruct (T a 1); unfold le, ordered_rings.le in *; intuition; subst;
-    eauto using zero_lt_1, one_lt.
-  exfalso; apply (lt_0_1 a); eauto.
+    eauto using zero_lt_1, (one_lt ℤ_order : ∀ a, 1 < a → 0 < a).
+  exfalso; apply (lt_0_1 a); auto.
 Qed.
 
 Theorem div_le : ∀ a b, 0 < b → a｜b → a ≤ b.
@@ -650,15 +638,27 @@ Proof.
         now rewrite A3, <-(neg_lt_0 ℤ_order).
     + exists (-q), 0.
       subst.
-      repeat split; auto with Z.
+      repeat split; auto using (le_refl ℤ_order : ∀ a : Z, a ≤ a).
       replace a with (--a); try ring; rewrite <-H3; ring.
   - exists 0, 0.
-    subst; repeat split; auto with Z; ring.
+    subst; repeat split;
+      auto using (le_refl ℤ_order : ∀ a : Z, a ≤ a); ring.
 Qed.
 
 Definition gcd a b d := d｜a ∧ d｜b ∧ ∀ x, x｜a → x｜b → x｜d.
 
 Notation "'gcd' ( a , b )  = d" := (gcd a b d) (at level 80).
+
+Global Hint Resolve (div_add ℤ : ∀ a b c, a｜b → a｜c → a｜b+c)
+       (div_1_l ℤ : ∀ a, 1｜a) (div_refl ℤ : ∀ a, a｜a) (div_0_r ℤ : ∀ a, a｜0)
+       (div_mul_l ℤ : ∀ a b c, a｜c → a｜b * c)
+       (div_mul_r ℤ : ∀ a b c, a｜b → a｜b * c)
+      (div_sign_neg_r ℤ : ∀ a b, a｜-b → a｜b)
+      (div_sign_l_neg ℤ : ∀ a b, a｜b → -a｜b)
+      (div_trans ℤ : ∀ a b c, a｜b → b｜c → a｜c)
+      (mul_pos_pos ℤ_order : ∀ a b, 0 < a → 0 < b → 0 < a * b)
+      (O0 ℤ_order : ∀ a b, 0 < a → 0 < b → 0 < a + b)
+      (square_ne0 ℤ_order : ∀ a : Z, a ≠ 0 → 0 < a * a) : Z.
 
 Theorem Euclidean_algorithm_N :
   ∀ a b, 0 < a → 0 < b → gcd (a,b) = 1 → ∃ x y, 1 = a * x + b * y.
@@ -668,15 +668,16 @@ Proof.
   intros b H0 [H1 [H2 H3]].
   destruct (division_algorithm b a) as [q [r [H4 [[H5 | H5] H6]]]]; subst; auto.
   - destruct (IHa r (conj H5 H6) H5 a) as [x [y H4]]; repeat split;
-      auto using (div_1_l ℤ), (div_add ℤ), (div_mul_r ℤ) with Z.
+      auto using (div_mul_r ℤ) with Z.
     exists (y+-(q*x)), x.
     rewrite H4.
     ring.
   - exists 1, 0.
     ring_simplify.
     apply assoc_pos; auto using zero_lt_1.
-    split; fold divide; auto using zero_lt_1, (div_refl ℤ), (div_add ℤ),
-                        (div_mul_r ℤ), (div_0_r ℤ) with Z.
+    split; fold divide;
+      auto using (div_mul_r ℤ), (div_add ℤ), (div_0_r ℤ),
+      (div_mul_r ℤ), (div_refl ℤ) with Z.
 Qed.
 
 Lemma gcd_zero_l : ∀ a d, gcd (0,a) = d → a ~ d.
@@ -731,10 +732,9 @@ Proof.
           rewrite Z; ring.
 Qed.
 
-Theorem FTA : ∀ a b c, gcd (a,b) = 1 → a｜b * c → a｜c.
+Theorem FTA : ∀ a b c, gcd (a, b) = 1 → a｜b * c → a｜c.
 Proof.
-  intros a b c H [d H0]; simpl in *; unfold rings.R, set_R, ℤ in *;
-    fold Z in *.
+  intros a b c H [d H0]; simpl in *; fold Z in *.
   destruct (Euclidean_algorithm a b H) as [x [y H1]].
   rewrite <-(M3 c), H1.
   exists (c*x + d*y); simpl.
@@ -981,7 +981,7 @@ Proof.
         now ring_simplify.
     + intros z H4 H5.
       subst.
-      auto using (div_mul_add ℤ) with Z.
+      now apply div_mul_add.
 Qed.
 
 Theorem common_factor : ∀ a b, b ≠ 0 → ∃ d, 0 < d ∧ gcd (a,b) = d.
@@ -1070,8 +1070,8 @@ Qed.
 
 Section IZR.
 
-  Variable Ring : ring.
-  Notation R := (rings.R Ring).
+  Variable Ring : rings.ring.
+  Notation R := (elts (Rset Ring)).
   Add Ring generic_ring : (ringify Ring).
 
   Definition IZR : Z → R.

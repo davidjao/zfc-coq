@@ -4,55 +4,31 @@ Require Export integers Field.
 
 Record field :=
   mkField {
-      set_F : set;
-      zero_F : elts set_F where "0" := zero_F;
-      one_F : elts set_F where "1" := one_F;
-      add_F : elts set_F → elts set_F → elts set_F where "a + b" := (add_F a b);
-      mul_F : elts set_F → elts set_F → elts set_F where "a * b" := (mul_F a b);
-      neg_F : elts set_F → elts set_F where "- a" := (neg_F a);
-      inv_F : elts set_F → elts set_F;
-      A3_F : ∀ a, 0 + a = a;
-      A1_F : ∀ a b, a + b = b + a;
-      A2_F : ∀ a b c, a + (b + c) = (a + b) + c;
-      M3_F : ∀ a, 1 * a = a;
-      M1_F : ∀ a b, a * b = b * a;
-      M2_F : ∀ a b c, a * (b * c) = (a * b) * c;
-      D1_F : ∀ a b c, (a + b) * c = a * c + b * c;
-      A4_F : ∀ a, a + (-a) = 0;
-      M4_F : ∀ a, a ≠ 0 → (inv_F a) * a = 1;
-      one_ne_0_F : 1 ≠ 0;
+      ring : rings.ring where
+      "a * b" :=
+        (rings.mul ring a b)
+          and "0" :=
+        (rings.zero ring)
+          and "1" :=
+          (rings.one ring);
+      inv : elts (Rset ring) → elts (Rset ring);
+      M4 : ∀ a, a ≠ 0 → (inv a) * a = 1;
+      one_ne_0 : 1 ≠ 0;
     }.
 
 Section Field_theorems.
   Variable Field : field.
-  Definition F := elts (set_F Field).
-  Definition zero := zero_F Field : F.
-  Definition one := one_F Field : F.
-  Definition add (a b : F) := (add_F Field a b) : F.
-  Definition mul (a b : F) := (mul_F Field a b) : F.
-  Definition neg (a : F) := (neg_F Field a) : F.
-  Definition inv (a : F) := (inv_F Field a) : F.
-  Notation "0" := zero.
-  Notation "1" := one.
-  Infix "+" := add.
-  Infix "*" := mul.
-  Notation "- a" := (neg a).
-  Notation "a '^-1' " := (inv a) (at level 30, format "a '^-1'").
-  Definition A1 := (A1_F Field) : ∀ a b, a + b = b + a.
-  Definition A2 := (A2_F Field) : ∀ a b c, a + (b + c) = (a + b) + c.
-  Definition A3 := (A3_F Field) : ∀ a, 0 + a = a.
-  Definition A4 := (A4_F Field) : ∀ a, a + -a = 0.
-  Definition M1 := (M1_F Field) : ∀ a b, a * b = b * a.
-  Definition M2 := (M2_F Field) : ∀ a b c, a * (b * c) = (a * b) * c.
-  Definition M3 := (M3_F Field) : ∀ a, 1 * a = a.
-  Definition D1 := (D1_F Field) : ∀ a b c, (a + b) * c = a * c + b * c.
-  Definition M4 := (M4_F Field) : ∀ a, a ≠ 0 → a^-1 * a = 1.
-  Definition one_ne_0 := one_ne_0_F _ : 1 ≠ 0.
+  Notation F := (elts (Rset (ring Field))).
+  Notation "0" := (rings.zero (ring Field)).
+  Notation "1" := (rings.one (ring Field)).
+  Infix "+" := (rings.add (ring Field)).
+  Infix "*" := (rings.mul (ring Field)).
+  Notation "- a" := (rings.neg (ring Field) a).
+  Notation "a '^-1' " := (inv Field a) (at level 30, format "a '^-1'").
 
-  Definition sub a b := a + (-b).
-  Definition inv_l := M4_F.
+  Definition inv_l := (M4 Field).
 
-  Infix "-" := sub.
+  Infix "-" := (rings.sub (ring Field)).
 
   Lemma sub_neg : ∀ a b, a - b = a + -b.
   Proof.
@@ -68,13 +44,12 @@ Section Field_theorems.
     auto.
   Qed.
 
-  Add Field generic_field :
-    (mk_field div inv
-              (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1 sub_neg A4)
-              one_ne_0 div_inv M4).
+  Definition fieldify :=
+    (mk_field div (inv _) (ringify (ring Field)) (one_ne_0 _) div_inv (M4 _)).
 
-  Definition ring_from_field :=
-    mkRing _ 0 1 add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
+  Add Field generic_field : fieldify.
+
+  Definition ring_from_field := (ring Field).
 
   Theorem inv_r : ∀ a, a ≠ 0 → a * a^-1 = 1.
   Proof.
@@ -89,12 +64,12 @@ Section Field_theorems.
     destruct (classic (a = 0)) as [H0 | H0]; try tauto.
     assert (a^-1 * (a * b) = a^-1 * 0) by now rewrite H.
     right.
-    rewrite M2, M4, M3 in H1; auto.
+    rewrite rings.M2, M4, rings.M3 in H1; auto.
     ring [H1].
   Qed.
 
   Definition integral_domain_from_field :=
-    mkID ring_from_field cancellation one_ne_0.
+    mkID ring_from_field cancellation (one_ne_0 _).
 
   Theorem inv_one : 1^-1 = 1.
   Proof.
@@ -108,7 +83,7 @@ Section Field_theorems.
     destruct (classic (a = 0)).
     - subst.
       replace (0*b) with 0 in H by ring.
-      now contradiction one_ne_0.
+      now contradiction (one_ne_0 Field).
     - now field [H].
   Qed.
 
@@ -127,7 +102,7 @@ Section Field_theorems.
     pose proof (inv_r a H) as H1.
     rewrite H0 in H1.
     replace (a*0) with 0 in H1 by ring.
-    now contradiction one_ne_0.
+    now contradiction (one_ne_0 Field).
   Qed.
 
   Theorem inv_inv : ∀ a, a ≠ 0 → a^-1^-1 = a.
@@ -268,13 +243,13 @@ Section Field_theorems.
       subst.
       apply (pow_add_r ring_from_field).
     - contradiction (ordered_rings.lt_antisym ℤ_order 0%Z (b+c)%Z).
-      now apply integers.O0.
+      now apply O0.
     - assert (b + c = 0)%Z as H1.
       { pose proof (integers.T (b+c) 0).
         tauto. }
       contradiction (ordered_rings.lt_irrefl ℤ_order 0%Z).
       rewrite <-H1 at 2.
-      now apply integers.O0.
+      now apply O0.
   Qed.
 
   Theorem pow_ne_0 : ∀ a b, a ≠ 0 → a^b ≠ 0.
@@ -292,7 +267,7 @@ Section Field_theorems.
     unfold pow.
     repeat destruct excluded_middle_informative;
       repeat destruct constructive_indefinite_description;
-      try destruct a0; try destruct a1; try tauto; try now rewrite M3.
+      try destruct a0; try destruct a1; try tauto; try now rewrite rings.M3.
     - apply (pow_mul_l ring_from_field).
     - replace ((a*b)^-1) with (a^-1*b^-1) by now field.
       apply (pow_mul_l ring_from_field).
@@ -339,7 +314,7 @@ Section Field_theorems.
       replace (0*x)%Z with 0%Z in * by ring.
       contradiction (ordered_rings.lt_irrefl ℤ_order 0%Z).
     - contradiction n0.
-      now apply mul_pos_pos.
+      now apply (ordered_rings.mul_pos_pos ℤ_order).
     - contradiction n1.
       now apply (mul_neg_pos ℤ_order).
     - now rewrite (rings.pow_1_l ring_from_field).
@@ -393,7 +368,7 @@ Section Field_theorems.
     intros a b c H H0 H1.
     eapply (cancellation_mul_l integral_domain_from_field (a^(-c)));
       auto using pow_ne_0; simpl.
-    rewrite ? (M1 (a^(-c))), <-M2, pow_add_r_opp, (M1 _ 1), M3;
+    rewrite ? (rings.M1 _ (a^(-c))), <-rings.M2, pow_add_r_opp, rings.M3_r;
       auto using pow_ne_0.
     destruct (integers.T 0 (b+c))
       as [[H2 [H3 H4]] | [[H2 [H3 H4]] | [H2 [H3 H4]]]].
@@ -401,12 +376,12 @@ Section Field_theorems.
       rewrite <-pow_add_r_pos_pos, <-integers.A2, integers.A4, (A3_r ℤ); auto.
     - rewrite <-(integers.A3 b) at 2.
       now rewrite <-(integers.A4 c), (integers.A1 _ b),
-      integers.A2, <-H3, integers.A3, pow_0_r, M3.
+      integers.A2, <-H3, integers.A3, pow_0_r, rings.M3.
     - eapply (cancellation_mul_l integral_domain_from_field (a^(-(b+c))));
         auto using pow_ne_0; simpl.
       rewrite (ordered_rings.lt_neg_0 ℤ_order) in H4.
-      rewrite ? M2, ? (M1 (a^(-(b+c)))), pow_add_r_opp, M3,
-      <-pow_add_r_pos_pos; auto.
+      rewrite ? rings.M2, ? (rings.M1 _ (a^(-(b+c)))), pow_add_r_opp,
+      rings.M3, <-pow_add_r_pos_pos; auto.
       now replace (b+-(b+c))%Z with (-c)%Z by ring.
   Qed.
 
@@ -416,9 +391,9 @@ Section Field_theorems.
     destruct (integers.T 0 b)
       as [[H0 [H1 H2]] | [[H0 [H1 H2]] | [H0 [H1 H2]]]], (integers.T 0 c)
         as [[H3 [H4 H5]] | [[H3 [H4 H5]] | [H3 [H4 H5]]]]; subst;
-      rewrite ? (integers.A1 _ 0), ? integers.A3, ? pow_0_r, ? (M1 _ 1),
-      ? M3; auto using pow_add_r_pos_pos, pow_add_r_pos_neg.
-    - rewrite integers.A1, M1.
+      rewrite ? (integers.A1 _ 0), ? integers.A3, ? pow_0_r, ? (rings.M1 _ _ 1),
+      ? rings.M3; auto using pow_add_r_pos_pos, pow_add_r_pos_neg.
+    - rewrite integers.A1, rings.M1.
       auto using pow_add_r_pos_neg.
     - replace b with (--b)%Z; replace c with (--c)%Z;
         replace (--b+--c)%Z with (-(-b+-c))%Z; try ring.

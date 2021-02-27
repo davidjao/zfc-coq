@@ -1010,7 +1010,6 @@ Qed.
 Theorem pred_succ : ∀ a, pred (S a) = a.
 Proof.
   intros a.
-  unfold pred.
   apply set_proj_injective; simpl.
   rewrite <-S_is_succ, union_succ; auto using N_in_ω.
 Qed.

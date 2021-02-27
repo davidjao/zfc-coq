@@ -2,48 +2,46 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Export integral_domains.
 
 Record ordered_ring :=
-  mkOring {
-      ring_OR : ring where
+  mkOR {
+      ring : rings.ring where
       "a + b" :=
-        (add_R ring_OR a b)
+        (add ring a b)
           and "a * b" :=
-        (mul_R ring_OR a b)
+        (mul ring a b)
           and "0" :=
-          (zero_R ring_OR)
+          (zero ring)
           and "1" :=
-            (one_R ring_OR);
-      lt_OR : elts (set_R ring_OR) → elts (set_R ring_OR) → Prop
-      where "a < b" := (lt_OR a b);
-      lt_trans_OR : ∀ a b c, a < b → b < c → a < c;
-      T_OR : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ b < a) ∨
+            (one ring);
+      lt : elts (Rset ring) → elts (Rset ring) → Prop
+      where "a < b" := (lt a b);
+      lt_trans : ∀ a b c, a < b → b < c → a < c;
+      T : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ b < a) ∨
                     (¬ a < b ∧ a = b ∧ ¬ b < a) ∨
                     (¬ a < b ∧ a ≠ b ∧ b < a);
-      O1_OR : ∀ a b c, b < c → a + b < a + c;
-      O2_OR : ∀ a b, 0 < a → 0 < b → 0 < a * b;
-      nontrivial_OR : 1 ≠ 0;
+      O1 : ∀ a b c, b < c → a + b < a + c;
+      O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b;
+      nontriviality : 1 ≠ 0;
     }.
 
 Section Ordered_ring_theorems.
 
   Variable OR : ordered_ring.
 
-  Definition R := (ring_OR OR).
-  Notation "0" := (zero R).
-  Notation "1" := (one R).
-  Infix "+" := (add R).
+  Notation Ring := (ring OR).
+  Notation R := (elts (Rset Ring)).
+  Notation "0" := (zero Ring).
+  Notation "1" := (one Ring).
+  Infix "+" := (add Ring).
   Notation "2" := (1 + 1).
-  Infix "*" := (mul R).
-  Notation "- a" := (neg R a).
-  Infix "-" := (sub R).
-  Infix "^" := (pow R).
-  Definition lt := lt_OR OR : rings.R R → rings.R R → Prop.
-  Infix "<" := lt.
-  Definition lt_trans := lt_trans_OR OR : ∀ a b c, a < b → b < c → a < c.
-  Definition O1 := O1_OR OR : ∀ a b c, b < c → a + b < a + c.
-  Definition O2 := O2_OR OR : ∀ a b, 0 < a → 0 < b → 0 < a * b.
-  Definition T := T_OR OR : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ b < a) ∨
-                                   (¬ a < b ∧ a = b ∧ ¬ b < a) ∨
-                                   (¬ a < b ∧ a ≠ b ∧ b < a).
+  Infix "*" := (mul Ring).
+  Notation "- a" := (neg Ring a).
+  Infix "-" := (sub Ring).
+  Infix "^" := (pow Ring).
+  Infix "<" := (lt OR).
+  Notation lt_trans := (lt_trans OR).
+  Notation O1 := (O1 OR).
+  Notation O2 := (O2 OR).
+  Notation T := (T OR).
   Notation "a > b" := (b < a) (only parsing).
   Definition le a b := a < b ∨ a = b.
   Infix "≤" := le.
@@ -53,14 +51,12 @@ Section Ordered_ring_theorems.
   Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level).
   Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level).
 
-  Add Ring generic_ordered_ring :
-    (mk_rt 0 1 (add R) (mul R) (sub R) (neg R) eq (A3 R) (A1 R)
-           (A2 R) (M3 R) (M1 R) (M2 R) (D1 R) (sub_is_neg R) (A4 R)).
+  Add Ring generic_ordered_ring : (ringify Ring).
 
   Theorem O1_r : ∀ a b c, b < c → b + a < c + a.
   Proof.
     intros a b c H.
-    rewrite ? (A1_R _ _ a).
+    rewrite ? (A1 _ _ a).
     auto using O1.
   Qed.
 
@@ -76,7 +72,7 @@ Section Ordered_ring_theorems.
   Theorem add_le_l : ∀ a b c, b ≤ c → a + b ≤ a + c.
   Proof.
     intros a b c H.
-    rewrite ? (A1 R a) in *.
+    rewrite ? (A1 _ a) in *.
     now apply add_le_r.
   Qed.
 
@@ -185,14 +181,13 @@ Section Ordered_ring_theorems.
         eauto using mul_neg_neg, mul_neg_pos, mul_pos_neg, mul_pos_pos.
   Qed.
 
-  Definition integral_domain_OR :=
-    mkID (ring_OR OR) cancellation_0_mul (nontrivial_OR OR).
+  Definition integral_domain := mkID Ring cancellation_0_mul (nontriviality OR).
 
   Lemma zero_lt_1 : 0 < 1.
   Proof.
     destruct (T 0 1) as [[H [H0 H1]] | [[H [H0 H1]] | [H [H0 H1]]]];
       try tauto.
-    - now contradiction (nontrivial_OR OR).
+    - now contradiction (nontriviality OR).
     - apply (O1_r (-(1))) in H1.
       rewrite A4, A3 in H1.
       eapply O2 in H1; eauto.
@@ -202,7 +197,7 @@ Section Ordered_ring_theorems.
   Lemma lt_succ : ∀ m, m < m + 1.
   Proof.
     intros m.
-    rewrite <-(A3 _ m), A1_R at 1.
+    rewrite <-(A3 _ m), A1 at 1.
     eauto using O1, zero_lt_1.
   Qed.
 
@@ -250,7 +245,7 @@ Section Ordered_ring_theorems.
   Lemma pos_div_r : ∀ a b, 0 < a → 0 < b * a → 0 < b.
   Proof.
     intros a b H H0.
-    rewrite M1_R in *.
+    rewrite M1 in *.
     eauto using pos_div_l.
   Qed.
 
@@ -384,7 +379,7 @@ Section Ordered_ring_theorems.
     apply O1, zero_lt_1.
   Qed.
 
-  Definition min : rings.R R → rings.R R → rings.R R.
+  Definition min : R → R → R.
   Proof.
     intros a b.
     destruct (excluded_middle_informative (a < b)).
@@ -419,7 +414,7 @@ Section Ordered_ring_theorems.
     - now right.
   Qed.
 
-  Definition max : rings.R R → rings.R R → rings.R R.
+  Definition max : R → R → R.
   Proof.
     intros a b.
     destruct (excluded_middle_informative (a < b)).

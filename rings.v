@@ -1,51 +1,38 @@
 Require Export iterated_ops Ring.
 Set Warnings "-notation-bound-to-variable,-notation-overridden".
-Set Warnings "-ambiguous-paths".
+Set Warnings "-ambiguous-paths,-uniform-inheritance".
 
 Record ring :=
   mkRing {
-      set_R : set;
-      zero_R : elts set_R where "0" := zero_R;
-      one_R : elts set_R where "1" := one_R;
-      add_R : elts set_R → elts set_R → elts set_R where "a + b" := (add_R a b);
-      mul_R : elts set_R → elts set_R → elts set_R where "a * b" := (mul_R a b);
-      neg_R : elts set_R → elts set_R where "- a" := (neg_R a);
-      A3_R : ∀ a, 0 + a = a;
-      A1_R : ∀ a b, a + b = b + a;
-      A2_R : ∀ a b c, a + (b + c) = (a + b) + c;
-      M3_R : ∀ a, 1 * a = a;
-      M1_R : ∀ a b, a * b = b * a;
-      M2_R : ∀ a b c, a * (b * c) = (a * b) * c;
-      D1_R : ∀ a b c, (a + b) * c = a * c + b * c;
-      A4_R : ∀ a, a + (-a) = 0;
+      Rset : set;
+      zero : elts Rset where "0" := zero;
+      one : elts Rset where "1" := one;
+      add : elts Rset → elts Rset → elts Rset where "a + b" := (add a b);
+      mul : elts Rset → elts Rset → elts Rset where "a * b" := (mul a b);
+      neg : elts Rset → elts Rset where "- a" := (neg a);
+      A3 : ∀ a, 0 + a = a;
+      A1 : ∀ a b, a + b = b + a;
+      A2 : ∀ a b c, a + (b + c) = (a + b) + c;
+      M3 : ∀ a, 1 * a = a;
+      M1 : ∀ a b, a * b = b * a;
+      M2 : ∀ a b c, a * (b * c) = (a * b) * c;
+      D1 : ∀ a b c, (a + b) * c = a * c + b * c;
+      A4 : ∀ a, a + (-a) = 0;
     }.
 
 Section Ring_theorems.
 
   Variable Ring : ring.
-  Definition R := elts (set_R Ring).
-  Definition zero := zero_R Ring : R.
-  Definition one := one_R Ring : R.
-  Definition add (a b : R) := (add_R Ring a b) : R.
-  Definition mul (a b : R) := (mul_R Ring a b) : R.
-  Definition neg (a : R) := (neg_R Ring a) : R.
+  Notation R := (elts (Rset Ring)).
   Declare Scope Ring_scope.
   Delimit Scope Ring_scope with ring.
   Open Scope Ring_scope.
   Bind Scope Ring_scope with R.
-  Notation "0" := zero : Ring_scope.
-  Notation "1" := one : Ring_scope.
-  Infix "+" := add : Ring_scope.
-  Infix "*" := mul : Ring_scope.
-  Notation "- a" := (neg a) : Ring_scope.
-  Definition A1 := (A1_R Ring) : ∀ a b, a + b = b + a.
-  Definition A2 := (A2_R Ring) : ∀ a b c, a + (b + c) = (a + b) + c.
-  Definition A3 := (A3_R Ring) : ∀ a, 0 + a = a.
-  Definition A4 := (A4_R Ring) : ∀ a, a + -a = 0.
-  Definition M1 := (M1_R Ring) : ∀ a b, a * b = b * a.
-  Definition M2 := (M2_R Ring) : ∀ a b c, a * (b * c) = (a * b) * c.
-  Definition M3 := (M3_R Ring) : ∀ a, 1 * a = a.
-  Definition D1 := (D1_R Ring) : ∀ a b c, (a + b) * c = a * c + b * c.
+  Notation "0" := (zero Ring) : Ring_scope.
+  Notation "1" := (one Ring) : Ring_scope.
+  Infix "+" := (add Ring) : Ring_scope.
+  Infix "*" := (mul Ring) : Ring_scope.
+  Notation "- a" := (neg Ring a) : Ring_scope.
 
   Definition IRS (a : R) := elt_to_set _ a : set.
 
@@ -61,7 +48,8 @@ Section Ring_theorems.
   Qed.
 
   Definition ringify :=
-    (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1 sub_is_neg A4).
+    (mk_rt 0 1 (add _) (mul _) sub (neg _) eq (A3 _) (A1 _) (A2 _)
+           (M3 _) (M1 _) (M2 _) (D1 _) sub_is_neg (A4 _)).
   Add Ring generic_ring : ringify.
 
   Theorem mul_0_r : ∀ a, a * 0 = 0.
@@ -273,7 +261,7 @@ Section Ring_theorems.
   Proof.
     intros a b [x H] [y H0].
     exists (x*y).
-    rewrite <-(M3 1), H, H0 at 1.
+    rewrite <-(M3 _ 1), H, H0 at 1.
     ring.
   Qed.
 
@@ -300,20 +288,20 @@ Section Ring_theorems.
   Theorem unit_cancel : ∀ a b c, unit a → a * b = a * c → b = c.
   Proof.
     intros a b c [x H] H0.
-    now rewrite <-(M3 b), H, <-M2, H0, M2, <-H, M3.
+    now rewrite <-(M3 _ b), H, <-M2, H0, M2, <-H, M3.
   Qed.
 
   Theorem cancellation_0_add : ∀ a b, a + b = 0 → b = -a.
   Proof.
     intros a b H.
-    rewrite <-(A3 (-a)), <-H.
+    rewrite <-(A3 _ (-a)), <-H.
     ring.
   Qed.
 
   Theorem cancellation_add : ∀ a b c, a + b = a + c → b = c.
   Proof.
     intros a b c H.
-    rewrite <-(A3 b), <-(A4 a), (A1 a), <-A2, H.
+    rewrite <-(A3 _ b), <-(A4 _ a), (A1 _ a), <-A2, H.
     ring.
   Qed.
 
@@ -322,15 +310,15 @@ Section Ring_theorems.
     intros a b H; split; contradict H; subst; ring.
   Qed.
 
-  Definition sum f a b := iterate_with_bounds _ add f 0 a b : R.
-  Definition prod f a b := iterate_with_bounds _ mul f 1 a b : R.
+  Definition sum f a b := iterate_with_bounds _ (add _) f 0 a b.
+  Definition prod f a b := iterate_with_bounds _ (mul _) f 1 a b.
 
   Theorem sum_succ : ∀ f a b,
       a ≤ S b → (sum f a (S b)) = (sum f a b) + (f (S b)).
   Proof.
     intros f a b H.
     apply iterate_succ_lower_limit; auto.
-    now ring_simplify.
+    ring.
   Qed.
 
   Theorem prod_succ : ∀ f a b,
@@ -338,7 +326,7 @@ Section Ring_theorems.
   Proof.
     intros f a b H.
     apply iterate_succ_lower_limit; auto.
-    now ring_simplify.
+    ring.
   Qed.
 
   Theorem sum_dist :
@@ -354,7 +342,7 @@ Section Ring_theorems.
     - rewrite add_0_r.
       unfold sum.
       now rewrite ? iterate_0.
-    - rewrite add_succ_r, ? sum_succ, IHc; try (now ring_simplify);
+    - rewrite add_succ_r, ? sum_succ, IHc; try ring;
         exists (c+1)%N; now rewrite add_1_r, add_succ_r.
   Qed.
 
@@ -409,7 +397,7 @@ Section Ring_theorems.
       eauto using le_trans, le_succ.
   Qed.
 
-  Definition pow a n := iterated_op _ mul 1 (λ x, a) n.
+  Definition pow a n := iterated_op _ (mul _) 1 (λ x, a) n.
 
   Infix "^" := pow : Ring_scope.
 
@@ -456,7 +444,7 @@ Section Ring_theorems.
   Proof.
     induction c using Induction.
     - now rewrite ? pow_0_r, M3.
-    - now rewrite ? pow_succ_r, <-? M2, (M2 a), (M1 _ (b^c)), IHc, ? M2.
+    - now rewrite ? pow_succ_r, <-? M2, (M2 _ a), (M1 _ _ (b^c)), IHc, ? M2.
   Qed.
 
   Theorem pow_mul_r : ∀ a b c, a^(b*c) = (a^b)^c.
@@ -480,7 +468,7 @@ Section Ring_theorems.
         try (exists (d+1)%N; rewrite <-? add_1_r); ring.
   Qed.
 
-  Definition INR (n : N) := sum (λ n, 1) 1 n : R.
+  Definition INR (n : N) := sum (λ n, 1) 1 n.
   Coercion INR : N >-> R.
 
   Theorem INR_zero : 0 = 0%N.
@@ -530,7 +518,7 @@ Section Ring_theorems.
   Section Subring_construction.
 
     Variable S : set.
-    Hypothesis subset : S ⊂ (set_R Ring).
+    Hypothesis subset : S ⊂ Rset Ring.
     Definition is_subring S := (∀ a b : R, a ∈ S → b ∈ S → a + b ∈ S) ∧
                                (∀ a b : R, a ∈ S → b ∈ S → a * b ∈ S) ∧
                                (∀ a : R, a ∈ S → -a ∈ S) ∧
@@ -622,7 +610,7 @@ Section Ring_theorems.
     Lemma zero_construction : 0 ∈ S.
     Proof.
       destruct SR as [H [H0 [H1 H2]]].
-      rewrite <-(A4 (1%ring)).
+      rewrite <-(A4 _ (1%ring)).
       auto.
     Qed.
 
@@ -702,9 +690,9 @@ Section Ring_theorems.
 
   End Subring_construction.
 
-  Definition subring_of_arbitrary_set (S : set) : ring.
+  Definition subring_of_arbitrary_set (S : set) : rings.ring.
   Proof.
-    destruct (excluded_middle_informative (S ⊂ set_R Ring)).
+    destruct (excluded_middle_informative (S ⊂ Rset Ring)).
     - destruct (excluded_middle_informative (is_subring S)).
       + exact (mkRing _ (sub_zero S i) (sub_one S i) (sub_add S s i)
                       (sub_mul S s i) (sub_neg S s i) (sub_A3 S s i)
@@ -719,20 +707,20 @@ Section Ring_theorems.
 
     Variable S : set.
 
-    Hypothesis subset : S ⊂ (set_R Ring).
+    Hypothesis subset : S ⊂ Rset Ring.
 
     Definition subset_generated_by S :=
-      ⋂ {s in P (set_R Ring) | S ⊂ s ∧ is_subring s}.
+      ⋂ {s in P (Rset Ring) | S ⊂ s ∧ is_subring s}.
 
-    Lemma generated_nonempty : {s in P (set_R Ring) | S ⊂ s ∧ is_subring s} ≠ ∅.
+    Lemma generated_nonempty : {s in P (Rset Ring) | S ⊂ s ∧ is_subring s} ≠ ∅.
     Proof.
       apply Nonempty_classification.
-      exists (set_R Ring).
+      exists (Rset Ring).
       rewrite Specify_classification, Powerset_classification.
       repeat split; eauto using Set_is_subset, elts_in_set.
     Qed.
 
-    Lemma generated_subset : subset_generated_by S ⊂ (set_R Ring).
+    Lemma generated_subset : subset_generated_by S ⊂ Rset Ring.
     Proof.
       unfold subset_generated_by.
       intros x H.
@@ -790,7 +778,7 @@ Section Ring_theorems.
         apply Specify_classification in H1 as [H1 [H2 H3]].
         auto.
       - rewrite Intersection_classification in *; auto using generated_nonempty.
-        assert (S ∈ {s in P (set_R Ring) | S ⊂ s ∧ is_subring s}) as H1; auto.
+        assert (S ∈ {s in P (Rset Ring) | S ⊂ s ∧ is_subring s}) as H1; auto.
         apply Specify_classification.
         split; auto using Set_is_subset.
         now apply Powerset_classification.
@@ -807,7 +795,7 @@ Section Ring_theorems.
 
   Section Subrings_match.
     Variable S : set.
-    Hypothesis subset_S : S ⊂ set_R Ring.
+    Hypothesis subset_S : S ⊂ Rset Ring.
     Hypothesis subring_S : is_subring S.
 
     Theorem subrings_match :
@@ -823,7 +811,7 @@ Section Ring_theorems.
 
   Section Subrings_generated_by_subrings.
     Variable S : set.
-    Hypothesis subset_S : S ⊂ set_R Ring.
+    Hypothesis subset_S : S ⊂ Rset Ring.
     Hypothesis subring_S : is_subring S.
 
     Theorem subring_generated_by_subring :
@@ -857,7 +845,7 @@ Section Ring_theorems.
       now apply lt_succ. }
     destruct (classic (m = S n)) as [H0 | H0].
     - subst.
-      rewrite sum_succ, <-(A3 a) at 1; auto using zero_le.
+      rewrite sum_succ, <-(A3 _ a) at 1; auto using zero_le.
       f_equal.
       + rewrite <-(sum_of_0 n).
         apply iterate_extensionality.
@@ -911,7 +899,7 @@ Section Ring_theorems.
       prod f 0 (S (S m)) = prod (swap _ _ (S m) (S (S m)) f) 0 (S (S m)).
   Proof.
     intros m f.
-    rewrite ? prod_succ, <-M2, (M1 (f (S m))), M2; auto using zero_le.
+    rewrite ? prod_succ, <-M2, (M1 _ (f (S m))), M2; auto using zero_le.
     do 2 f_equal; unfold swap;
       try (repeat destruct excluded_middle_informative; subst; congruence).
     apply iterate_extensionality.

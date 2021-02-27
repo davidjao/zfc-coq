@@ -48,7 +48,7 @@ Proof.
     apply set_proj_injective in H6.
     apply set_proj_injective in H7.
     subst.
-    apply (cancellation_mul_l (integral_domain_OR ℤ_order) b'); simpl.
+    apply (cancellation_mul_l (integral_domain ℤ_order) b'); simpl.
     + apply Specify_classification in H0 as [H0 H4].
       rewrite proj2_eval in H4; unfold IZS; auto using elts_in_set.
       contradict H4.
@@ -319,7 +319,7 @@ Proof.
   destruct a0, a1, a2, a3, a4.
   rewrite Qequiv in *; auto;
     try (intros Z; apply (cancellation_0_mul ℤ_order) in Z; tauto).
-  apply (cancellation_mul_r (integral_domain_OR ℤ_order) x3); auto; simpl.
+  apply (cancellation_mul_r (integral_domain ℤ_order) x3); auto; simpl.
   now ring_simplify [e7 e8].
 Qed.
 
@@ -357,7 +357,7 @@ Proof.
   destruct a0, a1, a2, a3, a4.
   rewrite Qequiv in *; auto;
     try (intros Z; apply (cancellation_0_mul ℤ_order) in Z; tauto).
-  apply (cancellation_mul_r (integral_domain_OR ℤ_order) x3); auto; simpl.
+  apply (cancellation_mul_r (integral_domain ℤ_order) x3); auto; simpl.
   now ring_simplify [e7 e8].
 Qed.
 
@@ -369,8 +369,8 @@ Proof.
   destruct a0, a1, a2, a3, a4, a5.
   rewrite Qequiv in *; auto;
     try (intros Z; apply (cancellation_0_mul ℤ_order) in Z; tauto).
-  apply (cancellation_mul_r (integral_domain_OR ℤ_order) x3); auto; simpl.
-  apply (cancellation_mul_r (integral_domain_OR ℤ_order) x1); auto; simpl.
+  apply (cancellation_mul_r (integral_domain ℤ_order) x3); auto; simpl.
+  apply (cancellation_mul_r (integral_domain ℤ_order) x1); auto; simpl.
   ring_simplify.
   replace (x*x5*x8*x10*x3*x1)%Z with (x*(x1*x3)*x5*x8*x10)%Z by ring.
   replace (x8*x3*x1*x4*x6*x9)%Z with ((x9*(x3*x6)*x1*x4*x8))%Z by ring.
@@ -430,13 +430,13 @@ Proof.
   - apply integers.zero_ne_1.
 Qed.
 
-Add Field rational_field :
-  (mk_field div inv
-            (mk_rt 0 1 add mul sub neg eq A3 A1 A2 M3 M1 M2 D1 sub_neg A4)
-            zero_ne_1 div_inv inv_l).
+Definition ℚ_ring := mkRing _ 0 1 add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
 
-Definition ℚ :=
-  mkField _ zero one add mul neg inv A3 A1 A2 M3 M1 M2 D1 A4 inv_l zero_ne_1.
+Definition ℚ := mkField ℚ_ring inv inv_l zero_ne_1.
+
+Add Field rational_field_raw : (fieldify ℚ).
+Add Field rational_field :
+  (fieldify ℚ : field_theory 0 1 add mul sub neg div inv eq).
 
 Definition positive : Q → Prop.
 Proof.
@@ -453,8 +453,8 @@ Proof.
   { intros x y z w H H0 H1 H2 H3.
     destruct (integers.T w 0), (integers.T y 0); intuition; subst;
       try (now apply (mul_neg_neg ℤ_order); simpl);
-      try (now apply (integers.mul_pos_pos); simpl).
-    + assert (0 < x * y) by now apply (integers.mul_pos_pos).
+      try (now apply (mul_pos_pos ℤ_order); simpl).
+    + assert (0 < x * y) by now apply (mul_pos_pos ℤ_order).
       assert (z * w < 0) by now apply (mul_pos_neg ℤ_order).
       rewrite H1 in *.
       exfalso; eapply (lt_antisym ℤ_order); eauto.
@@ -462,7 +462,7 @@ Proof.
       apply (cancellation_0_mul ℤ_order) in H1 as [H1 | H1]; subst;
         exfalso; eauto using lt_irrefl.
     + assert (x * y < 0) by now apply (mul_pos_neg ℤ_order).
-      assert (0 < z * w) by now apply (integers.mul_pos_pos).
+      assert (0 < z * w) by now apply (mul_pos_pos ℤ_order).
       rewrite H1 in *.
       exfalso; eapply (lt_antisym ℤ_order); eauto.
     + replace (z*0)%Z with 0%Z in * by ring.
@@ -517,13 +517,13 @@ Theorem T : ∀ a b, a < b ∧ a ≠ b ∧ ¬ b < a
 Proof.
   intros a b.
   unfold lt.
-  replace (a-b) with (-(b-a)) by field.
+  replace (a-b) with (-(b-a)) by ring.
   replace (a=b) with (b-a=0); eauto using T_pos.
   apply propositional_extensionality.
   split; intros H; try ring [H].
-  replace b with (a+(b-a)) by field.
+  replace b with (a+(b-a)) by ring.
   rewrite H.
-  field.
+  ring.
 Qed.
 
 Theorem O0 : ∀ a b, 0 < a → 0 < b → 0 < a + b.
@@ -534,14 +534,14 @@ Proof.
   rewrite A1, A3 in *.
   destruct (Qlift x) as [a [b [H1 H2]]], (Qlift y) as [c [d [H3 H4]]].
   rewrite <-H2, <-H4, add_wf, pos_wf in *;
-    auto using (ne0_cancellation (integral_domain_OR ℤ_order)).
+    auto using (ne0_cancellation (integral_domain ℤ_order)).
   apply (pos_mul ℤ_order) in H as [[H H5] | [H H5]];
     apply (pos_mul ℤ_order) in H0 as [[H0 H6] | [H0 H6]];
     try rewrite (lt_neg_0 ℤ_order) in *;
     [ | replace ((a*d+c*b)*(b*d))%Z with ((a*-d+-c*b)*(b*-d))%Z by ring
       | replace ((a*d+c*b)*(b*d))%Z with ((-a*d+c*-b)*(-b*d))%Z by ring
       | replace ((a*d+c*b)*(b*d))%Z with ((-a*-d+-c*-b)*(-b*-d))%Z by ring ];
-    eauto 6 using integers.mul_pos_pos, integers.O0.
+    eauto 6 using (mul_pos_pos ℤ_order), (O0 ℤ_order) with Z.
 Qed.
 
 Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
@@ -570,14 +570,13 @@ Proof.
   destruct (Qlift x) as [a [b [H1 H2]]], (Qlift y) as [c [d [H3 H4]]].
   subst.
   rewrite mul_wf, pos_wf in *;
-    auto using (ne0_cancellation (integral_domain_OR ℤ_order)).
+    auto using (ne0_cancellation (integral_domain ℤ_order)).
   replace (a*c*(b*d))%Z with ((a*b)*(c*d))%Z by ring.
-  now apply (integers.mul_pos_pos).
+  now apply (mul_pos_pos ℤ_order).
 Qed.
 
-Definition ℚ_ring := (ring_from_field ℚ).
-Definition ℚ_ring_order := mkOring ℚ_ring lt lt_trans T O1 O2 zero_ne_1.
-Definition ℚ_order := mkOfield ℚ lt lt_trans T O1 O2.
+Definition ℚ_ring_order := mkOR ℚ_ring lt lt_trans T O1 O2 zero_ne_1.
+Definition ℚ_order := mkOF ℚ lt lt_trans T O1 O2.
 
 Notation "a > b" := (b < a) (only parsing) : Q_scope.
 
@@ -589,14 +588,6 @@ Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level): Q_
 Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level): Q_scope.
 Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level): Q_scope.
 
-Definition O3 :=
-  ordered_rings.O3 ℚ_ring_order : ∀ a b c, 0 < a → b < c → a * b < a * c.
-Definition lt_irrefl := ordered_rings.lt_irrefl ℚ_ring_order : ∀ a, ¬ a < a.
-Definition lt_antisym :=
-  ordered_rings.lt_antisym ℚ_ring_order : ∀ a b, a < b → ¬ b < a.
-Definition le_trans :=
-  ordered_rings.le_trans ℚ_ring_order : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
-
 Theorem lt_dense : ∀ a b, a < b → ∃ c, a < c ∧ c < b.
 Proof.
   intros x y H.
@@ -605,15 +596,15 @@ Proof.
   subst.
   assert (2 ≠ 0)%Z as H1 by apply (ordered_rings.zero_ne_2 ℤ_order).
   split; unfold lt, sub in *; rewrite neg_wf, add_wf, pos_wf in *;
-    auto using (ne0_cancellation (integral_domain_OR ℤ_order)).
+    auto using (ne0_cancellation (integral_domain ℤ_order)).
   - replace (((b*c+a*d)*b+-a*(2*b*d))*(2*b*d*b))%Z
       with (2*(b*b)*((c*b+-a*d)*(d*b)))%Z by ring;
-      eauto using integers.mul_pos_pos, integers.O0,
-      integers.square_ne0, zero_lt_1.
+      eauto using (mul_pos_pos ℤ_order), (ordered_rings.O0 ℤ_order),
+      (square_ne0 ℤ_order), (ordered_rings.zero_lt_1 ℤ_order) with Z.
   - replace ((c*(2*b*d)+-(b*c+a*d)*d)*(d*(2*b*d)))%Z
       with (2*(d*d)*((c*b+-a*d)*(d*b)))%Z by ring;
-      eauto using integers.mul_pos_pos, integers.O0,
-      integers.square_ne0, zero_lt_1.
+      eauto using (mul_pos_pos ℤ_order), (ordered_rings.O0 ℤ_order),
+      (square_ne0 ℤ_order), (ordered_rings.zero_lt_1 ℤ_order) with Z.
 Qed.
 
 Theorem lt_dense2 : ∀ a b, 0 < a → 0 < b → ∃ c, 0 < c ∧ c < a ∧ c < b.
@@ -655,7 +646,7 @@ Proof.
     { apply H4; rewrite <-integers.M2;
         auto using (div_mul_l ℤ), (div_refl ℤ) with Z. }
     rewrite integers.M2, <-(integers.M3 d) in H0 at 1.
-    apply (cancellation_mul_r (integral_domain_OR ℤ_order)) in H0;
+    apply (cancellation_mul_r (integral_domain ℤ_order)) in H0;
       try now (exists e).
     now apply (cancellation_ne0 ℤ) in H.
   - rewrite Qequiv; simpl in *; fold Z in *; auto; try ring.
@@ -670,7 +661,7 @@ Proof.
   destruct (reduced_form p) as [m [n [H0 [H1 H2]]]].
   subst.
   rewrite mul_wf, Qequiv in H;
-    auto using (ne0_cancellation (integral_domain_OR ℤ_order)),
+    auto using (ne0_cancellation (integral_domain ℤ_order)),
     integers.zero_ne_1.
   rewrite (integers.M1 _ 1), integers.M3, (integers.M1 _ 2) in H.
   assert (2｜(m*m)) as H1.
@@ -680,7 +671,7 @@ Proof.
   assert (2｜m) as [k H3] by tauto; simpl in *; fold Z in *.
   subst.
   replace (k*2*(k*2))%Z with (2*(2*k*k))%Z in H by ring.
-  apply (cancellation_mul_l (integral_domain_OR ℤ_order)) in H.
+  apply (cancellation_mul_l (integral_domain ℤ_order)) in H.
   - assert (2｜(n*n)) as H3.
     { rewrite <-H;
         eauto using (div_mul_r ℤ), (div_refl ℤ) with Z. }
@@ -746,23 +737,14 @@ Qed.
 
 Lemma canonical_form_uniq : ∀ a b c d,
     a / b = c / d → b ≠ 0%Z → d ≠ 0%Z →
-    gcd (a,b) = 1 → gcd (c,d) = 1 → a ~ c ∧ b ~ d.
+    gcd (a, b) = 1 → gcd (c, d) = 1 → a ~ c ∧ b ~ d.
 Proof.
   intros a b c d H H0 H1.
   rewrite Qequiv in H; auto.
-  repeat split.
-  - eapply FTA; eauto.
-    rewrite <-H.
-    auto using (div_mul_r ℤ), (div_refl ℤ) with Z.
-  - eapply FTA; eauto using gcd_sym.
-    rewrite integers.M1, H.
-    auto using (div_mul_l ℤ), (div_refl ℤ) with Z.
-  - eapply FTA; eauto using gcd_sym.
-    rewrite H.
-    auto using (div_mul_r ℤ), (div_refl ℤ) with Z.
-  - eapply FTA; eauto using gcd_sym.
-    rewrite integers.M1, <-H.
-    auto using (div_mul_l ℤ), (div_refl ℤ) with Z.
+  repeat split; eapply FTA; eauto using gcd_sym;
+    [ rewrite <-H | rewrite integers.M1, H |
+      rewrite H | rewrite integers.M1, <-H ];
+    auto using (div_mul_l ℤ), (div_mul_r ℤ), (div_refl ℤ) with Z.
 Qed.
 
 Theorem canonical_form : ∀ x, exists ! a b, gcd (a,b) = 1 ∧ x = a / b ∧ b > 0%Z.
@@ -815,7 +797,7 @@ Proof.
            destruct (integers.T x' 0) as [H9 | [H9 | H9]]; try tauto.
            rewrite Qequiv in H7; try tauto.
            replace (b*-a)%Z with (a*-b)%Z in * by ring.
-           apply (cancellation_mul_l (integral_domain_OR ℤ_order)) in H7;
+           apply (cancellation_mul_l (integral_domain ℤ_order)) in H7;
              auto.
       * intros x' [y [[H6 [H7 H8]] H9]].
         subst.
@@ -826,7 +808,7 @@ Proof.
         apply assoc_pm in H11 as [H11 | H11]; try ring [H11].
         subst.
         rewrite Qequiv, integers.M1 in H7; try tauto.
-        apply (cancellation_mul_r (integral_domain_OR ℤ_order)) in H7;
+        apply (cancellation_mul_r (integral_domain ℤ_order)) in H7;
           auto.
         subst.
         contradiction (ordered_rings.lt_antisym ℤ_order 0%Z b).
@@ -841,7 +823,7 @@ Proof.
            rewrite <-IZQ_lt in H8.
            destruct (integers.T x' 0) as [H9 | [H9 | H9]]; try tauto.
            rewrite Qequiv, integers.M1 in H7; try tauto.
-           apply (cancellation_mul_r (integral_domain_OR ℤ_order)) in H7;
+           apply (cancellation_mul_r (integral_domain ℤ_order)) in H7;
              auto.
       * intros x' [y [[H6 [H7 H8]] H9]].
         subst.
@@ -853,7 +835,7 @@ Proof.
         subst.
         rewrite Qequiv in H7; try tauto.
         replace (-x'*y)%Z with (-y*x')%Z in * by ring.
-        apply (cancellation_mul_r (integral_domain_OR ℤ_order)) in H7;
+        apply (cancellation_mul_r (integral_domain ℤ_order)) in H7;
           auto.
         -- subst.
            rewrite <-(lt_neg_0 ℤ_order) in H5.
@@ -888,7 +870,7 @@ Proof.
       rewrite neg_wf, add_wf, pos_wf, ? (M3_r ℤ);
         auto using integers.zero_ne_1.
       * replace ((b*q+r+-q*b)*b)%Z with (b*r)%Z in * by ring.
-        auto using mul_pos_pos.
+        now apply (mul_pos_pos ℤ_order).
       * contradict H4.
         ring [H4].
     + right.
@@ -902,7 +884,7 @@ Proof.
     rewrite neg_wf, ? add_wf, pos_wf, ? (M3_r ℤ);
       auto using integers.zero_ne_1.
     + replace (((q+1)*b+-(b*q+r))*(1*b))%Z with (b*(b+-r))%Z by ring.
-      apply mul_pos_pos; auto.
+      apply (mul_pos_pos ℤ_order); auto; simpl.
       rewrite <-(integers.A4 r), ? (integers.A1 _ (-r)).
       now apply integers.O1.
     + contradict H4.
@@ -917,27 +899,13 @@ Proof.
   intros x b H.
   assert (b ≠ 0) as H0 by (pose proof (T b 0); tauto).
   destruct (Z_archimedean (x*b^-1)) as [n [[H1 | H1] H2]]; exists n;
-    repeat split; try (rewrite <-(M3 x), <-(inv_l b) at 1; auto;
-                       rewrite ? (M1 _ b), <-M2, (M1 _ x); now apply O3).
-  - left; simpl in *.
-    rewrite <-(M3 x), <-(inv_l b), ? (M1 _ b), <-M2, (M1 _ x); auto using O3.
-  - right.
-    now rewrite H1, <-M2, inv_l, M1, M3.
+    repeat split; rewrite <-(M3 x), <-(inv_l b) at 1; auto;
+      rewrite ? (M1 _ b), <-M2, (M1 _ x).
+  * now apply or_introl, (O3 ℚ_ring_order).
+  * now apply (O3 ℚ_ring_order).
+  * apply or_intror; congruence.
+  * now apply (O3 ℚ_ring_order).
 Qed.
-
-Definition neg_lt_0 :=
-  ordered_rings.neg_lt_0 ℚ_ring_order : ∀ a, 0 < a ↔ -a < 0.
-Definition lt_neg_0 :=
-  ordered_rings.lt_neg_0 ℚ_ring_order : ∀ a, a < 0 ↔ 0 < -a.
-Definition lt_sub_pos :=
-  ordered_rings.lt_sub_pos ℚ_ring_order : ∀  a b, 0 < b → a - b < a.
-Definition lt_neq :=
-  ordered_rings.lt_neq ℚ_ring_order : ∀ a b, a < b → b ≠ a.
-Definition lt_cross_mul :=
-  ordered_rings.lt_cross_mul ℚ_ring_order :
-    ∀ a b c d, 0 < a → 0 < c → a < b → c < d → a * c < b * d.
-Definition inv_unique := inv_unique ℚ : ∀ a, (∀ b, a * b = 1 → b = a^-1).
-Definition inv_one := inv_one ℚ : 1^-1 = 1.
 
 Theorem inv_zero : 0^-1 = 0.
 Proof.
@@ -988,7 +956,7 @@ Proof.
 Qed.
 
 Definition cancellation_mul_0 :=
-  cancellation_ID (integral_domain_from_field ℚ) :
+  integral_domains.cancellation (integral_domain_from_field ℚ) :
     ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
 
 Definition cancellation_mul_l :=
@@ -1042,7 +1010,7 @@ Proof.
   destruct (classic (a = 0)) as [H | H].
   - subst.
     now rewrite pow_neg, (pow_1_r ℚ).
-  - apply inv_unique; auto.
+  - apply (inv_unique ℚ); auto.
     now rewrite pow_neg, (pow_1_r ℚ), M1, inv_l.
 Qed.
 
@@ -1064,7 +1032,7 @@ Proof.
   destruct (classic (a = 0)); subst.
   - destruct (classic (b = 0%Z)); subst.
     + replace (-0)%Z with 0%Z by ring.
-      now rewrite pow_0_r, inv_one.
+      now rewrite pow_0_r, (fields.inv_one ℚ : 1^-1 = 1).
     + rewrite ? pow_0_l, inv_zero; auto.
       contradict H.
       ring [H].
@@ -1111,9 +1079,9 @@ Proof.
       replace n with (n+(-(1))+1)%Z at 2 by ring.
       apply (ordered_rings.lt_succ ℤ_order).
     + left.
-      apply (O3 (1+x)) in H7; auto.
+      apply (O3 ℚ_ring_order (1+x)) in H7; auto.
       rewrite <-(fields.pow_1_r ℚ (1+x)) in H7 at 2.
-      rewrite <-(fields.pow_add_r ℚ) in H7; auto using lt_neq.
+      rewrite <-(fields.pow_add_r ℚ) in H7; auto using (lt_neq ℚ_ring_order).
       replace (1 + (n + - (1)))%Z with n in * by ring.
       rewrite D1, M3, (M1 x), D1, A2, <-(A2 1), <-D1 in H7.
       rewrite <-IZQ_add, <-IZQ_neg, <-(A2 n),
@@ -1123,7 +1091,8 @@ Proof.
       rewrite IZQ_lt, <-IZQ_add, <-IZQ_neg in H5.
       auto using O1, O2.
     + replace n with (n+(-(1))+1)%Z at 2 by ring.
-      rewrite (pow_add_r ℚ); auto using lt_neq; fold pow; simpl.
+      rewrite (pow_add_r ℚ); auto using (lt_neq ℚ_ring_order);
+        fold pow; simpl.
       rewrite <-H7, (pow_1_r ℚ), <-IZQ_add, ? D1, M3, <-IZQ_neg.
       replace (IZQ 1%Z) with 1 by auto.
       replace (1+x+(n*x*(1+x)+-(1)*x*(1+x))) with (1+n*x+x*x*(n+-(1))) by ring.
@@ -1155,9 +1124,9 @@ Proof.
         rewrite lt_shift in H0.
         pose proof (T 0 (a+-(1))).
         tauto.
-      - apply (O3 (r+-(1))) in H5; try now rewrite <-lt_shift.
+      - apply (O3 ℚ_ring_order (r+-(1))) in H5; try now rewrite <-lt_shift.
         replace ((r + - (1)) * 0) with 0 in H5 by ring.
-        rewrite M1 in H5.
+        rewrite M1, mul_0_r in H5.
         assert (a + -(1) < 0) as H6 by eauto using lt_trans.
         rewrite lt_shift in H0.
         pose proof (T 0 (a+-(1))).
@@ -1189,11 +1158,11 @@ Proof.
     rewrite IZQ_lt, lt_shift, <-IZQ_neg.
     replace (IZQ 0) with 0 in * by auto.
     now replace (0+--n) with (n+-0) by ring.
-  - apply (O3 a) in H2; auto.
-    rewrite ? (M1 a), inv_l in H2; auto using lt_neq.
-    apply (O3 (r^-n)) in H2.
+  - apply (O3 ℚ_ring_order a) in H2; auto.
+    rewrite ? (M1 a), inv_l in H2; auto using (lt_neq ℚ_ring_order).
+    apply (O3 ℚ_ring_order (r^-n)) in H2.
     + rewrite M1, M3, M2, <-(pow_add_r ℚ), integers.A1, integers.A4,
-      pow_0_r, M3 in H2; auto using lt_neq.
+      pow_0_r, M3 in H2; auto using (lt_neq ℚ_ring_order).
     + now apply (pow_pos ℚ_order).
 Qed.
 
@@ -1201,21 +1170,23 @@ Theorem square_in_interval : ∀ a, 1 < a → ∃ r, 0 < r ∧ 1 < r * r < a.
 Proof.
   intros a H.
   assert (3 ≠ 0)%Z as H0.
-  { apply (ordered_rings.lt_neq ℤ_order), integers.O0;
-      auto using integers.zero_lt_1.
-    apply integers.O0; auto using integers.zero_lt_1. }
+  { apply (lt_neq ℤ_order), (ordered_rings.O0 ℤ_order);
+      try apply (ordered_rings.O0 ℤ_order);
+      auto using (ordered_rings.zero_lt_1 ℤ_order). }
   destruct (classic (2 < a)) as [H1 | H1].
   - exists (4/3).
     repeat split.
     + unfold zero, lt, sub.
-      rewrite neg_wf, add_wf, pos_wf; auto using integers.zero_ne_1.
-      replace ((4*1+-0*3)*(3*1))%Z with (4+4+4)%Z by ring.
-      auto 6 using integers.O0, integers.zero_lt_1.
-      now rewrite integers.M1, integers.M3.
+      rewrite neg_wf, add_wf, pos_wf; rewrite ? (M3_r ℤ);
+        auto using integers.zero_ne_1.
+      replace ((4+-0*3)*3)%Z with (4+4+4)%Z by ring.
+      repeat apply (ordered_rings.O0 ℤ_order);
+        auto using (ordered_rings.zero_lt_1 ℤ_order).
     + unfold one, lt, sub.
       rewrite mul_wf, neg_wf, add_wf, pos_wf; auto using integers.zero_ne_1.
-      * replace ((4*4*1+-(1)*(3*3))*(3*3*1))%Z with ((4+3)*(3*3))%Z by ring.
-        auto 6 using integers.O2, integers.O0, integers.zero_lt_1.
+      * replace ((4*4*1+-(1)*(3*3))*(3*3*1))%Z with ((1+3+3)*(3*3))%Z by ring.
+        repeat apply integers.O2; repeat apply (ordered_rings.O0 ℤ_order);
+          auto using (ordered_rings.zero_lt_1 ℤ_order).
       * intros H2.
         apply (cancellation_0_mul ℤ_order) in H2 as [H2 | H2];
           try now contradiction integers.zero_ne_1.
@@ -1226,7 +1197,8 @@ Proof.
       unfold IZQ, lt, sub.
       rewrite mul_wf, neg_wf, add_wf, pos_wf; auto using integers.zero_ne_1.
       * replace ((2*(3*3)+-(4*4)*1)*(1*(3*3)))%Z with (2*3*3)%Z by ring.
-        auto 6 using integers.O2, integers.O0, integers.zero_lt_1.
+        repeat apply integers.O2; repeat apply (ordered_rings.O0 ℤ_order);
+          auto using (ordered_rings.zero_lt_1 ℤ_order).
       * intros H2.
         apply (cancellation_0_mul ℤ_order) in H2 as [H2 | H2];
           try now contradiction integers.zero_ne_1.
@@ -1246,9 +1218,10 @@ Proof.
     assert (0 < r) as H3 by eauto using lt_trans, zero_lt_1.
     pose proof H2 as H4.
     apply (ordered_fields.pow_gt_1 ℚ_order _ 2) in H4;
-      auto using integers.O0, integers.zero_lt_1.
+      try apply (ordered_rings.O0 ℤ_order);
+      try apply (ordered_rings.zero_lt_1 ℤ_order).
     rewrite (pow_add_r ℚ) in H4; simpl in *; fold pow in *;
-      auto using lt_neq.
+      auto using (lt_neq ℚ_ring_order).
     rewrite <-pow_mul_l, (pow_1_r ℚ) in H4; auto using lt_neq.
     repeat split; auto.
     assert (r*r + -(1) = (r+-(1)) * (r+1)) as H5 by ring.
@@ -1262,7 +1235,7 @@ Proof.
       destruct H6 as [H6 | H6].
       - rewrite <-(integers.M3 1) at 4.
         rewrite <-IZQ_mul.
-        apply lt_cross_mul.
+        apply (lt_cross_mul ℚ_ring_order).
         + now rewrite <-lt_shift.
         + apply (inv_lt ℚ_order); simpl.
           rewrite <-? IZQ_add.
@@ -1284,9 +1257,10 @@ Proof.
         + rewrite <-(A3 1), A1, <-A2 at 1.
           unfold IZQ, one.
           auto using O1, O0, zero_lt_1. }
-    apply (O3 (r+-(1))) in H7; try now rewrite <-lt_shift.
+    apply (O3 ℚ_ring_order (r+-(1))) in H7; try now rewrite <-lt_shift.
     unfold r in H7 at 3.
-    rewrite <-A2, (A1 1), <-A2, ? (A1 _ 1), A4, (A1 _ 0), A3, <-M2, inv_l in H7.
+    rewrite <-A2, (A1 1), <-A2, ? (A1 _ 1), A4, (A1 _ 0), A3, <-M2, inv_l in H7;
+      simpl in H7.
     + rewrite (A1 1), <-H5, (M1 _ 1), M3, ? (A1 _ (-(1))) in H7.
       rewrite <-(A3 (r*r)), <-(A3 a), <-(A4 1), <-? A2.
       now apply O1.

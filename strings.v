@@ -1,7 +1,7 @@
 Set Warnings "-ambiguous-paths".
-Require Export polynomials.
+Require Export sets polynomials.
 
-Definition STR := (⋃ {({0,1}^n)%set | n in ω})%N.
+Definition STR := (⋃ {({0%N,1%N}^n)%set | n in ω})%N.
 
 Theorem STR_classification : ∀ f, f ∈ STR ↔ ∃ n : N, is_function f n {0,1}%N.
 Proof.
