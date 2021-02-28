@@ -35,8 +35,7 @@ Section Polynomials_construction.
     polynomial_set ⊂ Rset (power_series_ring ring).
   Proof.
     intros f H.
-    apply Specify_classification in H as [H H0].
-    exact H.
+    now apply Specify_classification in H as [H H0].
   Qed.
 
   Theorem polynomials_are_subring :
@@ -175,10 +174,9 @@ Section Polynomials_construction.
     repeat destruct excluded_middle_informative; auto.
     apply sub_0_le in e as [d H0].
     subst.
-    rewrite <-add_1_r, <-? naturals.add_assoc in H0.
-    rewrite <-(add_0_r 1) in H0 at 3.
+    rewrite <-(add_0_r 1), <-add_1_r, <-? naturals.add_assoc in H0.
     apply naturals.cancellation_add in H0.
-    rewrite naturals.add_comm, add_1_r in H0.
+    rewrite add_0_l, naturals.add_comm, add_1_r in H0.
     now contradiction (PA4 (c+d)).
   Qed.
 
@@ -293,6 +291,15 @@ Section Polynomial_theorems.
     now apply set_proj_injective.
   Qed.
 
+  Theorem IRP_eq : ∀ a b : R, (a : poly) = (b : poly) ↔ a = b.
+  Proof.
+    intros a b.
+    split; intros H; try congruence.
+    inversion H.
+    apply set_proj_injective in H1.
+    now apply IRS_eq.
+  Qed.
+
   Theorem IRP_add : ∀ a b : R, (a : poly) + (b : poly) = (a + b)%R.
   Proof.
     intros a b.
@@ -325,20 +332,16 @@ Section Polynomial_theorems.
 
   Theorem IRP_1 : 1 = 1%R.
   Proof.
-    unfold IRP.
     apply set_proj_injective.
     simpl.
-    unfold ISS, power_series.IRS, sub_one.
-    destruct polynomials_are_subring.
-    now repeat destruct a.
+    now destruct polynomials_are_subring, a.
   Qed.
 
   Theorem IRP_pow : ∀ (n : N) (a : R), (a : poly)^n = (a^n)%R.
   Proof.
-    intros n a.
-    induction n using Induction.
-    - now rewrite ? rings.pow_0_r, IRP_1.
-    - now rewrite ? rings.pow_succ_r, IHn, IRP_mul.
+    induction n using Induction; intros a;
+      now rewrite ? rings.pow_0_r, ? IRP_1,
+      ? rings.pow_succ_r, ? IHn, ? IRP_mul.
   Qed.
 
   Theorem nonzero_coefficients : ∀ f, f ≠ 0 ↔ ∃ m, coefficient f m ≠ 0%R.
@@ -355,14 +358,7 @@ Section Polynomial_theorems.
       simpl.
       unfold power_series.zero, IRS, power_series.IRS.
       rewrite coefficient_seriesify.
-      destruct excluded_middle_informative.
-      + apply NNPP.
-        contradict H.
-        exists 0%N.
-        now subst.
-      + apply NNPP.
-        contradict H.
-        now (exists n).
+      destruct excluded_middle_informative; apply NNPP; contradict H; eauto.
     - intros H0.
       subst.
       destruct H as [m H].
@@ -400,7 +396,7 @@ Section Polynomial_theorems.
     split; auto.
     intros x [H5 H6].
     apply NNPP.
-    intros H7.
+    contradict H6.
     eauto using naturals.le_antisymm.
   Qed.
 
@@ -422,10 +418,8 @@ Section Polynomial_theorems.
     split; intros H0; unfold degree in *;
       destruct excluded_middle_informative; try tauto;
         destruct constructive_indefinite_description as [y]; subst; auto.
-    destruct H0 as [H0 H1], a as [H2 H3].
-    destruct (lt_trichotomy y m) as [H4 | [H4 | H4]]; auto.
-    - now apply H3 in H4.
-    - now apply H1 in H4.
+    destruct H0 as [H0 H1], a as [H2 H3], (lt_trichotomy y m)
+          as [H4 | [H4 | H4]]; auto; exfalso; auto.
   Qed.
 
   Lemma coeffs_of_x : ∀ n : N, n ≠ 1%N → coefficient x n = 0%R.
@@ -461,14 +455,12 @@ Section Polynomial_theorems.
     rewrite ? coefficient_seriesify.
     repeat destruct excluded_middle_informative; auto.
     - now contradiction (PA4 0).
-    - contradiction n0.
-      now rewrite sub_diag.
+    - now rewrite sub_diag in n0.
   Qed.
 
   Lemma IPS_pow : ∀ n (f : poly), ((f : series)^n)%series = f^n.
   Proof.
-    intros n f.
-    induction n using Induction.
+    induction n using Induction; intros f.
     - rewrite ? (rings.pow_0_r PR), ? (rings.pow_0_r SR).
       apply sub_one_is_one.
     - now rewrite ? (pow_succ_r PR), ? (pow_succ_r SR), <-IPS_mul, IHn in *.
@@ -548,7 +540,6 @@ Section Polynomial_theorems.
 
   Lemma coeffs_of_x_to_n : ∀ n, coefficient (x^n) n = 1%R.
   Proof.
-    intros n.
     induction n using Induction.
     { rewrite rings.pow_0_r.
       simpl.
@@ -563,8 +554,8 @@ Section Polynomial_theorems.
     unfold coefficient, IPS.
     rewrite <-ISR_mul; simpl in *.
     unfold power_series.mul, coefficient in *.
-    rewrite coefficient_seriesify, <-(singleton_sum _ n (S n) 1%R).
-    2: { exists 1%N; now rewrite add_1_r. }
+    rewrite coefficient_seriesify, <-(singleton_sum _ n (S n) 1%R);
+      auto using le_succ.
     apply iterate_extensionality.
     intros k [H0 [c H1]].
     destruct excluded_middle_informative.
@@ -581,18 +572,14 @@ Section Polynomial_theorems.
   Proof.
     intros n f g.
     unfold coefficient.
-    rewrite <-IPS_add.
-    simpl.
-    now rewrite power_series.coefficient_add.
+    now rewrite <-IPS_add, <-power_series.coefficient_add.
   Qed.
 
   Theorem coefficient_neg : ∀ n f, coefficient (-f) n = (- coefficient f n)%R.
   Proof.
     intros n f.
     unfold coefficient.
-    rewrite <-IPS_neg.
-    simpl.
-    now rewrite power_series.coefficient_neg.
+    now rewrite <-IPS_neg, <-power_series.coefficient_neg.
   Qed.
 
   Theorem coefficient_mul : ∀ n f g,
@@ -601,9 +588,7 @@ Section Polynomial_theorems.
   Proof.
     intros n f g.
     unfold coefficient.
-    rewrite <-IPS_mul.
-    simpl.
-    now rewrite power_series.coefficient_mul.
+    now rewrite <-IPS_mul, <-power_series.coefficient_mul.
   Qed.
 
   Lemma minus_leading_term : ∀ f,
@@ -628,17 +613,13 @@ Section Polynomial_theorems.
       sub_abab, sub_abba in *.
       + split; auto.
         contradict H1.
-        symmetry in H1.
-        apply sub_0_le in H1.
-        f_equal.
-        apply NNPP.
-        intros H3.
-        rewrite (lt_1_eq_0 c), add_0_r in H2; repeat split; auto.
+        apply eq_sym, sub_0_le in H1.
+        apply f_equal, NNPP.
+        contradict H2.
+        rewrite (lt_1_eq_0 c), add_0_r; repeat split; auto.
       + apply naturals.le_not_gt.
         contradict H2.
-        apply lt_1_eq_0 in H2.
-        subst.
-        ring.
+        rewrite (lt_1_eq_0 c); auto; ring.
   Qed.
 
   Lemma polynomial_sum_lemma : ∀ d : N, ∀ f,
@@ -657,12 +638,10 @@ Section Polynomial_theorems.
       destruct (classic (n = 0%N)) as [H1 | H1].
       - subst.
         now rewrite const_coeff_mul, coeffs_of_x_to_n; ring_simplify.
-      - rewrite const_coeff_mul, coeffs_of_x_ne_n, coeffs_above_degree; auto.
-        + ring.
-        + rewrite H0, naturals.lt_def.
-          exists n.
-          rewrite naturals.add_0_l.
-          split; auto. }
+      - rewrite const_coeff_mul, coeffs_of_x_ne_n, coeffs_above_degree;
+          auto; try ring.
+        rewrite H0, naturals.lt_def.
+        eauto using naturals.add_0_l. }
     intros f H.
     destruct (classic (degree f = S d)) as [H0 | H0].
     - rewrite sum_succ, <-(rings.A3 _ f), (rings.A1 _ 0),
@@ -690,7 +669,7 @@ Section Polynomial_theorems.
     - rewrite <-(rings.A3 _ f), rings.A1, sum_succ at 1; auto using zero_le.
       f_equal.
       + apply IHd, naturals.le_not_gt.
-        intros H1.
+        contradict H0.
         eauto using squeeze_upper.
       + rewrite coeffs_above_degree; repeat split; auto.
         replace (0%R : poly) with 0 by now apply set_proj_injective.
@@ -737,8 +716,7 @@ Section Polynomial_theorems.
     apply iterate_extensionality.
     intros z H0.
     destruct excluded_middle_informative.
-    - subst.
-      rewrite const_coeff_mul, coeffs_of_x_to_n.
+    - rewrite e, const_coeff_mul, coeffs_of_x_to_n.
       now ring_simplify.
     - rewrite const_coeff_mul, coeffs_of_x_ne_n; auto; now ring_simplify.
   Qed.
@@ -748,10 +726,8 @@ Section Polynomial_theorems.
   Proof.
     intros n k f H.
     revert n H.
-    induction k using Induction; intros n [c H]; subst.
-    { rewrite rings.pow_0_r, sub_0_r.
-      f_equal.
-      ring. }
+    induction k using Induction; intros n [c H]; subst;
+      try now rewrite rings.pow_0_r, sub_0_r, M3_r.
     destruct (classic (k ≤ (S k + c))%N) as [H0 | H0].
     - unfold coefficient.
       rewrite pow_succ_r, rings.M2, rings.M1, <-IPS_mul.
@@ -768,17 +744,15 @@ Section Polynomial_theorems.
       unfold coefficient in H1.
       simpl in H1.
       rewrite H1.
-      + f_equal.
-        apply succ_0 in n as [m H2].
-        rewrite (naturals.add_comm _ c), <-add_1_r, naturals.add_assoc,
+      + rewrite (naturals.add_comm _ c), <-add_1_r, naturals.add_assoc,
         ? sub_abba at 1.
-        now apply sub_spec.
+        now apply f_equal, sub_spec.
       + exists c.
         apply sub_spec.
         rewrite <-add_1_r; ring.
     - contradict H0.
       exists (1+c)%N.
-      now rewrite <-add_1_r, naturals.add_assoc.
+      rewrite <-add_1_r; ring.
   Qed.
 
   Theorem add_degree :
@@ -786,16 +760,10 @@ Section Polynomial_theorems.
   Proof.
     intros f g.
     unfold naturals.max.
-    destruct excluded_middle_informative.
-    - apply degree_bound.
-      intros m H.
+    destruct excluded_middle_informative; apply degree_bound; intros m H;
+      try apply naturals.le_not_gt in n;
       rewrite coefficient_add, ? coeffs_above_degree, rings.A3;
-        eauto using naturals.lt_trans.
-    - apply naturals.le_not_gt in n.
-      apply degree_bound.
-      intros m H.
-      rewrite coefficient_add, ? coeffs_above_degree, rings.A3;
-        eauto using naturals.le_lt_trans.
+      eauto using naturals.lt_trans, naturals.le_lt_trans.
   Qed.
 
   Theorem mul_degree : ∀ f g, (degree (f * g)%poly ≤ degree f + degree g)%N.
@@ -836,7 +804,23 @@ Section Polynomial_theorems.
 
   Coercion eval : poly >-> Funclass.
 
-  Definition root (f : poly) r := f r = 0%R.
+  Definition roots (f : poly) := {r of type (Rset ring) | f r = 0%R}.
+
+  Theorem roots_in_R : ∀ f a, a ∈ roots f → a ∈ (Rset ring).
+  Proof.
+    intros f a H.
+    apply Specify_classification in H; tauto.
+  Qed.
+
+  Theorem roots_action : ∀ f (a : R), (elt_to_set _ a) ∈ roots f ↔ f a = 0%R.
+  Proof.
+    split; assert (elt_to_set _ a ∈ (Rset ring)) as H
+        by eauto using elts_in_set; intros H0;
+      [ apply Specify_classification in H0 as [H0 H1] |
+        apply Specify_classification ];
+      rewrite <-(setify_action _ _ H), <-specify_action, <-? H0, <-? H1 in *;
+      eauto using f_equal, set_proj_injective, elts_in_set.
+  Qed.
 
   Lemma sum_beyond_degree : ∀ f a m,
       (degree f ≤ m)%N →
@@ -942,8 +926,7 @@ Section Polynomial_theorems.
       + now rewrite H, coeff_const.
       + rewrite coeffs_above_degree; auto.
         rewrite degree_const, naturals.lt_def.
-        exists n.
-        split; auto using add_0_l.
+        eauto using add_0_l.
     - destruct constructive_indefinite_description as [d], a as [H0 H1].
       apply naturals.le_not_gt.
       contradict H; auto.
@@ -964,7 +947,7 @@ Section Polynomial_theorems.
       auto using naturals.le_refl.
   Qed.
 
-  Lemma eval_x : ∀ n α, ((x^n) α) = (α^n)%R.
+  Lemma eval_x_to_n : ∀ n α, ((x^n) α) = (α^n)%R.
   Proof.
     intros n α.
     unfold eval.
@@ -980,32 +963,34 @@ Section Polynomial_theorems.
     - rewrite coeffs_of_x_ne_n; auto; now ring_simplify.
   Qed.
 
+  Lemma eval_x : ∀ α, x α = α.
+  Proof.
+    intros α.
+    now rewrite <-(rings.pow_1_r PR x), eval_x_to_n, rings.pow_1_r.
+  Qed.
+
   Lemma eval_mul_x_lemma : ∀ m (α : R) (f : N → R) n,
       ((sum _ (λ i, f i * x^i) 0 m) * x^n) α =
       ((sum _ (λ i, f i * x^i)%poly 0 m : poly) α * α^n)%R.
   Proof.
-    intros m.
-    induction m using Induction.
-    { intros α f n.
-      unfold sum.
+    induction m using Induction; intros α f n.
+    - unfold sum.
       rewrite iterate_0, rings.pow_0_r, (rings.M1 _ _ 1), rings.M3,
-      eval_mul_const, eval_x.
+      eval_mul_const, eval_x_to_n.
       f_equal.
-      unfold eval.
-      rewrite degree_const.
-      unfold sum.
-      now rewrite iterate_0, rings.pow_0_r, coeff_const, rings.M1, rings.M3. }
-    intros α f n.
-    rewrite ? sum_succ, rings.D1, ? eval_add, rings.D1, IHm, <-rings.M2,
-    ? eval_mul_const, <-rings.M2, <-rings.pow_add_r, ? eval_x, rings.pow_add_r;
-      auto using zero_le.
+      unfold eval, sum.
+      now rewrite degree_const, iterate_0, rings.pow_0_r, coeff_const,
+      rings.M1, rings.M3.
+    - rewrite ? sum_succ, rings.D1, ? eval_add, rings.D1, IHm, <-rings.M2,
+      ? eval_mul_const, <-rings.M2, <-rings.pow_add_r, ? eval_x_to_n,
+      rings.pow_add_r; auto using zero_le.
   Qed.
 
   Lemma eval_mul_x_f : ∀ f a n, (f * x^n) a = (f a * (x^n)%poly a)%R.
   Proof.
     intros f a n.
-    now rewrite (polynomial_sum_lemma (degree f) f), ? eval_mul_x_lemma, eval_x;
-      auto using naturals.le_refl.
+    now rewrite (polynomial_sum_lemma (degree f) f), ? eval_mul_x_lemma,
+    eval_x_to_n; auto using naturals.le_refl.
   Qed.
 
   Lemma eval_mul_lemma : ∀ n f (a : N → R) α,
@@ -1017,11 +1002,11 @@ Section Polynomial_theorems.
     { unfold sum.
       now rewrite ? iterate_0, ? rings.M2,
       ? (rings.M1 _ _ (a 0%N : poly)), ? (rings.M1 _ _ (a 0%N)),
-      <-? rings.M2, eval_mul_const, eval_mul_x_f, eval_x. }
+      <-? rings.M2, eval_mul_const, eval_mul_x_f, eval_x_to_n. }
     rewrite ? sum_succ, ? rings.D1_l, <-IHn, eval_add; auto using zero_le.
     f_equal.
-    rewrite <-eval_x, rings.M1, <-rings.M2, eval_mul_const, (rings.M1 _ _ f),
-    eval_mul_x_f.
+    rewrite <-eval_x_to_n, rings.M1, <-rings.M2, eval_mul_const,
+    (rings.M1 _ _ f), eval_mul_x_f.
     ring.
   Qed.
 
@@ -1047,12 +1032,9 @@ Section Polynomial_theorems.
            auto using naturals.le_refl. }
       exists (coefficient f 0), (coefficient f 1).
       split.
-      + unfold naturals.one.
-        rewrite sum_succ; auto using zero_le.
-        unfold sum.
-        rewrite iterate_0, rings.pow_0_r.
+      + unfold naturals.one, sum.
+        rewrite iterate_succ, iterate_0, rings.pow_0_r; auto using zero_le.
         f_equal; try ring.
-        fold naturals.one.
         now rewrite rings.pow_1_r.
       + intros H0.
         contradiction (PA4 0).
@@ -1062,17 +1044,16 @@ Section Polynomial_theorems.
         apply naturals.le_antisymm; auto using zero_le.
         apply degree_bound.
         intros m [H1 H2].
-        assert (m ≠ 0%N) as H3 by auto.
-        apply succ_0 in H3 as [k H3].
+        apply neq_sym, succ_0 in H2 as [k H2].
         subst.
-        destruct (classic ((S k) = 1%N)) as [H3 | H3]; try congruence.
+        destruct (classic ((S k) = 1%N)) as [H2 | H2]; try congruence.
         rewrite coeffs_above_degree; auto.
         rewrite H, naturals.lt_def.
         exists k.
         rewrite naturals.add_comm, naturals.add_1_r.
         split; auto.
-        contradict H3.
-        now rewrite <-H3.
+        contradict H2.
+        now rewrite <-H2.
     - destruct H as [a [b [H H0]]].
       subst.
       unfold linear.
@@ -1091,8 +1072,7 @@ Section Polynomial_theorems.
         x_coeff_of_x.
         2: { rewrite degree_const; eauto using naturals.succ_lt. }
         contradict H0.
-        ring_simplify in H0.
-        now subst.
+        now ring_simplify in H0.
   Qed.
 
   Theorem degree_of_a_plus_x :
@@ -1114,14 +1094,14 @@ Section Polynomial_theorems.
     intros f g.
     rewrite coefficient_mul,
     <-(singleton_sum _ (degree f) (degree f + degree g)%N
-                     (coefficient f (degree f) * coefficient g (degree g))%R).
-    2: { now exists (degree g). }
+                     (coefficient f (degree f) * coefficient g (degree g))%R);
+      try now (exists (degree g)).
     apply iterate_extensionality.
     intros k H.
-    destruct (lt_trichotomy k (degree f)) as [H0 | [H0 | H0]].
-    - destruct excluded_middle_informative.
-      { subst; contradiction (naturals.lt_irrefl (degree f)). }
-      rewrite (coeffs_above_degree _ g); try now rewrite mul_0_r.
+    destruct (lt_trichotomy k (degree f)) as [H0 | [H0 | H0]];
+      destruct excluded_middle_informative; try tauto; subst;
+        (try now contradiction (naturals.lt_irrefl (degree f))).
+    - rewrite (coeffs_above_degree _ g); try now rewrite mul_0_r.
       destruct H0 as [[c H0] H2].
       rewrite <-H0, <-naturals.add_assoc, naturals.add_comm, sub_abba,
       naturals.add_comm, naturals.lt_def.
@@ -1130,12 +1110,8 @@ Section Polynomial_theorems.
       contradict H2.
       subst.
       ring [H0].
-    - subst.
-      destruct excluded_middle_informative; try tauto.
-      now rewrite naturals.add_comm, sub_abba.
-    - destruct excluded_middle_informative.
-      { subst; contradiction (naturals.lt_irrefl (degree f)). }
-      rewrite coeffs_above_degree; auto; now rewrite mul_0_l.
+    - now rewrite naturals.add_comm, sub_abba.
+    - rewrite coeffs_above_degree; auto; now rewrite mul_0_l.
   Qed.
 
   Theorem zero_ring_degree : 1%R = 0%R → ∀ f, degree f = 0%N.
@@ -1158,7 +1134,6 @@ Section Polynomial_theorems.
     { rewrite ? zero_ring_degree; auto; ring. }
     apply naturals.le_antisymm; auto using mul_degree.
     apply degree_lower_bound.
-    unfold monic in *.
     now rewrite <-leading_term_prod, H, H0, rings.M3.
   Qed.
 
@@ -1182,21 +1157,18 @@ Section Polynomial_theorems.
 
   Theorem monic_powers : ∀ n f, monic f → monic (f^n).
   Proof.
-    intros n f H.
-    induction n using Induction.
+    induction n using Induction; intros f H.
     - rewrite rings.pow_0_r.
       unfold monic.
       now rewrite IRP_1, degree_const, coeff_const.
     - rewrite pow_succ_r.
-      now apply monic_prod.
+      apply monic_prod; auto.
   Qed.
 
   Theorem monic_pow_degree : ∀ n f, monic f → degree (f^n) = (n * degree f)%N.
   Proof.
-    intros n f H.
-    induction n using Induction.
-    - rewrite rings.pow_0_r, IRP_1, degree_const.
-      ring.
+    induction n using Induction; intros f H.
+    - now rewrite rings.pow_0_r, IRP_1, degree_const, naturals.mul_0_l.
     - rewrite pow_succ_r, monic_prod_degree, IHn, <-add_1_r;
         auto using monic_powers; ring.
   Qed.
@@ -1239,8 +1211,6 @@ Section Polynomial_theorems.
   Theorem generalized_binomial_theorem :
     ∀ n k (α : R), coefficient ((α + x)^n) k = (binomial n k * α^(n-k))%R.
   Proof.
-    intros n k.
-    revert k.
     induction n using Induction; intros k α.
     { destruct (classic (k = 0%N)) as [H | H].
       - now subst; rewrite binomial_theorem_zero, sub_diag.
@@ -1265,8 +1235,7 @@ Section Polynomial_theorems.
     { subst.
       rewrite binomial_empty_set, sub_0_l, <-INR_0, rings.mul_0_l, rings.A3.
       2: { intros H.
-           symmetry in H.
-           contradiction (PA4 c). }
+           now contradiction (PA4 c). }
       rewrite sub_succ, ? sub_0_l.
       f_equal.
       destruct (classic (c = 0%N)) as [H | H].
@@ -1278,8 +1247,7 @@ Section Polynomial_theorems.
           exists c.
           rewrite <-? add_1_r.
           split; auto; ring.
-        + contradict H.
-          now rewrite <-add_1_r, sub_abba in H. }
+        + now rewrite <-add_1_r, sub_abba. }
     apply succ_0 in H as [m H].
     subst.
     rewrite ? sub_succ, <-(add_1_r c), sub_abba.
@@ -1294,9 +1262,8 @@ Section Polynomial_theorems.
       rewrite sub_diag, ? rings.pow_0_r, ? (rings.M1 _ _ 1%R), ? rings.M3,
       ? add_1_r, binomial_overflow, ? binomial_n_n, <-INR_0, mul_0_l, rings.A3;
         auto using naturals.succ_lt.
-    - rewrite ? binomial_overflow, <-INR_0; try now ring_simplify.
-      + now rewrite add_1_r, <-S_lt.
-      + rewrite add_1_r.
+    - rewrite ? binomial_overflow, <-INR_0; try (now ring_simplify);
+        rewrite add_1_r, <-? S_lt;
         eauto using naturals.lt_trans, naturals.succ_lt.
   Qed.
 
@@ -1331,10 +1298,17 @@ Section Polynomial_theorems.
 
   Definition leading_coefficient f := coefficient f (degree f).
 
+  Lemma leading_coefficient_zero : leading_coefficient 0 = 0%R.
+  Proof.
+    unfold leading_coefficient, degree.
+    destruct excluded_middle_informative; try now (exfalso; eauto).
+    replace 0 with (0%R : poly) by now apply set_proj_injective.
+    now rewrite coeff_const.
+  Qed.
+
   Lemma leading_coefficient_nonzero : ∀ f, leading_coefficient f = 0%R → f = 0.
   Proof.
     intros f H.
-    unfold leading_coefficient in H.
     apply NNPP.
     intros H0.
     eapply (degree_spec f) in H0.
@@ -1349,7 +1323,6 @@ Section Polynomial_theorems.
       intros m H1.
       rewrite const_coeff_mul, coeffs_above_degree; auto; now ring_simplify.
     - apply degree_lower_bound.
-      unfold monic in *.
       now rewrite const_coeff_mul, H0, rings.M1, rings.M3.
   Qed.
 
@@ -1394,26 +1367,23 @@ Section Polynomial_theorems.
       rewrite <-H5, <-H4.
       eapply naturals.le_trans; eauto using mul_degree.
       exists 0%N.
-      rewrite add_0_r, naturals.add_comm.
-      f_equal.
-      rewrite const_mul_monic; auto using degree_x_to_n.
+      rewrite add_0_r, naturals.add_comm, const_mul_monic, degree_x_to_n;
+        auto using degree_x_to_n.
       + intros H9.
         apply leading_coefficient_nonzero in H9.
         subst.
         unfold degree in H5.
-        destruct excluded_middle_informative.
-        * contradiction (PA4 n).
-        * now contradiction n0.
+        destruct excluded_middle_informative; intuition.
+        contradiction (PA4 n).
       + unfold monic.
         rewrite degree_x_to_n, coeffs_of_x_to_n; auto.
     - apply naturals.le_not_gt in H8.
       replace m with (S n) by now apply eq_sym, squeeze_upper.
       unfold leading_coefficient, monic in *.
       rewrite <-H5, <-rings.M2, const_coeff_mul, (rings.M1 PR),
-      coeff_of_x_mul, <-H4, sub_abba, H0.
-      + now ring_simplify.
-      + exists (degree b).
-        now rewrite <-H4, naturals.add_comm.
+      coeff_of_x_mul, <-H4, sub_abba, H0; try now ring_simplify.
+      exists (degree b).
+      now ring_simplify [H4].
   Qed.
 
   Theorem monic_division_algorithm : ∀ a b,
@@ -1436,15 +1406,14 @@ Section Polynomial_theorems.
       + rewrite H.
         auto using naturals.le_refl.
     - destruct H as [c H].
-      subst.
-      now rewrite degree_const.
+      now rewrite H, degree_const.
   Qed.
 
   Theorem eval_const : ∀ a b : R, a b = a.
   Proof.
     intros a b.
     rewrite <-(rings.M3 _ (a : poly)), rings.M1, <-(rings.pow_0_r _ x),
-    eval_mul_const, eval_x, rings.pow_0_r.
+    eval_mul_const, eval_x_to_n, rings.pow_0_r.
     ring.
   Qed.
 
@@ -1457,14 +1426,15 @@ Section Polynomial_theorems.
 
   Infix "｜" := (rings.divide PR).
 
-  Theorem roots_classification : ∀ f a, root f a ↔ x - a｜f.
+  Theorem root_classification :
+    ∀ f (a : R), (elt_to_set _ a) ∈ roots f ↔ x - a｜f.
   Proof.
     destruct (classic (1%R = 0%R)) as [H | H]; split; intros H0;
-      try now apply zero_ring_degeneracy.
+      rewrite roots_action in *; try now apply zero_ring_degeneracy.
     { exists 1.
       apply zero_ring_degeneracy.
-      replace 0 with (0%R : poly) by now apply set_proj_injective.
-      now rewrite IRP_1, H. }
+      rewrite IRP_1, H.
+      now apply set_proj_injective. }
     - assert (linear (x - a)) as H1; try unfold linear in H1.
       { rewrite linear_classification.
         exists (-a)%R, 1%R.
@@ -1479,28 +1449,180 @@ Section Polynomial_theorems.
       + exists q.
         rewrite rings.M1, H2.
         replace r with 0; try ring.
-        assert (const r) as H4.
-        { unfold const.
-          apply NNPP.
-          intros H4.
-          apply succ_0 in H4 as [c H4].
-          rewrite H4, naturals.lt_not_ge, <-add_1_r, naturals.add_comm in H3.
-          contradict H3.
-          now (exists c). }
+        assert (const r) as H4 by now apply lt_1_eq_0 in H3.
         apply const_classification in H4 as [c H4].
         subst.
-        symmetry.
-        unfold root in H0.
         replace 0 with (0%R : poly) by now apply set_proj_injective.
         now rewrite <-H0, eval_add, eval_mul, sub_is_neg, eval_add, eval_neg,
-        <-(rings.pow_1_r _ x), eval_x, ? eval_const, rings.pow_1_r, rings.A4,
-        mul_0_l, rings.A3.
+        eval_x, ? eval_const, rings.A4, mul_0_l, rings.A3.
     - destruct H0 as [q H0].
       subst.
-      unfold root.
-      rewrite eval_mul, sub_is_neg, eval_add, <-(rings.pow_1_r _ x), eval_neg,
-      eval_x, ? eval_const, rings.pow_1_r.
+      rewrite eval_mul, sub_is_neg, eval_add, eval_neg, eval_x, ? eval_const.
       ring.
   Qed.
+
+  Theorem coeffs_of_0 : ∀ n, coefficient 0 n = 0%R.
+  Proof.
+    intros n.
+    destruct (classic (n = 0%N)).
+    - replace 0 with (0%R : poly) by now apply set_proj_injective.
+      subst; now rewrite coeff_const.
+    - apply coeffs_above_degree.
+      unfold degree.
+      destruct excluded_middle_informative; try (now exfalso; eauto).
+      apply succ_0 in H as [m H].
+      subst; auto using naturals.lt_succ.
+  Qed.
+
+  Section Integral_domain_theorems.
+
+    Hypothesis is_ID : is_integral_domain ring.
+
+    Theorem poly_is_ID : is_integral_domain PR.
+    Proof.
+      destruct is_ID as [C N].
+      split.
+      - intros a b H.
+        destruct (classic (a = 0))
+          as [H0 | H0], (classic (b = 0)) as [H1 | H1]; intuition.
+        assert (leading_coefficient a ≠ 0%R) as H2 by
+            eauto using leading_coefficient_nonzero.
+        assert (leading_coefficient b ≠ 0%R) as H3 by
+            eauto using leading_coefficient_nonzero.
+        unfold leading_coefficient in *.
+        assert (coefficient (a * b) (degree a + degree b) ≠ 0%R) as H4.
+        { rewrite <-leading_term_prod.
+          intros H4.
+          apply C in H4; tauto. }
+        now rewrite H, coeffs_of_0 in H4.
+      - intros H.
+        contradiction N.
+        rewrite IRP_1 in H.
+        replace 0 with (0%R : poly) in H by now apply set_proj_injective.
+        now apply IRP_eq.
+    Qed.
+
+    Theorem monic_nonzero : ∀ f, monic f → f ≠ 0.
+    Proof.
+      intros f H H0.
+      unfold monic in *.
+      subst.
+      rewrite coeffs_of_0 in H.
+      destruct is_ID as [C N].
+      now contradiction N.
+    Qed.
+
+    Theorem prod_root : ∀ f g, roots (f * g) = (roots f) ∪ (roots g).
+    Proof.
+      intros f g.
+      destruct is_ID as [C N].
+      apply Extensionality.
+      split; intros H.
+      - apply Pairwise_union_classification.
+        apply roots_in_R in H as H0.
+        rewrite <-(setify_action _ _ H0), ? roots_action, eval_mul in *.
+        apply C in H; tauto.
+      - apply Pairwise_union_classification in H as [H | H];
+          apply roots_in_R in H as H0;
+          rewrite <-(setify_action _ _ H0), ? roots_action, eval_mul, H in *;
+          ring.
+    Qed.
+
+    Theorem monic_linear_root :
+      ∀ (a : R), roots (x - a) = {(elt_to_set _ a), (elt_to_set _ a)}.
+    Proof.
+      intros a.
+      apply Extensionality.
+      split; intros H; rewrite Singleton_classification in *; subst.
+      - apply roots_in_R in H as H0.
+        set (ζ := exist _ _ H0 : R).
+        rewrite <-(setify_action _ _ H0) in *; fold ζ in H |-*.
+        apply roots_action in H.
+        unfold rings.sub in H.
+        rewrite <-(rings.A3 _ a), <-H, eval_add, eval_x, eval_neg, eval_const.
+        f_equal.
+        ring.
+      - rewrite roots_action.
+        unfold rings.sub.
+        rewrite eval_add, eval_x, eval_neg, eval_const.
+        ring.
+    Qed.
+
+    Theorem nonzero_prod_degree :
+      ∀ f g, f ≠ 0 → g ≠ 0 → degree (f * g) = (degree f + degree g)%N.
+    Proof.
+      intros f g H H0.
+      apply naturals.le_antisymm; auto using mul_degree.
+      apply degree_lower_bound.
+      rewrite <-leading_term_prod.
+      intros H1.
+      destruct is_ID as [C N].
+      apply C in H1 as [H1 | H1]; now apply leading_coefficient_nonzero in H1.
+    Qed.
+
+    Theorem monic_linear_degree : ∀ (a : R), degree (x - a) = 1%N.
+    Proof.
+      intros a.
+      destruct is_ID as [C N].
+      rewrite <-(degree_of_a_plus_x N (-a)), <-IRP_neg.
+      now replace (x - a) with (-a + x) by now ring_simplify.
+    Qed.
+
+    Theorem finite_roots : ∀ f, f ≠ 0 → finite (roots f).
+    Proof.
+      intros f H.
+      remember (degree f) as d.
+      revert f H Heqd.
+      induction d using Strong_Induction.
+      intros f H0 Heqd.
+      destruct (classic (roots f = ∅)) as [H1 | H1].
+      { rewrite H1.
+        now exists 0%N. }
+      apply Nonempty_classification in H1 as [a H1].
+      apply roots_in_R in H1 as H2.
+      set (α := exist _ _ H2 : R).
+      rewrite <-(setify_action _ _ H2) in *; fold α in H1.
+      apply root_classification in H1 as [g H1].
+      subst.
+      rewrite prod_root.
+      apply cancellation_ne0 in H0 as [H0 H1].
+      apply finite_unions_are_finite.
+      - eapply H; eauto.
+        rewrite nonzero_prod_degree, monic_linear_degree, add_1_r; auto.
+        apply naturals.succ_lt.
+      - rewrite monic_linear_root.
+        apply singletons_are_finite.
+    Qed.
+
+    Theorem root_degree_bound : ∀ f, f ≠ 0 → (# roots f ≤ degree f)%N.
+    Proof.
+      intros f H.
+      destruct is_ID as [C N].
+      remember (degree f) as d.
+      revert f H Heqd.
+      induction d using Strong_Induction.
+      intros f H0 Heqd.
+      destruct (classic (roots f = ∅)) as [H1 | H1].
+      { rewrite H1, card_empty.
+        apply zero_le. }
+      apply Nonempty_classification in H1 as [a H1].
+      apply roots_in_R in H1 as H2.
+      set (α := exist _ _ H2 : R).
+      rewrite <-(setify_action _ _ H2) in *; fold α in H1.
+      apply root_classification in H1 as [g H1].
+      subst.
+      rewrite prod_root.
+      apply cancellation_ne0 in H0 as [H0 H1].
+      rewrite nonzero_prod_degree, monic_linear_degree in *; auto.
+      eapply naturals.le_trans; eauto using finite_union_card_bound.
+      apply naturals.le_cross_add.
+      - apply H; auto.
+        rewrite add_1_r.
+        apply naturals.succ_lt.
+      - rewrite monic_linear_root, singleton_card.
+        apply naturals.le_refl.
+    Qed.
+
+  End Integral_domain_theorems.
 
 End Polynomial_theorems.

@@ -682,10 +682,7 @@ Section Modular_arithmetic.
         rewrite <-add_1_r, add_comm, sub_abab in *; auto using Euler_Phi_ge_1.
     Qed.
 
-    Definition Euler_Phi_product : Z_.
-    Proof.
-      exact (prod ℤ_ Euler_Phi_list 0 (Euler_Phi - 1)).
-    Defined.
+    Definition Euler_Phi_product := prod ℤ_ Euler_Phi_list 0 (Euler_Phi - 1).
 
     Lemma Euler_Phi_product_unit : rings.unit ℤ_ Euler_Phi_product.
     Proof.
@@ -697,10 +694,8 @@ Section Modular_arithmetic.
       Variable a : Z_.
       Hypothesis unit_a : rings.unit ℤ_ a.
 
-      Definition Euler_Phi_product_shifted : Z_.
-      Proof.
-        exact (prod ℤ_ (λ x, a * (Euler_Phi_list x)) 0 (Euler_Phi - 1)).
-      Defined.
+      Definition Euler_Phi_product_shifted :=
+        prod ℤ_ (λ x, a * (Euler_Phi_list x)) 0 (Euler_Phi - 1).
 
       Lemma Euler_Phi_equal : Euler_Phi_product = Euler_Phi_product_shifted.
       Proof.
@@ -718,8 +713,7 @@ Section Modular_arithmetic.
           destruct (Euler_Phi_list_surj (x * Euler_Phi_list i)) as [j [H1 H2]].
           { apply unit_closure; auto using Euler_Phi_list_unit.
             exists a.
-            rewrite H0.
-            ring. }
+            now rewrite H0, M1. }
           exists j.
           simpl in H0.
           split; try split; auto.

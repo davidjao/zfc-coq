@@ -16,21 +16,61 @@ Record integral_domain :=
       nontriviality : 1 ≠ 0;
     }.
 
+Section Integral_domain_construction.
+  Variable ring : rings.ring.
+  Variable ID : integral_domain.
+  Notation R := (elts (Rset ring)).
+  Notation "0" := (zero ring).
+  Notation "1" := (one ring).
+  Infix "+" := (add ring).
+  Infix "-" := (sub ring).
+  Infix "*" := (mul ring).
+  Notation "- a" := (neg ring a).
+  Infix "^" := (pow ring).
+
+  Add Ring R_ring : (ringify ring).
+
+  Definition has_cancellation := ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
+  Definition has_nontriviality := 1 ≠ 0.
+  Definition is_integral_domain := has_cancellation ∧ has_nontriviality.
+
+  Hypothesis C : has_cancellation.
+  Hypothesis N : has_nontriviality.
+
+  Definition integral_domain_from_ring := mkID ring C N.
+
+End Integral_domain_construction.
+
 Section Integral_domain_theorems.
 
   Variable ID : integral_domain.
 
-  Notation Ring := (ring ID).
-  Notation R := (elts (Rset Ring)).
-  Notation "0" := (zero Ring).
-  Notation "1" := (one Ring).
-  Infix "+" := (add Ring).
-  Infix "-" := (sub Ring).
-  Infix "*" := (mul Ring).
-  Notation "- a" := (neg Ring a).
-  Infix "^" := (pow Ring).
+  Notation ring := (ring ID).
+  Notation R := (elts (Rset ring)).
+  Notation "0" := (zero ring).
+  Notation "1" := (one ring).
+  Infix "+" := (add ring).
+  Infix "-" := (sub ring).
+  Infix "*" := (mul ring).
+  Notation "- a" := (neg ring a).
+  Infix "^" := (pow ring).
 
-  Add Ring R_ring : (ringify Ring).
+  Add Ring R_ring : (ringify ring).
+
+  Lemma has_nontriviality_ID : has_nontriviality ring.
+  Proof.
+    exact (nontriviality ID).
+  Qed.
+
+  Lemma has_cancellation_ID : has_cancellation ring.
+  Proof.
+    exact (cancellation ID).
+  Qed.
+
+  Lemma is_integral_domain_ID : is_integral_domain ring.
+  Proof.
+    split; try apply has_nontriviality_ID; apply has_cancellation_ID.
+  Qed.
 
   Lemma ne0_cancellation : ∀ a b, a ≠ 0 → b ≠ 0 → a * b ≠ 0.
   Proof.

@@ -616,70 +616,55 @@ Proof.
       apply Inverse_image_subset in H0.
       - rewrite psp_domain in H0.
         apply Specify_classification in H0 as [H0 [f H2]].
-        replace (a : set) with (graph f) by intuition.
         pose proof func_hyp f.
         intuition; congruence.
       - now rewrite psp_range. }
-    unfold sets.functionify.
-    destruct constructive_indefinite_description as [f].
-    destruct a0 as [H1 [H2 H3]].
-    intros z H4.
-    apply Graph_classification in H4 as [z1 [H4 H5]].
+    intros z H1.
+    apply Graph_classification in H1 as [z1 [H1 H2]].
     subst.
-    rewrite H1 in H4.
-    set (ζ1 := exist _ _ H4 : elts (S n)).
-    replace z1 with (ζ1 : set) in * by auto.
-    rewrite H3.
+    rewrite sets.functionify_domain, <-(setify_action _ _ H1),
+    functionify_action in *.
     unfold permutation_succ_right_helper; simpl.
     destruct excluded_middle_informative.
     * subst.
-      apply Inverse_image_classification in H0 as H5.
+      apply Inverse_image_classification in H0 as H2.
       2: { apply Specify_classification in H0; tauto. }
       2: { now rewrite psp_range. }
-      unfold inverse_image_of_element in H0.
-      apply Specify_classification in H0 as [H0 H6].
+      apply Specify_classification in H0 as [H0 H3].
       rewrite psp_domain in H0.
       set (α := exist _ _ H0 : elts (bijection_set (S n) (S n))).
       replace (a : set) with (α : set) in * by auto.
-      rewrite psp_action in H5.
+      rewrite psp_action in H2.
       simpl.
-      pose proof H0 as H7.
-      apply Specify_classification in H7 as [H7 [f' [H8 [H9 [H10 H11]]]]].
-      assert (graph f' = α) as H12 by now rewrite H10.
-      rewrite <-(functionify_graph (S n) (S n) α) in H12.
-      apply function_record_injective in H12.
-      -- rewrite <-H10, H12.
-         apply Graph_classification.
-         exists n.
-         split; congruence.
-      -- now rewrite functionify_range.
+      pose proof H0 as H4.
+      apply Specify_classification in H4 as [H4 [f' [H5 [H6 [H7 H8]]]]].
+      assert (graph f' = α) as H9 by now rewrite H7.
+      rewrite <-(functionify_graph (S n) (S n) α) in H9.
+      apply function_record_injective in H9; try now rewrite functionify_range.
+      rewrite <-H7, H9.
+      apply Graph_classification.
+      exists n.
+      split; congruence.
     * destruct Complement_classification, a0, Specify_classification,
       a1, constructive_indefinite_description as [f'].
       simpl.
       clear n1 i0 i a0 e i2 i1 a1.
-      destruct a2 as [H5 [H6 [H7 H8]]].
+      destruct a2 as [H2 [H3 [H4 H5]]].
       assert ((z1, f' z1) ∈ graph f').
       { apply Graph_classification.
         exists z1.
         split; auto.
-        clear ζ1.
-        rewrite <-S_is_succ in H4.
-        apply Pairwise_union_classification in H4 as [H4 | H4]; try congruence.
-        now apply Singleton_classification in H4. }
-      rewrite H7 in H9.
-      apply Graph_classification in H9 as [z1' [H9 H10]].
-      apply Ordered_pair_iff in H10 as [H10 H11].
+        rewrite <-S_is_succ in H1.
+        apply Pairwise_union_classification in H1 as [H1 | H1]; try congruence.
+        now apply Singleton_classification in H1. }
+      rewrite H4 in H6.
+      apply Graph_classification in H6 as [z1' [H6 H7]].
+      apply Ordered_pair_iff in H7 as [H7 H8].
       subst.
-      rewrite H11.
-      unfold sets.functionify in *.
-      destruct constructive_indefinite_description as [f''].
-      destruct a0 as [H10 [H12 H13]].
-      rewrite H10 in H9.
-      set (ζ1' := exist _ _ H9 : elts n).
-      replace z1' with (ζ1' : set) in * by auto.
-      rewrite H13.
+      rewrite H8, sets.functionify_domain, <-(setify_action _ _ H6),
+      functionify_action in *.
       simpl.
-      clear H11 H8 H7 H13 H12 H10 f'' H6 H5 f' ζ1 H3 H2 H1 f.
+      clear H8 H5 H3 H2 H1.
       rewrite Inverse_image_classification in H0.
       2: { rewrite psp_domain.
            pose proof (elts_in_set _ (inverse_image_incl n (exist _ _ H) a)).

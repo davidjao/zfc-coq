@@ -1022,6 +1022,17 @@ Proof.
     subsets_of_finites_are_finite.
 Qed.
 
+Theorem finite_union_card_bound : ∀ E F, # (E ∪ F) ≤ # E + # F.
+Proof.
+  intros E F.
+  destruct (classic (finite E))
+    as [H | H], (classic (finite F)) as [H0 | H0];
+  try (now rewrite <-Inclusion_Exclusion; unfold le; eauto);
+  unfold finite_cardinality at 1; destruct excluded_middle_informative;
+    auto using zero_le; exfalso;
+      eauto using subsets_of_finites_are_finite, Union_right, Union_left.
+Qed.
+
 Add Morphism product with signature
     equinumerous ==> equinumerous ==> equinumerous as product_equiv.
 Proof.

@@ -32,6 +32,15 @@ Section Set_to_type.
   Coercion elt_to_set : elts >-> set.
 End Set_to_type.
 
+Theorem set_proj_injective :
+  ∀ X (n m : elts X), (n : set) = (m : set) → n = m.
+Proof.
+  intros S n m H.
+  destruct n, m; simpl in *.
+  subst.
+  now replace i with i0 by apply proof_irrelevance.
+Qed.
+
 Theorem elts_in_set : ∀ S x, elt_to_set S x ∈ S.
 Proof.
   intros S x.
@@ -107,19 +116,37 @@ Proof.
   exact S.
 Defined.
 
+Definition specify_lift (A : set) (p : elts A → Prop) : set → Prop.
+Proof.
+  intros a.
+  destruct (excluded_middle_informative (a ∈ A)).
+  - exact (p (exist _ _ i)).
+  - exact False.
+Defined.
+
+Definition specify_type (A : set) (p : elts A → Prop) : set.
+Proof.
+  destruct (constructive_indefinite_description
+              _ (Specification A (specify_lift A p))) as [S].
+  exact S.
+Defined.
+
+Theorem specify_action :
+  ∀ A (p : elts A → Prop) x, p x = specify_lift A p (x : set).
+Proof.
+  intros A p x.
+  unfold specify_lift.
+  destruct excluded_middle_informative.
+  - now apply f_equal, set_proj_injective.
+  - exfalso; eauto using elts_in_set.
+Qed.
+
 Notation "{ x 'in' A | P }" := (specify A (λ x, P)) : set_scope.
+
+Notation "{ x 'of' 'type' A | P }" := (specify_type A (λ x, P)) : set_scope.
 
 Definition subset a b := ∀ x, x ∈ a → x ∈ b.
 Infix "⊂" := subset (at level 70) : set_scope.
-
-Theorem set_proj_injective :
-  ∀ X (n m : elts X), (n : set) = (m : set) → n = m.
-Proof.
-  intros S n m H.
-  destruct n, m; simpl in *.
-  subst.
-  now replace i with i0 by apply proof_irrelevance.
-Qed.
 
 Theorem replacement_construction : ∀ S (f : elts S → set),
   ∃ X, ∀ x, x ∈ X ↔ ∃ s, f s = x.
@@ -279,17 +306,30 @@ Qed.
 
 Theorem Specify_classification : ∀ A P x, x ∈ {x in A | P x} ↔ x ∈ A ∧ P x.
 Proof.
-  intros A P x.
+  intros A p x.
   unfold specify in *.
-  repeat destruct constructive_indefinite_description.
-  split; intros H; now apply i.
+  now repeat destruct constructive_indefinite_description.
 Qed.
 
-Theorem Specify_subset : ∀ A P, {x in A | P x} ⊂ A.
+Theorem Specify_subset : ∀ A p, {x in A | p x} ⊂ A.
+Proof.
+  intros A p x H.
+  now apply Specify_classification in H.
+Qed.
+
+Theorem Specify_type_classification :
+  ∀ A p x, p x ∧ x ∈ A ↔ x ∈ {x of type A | p x}.
+Proof.
+  split; intros H; [ apply Specify_classification |
+                     apply Specify_classification in H ];
+  split; intuition; now rewrite <-? (setify_action _ _ H1),
+                    <-? (setify_action _ _ H0), <-specify_action in *.
+Qed.
+
+Theorem Specify_type_subset : ∀ A P, {x of type A | P x} ⊂ A.
 Proof.
   intros A P x H.
-  apply Specify_classification in H.
-  tauto.
+  now apply Specify_classification in H.
 Qed.
 
 Lemma Pairing_classification : ∀ x y z, z ∈ {x,y} ↔ (z = x ∨ z = y).
@@ -458,6 +498,18 @@ Proof.
     firstorder; firstorder using Pairwise_union_classification.
 Qed.
 
+Theorem Union_left : ∀ A B, A ⊂ A ∪ B.
+Proof.
+  intros A B x H.
+  apply Pairwise_union_classification; tauto.
+Qed.
+
+Theorem Union_right : ∀ A B, B ⊂ A ∪ B.
+Proof.
+  intros A B x H.
+  apply Pairwise_union_classification; tauto.
+Qed.
+
 Definition intersection X := {y in ⋃ X | ∀ x, x ∈ X → y ∈ x}.
 
 Notation "⋂ x" := (intersection x) (at level 60) : set_scope.
@@ -590,8 +642,7 @@ Theorem Complement_classification : ∀ A B x, x ∈ A \ B ↔ x ∈ A ∧ x ∉
 Proof.
   intros A B x.
   unfold complement, specify.
-  repeat destruct constructive_indefinite_description.
-  auto.
+  now repeat destruct constructive_indefinite_description.
 Qed.
 
 Theorem Complement_subset : ∀ A B, A ⊂ B ↔ A \ B = ∅.
@@ -605,10 +656,7 @@ Proof.
     intros x H1.
     apply NNPP.
     intros H2.
-    eapply Empty_set_classification.
-    apply H.
-    rewrite Complement_classification in *.
-    eauto.
+    eapply Empty_set_classification, H, Complement_classification; eauto.
 Qed.
 
 Theorem Complement_intersection : ∀ A B, A \ (A \ B) = A ∩ B.
