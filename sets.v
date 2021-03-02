@@ -452,6 +452,15 @@ Proof.
   [ exists A | exists B ]; split; try rewrite Pairing_classification; tauto.
 Qed.
 
+Lemma Pairing_union_singleton : ∀ x y, {x,y} = {x,x} ∪ {y,y}.
+Proof.
+  intros x y.
+  apply Extensionality.
+  split; intros H; [ apply Pairwise_union_classification |
+                     apply Pairwise_union_classification in H ];
+  rewrite Pairing_classification, Singleton_classification in *; tauto.
+Qed.
+
 Theorem Singleton_union : ∀ A, ⋃ {A, A} = A.
 Proof.
   intros A.
@@ -545,6 +554,23 @@ Proof.
   - split; apply H; apply Pairing_classification; tauto.
   - intros X H0.
     apply Pairing_classification in H0 as [H0 | H0]; subst; tauto.
+Qed.
+
+Theorem Pairing_intersection_disjoint : ∀ x y, x ≠ y ↔ {x,x} ∩ {y,y} = ∅.
+Proof.
+  intros x y.
+  split; intros H.
+  - apply Extensionality.
+    split; intros H0.
+    + rewrite Pairwise_intersection_classification,
+      ? Singleton_classification in *.
+      destruct H0; contradict H; congruence.
+    + exfalso; firstorder using Empty_set_classification.
+  - contradict H.
+    subst.
+    apply Nonempty_classification.
+    exists y.
+    now rewrite Pairwise_intersection_classification, Singleton_classification.
 Qed.
 
 Theorem Empty_intersection : (⋂ ∅ = ∅).

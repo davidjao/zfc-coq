@@ -34,10 +34,10 @@ Section Integral_domain_construction.
   Definition has_nontriviality := 1 ≠ 0.
   Definition is_integral_domain := has_cancellation ∧ has_nontriviality.
 
-  Hypothesis C : has_cancellation.
-  Hypothesis N : has_nontriviality.
+  Hypothesis is_ID : is_integral_domain.
 
-  Definition integral_domain_from_ring := mkID ring C N.
+  Definition integral_domain_from_ring :=
+    mkID ring (Logic.proj1 is_ID) (Logic.proj2 is_ID).
 
 End Integral_domain_construction.
 

@@ -123,6 +123,12 @@ Section Ring_theorems.
     ring.
   Qed.
 
+  Theorem difference_of_squares : ∀ a b, a * a - b * b = (a - b) * (a + b).
+  Proof.
+    intros a b.
+    ring.
+  Qed.
+
   Definition divide x y := ∃ z, y = z * x.
 
   Notation "x ｜ y" :=

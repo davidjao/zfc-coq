@@ -2001,3 +2001,11 @@ Proof.
     rewrite <-H1, disjoint_union_complement.
     now apply finite_unions_are_finite.
 Qed.
+
+Theorem pairing_card : ∀ x y, x ≠ y → {x,y} ~ 2.
+Proof.
+  intros x y H.
+  apply Pairing_intersection_disjoint in H.
+  now rewrite Pairing_union_singleton, finite_union_equinumerosity,
+  ? singleton_card, add_1_r; eauto using singletons_are_finite.
+Qed.

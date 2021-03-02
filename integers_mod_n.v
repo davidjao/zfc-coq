@@ -70,6 +70,18 @@ Proof.
   now ring_simplify.
 Qed.
 
+Theorem eqm_div_n : ∀ n a, n｜a ↔ a ≡ 0 (mod n).
+Proof.
+  intros n a.
+  split; intros H.
+  - apply eqm_sym.
+    unfold eqm.
+    now ring_simplify.
+  - apply eqm_sym in H.
+    unfold eqm in *.
+    now ring_simplify in H.
+Qed.
+
 Section Modular_arithmetic.
 
   Variable n : Z.
@@ -400,6 +412,27 @@ Section Modular_arithmetic.
     symmetry in H1 |-*.
     apply injective_mod_n_on_interval_left; auto.
     now apply or_introl, lt_not_ge.
+  Qed.
+
+  Theorem IZn_neg : ∀ a : Z, (-a : Z_) = (-a)%Z.
+  Proof.
+    intros a.
+    apply IZn_eq.
+    now rewrite <-Zlift_equiv.
+  Qed.
+
+  Theorem IZn_mul : ∀ a b : Z, (a * b : Z_) = (a * b)%Z.
+  Proof.
+    intros a b.
+    apply IZn_eq.
+    now rewrite <-? Zlift_equiv.
+  Qed.
+
+  Theorem IZn_add : ∀ a b : Z, (a + b : Z_) = (a + b)%Z.
+  Proof.
+    intros a b.
+    apply IZn_eq.
+    now rewrite <-? Zlift_equiv.
   Qed.
 
   Section Positive_modulus.
@@ -737,9 +770,30 @@ Section Modular_arithmetic.
 
     Section Prime_modulus.
 
-      Hypothesis prime_modulus : prime n.
+      Notation p := n.
+      Notation p_in_N := modulus_in_N.
+      Hypothesis prime_modulus : prime p.
+      Hypothesis odd_prime : p > 2.
 
-      Theorem Prime_Euler_Phi : (Euler_Phi = modulus_in_N - 1)%N.
+      Theorem Z_mod_prime_is_ID : is_integral_domain ℤ_.
+      Proof.
+        split.
+        - intros a b H; simpl in *.
+          apply IZn_eq, eqm_div_n, Euclid's_lemma in H as [H | H]; auto.
+          + left.
+            apply eqm_div_n, IZn_eq in H.
+            now rewrite <-H, <-Zproj_eq.
+          + right.
+            apply eqm_div_n, IZn_eq in H.
+            now rewrite <-H, <-Zproj_eq.
+        - intros H; simpl in *.
+          apply IZn_eq, eqm_div_n in H.
+          now destruct prime_modulus.
+      Qed.
+
+      Definition ℤ_ID := integral_domain_from_ring ℤ_ Z_mod_prime_is_ID.
+
+      Theorem Prime_Euler_Phi : (Euler_Phi = p_in_N - 1)%N.
       Proof.
         rewrite <-(singleton_card (0 : Z_)), <-Z_mod_card,
         <-complement_card; auto using singletons_are_finite.
@@ -755,11 +809,10 @@ Section Modular_arithmetic.
           split; auto.
           intros H0.
           apply Singleton_classification, set_proj_injective,
-          IZn_eq, eqm_sym in H0.
+          IZn_eq, eqm_div_n in H0.
           destruct prime_modulus as [H3 H4].
           contradict H3.
-          apply H1; try apply rings.divide_refl.
-          now replace a with (a - 0)%Z by ring.
+          now apply H1; try apply rings.divide_refl.
         - apply Complement_classification in H as [H H0].
           apply Specify_classification.
           split; auto.
@@ -774,18 +827,92 @@ Section Modular_arithmetic.
           destruct H2 as [H2 H5]; fold integers.divide in H2, H5.
           contradict H0.
           apply Singleton_classification, f_equal.
-          rewrite Zproj_eq, IZn_eq, eqm_sym_iff at 1.
-          unfold eqm.
-          ring_simplify.
+          rewrite Zproj_eq, IZn_eq, <-eqm_div_n at 1.
           eapply div_trans; eauto.
       Qed.
 
-      Theorem Prime_Euler_Phi_Z : (n - 1 = Euler_Phi)%Z.
+      Theorem Prime_Euler_Phi_Z : (p - 1 = Euler_Phi)%Z.
       Proof.
         replace 1 with (1%N : Z) by auto.
         rewrite modulus_in_Z, INZ_sub.
         - apply INZ_eq, eq_sym, Prime_Euler_Phi.
         - now rewrite <-lt_0_le_1, <-modulus_in_Z.
+      Qed.
+
+      (* Still some work to do to prove Euler's criterion: we need to
+         functionify square using Euler_Phi_set as the domain. *)
+
+      Definition square (a : Z_) := a * a.
+
+      Definition square_function := sets.functionify _ _ square.
+
+      Definition QR := {x of type Z_mod | x ≠ (0 : Z_) ∧ ∃ a, square a = x}.
+
+      Theorem number_of_square_roots : ∀ x : Z_,
+          x ∈ QR → (inverse_image_of_element square_function x ~ 2%N)%set.
+      Proof.
+        intros x H.
+        apply Specify_classification in H as [H H0].
+        rewrite <-specify_action in H0.
+        destruct H0 as [H0 [a H1]].
+        replace (inverse_image_of_element square_function x) with {a, -a}.
+        { apply pairing_card.
+          intros H2.
+          destruct (surjective_mod_n_on_interval a) as [a' [[[H3 H4] H5] H6]].
+          subst.
+          apply set_proj_injective in H2.
+          rewrite Zproj_eq in H2.
+          rewrite (Zproj_eq a'), IZn_neg in H2 at 1.
+          apply IZn_eq, eqm_sym in H2.
+          rewrite <-? Zlift_equiv in H2.
+          unfold eqm, integers.sub in H2.
+          replace (--a')%Z with (a') in * by now ring_simplify.
+          rewrite <-(integers.M3 a'), <-integers.D1 in H2.
+          apply Euclid's_lemma in H2 as [H2 | H2]; auto.
+          - now apply div_le, le_not_gt in H2; try apply (zero_lt_2 ℤ_order).
+          - contradict H0.
+            unfold square.
+            rewrite IZn_mul, eqm_div_n in *.
+            apply IZn_eq.
+            setoid_replace a' with 0%Z; auto.
+            now rewrite (mul_0_r ℤ). }
+        apply Extensionality.
+        unfold square_function.
+        assert ({a,-a} ⊂ Z_mod) as H2.
+        { intros z H2.
+          apply Pairing_classification in H2 as [H2 | H2];
+            subst; eauto using elts_in_set. }
+        split; intros H3.
+        - rewrite Inverse_image_classification in *;
+          rewrite ? sets.functionify_domain, ? sets.functionify_range;
+          auto using elts_in_set.
+          apply Pairing_classification in H3 as [H3 | H3]; subst.
+          + now rewrite functionify_action.
+          + rewrite functionify_action.
+            unfold square.
+            apply f_equal.
+            now rewrite (rings.mul_neg_neg ℤ_).
+        - apply Inverse_image_subset in H3 as H4;
+            rewrite ? sets.functionify_range, ? sets.functionify_domain in *;
+            auto using elts_in_set.
+          rewrite Inverse_image_classification in *;
+          rewrite ? sets.functionify_domain, ? sets.functionify_range;
+          auto using elts_in_set.
+          set (ζ := exist _ _ H4 : Z_).
+          rewrite <-(setify_action _ _ H4), functionify_action in *.
+          fold ζ in H3 |-*.
+          unfold square in *.
+          subst.
+          apply set_proj_injective in H3.
+          pose proof (difference_of_squares ℤ_ ζ a) as H1; simpl in H1.
+          rewrite H3, A4 in H1.
+          apply Pairing_classification.
+          apply eq_sym, (integral_domains.cancellation ℤ_ID) in H1 as [H1 | H1];
+            simpl in H1.
+          + left; unfold IZnS; f_equal.
+            now rewrite <-(A3 a), <-H1, <-A2, (A1 _ a), A4, A1, A3.
+          + right.
+            now rewrite <-(A3 (-a)), <-H1, <-A2, A4, A1, A3.
       Qed.
 
     End Prime_modulus.
