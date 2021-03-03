@@ -1075,6 +1075,27 @@ Proof.
   eauto using elts_in_set.
 Qed.
 
+Theorem function_maps_domain_to_graph :
+  ∀ f x y, x ∈ domain f → y ∈ range f → (x,y) ∈ graph f ↔ f x = y.
+Proof.
+  intros f x y H H0.
+  split; intros H1; unfold eval, eval_rel in *;
+    repeat destruct excluded_middle_informative; intuition;
+      try contradiction (func_hyp f);
+      try destruct i0, constructive_indefinite_description;
+      destruct a as [[H2 H3] H4]; auto; congruence.
+Qed.
+
+Theorem graph_elements_are_pairs : ∀ f z, z ∈ graph f → z ∈ domain f × range f.
+Proof.
+  intros f z H.
+  destruct f.
+  unfold graph in H.
+  simpl.
+  destruct func_hyp0.
+  now apply H0.
+Qed.
+
 Section Function_evaluation.
 
   Variable f : function.
@@ -1110,6 +1131,13 @@ Section Function_evaluation.
     unfold functionify.
     destruct constructive_indefinite_description.
     tauto.
+  Qed.
+
+  Theorem functionify_graph : ∀ g, graph (functionify g) ⊂ A × B.
+  Proof.
+    intros g z H.
+    apply graph_elements_are_pairs in H.
+    now rewrite functionify_domain, functionify_range in H.
   Qed.
 
   Theorem functionify_action :
@@ -1151,27 +1179,6 @@ Proof.
       destruct H2 as [H2 [z [H3 H4]]].
       rewrite Ordered_pair_iff in H4.
       intuition; congruence.
-Qed.
-
-Theorem function_maps_domain_to_graph :
-  ∀ f x y, x ∈ domain f → y ∈ range f → (x,y) ∈ graph f ↔ f x = y.
-Proof.
-  intros f x y H H0.
-  split; intros H1; unfold eval, eval_rel in *;
-    repeat destruct excluded_middle_informative; intuition;
-      try contradiction (func_hyp f);
-      try destruct i0, constructive_indefinite_description;
-      destruct a as [[H2 H3] H4]; auto; congruence.
-Qed.
-
-Theorem graph_elements_are_pairs : ∀ f z, z ∈ graph f → z ∈ domain f × range f.
-Proof.
-  intros f z H.
-  destruct f.
-  unfold graph in H.
-  simpl.
-  destruct func_hyp0.
-  now apply H0.
 Qed.
 
 Definition injective f := ∀ x1 x2, f[x1] = f[x2] → x1 = x2.
@@ -1386,6 +1393,25 @@ Theorem image_subset_range : ∀ f, image f ⊂ range f.
 Proof.
   intros f x H.
   now apply Specify_classification in H as [H H0].
+Qed.
+
+Theorem function_maps_domain_to_image :
+  ∀ f x, x ∈ domain f → f x ∈ image f.
+Proof.
+  intros f x H.
+  apply Specify_classification.
+  eauto using function_maps_domain_to_range.
+Qed.
+
+Theorem surjective_image : ∀ f, surjective f → range f = image f.
+Proof.
+  intros f H.
+  apply Extensionality.
+  split; intros H0.
+  - apply Specify_classification.
+    rewrite Surjective_classification in H.
+    split; auto.
+  - now apply Specify_classification in H0.
 Qed.
 
 Definition empty_function : function.

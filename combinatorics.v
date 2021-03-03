@@ -19,8 +19,9 @@ Open Scope set_scope.
 Section orbit_stabilizer_cardinality_theorem.
 
   Variable f : function.
-  Variable x : set.
-  Hypothesis H : ∀ y, y ∈ range f → inverse_image_of_element f y ~ x.
+  Variable x Y : set.
+  Hypothesis Y_subset : image f ⊂ Y.
+  Hypothesis Y_inv : ∀ y, y ∈ Y → inverse_image_of_element f y ~ x.
 
   Definition oschf : set → function.
   Proof.
@@ -58,65 +59,79 @@ Section orbit_stabilizer_cardinality_theorem.
     now repeat destruct a.
   Qed.
 
-  Theorem orbit_stabilizer_cardinality : domain f ~ range f × x.
+  Theorem orbit_stabilizer_cardinality_helper : domain f ~ Y × x.
   Proof.
     destruct (function_construction
-                (domain f) (range f × x)
+                (domain f) (Y × x)
                 (λ x,
                  (f x, (oschf (inverse_image_of_element f (f x)) x))))
-      as [g [H0 [H1 H2]]].
-    { intros a H0.
+      as [g [H [H0 H1]]].
+    { intros a H.
       unfold oschf.
       destruct excluded_middle_informative.
       - destruct constructive_indefinite_description as [g].
         repeat destruct a0.
         apply Product_classification.
         exists (f a), (g a).
-        repeat split; auto.
-        + now apply function_maps_domain_to_range.
-        + rewrite <-e1.
-          apply function_maps_domain_to_range.
-          rewrite e0.
-          unfold inverse_image_of_element.
-          now apply Specify_classification.
+        repeat split; auto using function_maps_domain_to_image.
+        rewrite <-e1.
+        apply function_maps_domain_to_range.
+        rewrite e0.
+        unfold inverse_image_of_element.
+        now apply Specify_classification.
       - contradict n.
-        now apply H, function_maps_domain_to_range. }
+        auto using function_maps_domain_to_image. }
     exists g.
     repeat split; auto.
     - apply Injective_classification.
-      intros u v H3 H4 H5.
-      rewrite H0 in H3, H4.
-      rewrite ? H2 in H5; auto.
-      apply Ordered_pair_iff in H5 as [H5 H6].
-      rewrite H5 in H6.
-      unfold oschf in H6.
+      intros u v H2 H3 H4.
+      rewrite H in H2, H3.
+      rewrite ? H1 in H4; auto.
+      apply Ordered_pair_iff in H4 as [H4 H5].
+      rewrite H4 in H5.
+      unfold oschf in H5.
       destruct excluded_middle_informative;
-        try (contradict n; now apply H, function_maps_domain_to_range).
+        try (contradict n; auto using function_maps_domain_to_image).
       destruct constructive_indefinite_description as [h].
       repeat destruct a.
       destruct b.
-      rewrite Injective_classification in H7.
-      apply H7 in H6; auto; rewrite e0; unfold inverse_image_of_element;
+      rewrite Injective_classification in H6.
+      apply H6 in H5; auto; rewrite e0; unfold inverse_image_of_element;
           now apply Specify_classification.
     - rewrite Surjective_classification.
-      intros y H3.
-      rewrite H1 in H3.
-      apply Product_classification in H3 as [a [b [H3 [H4 H5]]]].
+      intros y H2.
+      rewrite H0 in H2.
+      apply Product_classification in H2 as [a [b [H2 [H3 H4]]]].
       subst.
-      pose proof oschf_bijective (inverse_image_of_element f a) (H a H3)
-        as [H5 H6].
-      rewrite Surjective_classification in H6.
-      destruct (H6 b) as [z [H7 H8]].
+      pose proof oschf_bijective (inverse_image_of_element f a) (Y_inv a H2)
+        as [H4 H5].
+      rewrite Surjective_classification in H5.
+      destruct (H5 b) as [z [H6 H7]].
       { rewrite oschf_range; auto. }
-      rewrite oschf_domain in H7.
-      + apply Specify_classification in H7.
-        exists z.
-        split; intuition; try congruence.
-        rewrite H2; congruence.
-      + now rewrite H.
+      rewrite oschf_domain in H6; auto.
+      apply Specify_classification in H6.
+      exists z.
+      split; intuition; try congruence.
+      rewrite H1; congruence.
   Qed.
 
 End orbit_stabilizer_cardinality_theorem.
+
+Theorem orbit_stabilizer_cardinality : ∀ f x,
+    (∀ y, y ∈ range f → inverse_image_of_element f y ~ x) →
+    domain f ~ range f × x.
+Proof.
+  intros f x H.
+  auto using orbit_stabilizer_cardinality_helper, image_subset_range.
+Qed.
+
+Theorem orbit_stabilizer_cardinality_image : ∀ f x,
+    (∀ y, y ∈ image f → inverse_image_of_element f y ~ x) →
+    domain f ~ image f × x.
+Proof.
+  intros f x H.
+  auto using orbit_stabilizer_cardinality_helper, Set_is_subset.
+Qed.
 
 Section permutation_succ_helper_functions.
 
@@ -582,7 +597,7 @@ Section permutation_succ_helper_functions.
     intros f.
     exact (exist _ _ (permutation_succ_right_construction f)).
   Defined.
- 
+
 End permutation_succ_helper_functions.
 
 Theorem permutation_succ :
