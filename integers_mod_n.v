@@ -855,6 +855,37 @@ Section Modular_arithmetic.
     Definition square_function := sets.functionify _ _ square.
 
     Definition QR := {x of type Z_mod | rings.unit ℤ_ x ∧ ∃ a, square a = x}.
+    Definition QNR := {x of type Z_mod | rings.unit ℤ_ x ∧ (x : Z_) ∉ QR}.
+
+    Theorem QR_Euler_Phi : QR ⊂ Euler_Phi_set.
+    Proof.
+      intros x H.
+      apply Specify_classification in H as [H H0].
+      apply Specify_classification.
+      rewrite <-(setify_action _ _ H), <-specify_action in *.
+      split; eauto using elts_in_set.
+      now apply units_in_ℤ_.
+    Qed.
+
+    Theorem QNR_QR_c : QNR = Euler_Phi_set \ QR.
+    Proof.
+      apply Extensionality.
+      split; intros H.
+      - apply Specify_classification in H as [H H0].
+        rewrite <-(setify_action _ _ H), <-specify_action in *.
+        apply Complement_classification.
+        split; try tauto.
+        apply Specify_classification.
+        rewrite <-specify_action.
+        split; auto using elts_in_set.
+        now apply units_in_ℤ_.
+      - apply Complement_classification in H as [H H0].
+        apply Specify_classification in H as [H H1].
+        apply Specify_classification.
+        rewrite <-(setify_action _ _ H), <-specify_action in *.
+        repeat split; auto using elts_in_set.
+        now apply units_in_ℤ_.
+    Qed.
 
     Definition unit_square_function := restriction square_function unit_set_mod.
 
@@ -1047,7 +1078,7 @@ Section Modular_arithmetic.
       rewrite add_1_r, <-(card_of_natural 2), mul_comm, <-finite_products_card,
       card_equiv, Euler_Phi_unit, <-domain_usf, <-image_usf;
         auto using finite_products_are_finite, naturals_are_finite,
-        (finite_QR odd_prime_positive).
+        finite_QR, odd_prime_positive.
       apply orbit_stabilizer_cardinality_image.
       intros y H0.
       rewrite image_usf, <-inverse_image_usf in *; auto.
@@ -1060,10 +1091,23 @@ Section Modular_arithmetic.
     Theorem size_of_QR : Euler_Phi = (2 * # QR)%N.
     Proof.
       apply INZ_eq.
-      rewrite <-INZ_mul, <-add_1_r, <-INZ_add.
-      fold integers.one.
-      rewrite <- size_of_QR_in_Z, Prime_Euler_Phi_Z;
-        auto using odd_prime_positive.
+      rewrite <-INZ_mul, <-add_1_r, <-INZ_add, <-Prime_Euler_Phi_Z;
+        auto using odd_prime_positive, size_of_QR_in_Z.
+    Qed.
+
+    Theorem size_QR_QNR : # QR = # QNR.
+    Proof.
+      rewrite QNR_QR_c, complement_card;
+        eauto using finite_QR, odd_prime_positive, QR_Euler_Phi.
+      fold Euler_Phi.
+      now rewrite size_of_QR, <-add_1_r, mul_distr_r, mul_1_l, sub_abba.
+    Qed.
+
+    Theorem size_of_QNR : Euler_Phi = (2 * # QNR)%N.
+    Proof.
+      rewrite <-add_1_r, mul_distr_r, mul_1_l, QNR_QR_c, complement_card,
+      ? size_of_QR, <-? add_1_r, ? mul_distr_r, ? mul_1_l, <-size_QR_QNR,
+      sub_abba at 1; auto using finite_QR, odd_prime_positive, QR_Euler_Phi.
     Qed.
 
     Notation "ℤp[x]" := (polynomial_ring ℤ_).
