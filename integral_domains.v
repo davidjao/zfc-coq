@@ -104,4 +104,13 @@ Section Integral_domain_theorems.
       tauto.
   Qed.
 
+  Theorem unit_nonzero : ∀ a, unit ring a → a ≠ 0.
+  Proof.
+    intros a H H0.
+    subst.
+    destruct H as [x H].
+    apply (nontriviality ID).
+    now ring_simplify in H.
+  Qed.
+
 End Integral_domain_theorems.

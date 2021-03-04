@@ -1607,6 +1607,80 @@ Proof.
   rewrite <-(H9 a), <-(H9 a'); auto.
 Qed.
 
+Section Restrictions.
+
+  Variable f : function.
+  Variable X : set.
+
+  Definition restriction_set :=
+    {x in graph f | proj1 (domain f) (range f) x ∈ X}.
+
+  Lemma restriction_is_function :
+    is_function restriction_set (X ∩ domain f) (range f).
+  Proof.
+    split; intros z H.
+    - apply Specify_classification in H as [H H0].
+      rewrite Product_intersection_distr_l,
+      Pairwise_intersection_classification.
+      apply graph_elements_are_pairs in H as H1.
+      split; auto.
+      apply Product_classification in H1 as [a [b [H1 [H2 H3]]]]; subst.
+      rewrite Product_classification, proj1_eval in *; eauto.
+    - exists (f z).
+      apply Pairwise_intersection_classification in H as [H H0].
+      repeat split.
+      + auto using function_maps_domain_to_range.
+      + apply Specify_classification.
+        split.
+        * apply function_maps_domain_to_graph;
+            auto using function_maps_domain_to_range.
+        * rewrite proj1_eval; auto using function_maps_domain_to_range.
+      + intros y [H1 H2].
+        apply function_maps_domain_to_graph; auto.
+        now apply Specify_classification in H2.
+  Qed.
+
+  Definition restriction := mkFunc _ _ _ restriction_is_function.
+
+  Theorem restriction_domain : domain restriction = (X ∩ domain f).
+  Proof.
+    auto.
+  Qed.
+
+  Theorem restriction_range : range restriction = range f.
+  Proof.
+    auto.
+  Qed.
+
+  Theorem restriction_graph : graph restriction = restriction_set.
+  Proof.
+    auto.
+  Qed.
+
+  Theorem restriction_subset : graph restriction ⊂ graph f.
+  Proof.
+    rewrite restriction_graph.
+    intros z H.
+    now apply Specify_classification in H.
+  Qed.
+
+  Theorem restriction_action : ∀ x, x ∈ X ∩ domain f → f x = restriction x.
+  Proof.
+    intros x H.
+    apply Pairwise_intersection_classification in H as [H H0].
+    unfold restriction.
+    apply function_maps_domain_to_graph; simpl; auto.
+    - rewrite <-restriction_range.
+      apply function_maps_domain_to_range.
+      rewrite restriction_domain.
+      now apply Pairwise_intersection_classification.
+    - apply restriction_subset, Graph_classification.
+      exists x.
+      now rewrite restriction_domain, Pairwise_intersection_classification.
+  Qed.
+
+End Restrictions.
+
 Section Quotient_maps.
 
   Variable X R : set.
