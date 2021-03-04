@@ -834,6 +834,13 @@ Section Ring_theorems.
     ring [H].
   Qed.
 
+  Theorem unit_nonzero : 1 ≠ 0 → ∀ a, unit a → a ≠ 0.
+  Proof.
+    intros H a [x H0] H1.
+    subst.
+    now ring_simplify in H0.
+  Qed.
+
   Theorem singleton_sum : ∀ m n a,
       m ≤ n →
       sum (λ k, if (excluded_middle_informative (k = m)) then a else 0) 0 n = a.
