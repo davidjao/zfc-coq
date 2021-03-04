@@ -130,8 +130,8 @@ Proof.
   exact (b - a)%set.
 Defined.
 
-Definition zero := (0 - 0)%set.
-Definition one := (1 - 0)%set.
+Definition zero := 0%N : Z.
+Definition one := 1%N : Z.
 
 Infix "+" := add : Z_scope.
 Infix "*" := mul : Z_scope.
@@ -1031,10 +1031,10 @@ Proof.
     apply div_le in H as [H | H]; auto using zero_lt_1; simpl in *.
     + rewrite lt_def in H.
       destruct H as [c [H H0]].
-      unfold INZ, one in H0.
+      unfold one, INZ in H0.
       rewrite A1, A2, ? add_wf, Zequiv, ? add_0_r, ? add_0_l, ? add_1_r in H0.
       now apply PA5, PA4 in H0.
-    + unfold INZ, one in H.
+    + unfold one, INZ in H.
       rewrite ? add_wf, Zequiv, ? add_0_r, add_0_l, add_1_r in H.
       now apply PA5, eq_sym, PA4 in H.
   - assert (∀ d : Z, 0 < d → d｜2 → unit d ∨ d ~ 2) as H.
@@ -1065,8 +1065,8 @@ Proof.
     + subst.
       apply div_0_l, eq_sym in H0; simpl in *.
       unfold zero, one in *.
-      rewrite add_wf, Zequiv, ? add_0_l, add_1_r in H0.
-      now apply PA4 in H0.
+      rewrite INZ_add, add_1_r in H0.
+      now apply INZ_eq, PA4 in H0.
 Qed.
 
 Theorem INZ_sub : ∀ a b : N, b ≤ a → a - b = (a - b)%N.

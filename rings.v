@@ -271,6 +271,14 @@ Section Ring_theorems.
     ring.
   Qed.
 
+  Theorem unit_square : ∀ u, unit (u * u) → unit u.
+  Proof.
+    intros u [x H].
+    exists (x*u).
+    rewrite H.
+    ring.
+  Qed.
+
   Theorem unit_sign : ∀ a, unit a ↔ unit (-a).
   Proof.
     split; intros H; unfold unit in *; now rewrite <-div_sign_l in *.
@@ -437,6 +445,12 @@ Section Ring_theorems.
   Proof.
     induction x using Induction; intros H; try tauto.
     now rewrite pow_succ_r, mul_0_r.
+  Qed.
+
+  Theorem pow_2_r : ∀ x, x^2 = x * x.
+  Proof.
+    intros x.
+    now rewrite pow_succ_r, pow_1_r.
   Qed.
 
   Theorem pow_add_r : ∀ a b c, a^(b+c) = a^b * a^c.

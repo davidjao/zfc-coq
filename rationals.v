@@ -681,8 +681,8 @@ Proof.
     apply H7; auto using (div_mul_l ℤ), (div_refl ℤ) with Z.
   - intros H3; simpl in H3.
     unfold integers.zero, integers.one in *.
-    rewrite integers.add_wf, Zequiv, ? add_0_l, ? add_0_r, ? add_1_r in H3.
-    now apply eq_sym, PA4 in H3.
+    rewrite INZ_add, add_1_r in H3.
+    now apply eq_sym, INZ_eq, PA4 in H3.
 Qed.
 
 Theorem IZQ_add : ∀ a b : Z, a + b = (a + b)%Z.

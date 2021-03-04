@@ -844,7 +844,7 @@ Section Modular_arithmetic.
 
     Theorem Prime_Euler_Phi_Z : (p - 1 = Euler_Phi)%Z.
     Proof.
-      replace 1 with (1%N : Z) by auto.
+      unfold integers.one.
       rewrite ( modulus_in_Z positive_prime), INZ_sub.
       - apply INZ_eq, eq_sym, Prime_Euler_Phi.
       - rewrite <-lt_0_le_1, <-( modulus_in_Z positive_prime); auto.
@@ -1038,9 +1038,9 @@ Section Modular_arithmetic.
           now rewrite <-(A3 (-a)), <-H1, <-A2, A4, A1, A3.
     Qed.
 
-    Theorem size_of_QR : (p - 1 = 2 * # QR)%Z.
+    Theorem size_of_QR_in_Z : (p - 1 = 2 * # QR)%Z.
     Proof.
-      replace 1 with (1%N : Z) at 2 3 by auto.
+      unfold integers.one at 2 3.
       rewrite (Prime_Euler_Phi_Z prime_modulus odd_prime_positive), INZ_add,
       INZ_mul; auto using odd_prime_positive.
       apply INZ_eq, equivalence_to_card.
@@ -1055,6 +1055,41 @@ Section Modular_arithmetic.
       apply Specify_classification in H1 as [H1 _].
       rewrite <-(setify_action _ _ H1).
       auto using number_of_square_roots.
+    Qed.
+
+    Theorem size_of_QR : Euler_Phi = (2 * # QR)%N.
+    Proof.
+      apply INZ_eq.
+      rewrite <-INZ_mul, <-add_1_r, <-INZ_add.
+      fold integers.one.
+      rewrite <- size_of_QR_in_Z, Prime_Euler_Phi_Z;
+        auto using odd_prime_positive.
+    Qed.
+
+    Notation "ℤp[x]" := (polynomial_ring ℤ_).
+    Notation "Zp[x]" := (poly ℤ_).
+
+    Notation x := (polynomials.x ℤ_).
+
+    Declare Scope poly_scope.
+    Delimit Scope poly_scope with poly.
+    Bind Scope poly_scope with poly.
+    Infix "+" := (rings.add ℤp[x]) : poly_scope.
+    Infix "-" := (rings.sub ℤp[x]) : poly_scope.
+    Infix "*" := (rings.mul ℤp[x]) : poly_scope.
+    Infix "^" := (rings.pow ℤp[x]) : poly_scope.
+    Notation "- a" := (rings.neg ℤp[x] a) : poly_scope.
+
+    Theorem Euler_Criterion_QR : ∀ a : Z_, a ∈ QR → a^(# QR) = (1 : Z_).
+    Proof.
+      intros a H.
+      apply Specify_classification in H as [H H0].
+      rewrite <-specify_action in H0.
+      destruct H0 as [H0 [x H1]].
+      subst.
+      unfold square.
+      rewrite <-(rings.pow_2_r ℤ_), <-(rings.pow_mul_r ℤ_), <-size_of_QR.
+      auto using Euler, unit_square, odd_prime_positive.
     Qed.
 
   End Odd_prime_modulus.
