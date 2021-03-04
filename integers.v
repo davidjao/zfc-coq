@@ -680,7 +680,7 @@ Proof.
       (div_mul_r ℤ), (div_refl ℤ) with Z.
 Qed.
 
-Lemma gcd_zero_l : ∀ a d, gcd (0,a) = d → a ~ d.
+Lemma gcd_0_l : ∀ a d, gcd (0,a) = d → a ~ d.
 Proof.
   intros a d [H [H0 H1]].
   split; fold divide; auto using (div_0_r ℤ), (div_refl ℤ) with Z.
@@ -692,10 +692,22 @@ Proof.
   repeat split; auto.
 Qed.
 
-Lemma gcd_zero_r : ∀ a d, gcd (a,0) = d → a ~ d.
+Lemma gcd_0_r : ∀ a d, gcd (a,0) = d → a ~ d.
 Proof.
   intros a d H.
-  auto using gcd_zero_l, gcd_sym.
+  auto using gcd_0_l, gcd_sym.
+Qed.
+
+Lemma gcd_1_l : ∀ a, gcd (1,a) = 1.
+Proof.
+  intros a.
+  repeat split; auto using (div_1_l ℤ) with Z.
+Qed.
+
+Lemma gcd_1_r : ∀ a, gcd (a,1) = 1.
+Proof.
+  intros a.
+  repeat split; auto using (div_1_l ℤ) with Z.
 Qed.
 
 Lemma gcd_neg : ∀ a b d, gcd (a,b) = d ↔ gcd(a,-b) = d.
@@ -717,7 +729,7 @@ Theorem Euclidean_algorithm :
 Proof.
   intros a b H.
   destruct (T a 0), (T b 0); intuition; subst;
-    try apply gcd_zero_l in H; try apply gcd_zero_r in H;
+    try apply gcd_0_l in H; try apply gcd_0_r in H;
       try (now (destruct H as [[x H]]; exists x, 0;
                 simpl in *; fold Z in x; rewrite H; ring));
       try (now (destruct H as [[x H]]; exists 0, x;

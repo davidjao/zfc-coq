@@ -253,9 +253,9 @@ Proof.
     split; unfold IQS; auto using elts_in_set.
     exists (q-1).
     split; auto.
-    rewrite lt_shift.
+    rewrite (ordered_rings.lt_shift ℚ_ring_order); simpl.
     replace (q+-(q-1)) with 1 by field.
-    apply zero_lt_1.
+    apply (ordered_rings.zero_lt_1 ℚ_ring_order).
   - intros H.
     assert (q+1 ∈ Qset) as H1 by (unfold IQS; auto using elts_in_set).
     rewrite <-H in H1.
@@ -351,7 +351,7 @@ Proof.
     + f_equal.
       ring.
     + eapply Dedekind_cut_2; eauto.
-      rewrite lt_shift in *.
+      rewrite (ordered_rings.lt_shift ℚ_ring_order) in *; simpl in *.
       now replace (r+-(q+-s)) with (r+s+-q) by ring.
   - intros p H.
     apply Specify_classification in H as [H [r [s [H0 [H1 H2]]]]].
@@ -473,7 +473,7 @@ Proof.
     apply Specify_classification.
     split; unfold IQS; auto using elts_in_set.
     exists (-σ-1), 1.
-    repeat split; auto using zero_lt_1.
+    repeat split; try apply (ordered_rings.zero_lt_1 ℚ_ring_order).
     now replace (-(-σ-1)-1)%Q with σ by ring.
   - pose proof Dedekind_cut_1 α as H.
     apply neq_sym in H.
@@ -488,7 +488,7 @@ Proof.
     contradict H6.
     apply (Dedekind_cut_2 _ σ); auto.
     apply set_proj_injective in H4.
-    rewrite <-H4, lt_shift.
+    rewrite <-H4, (ordered_rings.lt_shift ℚ_ring_order); simpl.
     now replace (σ+-(--σ-r))%Q with r by ring.
   - intros p q H H0.
     apply Specify_classification in H as [H [ρ [r [H1 [H2 H3]]]]].
@@ -500,7 +500,7 @@ Proof.
     repeat split; auto.
     contradict H3.
     apply (Dedekind_cut_2 _ (-q-r)); auto.
-    rewrite lt_shift in *.
+    rewrite (ordered_rings.lt_shift ℚ_ring_order) in *; simpl in *.
     now replace (-q-r+-(-ρ-r))%Q with (ρ+-q)%Q by ring.
   - intros p H.
     apply Specify_classification in H as [H [ρ [r [H1 [H2 H3]]]]].
@@ -547,11 +547,11 @@ Proof.
     + apply (H3 ξ); auto.
       destruct H6 as [H6 | H6]; rewrite <-IZQ_add; ring_simplify.
       * apply (rationals.lt_trans _ (k*b)); auto.
-        rewrite lt_shift.
+        rewrite (ordered_rings.lt_shift ℚ_ring_order); simpl.
         replace (k*b+-(k*b+m*b))%Q with (-m*b)%Q by field.
         apply O2; auto.
         now rewrite IZQ_lt, (lt_neg_0 ℚ_ring_order) in H8.
-      * rewrite <-H6, lt_shift.
+      * rewrite <-H6, (ordered_rings.lt_shift ℚ_ring_order); simpl.
         replace (k*b+-(k*b+m*b))%Q with (-m*b)%Q by field.
         apply O2; auto.
         now rewrite IZQ_lt, (lt_neg_0 ℚ_ring_order) in H8.
@@ -615,21 +615,19 @@ Proof.
     subst.
     assert (-s ∉ α)%Q as H0.
     { eapply Dedekind_cut_5; eauto.
-      rewrite lt_shift in *.
+      rewrite (ordered_rings.lt_shift ℚ_ring_order) in *; simpl in *.
       now replace (-s+-(-s-q))%Q with (q+-0)%Q by ring. }
     eapply Dedekind_cut_4 in H0; eauto.
     apply Specify_classification.
     split; eauto.
     exists (r+s)%Q.
     split; auto.
-    rewrite lt_shift in *.
+    rewrite (ordered_rings.lt_shift ℚ_ring_order) in *; simpl in *.
     now replace (0+-(r+s))%Q with (-s+-r)%Q by ring.
   - destruct H0 as [v [H0 H1]].
     subst.
     set (w := (-v * 2^-1)%Q).
-    assert (0 < 2)%Z as H0.
-    apply IZQ_lt.
-    eauto using zero_lt_1, one_lt_2, rationals.lt_trans.
+    assert (0 < 2)%Z as H0 by apply (ordered_rings.zero_lt_2 ℤ_order).
     assert (0 < w)%Q as H2.
     { unfold w.
       apply rationals.O2; try now apply (lt_neg_0 ℚ_ring_order).
@@ -742,7 +740,7 @@ Proof.
     exists c, d, (c*d - 1).
     repeat split; auto.
     left.
-    apply lt_sub_pos, zero_lt_1.
+    apply lt_sub_pos, (ordered_rings.zero_lt_1 ℚ_ring_order).
   - destruct (Dedekind_cut_6 a) as [c H1], (Dedekind_cut_6 b) as [d H2].
     intros H3.
     apply Subset_equality_iff in H3 as [H3 H4].
@@ -926,7 +924,7 @@ Proof.
   unfold zero, one, IQR, iqr_set in H.
   inversion H as [H0].
   apply Subset_equality_iff in H0 as [H0 H1].
-  pose proof zero_lt_1 as H2.
+  pose proof (ordered_rings.zero_lt_1 ℚ_ring_order) as H2.
   apply lt_dense in H2 as [c [H2 H3]].
   contradiction (ordered_rings.lt_antisym ℚ_ring_order c 0%Q).
   pose proof (H0 c) as H4.
@@ -944,7 +942,8 @@ Proof.
     unfold zero, one, IQR, iqr_set in *.
     apply Specify_classification in H as [H [ξ [H0 H1]]].
     apply Specify_classification.
-    split; eauto using rationals.lt_trans, zero_lt_1.
+    split; eauto using rationals.lt_trans,
+           (ordered_rings.zero_lt_1 ℚ_ring_order : 0 < 1)%Q.
   - intros H.
     apply set_proj_injective in H.
     now contradiction zero_ne_1.
@@ -1131,7 +1130,8 @@ Proof.
         right.
         rewrite <-? M2, inv_l, (M1 _ 1), M3; auto using (lt_neq ℚ_ring_order).
         split; auto.
-        assert (0 < r)%Q by eauto using rationals.lt_trans, rationals.zero_lt_1.
+        assert (0 < r)%Q by eauto using rationals.lt_trans,
+                            (ordered_rings.zero_lt_1 ℚ_ring_order : 0 < 1)%Q.
         repeat apply O2; auto; now apply (inv_lt ℚ_order).
 Qed.
 
@@ -1179,8 +1179,9 @@ Proof.
         as [[H4 [H5 H6]] | [[H4 [H5 H6]] | [H4 [H5 H6]]]]; try tauto; subst;
         contradiction H3; eauto using Dedekind_cut_2, rationals.lt_trans. }
     apply (inv_lt ℚ_order) in H4 as H5.
-    assert (0 < 2)%Q as H6 by
-          eauto using rationals.zero_lt_1, one_lt_2, rationals.lt_trans.
+    assert (0 < 2)%Q as H6.
+    { rewrite <-IZQ_add.
+      apply (ordered_rings.zero_lt_2 ℚ_ring_order). }
     apply (inv_lt ℚ_order) in H6 as H7.
     assert ((x^-1 * 2^-1)%Q ∉ 0) as H8 by auto using pos_not_in_0, O2.
     contradiction H8.
@@ -1206,7 +1207,8 @@ Proof.
   apply (pos_pow_archimedean q r) in H0 as H5.
   destruct H3 as [m [H3 H4]], H5 as [n [H5 H6]], (WOP (λ x, (r^(m+x))%Q ∉ a))
         as [x [H7 H8]]; auto.
-  assert (0 < r)%Q as H7 by eauto using rationals.lt_trans, rationals.zero_lt_1.
+  assert (0 < r)%Q as H7 by eauto using rationals.lt_trans,
+                            (ordered_rings.zero_lt_1 ℚ_ring_order : 0 < 1)%Q.
   - intros x H8.
     destruct (integers.T 0 x) as [[H9 _] | [[_ [H9 _]] | [_ [_ H9]]]]; auto.
     + subst.
@@ -1260,7 +1262,8 @@ Proof.
       * subst.
         contradiction (ordered_rings.lt_irrefl ℚ_ring_order 0%Q).
     + assert (0 < q)%Q as H1 by
-            eauto using rationals.lt_trans, rationals.zero_lt_1.
+            eauto using rationals.lt_trans,
+            (ordered_rings.zero_lt_1 ℚ_ring_order : 0 < 1)%Q.
       apply (inv_lt_1 ℚ_order) in H8; simpl in *; auto.
       eapply Dedekind_cut_4 in H10; eauto.
       rewrite <-inv_mul in H10.
@@ -1395,14 +1398,14 @@ Proof.
       * exists (r'+s'+-k)%Q, s, (ξ+-k*s)%Q.
         repeat split; auto.
         -- eapply Dedekind_cut_2; eauto.
-           rewrite lt_shift.
+           rewrite (ordered_rings.lt_shift ℚ_ring_order); simpl.
            replace (r'+-(r'+s'+-k))%Q with (k+-s')%Q by ring.
-           rewrite <-lt_shift.
+           rewrite <-(ordered_rings.lt_shift ℚ_ring_order); simpl.
            rewrite <-(le_not_gt ℚ_ring_order) in H10; fold rationals.le in *.
            destruct H10 as [H10 | H10]; simpl in *.
            ++ eauto using rationals.lt_trans.
            ++ now subst.
-        -- now rewrite <-lt_shift.
+        -- now rewrite <-(ordered_rings.lt_shift ℚ_ring_order).
         -- replace ((r'+s'+-k)*s)%Q with ((r'+s')*s+-k*s)%Q by ring.
            now apply add_le_r.
       * exists k, s, (k*s)%Q.
@@ -1419,14 +1422,14 @@ Proof.
       * exists (r'+s'+-k)%Q, s, (ξ+-k*s)%Q.
         repeat split; auto.
         -- eapply Dedekind_cut_2; eauto.
-           rewrite lt_shift.
+           rewrite (ordered_rings.lt_shift ℚ_ring_order); simpl.
            replace (s'+-(r'+s'+-k))%Q with (k+-r')%Q by ring.
-           rewrite <-lt_shift.
+           rewrite <-(ordered_rings.lt_shift ℚ_ring_order); simpl.
            rewrite <-(le_not_gt ℚ_ring_order) in H4; fold rationals.le in *.
            destruct H4 as [H4 | H4]; simpl in *.
            ++ eauto using rationals.lt_trans.
            ++ now subst.
-        -- now rewrite <-lt_shift.
+        -- now rewrite <-(ordered_rings.lt_shift ℚ_ring_order).
         -- replace ((r' + s' + - k) * s)%Q with ((r'+s')*s + -k*s)%Q by ring.
            now apply add_le_r.
     + apply (O0_opp ℚ_ring_order) in H7.

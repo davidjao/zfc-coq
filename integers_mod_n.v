@@ -557,8 +557,7 @@ Section Modular_arithmetic.
       auto using equivalence_to_card, bijection_of_Z_mod.
     Qed.
 
-    Definition Euler_Phi_set :=
-      {x in Z_mod | ∃ a : Z, x = (a : Z_) ∧ gcd(a, n) = 1}.
+    Definition Euler_Phi_set := {x of type Z_mod | gcd (x : Z_, n) = 1}.
 
     Definition Euler_Phi := # Euler_Phi_set.
 
@@ -567,31 +566,17 @@ Section Modular_arithmetic.
     Theorem Euler_Phi_unit : Euler_Phi_set = unit_set_mod.
     Proof.
       apply Extensionality.
-      split; intros H.
-      - apply Specify_classification in H as [H [a [H0 H1]]]; subst.
-        apply Specify_classification.
-        rewrite <-(setify_action _ _ H), <-specify_action in *.
-        split; auto; simpl.
-        eapply units_in_ℤ_, eqm_gcd; eauto.
-        rewrite (Zlift_equiv a).
-        apply IZn_eq.
-        rewrite <-? Zproj_eq.
-        now apply set_proj_injective.
-      - apply Specify_classification in H as [H H0].
-        rewrite <-(setify_action _ _ H), <-specify_action in *.
-        apply Specify_classification.
-        split; eauto using elts_in_set.
-        exists ((exist _ _ H : Z_) : Z).
-        rewrite <-Zproj_eq.
-        split; auto.
-        now apply units_in_ℤ_.
+      split; intros H; apply Specify_classification in H as [H H0];
+        apply Specify_classification;
+        rewrite <-(setify_action _ _ H), <-specify_action in *; split;
+          eauto using elts_in_set; eapply units_in_ℤ_; eauto using eqm_gcd.
     Qed.
 
     Theorem Euler_Phi_finite : finite Euler_Phi_set.
     Proof.
       eapply subsets_of_finites_are_finite; eauto using finite_Z_mod.
       intros x H.
-      apply Specify_classification in H; tauto.
+      now apply Specify_classification in H.
     Qed.
 
     Theorem Euler_Phi_nonzero : Euler_Phi ≠ 0%N.
@@ -599,24 +584,23 @@ Section Modular_arithmetic.
       unfold Euler_Phi.
       intros H.
       apply finite_empty in H; auto using Euler_Phi_finite.
-      assert (¬ (Euler_Phi_set ≠ ∅)) as H0 by tauto.
-      contradict H0.
+      contradict H.
       apply Nonempty_classification.
       exists (1 : Z_).
+      rewrite Euler_Phi_unit.
       apply Specify_classification.
       split; auto using (elts_in_set Z_mod).
-      exists 1.
-      repeat split; auto; apply div_1_l.
+      rewrite <-specify_action.
+      exists (1 : Z_).
+      now rewrite M3.
     Qed.
 
     Corollary Euler_Phi_ge_1 : (1 ≤ Euler_Phi)%N.
     Proof.
       apply naturals.le_not_gt.
       intros H.
-      unfold naturals.one in H.
       apply le_lt_succ in H.
-      contradiction Euler_Phi_nonzero.
-      apply naturals.le_antisymm; auto using zero_le.
+      auto using Euler_Phi_nonzero, naturals.le_antisymm, zero_le.
     Qed.
 
     Theorem Euler_Phi_helper : ∀ f,
@@ -625,7 +609,7 @@ Section Modular_arithmetic.
       intros f H x H0.
       assert (Euler_Phi_set ⊂ Z_mod) as H1.
       { intros z H1.
-        apply Specify_classification in H1; tauto. }
+        now apply Specify_classification in H1. }
       apply H1.
       rewrite <-H.
       now apply function_maps_domain_to_range.
@@ -635,8 +619,8 @@ Section Modular_arithmetic.
     Proof.
       intros x.
       pose proof Euler_Phi_finite.
-      destruct (constructive_indefinite_description _ H) as [m H0].
-      destruct (excluded_middle_informative (x < m)%N).
+      destruct (constructive_indefinite_description _ H)
+        as [m H0], (excluded_middle_informative (x < m)%N).
       - symmetry in H0.
         destruct (constructive_indefinite_description _ H0) as [f [H1 [H2 H3]]].
         rewrite lt_is_in, <-H1 in l.
@@ -649,15 +633,15 @@ Section Modular_arithmetic.
       ∀ a : Z_, a ∈ Euler_Phi_set ↔ gcd(a, n) = 1.
     Proof.
       split; intros H.
-      - apply Specify_classification in H as [H [a' [H0 H1]]].
-        apply set_proj_injective in H0.
-        subst.
-        eauto using eqm_gcd, Zlift_equiv.
+      - apply Specify_classification in H as [H H0].
+        rewrite <-(setify_action _ _ H), <-specify_action in *.
+        eapply eqm_gcd; eauto.
+        apply IZn_eq.
+        rewrite <-? Zproj_eq.
+        now apply set_proj_injective.
       - apply Specify_classification.
-        split; auto using (elts_in_set Z_mod).
-        exists a.
-        rewrite <-Zproj_eq.
-        eauto.
+        rewrite <-specify_action.
+        auto using (elts_in_set Z_mod).
     Qed.
 
     Lemma Euler_Phi_list_unit :
@@ -689,10 +673,8 @@ Section Modular_arithmetic.
       rewrite units_in_ℤ_ in H.
       assert (a ∈ Euler_Phi_set).
       { apply Specify_classification.
-        split; auto using (elts_in_set Z_mod).
-        exists a.
-        split; auto.
-        apply f_equal, Zproj_eq. }
+        rewrite <-specify_action.
+        auto using (elts_in_set Z_mod). }
       destruct constructive_indefinite_description as [f].
       repeat destruct a0.
       assert ((inverse f) a ∈ x) as H1.
@@ -793,284 +775,285 @@ Section Modular_arithmetic.
 
     End Euler's_Theorem.
 
-    Section Prime_modulus.
-
-      Notation p := n.
-      Notation p_in_N := modulus_in_N.
-      Hypothesis prime_modulus : prime p.
-      Hypothesis odd_prime : p > 2.
-
-      Theorem Z_mod_prime_is_ID : is_integral_domain ℤ_.
-      Proof.
-        split.
-        - intros a b H; simpl in *.
-          apply IZn_eq, eqm_div_n, Euclid's_lemma in H as [H | H]; auto.
-          + left.
-            apply eqm_div_n, IZn_eq in H.
-            now rewrite <-H, <-Zproj_eq.
-          + right.
-            apply eqm_div_n, IZn_eq in H.
-            now rewrite <-H, <-Zproj_eq.
-        - intros H; simpl in *.
-          apply IZn_eq, eqm_div_n in H.
-          now destruct prime_modulus.
-      Qed.
-
-      Definition ℤ_ID := integral_domain_from_ring ℤ_ Z_mod_prime_is_ID.
-
-      Lemma nonzero_unit : ∀ a : Z_, a ≠ 0 → rings.unit ℤ_ a.
-      Proof.
-        intros a H.
-        apply units_in_ℤ_, gcd_sym, prime_rel_prime; auto.
-        contradict H.
-        apply eqm_div_n, IZn_eq in H.
-        now rewrite <-Zproj_eq in H.
-      Qed.
-
-      Theorem Prime_Euler_Phi : (Euler_Phi = p_in_N - 1)%N.
-      Proof.
-        rewrite <-(singleton_card (0 : Z_)), <-Z_mod_card,
-        <-complement_card; auto using singletons_are_finite.
-        2: { intros z H.
-             apply Singleton_classification in H.
-             subst.
-             auto using (elts_in_set Z_mod). }
-        apply f_equal, Extensionality.
-        split; intros H.
-        - apply Specify_classification in H as [H [a [H0 H1]]].
-          subst.
-          apply Complement_classification.
-          split; auto.
-          intros H0.
-          apply Singleton_classification, set_proj_injective,
-          IZn_eq, eqm_div_n in H0.
-          destruct prime_modulus as [H3 H4].
-          contradict H3.
-          now apply H1; try apply rings.divide_refl.
-        - apply Complement_classification in H as [H H0].
-          apply Specify_classification.
-          split; auto.
-          set (ζ := exist _ _ H : Z_).
-          rewrite <-(setify_action _ _ H) in *; fold ζ in H0 |-*.
-          exists ζ.
-          split; try now rewrite <-Zproj_eq.
-          repeat split; try apply div_1_l.
-          intros d H1 H2.
-          destruct prime_modulus as [H3 H4].
-          apply H4 in H2 as [H2 | H2]; auto.
-          destruct H2 as [H2 H5]; fold integers.divide in H2, H5.
-          contradict H0.
-          apply Singleton_classification, f_equal.
-          rewrite Zproj_eq, IZn_eq, <-eqm_div_n at 1.
-          eapply div_trans; eauto.
-      Qed.
-
-      Theorem Prime_Euler_Phi_Z : (p - 1 = Euler_Phi)%Z.
-      Proof.
-        replace 1 with (1%N : Z) by auto.
-        rewrite modulus_in_Z, INZ_sub.
-        - apply INZ_eq, eq_sym, Prime_Euler_Phi.
-        - now rewrite <-lt_0_le_1, <-modulus_in_Z.
-      Qed.
-
-      Definition square (a : Z_) := a * a.
-
-      Definition square_function := sets.functionify _ _ square.
-
-      Definition QR := {x of type Z_mod | x ≠ (0 : Z_) ∧ ∃ a, square a = x}.
-
-      Definition square_function_unit :=
-        restriction square_function unit_set_mod.
-
-      Lemma domain_sfu : domain square_function_unit = unit_set_mod.
-      Proof.
-        unfold square_function_unit, square_function.
-        rewrite restriction_domain, sets.functionify_domain.
-        apply Intersection_subset.
-        intros x H.
-        now apply Specify_classification in H.
-      Qed.
-
-      Lemma image_sfu : image square_function_unit = QR.
-      Proof.
-        unfold square_function_unit, square_function.
-        apply Extensionality.
-        split; intros H.
-        - apply Specify_classification in H as [H [x [H0 H1]]].
-          rewrite restriction_domain, restriction_range, <-restriction_action,
-          sets.functionify_domain, sets.functionify_range in *;
-            try now rewrite sets.functionify_domain in *.
-          apply Pairwise_intersection_classification in H0 as [H0 H2].
-          apply Specify_classification.
-          rewrite <-(setify_action _ _ H), <-(setify_action _ _ H2),
-          functionify_action, <-specify_action in *.
-          apply set_proj_injective in H1.
-          repeat split; eauto.
-          apply Specify_classification in H0 as [H0 H3].
-          rewrite <-specify_action in H3.
-          apply (unit_nonzero ℤ_ID).
-          rewrite <-H1.
-          now apply unit_closure.
-        - apply Specify_classification.
-          rewrite restriction_domain, restriction_range,
-          sets.functionify_domain, sets.functionify_range.
-          apply Specify_classification in H as [H H0].
-          rewrite <-(setify_action _ _ H), <-specify_action in *.
-          destruct H0 as [H0 [a H1]].
-          split; eauto using elts_in_set.
-          exists a.
-          enough (a ∈ unit_set_mod ∩ Z_mod).
-          { now rewrite <-restriction_action, functionify_action, H1;
-              try now rewrite sets.functionify_domain. }
-          rewrite Pairwise_intersection_classification.
-          split; eauto using elts_in_set.
-          apply Specify_classification.
-          rewrite <-specify_action.
-          split; eauto using elts_in_set.
-          apply nonzero_unit.
-          contradict H0.
-          rewrite <-H1, H0.
-          unfold square.
-          now rewrite (rings.mul_0_r ℤ_).
-      Qed.
-
-      Theorem number_of_square_roots : ∀ x : Z_,
-          x ∈ QR → (inverse_image_of_element square_function x ~ 2%N)%set.
-      Proof.
-        intros x H.
-        apply Specify_classification in H as [H H0].
-        rewrite <-specify_action in H0.
-        destruct H0 as [H0 [a H1]].
-        replace (inverse_image_of_element square_function x) with {a, -a}.
-        { apply pairing_card.
-          intros H2.
-          destruct (surjective_mod_n_on_interval a) as [a' [[[H3 H4] H5] H6]].
-          subst.
-          apply set_proj_injective in H2.
-          rewrite Zproj_eq in H2.
-          rewrite (Zproj_eq a'), IZn_neg in H2 at 1.
-          apply IZn_eq, eqm_sym in H2.
-          rewrite <-? Zlift_equiv in H2.
-          unfold eqm, integers.sub in H2.
-          replace (--a')%Z with (a') in * by now ring_simplify.
-          rewrite <-(integers.M3 a'), <-integers.D1 in H2.
-          apply Euclid's_lemma in H2 as [H2 | H2]; auto.
-          - now apply div_le, le_not_gt in H2; try apply (zero_lt_2 ℤ_order).
-          - contradict H0.
-            unfold square.
-            rewrite IZn_mul, eqm_div_n in *.
-            apply IZn_eq.
-            setoid_replace a' with 0%Z; auto.
-            now rewrite (mul_0_r ℤ). }
-        apply Extensionality.
-        unfold square_function.
-        assert ({a,-a} ⊂ Z_mod) as H2.
-        { intros z H2.
-          apply Pairing_classification in H2 as [H2 | H2];
-            subst; eauto using elts_in_set. }
-        split; intros H3.
-        - rewrite Inverse_image_classification in *;
-          rewrite ? sets.functionify_domain, ? sets.functionify_range;
-          auto using elts_in_set.
-          apply Pairing_classification in H3 as [H3 | H3]; subst.
-          + now rewrite functionify_action.
-          + rewrite functionify_action.
-            unfold square.
-            apply f_equal.
-            now rewrite (rings.mul_neg_neg ℤ_).
-        - apply Inverse_image_subset in H3 as H4;
-            rewrite ? sets.functionify_range, ? sets.functionify_domain in *;
-            auto using elts_in_set.
-          rewrite Inverse_image_classification in *;
-          rewrite ? sets.functionify_domain, ? sets.functionify_range;
-          auto using elts_in_set.
-          set (ζ := exist _ _ H4 : Z_).
-          rewrite <-(setify_action _ _ H4), functionify_action in *.
-          fold ζ in H3 |-*.
-          unfold square in *.
-          subst.
-          apply set_proj_injective in H3.
-          pose proof (difference_of_squares ℤ_ ζ a) as H1; simpl in H1.
-          rewrite H3, A4 in H1.
-          apply Pairing_classification.
-          apply eq_sym, (integral_domains.cancellation ℤ_ID) in H1 as [H1 | H1];
-            simpl in H1.
-          + left; unfold IZnS; f_equal.
-            now rewrite <-(A3 a), <-H1, <-A2, (A1 _ a), A4, A1, A3.
-          + right.
-            now rewrite <-(A3 (-a)), <-H1, <-A2, A4, A1, A3.
-      Qed.
-
-      Theorem inverse_image_sfu :
-        ∀ x, x ∈ QR → inverse_image_of_element square_function x =
-                      inverse_image_of_element square_function_unit x.
-      Proof.
-        intros x H.
-        pose proof H as H0.
-        rewrite <-image_sfu in H0.
-        assert (image square_function_unit ⊂ range square_function) as H1.
-        { unfold square_function_unit.
-          erewrite <-restriction_range; eauto using image_subset_range. }
-        apply Extensionality.
-        split; intros H2.
-        - assert (z ∈ domain square_function) as H3
-              by eauto using Inverse_image_classification_domain.
-          pose proof H3 as H4.
-          unfold square_function in H4.
-          rewrite sets.functionify_domain in H4.
-          assert (z ∈ unit_set_mod) as H5.
-          { apply Specify_classification.
-            split; auto.
-            apply Specify_classification in H as [H H5].
-            rewrite <-(setify_action _ _ H4), <-(setify_action _ _ H),
-            <-? specify_action in *.
-            destruct H5 as [H5 [a H6]].
-            apply nonzero_unit.
-            contradict H5.
-            apply Inverse_image_classification in H2; auto.
-            apply set_proj_injective.
-            unfold square_function, square in *.
-            now rewrite <-H2, sets.functionify_action, H5, (mul_0_r ℤ_). }
-          rewrite Inverse_image_classification in *; eauto;
-            unfold square_function_unit; rewrite <-? restriction_action; auto;
-              now apply Pairwise_intersection_classification.
-        - apply Specify_classification in H2 as [H2 H3].
-          unfold square_function_unit in *.
-          rewrite restriction_domain, <-restriction_action,
-          Pairwise_intersection_classification in *; auto.
-          now apply Inverse_image_classification; auto.
-      Qed.
-
-      Theorem finite_QR : finite QR.
-      Proof.
-        rewrite <-image_sfu.
-        eapply subsets_of_finites_are_finite; eauto using image_subset_range.
-        unfold square_function_unit, square_function.
-        rewrite restriction_range, sets.functionify_range.
-        auto using finite_Z_mod.
-      Qed.
-
-      Theorem size_of_QR : (p - 1 = 2 * # QR)%Z.
-      Proof.
-        replace 1 with (1%N : Z) at 2 3 by auto.
-        rewrite Prime_Euler_Phi_Z, INZ_add, INZ_mul.
-        apply INZ_eq, equivalence_to_card.
-        rewrite add_1_r, <-(card_of_natural 2), mul_comm,
-        <-finite_products_card, card_equiv, Euler_Phi_unit,
-        <-domain_sfu, <-image_sfu; auto using finite_products_are_finite,
-                                   naturals_are_finite, finite_QR.
-        apply orbit_stabilizer_cardinality_image.
-        intros y H0.
-        rewrite image_sfu, <-inverse_image_sfu in *; auto.
-        pose proof H0 as H1.
-        apply Specify_classification in H1 as [H1 H2].
-        rewrite <-(setify_action _ _ H1) in *.
-        auto using number_of_square_roots.
-      Qed.
-
-    End Prime_modulus.
-
   End Positive_modulus.
+
+  Section Prime_modulus.
+
+    Notation p := n.
+    Hypothesis prime_modulus : prime p.
+    Hypothesis odd_prime : p > 2.
+
+    Theorem odd_prime_positive : 0 < p.
+    Proof.
+      eapply integers.lt_trans; eauto.
+      apply (ordered_rings.zero_lt_2 ℤ_order).
+    Qed.
+
+    Notation p_in_N := ( modulus_in_N odd_prime_positive).
+
+    Theorem Z_mod_prime_is_ID : is_integral_domain ℤ_.
+    Proof.
+      split.
+      - intros a b H; simpl in *.
+        apply IZn_eq, eqm_div_n, Euclid's_lemma in H as [H | H]; auto;
+          [ left | right ]; apply eqm_div_n, IZn_eq in H;
+            now rewrite <-H, <-Zproj_eq.
+      - intros H; simpl in *.
+        apply IZn_eq, eqm_div_n in H.
+        now destruct prime_modulus.
+    Qed.
+
+    Definition ℤ_ID := integral_domain_from_ring ℤ_ Z_mod_prime_is_ID.
+
+    Lemma nonzero_unit : ∀ a : Z_, a ≠ 0 → rings.unit ℤ_ a.
+    Proof.
+      intros a H.
+      apply units_in_ℤ_, gcd_sym, prime_rel_prime; auto.
+      contradict H.
+      apply eqm_div_n, IZn_eq in H.
+      now rewrite <-Zproj_eq in H.
+    Qed.
+
+    Theorem Prime_Euler_Phi : (Euler_Phi = p_in_N - 1)%N.
+    Proof.
+      rewrite <-(singleton_card (0 : Z_)), <-Z_mod_card, <-complement_card;
+        auto using singletons_are_finite.
+      2: { intros z H.
+           apply Singleton_classification in H.
+           subst.
+           auto using (elts_in_set Z_mod). }
+      apply f_equal, Extensionality.
+      split; intros H; destruct prime_modulus as [H0 H1].
+      - apply Specify_classification in H as [H H2].
+        rewrite <-(setify_action _ _ H), <-specify_action in *.
+        apply Complement_classification.
+        split; auto.
+        intros H3.
+        apply Singleton_classification, set_proj_injective in H3.
+        destruct H2 as [H2 [H4 H5]].
+        contradict H0.
+        apply H5; eauto using (divide_refl ℤ) with Z.
+        apply eqm_div_n.
+        now rewrite H3, <-Zlift_equiv.
+      - apply Complement_classification in H as [H H2].
+        apply Specify_classification.
+        split; auto.
+        rewrite <-(setify_action _ _ H), <-specify_action,
+        Singleton_classification in *.
+        repeat split; try apply div_1_l.
+        intros d H3 H4.
+        apply H1 in H4 as [H4 | [H4 H5]]; fold integers.divide in *; auto.
+        contradict H2.
+        apply f_equal.
+        rewrite Zproj_eq, IZn_eq, <-eqm_div_n at 1.
+        eapply div_trans; eauto.
+    Qed.
+
+    Theorem Prime_Euler_Phi_Z : (p - 1 = Euler_Phi)%Z.
+    Proof.
+      replace 1 with (1%N : Z) by auto.
+      rewrite ( modulus_in_Z odd_prime_positive), INZ_sub.
+      - apply INZ_eq, eq_sym, Prime_Euler_Phi.
+      - rewrite <-lt_0_le_1, <-( modulus_in_Z odd_prime_positive);
+          auto using odd_prime_positive.
+    Qed.
+
+    Definition square (a : Z_) := a * a.
+
+    Definition square_function := sets.functionify _ _ square.
+
+    Definition QR := {x of type Z_mod | x ≠ (0 : Z_) ∧ ∃ a, square a = x}.
+
+    Definition square_function_unit :=
+      restriction square_function unit_set_mod.
+
+    Lemma domain_sfu : domain square_function_unit = unit_set_mod.
+    Proof.
+      unfold square_function_unit, square_function.
+      rewrite restriction_domain, sets.functionify_domain.
+      apply Intersection_subset.
+      intros x H.
+      now apply Specify_classification in H.
+    Qed.
+
+    Lemma image_sfu : image square_function_unit = QR.
+    Proof.
+      unfold square_function_unit, square_function.
+      apply Extensionality.
+      split; intros H.
+      - apply Specify_classification in H as [H [x [H0 H1]]].
+        rewrite restriction_domain, restriction_range, <-restriction_action,
+        sets.functionify_domain, sets.functionify_range in *;
+          try now rewrite sets.functionify_domain in *.
+        apply Pairwise_intersection_classification in H0 as [H0 H2].
+        apply Specify_classification.
+        rewrite <-(setify_action _ _ H), <-(setify_action _ _ H2),
+        functionify_action, <-specify_action in *.
+        apply set_proj_injective in H1.
+        repeat split; eauto.
+        apply Specify_classification in H0 as [H0 H3].
+        rewrite <-specify_action in H3.
+        apply (unit_nonzero ℤ_ID).
+        rewrite <-H1.
+        now apply unit_closure.
+      - apply Specify_classification.
+        rewrite restriction_domain, restriction_range,
+        sets.functionify_domain, sets.functionify_range.
+        apply Specify_classification in H as [H H0].
+        rewrite <-(setify_action _ _ H), <-specify_action in *.
+        destruct H0 as [H0 [a H1]].
+        split; eauto using elts_in_set.
+        exists a.
+        enough (a ∈ unit_set_mod ∩ Z_mod).
+        { now rewrite <-restriction_action, functionify_action, H1;
+            try now rewrite sets.functionify_domain. }
+        rewrite Pairwise_intersection_classification.
+        split; eauto using elts_in_set.
+        apply Specify_classification.
+        rewrite <-specify_action.
+        split; eauto using elts_in_set.
+        apply nonzero_unit.
+        contradict H0.
+        rewrite <-H1, H0.
+        unfold square.
+        now rewrite (rings.mul_0_r ℤ_).
+    Qed.
+
+    Theorem number_of_square_roots : ∀ x : Z_,
+        x ∈ QR → (inverse_image_of_element square_function x ~ 2%N)%set.
+    Proof.
+      intros x H.
+      apply Specify_classification in H as [H H0].
+      rewrite <-specify_action in H0.
+      destruct H0 as [H0 [a H1]].
+      replace (inverse_image_of_element square_function x) with {a, -a}.
+      { apply pairing_card.
+        intros H2.
+        destruct (surjective_mod_n_on_interval odd_prime_positive a)
+          as [a' [[[H3 H4] H5] H6]].
+        subst.
+        apply set_proj_injective in H2.
+        rewrite Zproj_eq in H2.
+        rewrite (Zproj_eq a'), IZn_neg in H2 at 1.
+        apply IZn_eq, eqm_sym in H2.
+        rewrite <-? Zlift_equiv in H2.
+        unfold eqm, integers.sub in H2.
+        replace (--a')%Z with (a') in * by now ring_simplify.
+        rewrite <-(integers.M3 a'), <-integers.D1 in H2.
+        apply Euclid's_lemma in H2 as [H2 | H2]; auto.
+        - now apply div_le, le_not_gt in H2; try apply (zero_lt_2 ℤ_order).
+        - contradict H0.
+          unfold square.
+          rewrite IZn_mul, eqm_div_n in *.
+          apply IZn_eq.
+          setoid_replace a' with 0%Z; auto.
+          now rewrite (mul_0_r ℤ). }
+      apply Extensionality.
+      unfold square_function.
+      assert ({a,-a} ⊂ Z_mod) as H2.
+      { intros z H2.
+        apply Pairing_classification in H2 as [H2 | H2];
+          subst; eauto using elts_in_set. }
+      split; intros H3.
+      - rewrite Inverse_image_classification in *;
+          rewrite ? sets.functionify_domain, ? sets.functionify_range;
+          auto using elts_in_set.
+        apply Pairing_classification in H3 as [H3 | H3]; subst.
+        + now rewrite functionify_action.
+        + rewrite functionify_action.
+          unfold square.
+          apply f_equal.
+          now rewrite (rings.mul_neg_neg ℤ_).
+      - apply Inverse_image_subset in H3 as H4;
+          rewrite ? sets.functionify_range, ? sets.functionify_domain in *;
+          auto using elts_in_set.
+        rewrite Inverse_image_classification in *;
+          rewrite ? sets.functionify_domain, ? sets.functionify_range;
+          auto using elts_in_set.
+        set (ζ := exist _ _ H4 : Z_).
+        rewrite <-(setify_action _ _ H4), functionify_action in *.
+        fold ζ in H3 |-*.
+        unfold square in *.
+        subst.
+        apply set_proj_injective in H3.
+        pose proof (difference_of_squares ℤ_ ζ a) as H1; simpl in H1.
+        rewrite H3, A4 in H1.
+        apply Pairing_classification.
+        apply eq_sym, (integral_domains.cancellation ℤ_ID) in H1 as [H1 | H1];
+          simpl in H1.
+        + left; unfold IZnS; f_equal.
+          now rewrite <-(A3 a), <-H1, <-A2, (A1 _ a), A4, A1, A3.
+        + right.
+          now rewrite <-(A3 (-a)), <-H1, <-A2, A4, A1, A3.
+    Qed.
+
+    Theorem inverse_image_sfu :
+      ∀ x, x ∈ QR → inverse_image_of_element square_function x =
+                    inverse_image_of_element square_function_unit x.
+    Proof.
+      intros x H.
+      pose proof H as H0.
+      rewrite <-image_sfu in H0.
+      assert (image square_function_unit ⊂ range square_function) as H1.
+      { unfold square_function_unit.
+        erewrite <-restriction_range; eauto using image_subset_range. }
+      apply Extensionality.
+      split; intros H2.
+      - assert (z ∈ domain square_function) as H3
+            by eauto using Inverse_image_classification_domain.
+        pose proof H3 as H4.
+        unfold square_function in H4.
+        rewrite sets.functionify_domain in H4.
+        assert (z ∈ unit_set_mod) as H5.
+        { apply Specify_classification.
+          split; auto.
+          apply Specify_classification in H as [H H5].
+          rewrite <-(setify_action _ _ H4), <-(setify_action _ _ H),
+          <-? specify_action in *.
+          destruct H5 as [H5 [a H6]].
+          apply nonzero_unit.
+          contradict H5.
+          apply Inverse_image_classification in H2; auto.
+          apply set_proj_injective.
+          unfold square_function, square in *.
+          now rewrite <-H2, sets.functionify_action, H5, (mul_0_r ℤ_). }
+        rewrite Inverse_image_classification in *; eauto;
+          unfold square_function_unit; rewrite <-? restriction_action; auto;
+            now apply Pairwise_intersection_classification.
+      - apply Specify_classification in H2 as [H2 H3].
+        unfold square_function_unit in *.
+        rewrite restriction_domain, <-restriction_action,
+        Pairwise_intersection_classification in *; auto.
+        now apply Inverse_image_classification; auto.
+    Qed.
+
+    Theorem finite_QR : finite QR.
+    Proof.
+      rewrite <-image_sfu.
+      eapply subsets_of_finites_are_finite; eauto using image_subset_range.
+      unfold square_function_unit, square_function.
+      rewrite restriction_range, sets.functionify_range.
+      auto using (finite_Z_mod odd_prime_positive).
+    Qed.
+
+    Theorem size_of_QR : (p - 1 = 2 * # QR)%Z.
+    Proof.
+      replace 1 with (1%N : Z) at 2 3 by auto.
+      rewrite Prime_Euler_Phi_Z, INZ_add, INZ_mul.
+      apply INZ_eq, equivalence_to_card.
+      rewrite add_1_r, <-(card_of_natural 2), mul_comm, <-finite_products_card,
+      card_equiv, Euler_Phi_unit, <-domain_sfu, <-image_sfu;
+        auto using finite_products_are_finite, naturals_are_finite, finite_QR.
+      apply orbit_stabilizer_cardinality_image.
+      intros y H0.
+      rewrite image_sfu, <-inverse_image_sfu in *; auto.
+      pose proof H0 as H1.
+      apply Specify_classification in H1 as [H1 _].
+      rewrite <-(setify_action _ _ H1).
+      auto using number_of_square_roots.
+    Qed.
+
+  End Prime_modulus.
 
 End Modular_arithmetic.
 
