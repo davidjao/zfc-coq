@@ -494,6 +494,21 @@ Section Ring_theorems.
         try (exists (d+1)%N; rewrite <-? add_1_r); ring.
   Qed.
 
+  Theorem unit_pow_closure : ∀ a n, 0 < n → unit (a^n) → unit a.
+  Proof.
+    intros a n H H0.
+    destruct (classic (n = 0%N)) as [H1 | H1].
+    { subst.
+      contradiction (lt_irrefl 0). }
+    apply succ_0 in H1 as [m H1].
+    subst.
+    rewrite pow_succ_r in H0.
+    destruct H0 as [x H0].
+    exists (x * a^m).
+    rewrite H0.
+    ring.
+  Qed.
+
   Definition INR (n : N) := sum (λ n, 1) 1 n.
   Coercion INR : N >-> R.
 

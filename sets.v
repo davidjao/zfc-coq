@@ -2112,3 +2112,12 @@ Proof.
       * rewrite left_inverse, right_inverse; auto.
         rewrite inverse_domain, inverse_range; auto.
 Qed.
+
+Lemma Euler_Phi_lemma :
+  ∀ A B C D, A = B → A ∩ C = ∅ → B ∩ D = ∅ → A ∪ C = B ∪ D → C = D.
+Proof.
+  intros A B C D H H0 H1 H2.
+  rewrite Intersection_comm, Union_comm, (Union_comm B D) in *.
+  apply complement_disjoint_union in H0, H1.
+  now rewrite <-H0, <-H1, H2, H.
+Qed.

@@ -185,10 +185,9 @@ Section Modular_arithmetic.
     - intros a b c H H0 H1 H2 H3.
       apply Specify_classification; split.
       + apply Product_classification; eauto.
-      + apply Specify_classification in H2 as [H2 [a' [b' [H4 H5]]]].
-        apply Specify_classification in H3 as [H3 [b'' [c' [H6 H7]]]].
-        apply Ordered_pair_iff in H4 as [H4 H8].
-        apply Ordered_pair_iff in H6 as [H6 H9].
+      + apply Specify_classification in H2
+          as [H2 [a' [b' [H4 H5]]]], H3 as [H3 [b'' [c' [H6 H7]]]].
+        apply Ordered_pair_iff in H4 as [H4 H8], H6 as [H6 H9].
         subst.
         apply set_proj_injective in H6; subst.
         eauto using eqm_trans.
@@ -263,8 +262,7 @@ Section Modular_arithmetic.
       apply Specify_classification in H as [H [a' [b' [H0 H1]]]].
       apply Ordered_pair_iff in H0 as [H0 H2].
       simpl in *.
-      apply set_proj_injective in H0.
-      apply set_proj_injective in H2.
+      apply set_proj_injective in H0, H2.
       now subst.
     - apply quotient_equiv, Specify_classification; auto using equivalence_mod.
       split.
@@ -457,8 +455,7 @@ Section Modular_arithmetic.
         rewrite (eqn_zero n) at 2.
         now ring_simplify.
       - intros y [H1 H2].
-        apply injective_mod_n_on_interval; auto.
-        apply IZn_eq.
+        apply injective_mod_n_on_interval, IZn_eq; auto.
         rewrite <-H2, Zproj_eq.
         apply IZn_eq.
         rewrite <-H.
@@ -1182,6 +1179,93 @@ Section Modular_arithmetic.
       naturals.le_antisymm; auto using finite_subsets, finite_roots,
                             finite_QR, odd_prime_positive, Z_mod_prime_is_ID.
       rewrite <-D at 2; auto using root_degree_bound, Z_mod_prime_is_ID.
+    Qed.
+
+    Theorem roots_QNR : roots _ (x^(# QR) + 1)%poly = QNR.
+    Proof.
+      pose proof (eq_refl Euler_Phi_set) as E.
+      replace Euler_Phi_set with (QR ∪ QNR) in E at 1.
+      2: { apply Extensionality.
+           split; intros H.
+           - apply Pairwise_union_classification in H as [H | H];
+             apply Specify_classification in H as [H H0];
+             apply Specify_classification;
+             rewrite <-(setify_action _ _ H), <-specify_action in *;
+             split; auto; now rewrite <-units_in_ℤ_.
+           - apply Specify_classification in H as [H H0].
+             apply Pairwise_union_classification.
+             destruct (classic (z ∈ QR)); auto.
+             right.
+             apply Specify_classification.
+             now rewrite <-(setify_action _ _ H),
+             <-specify_action, units_in_ℤ_ in *. }
+      replace Euler_Phi_set with
+          ((roots _ (x^(# QR) - 1)%poly) ∪ (roots _ (x^(# QR) + 1)%poly)) in E.
+      2: { rewrite <-prod_root, <-difference_of_squares, <-rings.pow_mul_l,
+           <-rings.pow_2_r, <-rings.pow_mul_r, <-size_of_QR, rings.M3,
+           rings.sub_is_neg; auto using Z_mod_prime_is_ID.
+           apply Extensionality.
+           split; intros H.
+           - apply Specify_classification in H as [H H0]; simpl Rset in H.
+             apply Specify_classification.
+             set (ζ := exist _ _ H : Z_).
+             rewrite <-(setify_action _ _ H), <-specify_action,
+             <-units_in_ℤ_ in *; fold ζ in H0 |-*.
+             split; auto.
+             rewrite eval_add, eval_neg, IRP_1, eval_const, eval_x_to_n,
+             <-(rings.A4 ℤ_ (1:Z_)), ? (rings.A1 ℤ_ _ (-(1:Z_))) in H0;
+               simpl in *.
+             apply (cancellation_add ℤ_) in H0.
+             eapply unit_pow_closure; try rewrite H0.
+             + pose proof Euler_Phi_nonzero odd_prime_positive.
+               apply succ_0 in H1 as [m H1].
+               rewrite H1.
+               apply naturals.lt_succ.
+             + apply one_unit.
+           - apply Specify_classification in H as [H H0].
+             apply Specify_classification; simpl Rset.
+             set (ζ := exist _ _ H : Z_).
+             rewrite <-(setify_action _ _ H), <-specify_action,
+             <-units_in_ℤ_ in *; fold ζ in H0 |-*.
+             split; auto.
+             rewrite eval_add, eval_neg, IRP_1, eval_const, eval_x_to_n,
+             Euler, A4; auto using odd_prime_positive. }
+      apply Euler_Phi_lemma in E; auto using roots_QR.
+      { apply NNPP.
+        intros H.
+        apply Nonempty_classification in H as [x H].
+        apply Pairwise_intersection_classification in H as [H H0].
+        apply Specify_classification in H0 as [H0 H1].
+        now rewrite <-(setify_action _ _ H0), <-specify_action in *. }
+      apply NNPP.
+      intros H.
+      apply Nonempty_classification in H as [z H].
+      apply Pairwise_intersection_classification in H as [H H0].
+      apply Specify_classification in H as [H H1], H0 as [H0 H2].
+      simpl Rset in *.
+      rewrite <-(setify_action _ _ H), <-specify_action, <-H2, rings.sub_is_neg,
+      ? eval_add, ? eval_neg, ? IRP_1, ? eval_const, ? eval_x_to_n in *.
+      apply (rings.cancellation_add ℤ_), IZn_eq in H1; simpl in H1.
+      rewrite <-Zlift_equiv in H1.
+      unfold eqm in H1.
+      replace (1--(1))%Z with (2%Z) in H1 by ring.
+      now apply div_le, le_not_gt in H1;
+        try apply (ordered_rings.zero_lt_2 ℤ_order).
+    Qed.
+
+    Theorem Euler_Criterion_QNR :
+      ∀ a : Z_, a ∈ QNR → a^(# QR) = ((-(1)) : Z_)%Z.
+    Proof.
+      intros a H.
+      rewrite <-roots_QNR in H.
+      apply Specify_classification in H as [H H0]; simpl Rset in *.
+      rewrite <-(setify_action _ _ H), <-specify_action in *.
+      rewrite eval_add, IRP_1, eval_const, eval_x_to_n, (A1 _ 1),
+      <-(rings.A4 ℤ_ (1:Z_)) in H0; simpl in H0.
+      apply (rings.cancellation_add ℤ_) in H0.
+      rewrite <-IZn_neg, <-H0.
+      f_equal.
+      now apply set_proj_injective.
     Qed.
 
   End Odd_prime_modulus.
