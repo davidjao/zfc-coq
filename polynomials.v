@@ -382,6 +382,12 @@ Section Polynomial_theorems.
       exact d.
   Defined.
 
+  Theorem degree_zero : degree 0 = 0%N.
+  Proof.
+    unfold degree.
+    destruct excluded_middle_informative; auto; exfalso; auto.
+  Qed.
+
   Theorem degree_spec : ∀ f m,
       f ≠ 0 → degree f = m ↔ (coefficient f m ≠ 0%R ∧
                               ∀ n, (m < n)%N → coefficient f n = 0%R).

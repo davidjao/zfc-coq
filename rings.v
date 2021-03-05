@@ -123,6 +123,12 @@ Section Ring_theorems.
     ring.
   Qed.
 
+  Theorem neg_neg : ∀ a, --a = a.
+  Proof.
+    intros a.
+    ring.
+  Qed.
+
   Theorem difference_of_squares : ∀ a b, a * a - b * b = (a - b) * (a + b).
   Proof.
     intros a b.

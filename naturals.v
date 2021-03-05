@@ -1154,6 +1154,34 @@ Proof.
   destruct excluded_middle_informative; intuition.
 Qed.
 
+Theorem max_sym : ∀ a b, max a b = max b a.
+Proof.
+  intros a b.
+  unfold max.
+  repeat destruct excluded_middle_informative; auto.
+  - contradiction (lt_antisym a b).
+  - rewrite <-le_not_gt in *.
+    auto using le_antisymm.
+Qed.
+
+Theorem max_0_l : ∀ a, max 0 a = a.
+Proof.
+  intros a.
+  unfold max.
+  destruct excluded_middle_informative; auto.
+  apply NNPP.
+  contradict n.
+  apply neq_sym, succ_0 in n as [m H].
+  subst.
+  auto using lt_succ.
+Qed.
+
+Theorem max_0_r : ∀ a, max a 0 = a.
+Proof.
+  intros a.
+  now rewrite max_sym, max_0_l.
+Qed.
+
 Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
 Proof.
   intros a b c [d H] [e H0].

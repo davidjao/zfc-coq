@@ -1110,19 +1110,23 @@ Section Modular_arithmetic.
       sub_abba at 1; auto using finite_QR, odd_prime_positive, QR_Euler_Phi.
     Qed.
 
-    Notation "ℤp[x]" := (polynomial_ring ℤ_).
-    Notation "Zp[x]" := (poly ℤ_).
+    Notation ℤ_p_x := (polynomial_ring ℤ_).
+    Notation Z_p_x := (poly ℤ_).
 
     Notation x := (polynomials.x ℤ_).
 
     Declare Scope poly_scope.
     Delimit Scope poly_scope with poly.
     Bind Scope poly_scope with poly.
-    Infix "+" := (rings.add ℤp[x]) : poly_scope.
-    Infix "-" := (rings.sub ℤp[x]) : poly_scope.
-    Infix "*" := (rings.mul ℤp[x]) : poly_scope.
-    Infix "^" := (rings.pow ℤp[x]) : poly_scope.
-    Notation "- a" := (rings.neg ℤp[x] a) : poly_scope.
+    Infix "+" := (rings.add ℤ_p_x) : poly_scope.
+    Infix "-" := (rings.sub ℤ_p_x) : poly_scope.
+    Infix "*" := (rings.mul ℤ_p_x) : poly_scope.
+    Infix "^" := (rings.pow ℤ_p_x) : poly_scope.
+    Notation "0" := (rings.zero ℤ_p_x) : poly_scope.
+    Notation "1" := (rings.one ℤ_p_x) : poly_scope.
+    Notation "- a" := (rings.neg ℤ_p_x a) : poly_scope.
+    Definition IRP := (IRP ℤ_ : Z_ → Z_p_x).
+    Coercion IRP : Z_ >-> Z_p_x.
 
     Theorem Euler_Criterion_QR : ∀ a : Z_, a ∈ QR → a^(# QR) = (1 : Z_).
     Proof.
@@ -1134,6 +1138,50 @@ Section Modular_arithmetic.
       unfold square.
       rewrite <-(rings.pow_2_r ℤ_), <-(rings.pow_mul_r ℤ_), <-size_of_QR.
       auto using Euler, unit_square, odd_prime_positive.
+    Qed.
+
+    Theorem roots_QR : roots _ (x^(# QR) - 1)%poly = QR.
+    Proof.
+      assert (QR ⊂ roots ℤ_ ((x ^ (# QR))%poly + (- (1))%poly)) as S.
+      { intros x H.
+        apply Specify_classification; simpl Rset.
+        pose proof H as H0.
+        apply Specify_classification in H0 as [H0 H1].
+        rewrite <-(setify_action _ _ H0), <-specify_action in *.
+        destruct H1 as [H1 [a H2]].
+        split; auto using elts_in_set.
+        rewrite eval_add, eval_neg, IRP_1, eval_const, eval_x_to_n,
+        Euler_Criterion_QR, A4; auto. }
+      assert ((x ^ (# QR) + - (1))%poly ≠ 0%poly) as N.
+      { apply nonzero_coefficients.
+        exists 0%N.
+        rewrite coefficient_add, coefficient_neg, coeffs_of_x_ne_n, IRP_1,
+        coeff_const, rings.A3, rings.neg_0; intros H.
+        - apply (f_equal (rings.neg ℤ_)) in H.
+          rewrite ? neg_neg in H.
+          now destruct Z_mod_prime_is_ID.
+        - contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
+          rewrite size_of_QR, <-H.
+          ring. }
+      assert (degree _ (x^(# QR) + (-(1)))%poly = # QR) as D.
+      { apply naturals.le_antisymm.
+        - rewrite <-max_0_r.
+          eapply naturals.le_trans; eauto using (add_degree ℤ_).
+          exists 0%N.
+          rewrite add_0_r.
+          f_equal.
+          + apply degree_x_to_n; now destruct Z_mod_prime_is_ID.
+          + apply const_classification.
+            exists (-(1)).
+            now rewrite IRP_1, IRP_neg.
+        - apply finite_subsets in S;
+            eauto using finite_roots, Z_mod_prime_is_ID,
+            naturals.le_trans, root_degree_bound. }
+      rewrite rings.sub_is_neg.
+      apply eq_sym, finite_subsets_bijective, finite_cardinality_equinumerous,
+      naturals.le_antisymm; auto using finite_subsets, finite_roots,
+                            finite_QR, odd_prime_positive, Z_mod_prime_is_ID.
+      rewrite <-D at 2; auto using root_degree_bound, Z_mod_prime_is_ID.
     Qed.
 
   End Odd_prime_modulus.
