@@ -539,4 +539,11 @@ Section Ordered_ring_theorems.
     auto using mul_le_l_nonneg.
   Qed.
 
+  Theorem pos_ne_0 : ∀ a, 0 < a → a ≠ 0.
+  Proof.
+    intros a H H0.
+    subst.
+    contradiction (lt_irrefl 0).
+  Qed.
+
 End Ordered_ring_theorems.

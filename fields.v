@@ -418,4 +418,12 @@ Section Field_theorems.
       now rewrite pow_0_r, (rings.pow_0_r ring_from_field).
   Qed.
 
+  Theorem minus_one_nonzero : -(1) ≠ 0.
+  Proof.
+    intros H.
+    apply (f_equal (rings.neg (ring Field))) in H.
+    ring_simplify in H.
+    contradiction (one_ne_0 Field).
+  Qed.
+
 End Field_theorems.

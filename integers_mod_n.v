@@ -820,21 +820,35 @@ Section Modular_arithmetic.
       now rewrite <-Zproj_eq in H.
     Qed.
 
+    Definition inv : Z_ → Z_.
+    Proof.
+      intros a.
+      destruct (excluded_middle_informative (a = 0)).
+      - exact 0.
+      - apply nonzero_unit in n0.
+        destruct (constructive_indefinite_description _ n0) as [x H].
+        exact x.
+    Defined.
+
+    Theorem inv_l : ∀ a : Z_, a ≠ 0 → inv a * a = 1.
+    Proof.
+      intros a H.
+      unfold inv.
+      destruct excluded_middle_informative; try tauto.
+      now destruct constructive_indefinite_description.
+    Qed.
+
+    Definition 𝔽 := mkField ℤ_ inv inv_l (Logic.proj2 Z_mod_prime_is_ID).
+
     Theorem Euler_Criterion_zero : ∀ a, legendre_symbol a = 0 ↔ a = 0.
     Proof.
       split; unfold legendre_symbol; intros H.
       destruct excluded_middle_informative.
       - contradiction (integers.zero_ne_1).
       - destruct excluded_middle_informative.
-        + pose proof Zlift_equiv (-(1)) as H0.
-          rewrite <-IZn_neg, H in H0.
-          apply IZn_eq in H0.
-          destruct Z_mod_prime_is_ID as [H1 H2].
-          contradiction H2.
-          rewrite (neg_0 ℤ_).
+        + contradiction (minus_one_nonzero 𝔽).
           simpl.
-          apply (f_equal neg) in H0.
-          now rewrite IZn_neg, (neg_neg ℤ) in H0.
+          now rewrite <-H, <-Zproj_eq.
         + apply NNPP.
           contradict n1.
           apply nonzero_unit in n1.
@@ -1025,6 +1039,12 @@ Section Modular_arithmetic.
       now apply Specify_classification in H.
     Qed.
 
+    Theorem Fpow_wf : ∀ (a : Z_) k, rings.pow ℤ_ a k = (fields.pow 𝔽 a k).
+    Proof.
+      intros a k.
+      now rewrite <-pow_wf.
+    Qed.
+
   End Prime_modulus.
 
   Section Odd_prime_modulus.
@@ -1165,6 +1185,11 @@ Section Modular_arithmetic.
     Definition IRP := (IRP ℤ_ : Z_ → Z_p_x).
     Coercion IRP : Z_ >-> Z_p_x.
 
+    Declare Scope F_scope.
+    Delimit Scope F_scope with F.
+    Bind Scope F_scope with 𝔽.
+    Infix "^" := (fields.pow  (𝔽 prime_modulus)) : F_scope.
+
     Theorem Euler_Criterion_QR : ∀ a : Z_, a ∈ QR → a^(# QR) = (1 : Z_).
     Proof.
       intros a H.
@@ -1194,9 +1219,9 @@ Section Modular_arithmetic.
         exists 0%N.
         rewrite coefficient_add, coefficient_neg, coeffs_of_x_ne_n, IRP_1,
         coeff_const, rings.A3, rings.neg_0; intros H.
-        - apply (f_equal (rings.neg ℤ_)) in H.
-          rewrite ? neg_neg in H.
-          now destruct Z_mod_prime_is_ID.
+        - rewrite <-(neg_0 ℤ_) in H.
+          contradiction (integral_domains.minus_one_nonzero
+                           (ℤ_ID prime_modulus)).
         - contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
           rewrite size_of_QR, <-H.
           ring. }

@@ -113,4 +113,12 @@ Section Integral_domain_theorems.
     now ring_simplify in H.
   Qed.
 
+  Theorem minus_one_nonzero : -(1) ≠ 0.
+  Proof.
+    intros H.
+    apply (f_equal (neg ring)) in H.
+    ring_simplify in H.
+    contradiction (nontriviality ID).
+  Qed.
+
 End Integral_domain_theorems.
