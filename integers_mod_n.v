@@ -774,6 +774,22 @@ Section Modular_arithmetic.
 
   End Positive_modulus.
 
+  Definition square (a : Z_) := a * a.
+
+  Definition square_function := sets.functionify _ _ square.
+
+  Definition QR := {x of type Z_mod | rings.unit ℤ_ x ∧ ∃ a, square a = x}.
+  Definition QNR := {x of type Z_mod | rings.unit ℤ_ x ∧ (x : Z_) ∉ QR}.
+
+  Definition legendre_symbol (a : Z_) : Z.
+  Proof.
+    destruct (excluded_middle_informative (a ∈ QR)).
+    - exact 1.
+    - destruct (excluded_middle_informative (a ∈ QNR)).
+      + exact (-(1)).
+      + exact 0.
+  Defined.
+
   Section Prime_modulus.
 
     Notation p := n.
@@ -802,6 +818,37 @@ Section Modular_arithmetic.
       contradict H.
       apply eqm_div_n, IZn_eq in H.
       now rewrite <-Zproj_eq in H.
+    Qed.
+
+    Theorem Euler_Criterion_zero : ∀ a, legendre_symbol a = 0 ↔ a = 0.
+    Proof.
+      split; unfold legendre_symbol; intros H.
+      destruct excluded_middle_informative.
+      - contradiction (integers.zero_ne_1).
+      - destruct excluded_middle_informative.
+        + pose proof Zlift_equiv (-(1)) as H0.
+          rewrite <-IZn_neg, H in H0.
+          apply IZn_eq in H0.
+          destruct Z_mod_prime_is_ID as [H1 H2].
+          contradiction H2.
+          rewrite (neg_0 ℤ_).
+          simpl.
+          apply (f_equal neg) in H0.
+          now rewrite IZn_neg, (neg_neg ℤ) in H0.
+        + apply NNPP.
+          contradict n1.
+          apply nonzero_unit in n1.
+          apply Specify_classification.
+          rewrite <-specify_action.
+          split; auto using (elts_in_set Z_mod).
+      - subst; repeat destruct excluded_middle_informative; auto;
+          apply Specify_classification in i as [H0 H1];
+          rewrite <-(setify_action _ _ H0), <-specify_action in *;
+          replace (exist _ _ H0 : Z_) with (0 : Z_) in *
+            by (now apply set_proj_injective);
+          destruct H1 as [[x H1] H2], Z_mod_prime_is_ID as [H3 H4];
+          contradiction H4;
+          now rewrite H1, mul_0_r.
     Qed.
 
     Theorem Prime_Euler_Phi : (Euler_Phi = p_in_N - 1)%N.
@@ -846,13 +893,6 @@ Section Modular_arithmetic.
       - apply INZ_eq, eq_sym, Prime_Euler_Phi.
       - rewrite <-lt_0_le_1, <-( modulus_in_Z positive_prime); auto.
     Qed.
-
-    Definition square (a : Z_) := a * a.
-
-    Definition square_function := sets.functionify _ _ square.
-
-    Definition QR := {x of type Z_mod | rings.unit ℤ_ x ∧ ∃ a, square a = x}.
-    Definition QNR := {x of type Z_mod | rings.unit ℤ_ x ∧ (x : Z_) ∉ QR}.
 
     Theorem QR_Euler_Phi : QR ⊂ Euler_Phi_set.
     Proof.
@@ -1266,6 +1306,25 @@ Section Modular_arithmetic.
       rewrite <-IZn_neg, <-H0.
       f_equal.
       now apply set_proj_injective.
+    Qed.
+
+    Theorem Euler's_Criterion : ∀ a : Z_, a^(# QR) = ((legendre_symbol a) : Z_).
+    Proof.
+      intros a.
+      unfold legendre_symbol.
+      repeat destruct excluded_middle_informative.
+      - now apply Euler_Criterion_QR.
+      - rewrite <-Zproj_eq, IZn_neg.
+        now apply Euler_Criterion_QNR.
+      - destruct (classic (a = 0)) as [H | H]; subst.
+        + rewrite rings.pow_0_l; auto.
+          intros H.
+          contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
+          now rewrite size_of_QR, H, naturals.mul_0_r.
+        + apply nonzero_unit in H; auto.
+          contradict n1.
+          apply Specify_classification.
+          rewrite <-specify_action; auto using (elts_in_set Z_mod).
     Qed.
 
   End Odd_prime_modulus.
