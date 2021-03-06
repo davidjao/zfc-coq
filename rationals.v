@@ -1321,11 +1321,11 @@ Proof.
 Qed.
 
 Theorem division_signed : ∀ a b : Z,
-    (0 < b < a)%Z → ∃ q r : Z, 0 ≤ r ≤ b / 2 ∧ b*q + (-(1))^⌊2 * a / b⌋ * r = a.
+    (0 < b)%Z → ∃ q r : Z, 0 ≤ r ≤ b / 2 ∧ b*q + (-(1))^⌊2 * a / b⌋ * r = a.
 Proof.
-  intros a b [H H0].
-  destruct (division_algorithm a b) as [q [r [H1 [H2 H3]]]]; auto.
-  destruct (classic (r < b/2)) as [H4 | H4]; subst.
+  intros a b H.
+  destruct (division_algorithm a b) as [q [r [H0 [H1 H2]]]]; subst; auto.
+  destruct (classic (r < b/2)) as [H0 | H0]; subst.
   - exists q, r.
     repeat split; try (now apply IZQ_le || now left).
     rewrite <-IZQ_add, <-IZQ_mul.
@@ -1343,7 +1343,7 @@ Proof.
         apply mul_le_l; try apply IZQ_lt, (ordered_rings.zero_lt_2 ℤ_order);
           fold le.
         apply IZQ_lt in H.
-        apply IZQ_le in H2.
+        apply IZQ_le in H1.
         rewrite <-IZQ_add, <-IZQ_mul, D1, M1, M2, inv_l;
           auto using (pos_ne_0 ℚ_ring_order).
         rewrite M3, <-(A3_r ℚ_ring (q:Q)) at 1; simpl.
@@ -1357,8 +1357,8 @@ Proof.
         rewrite M3, (rings.D1_l ℚ_ring); simpl.
         apply O1.
         rewrite <-(inv_l 2), (M1 _ 2).
-        2: { intros H5.
-             now apply IZQ_eq, (zero_ne_2 ℤ_order) in H5. }
+        2: { intros H4.
+             now apply IZQ_eq, (zero_ne_2 ℤ_order) in H4. }
         apply (O3 ℚ_ring_order); simpl.
         { apply IZQ_lt, (ordered_rings.zero_lt_2 ℤ_order). }
         rewrite <-(M3 (2^-1)), (M1 1), <-(inv_l b), (M1 _ b), M2;
@@ -1369,7 +1369,7 @@ Proof.
     repeat split.
     { rewrite <-(A4 r), <-IZQ_add, <-IZQ_neg.
       now apply (add_le_r ℚ_ring_order), IZQ_le, or_introl. }
-    { apply (le_not_gt ℚ_ring_order) in H4; fold le in H4.
+    { apply (le_not_gt ℚ_ring_order) in H0; fold le in H0.
       rewrite <-(A3 (b/2)), (A1 0), <-(A4 r), A2, <-IZQ_add, <-IZQ_neg.
       apply (add_le_r ℚ_ring_order); fold le.
       rewrite <-(M3 b), M1, <-(inv_l 2), (M1 _ 2), M2, inv_div;
@@ -1398,7 +1398,7 @@ Proof.
         auto using (pos_ne_0 ℚ_ring_order).
       rewrite (D1_l ℚ_ring), <-IZQ_add, <-IZQ_mul; simpl.
       apply add_le_l; fold le.
-      apply (le_not_gt ℚ_ring_order) in H4; fold le in H4.
+      apply (le_not_gt ℚ_ring_order) in H0; fold le in H0.
       unfold IZQ at 1; fold one.
       rewrite <-(inv_l b); auto using (pos_ne_0 ℚ_ring_order).
       rewrite M2, (M1 _ (b^-1)).
@@ -1409,7 +1409,7 @@ Proof.
       rewrite M1, <-inv_div; auto using (zero_ne_2 ℤ_order).
     + apply IZQ_le, floor_lower.
       rewrite inv_div, <-? IZQ_mul, <-M2; auto using (pos_ne_0 ℤ_order).
-      apply IZQ_lt in H, H3.
+      apply IZQ_lt in H, H2.
       rewrite <- (IZQ_add _ r), <-IZQ_mul, D1, (M1 (b*q)), M2, inv_l, M3;
         auto using (pos_ne_0 ℚ_ring_order).
       rewrite <-(IZQ_add (2*q)), <-IZQ_mul, (D1_l ℚ_ring), <-A2; simpl.
@@ -1425,10 +1425,10 @@ Proof.
         apply (mul_lt_r ℚ_ring_order); auto; now apply (inv_lt ℚ_order).
 Qed.
 
-Theorem QR_epsilon_construction : ∀ a b : Z, (0 < b < a → 0 ≤ ⌊2 * a / b⌋)%Z.
+Theorem QR_epsilon_construction :
+  ∀ a b : Z, (0 < a → 0 < b → 0 ≤ ⌊2 * a / b⌋)%Z.
 Proof.
-  intros a b [H H0].
-  assert (0 < a)%Z as H1 by eauto using integers.lt_trans.
+  intros a b H H0.
   apply IZQ_le, floor_upper.
   rewrite inv_div; auto using (pos_ne_0 ℤ_order).
   apply (mul_nonneg_nonneg ℚ_ring_order); simpl; fold le.
@@ -1439,10 +1439,12 @@ Qed.
 
 Definition QR_ε_exponent (a b : Z) : N.
 Proof.
-  destruct (excluded_middle_informative (0 < b < a)%Z) as [H | H].
-  - apply QR_epsilon_construction, le_def in H.
-    destruct (constructive_indefinite_description _ H) as [c H0].
-    exact c.
+  destruct (excluded_middle_informative (0 < a)%Z) as [H | H].
+  - destruct (excluded_middle_informative (0 < b)%Z) as [H0 | H0].
+    + eapply QR_epsilon_construction, le_def in H0; try apply H.
+      destruct (constructive_indefinite_description _ H0) as [c H1].
+      exact c.
+    + exact 0%N.
   - exact 0%N.
 Defined.
 
@@ -1468,18 +1470,18 @@ Qed.
 Definition QR_ε (a b : Z) := ((-(1))^(QR_ε_exponent a b) : Z)%Z.
 
 Theorem division_QR : ∀ a b : Z,
-    (0 < b < a → ∃ q r : Z, 0 ≤ r ≤ ⌊b / 2⌋ ∧ b*q + QR_ε a b * r = a)%Z.
+    (0 < a → 0 < b → ∃ q r : Z, 0 ≤ r ≤ ⌊b / 2⌋ ∧ b*q + QR_ε a b * r = a)%Z.
 Proof.
-  intros a b H.
+  intros a b H H0.
   unfold QR_ε, QR_ε_exponent.
-  destruct excluded_middle_informative; try tauto.
+  repeat destruct excluded_middle_informative; try tauto.
   destruct constructive_indefinite_description.
   rewrite integers.A3 in e.
-  apply division_signed in H as [q [r [[H H0] H1]]].
+  eapply division_signed in H0 as [q [r [[H0 H1] H2]]]; try apply H.
   exists q, r.
   repeat split.
   - now apply IZQ_le.
   - now apply IZQ_le, floor_upper.
   - apply IZQ_eq.
-    now rewrite <-H1, e, <-IZQ_add, <-? IZQ_mul, <-IZQ_pow, <-IZQ_neg.
+    now rewrite <-H2, e, <-IZQ_add, <-? IZQ_mul, <-IZQ_pow, <-IZQ_neg.
 Qed.

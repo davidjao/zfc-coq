@@ -1381,10 +1381,10 @@ Section Modular_arithmetic.
       intros a b [H | [H | H]] [H0 | [H0 | H0]]; subst; split; intros H1;
         try tauto; try now contradiction integers.zero_ne_1;
           try now contradiction one_ne_minus_one;
-          try now contradiction
-              (integral_domains.nontriviality (ℤ_ID prime_modulus));
-          try now contradiction
-              (integral_domains.minus_one_nonzero (integers.ℤ_ID));
+          try now contradiction (integral_domains.nontriviality
+                                   (ℤ_ID prime_modulus));
+          try now contradiction (integral_domains.minus_one_nonzero
+                                   (integers.ℤ_ID));
           try (now contradiction (ordered_rings.one_ne_minus_one ℤ_order));
           try (rewrite <-IZn_neg in H1;
                now contradiction (integral_domains.minus_one_nonzero
@@ -1392,11 +1392,79 @@ Section Modular_arithmetic.
     Qed.
 
     Theorem legendre_mult : ∀ a b : Z_,
-        legendre_symbol (a * b) = ((legendre_symbol a) * (legendre_symbol b))%Z.
+        legendre_symbol (a * b) = (legendre_symbol a * legendre_symbol b)%Z.
     Proof.
       intros a b.
       apply trinary_IZn_eq; auto using trinary_legendre, trinary_mul.
       now rewrite <-IZn_mul, <-? Euler's_Criterion, rings.pow_mul_l.
+    Qed.
+
+    Variable a : N.
+
+    Definition QR_b (l : N) : Z.
+    Proof.
+      destruct (excluded_middle_informative (0 < a * l)%Z) as [H | H].
+      - apply (division_QR (a*l)%Z p) in H.
+        + destruct (constructive_indefinite_description _ H) as [q H0].
+          exact q.
+        + apply odd_prime_positive.
+      - exact 0.
+    Defined.
+
+    Definition QR_r (l : N) : Z.
+    Proof.
+      destruct (excluded_middle_informative (0 < a * l)%Z) as [H | H].
+      - apply (division_QR (a*l)%Z p) in H.
+        + destruct (constructive_indefinite_description _ H) as [q H0].
+          destruct (constructive_indefinite_description _ H0) as [r H1].
+          exact r.
+        + apply odd_prime_positive.
+      - exact 0.
+    Defined.
+
+    Definition QR_ε (l : N) := rationals.QR_ε (a*l)%Z p.
+
+    Theorem modified_division_algorithm :
+      ∀ l : N, (a*l = QR_b l * p + QR_ε l * QR_r l)%Z.
+    Proof.
+      intros l.
+      unfold QR_b, QR_ε, QR_r.
+      destruct excluded_middle_informative.
+      - repeat destruct constructive_indefinite_description.
+        rewrite (integers.M1 x p).
+        intuition.
+      - unfold integers.zero in n0.
+        rewrite INZ_mul, INZ_lt, <-naturals.le_not_gt,
+        ? (mul_0_l ℤ), ? (mul_0_r ℤ), integers.A3 in *.
+        apply INZ_eq, naturals.le_antisymm; auto using zero_le.
+    Qed.
+
+    Theorem QR_r_bound : ∀ l, (0 ≤ QR_r l ≤ # QR)%Z.
+    Proof.
+      intros l.
+      unfold QR_r.
+      destruct excluded_middle_informative.
+      - repeat destruct constructive_indefinite_description.
+        destruct a0 as [[H H0] H1].
+        split; auto.
+        eapply ordered_rings.le_trans; eauto; fold integers.le.
+        apply IZQ_le, floor_lower.
+        unfold rationals.one; fold (IZQ 1).
+        rewrite inv_div, IZQ_add; auto using (zero_ne_2 ℤ_order).
+        apply (mul_denom_l ℚ_order);
+          try apply IZQ_lt, (zero_lt_2 ℤ_order); simpl.
+        rewrite IZQ_mul.
+        apply IZQ_lt.
+        unfold integers.one.
+        rewrite (D1_l ℤ), ? INZ_add, ? INZ_mul, add_1_r, <-size_of_QR,
+        <-Prime_Euler_Phi_Z, <-add_1_r, <-INZ_mul, <-INZ_add;
+          auto using odd_prime_positive.
+        fold integers.one; apply (ordered_rings.lt_shift ℤ_order); simpl.
+        replace (p - 1 + 2 * 1 + - p)%Z with 1%Z by ring.
+        auto using integers.zero_lt_1.
+      - split.
+        + apply le_refl.
+        + apply INZ_le, zero_le.
     Qed.
 
   End Odd_prime_modulus.

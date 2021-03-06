@@ -163,4 +163,16 @@ Section Ordered_field_theorems.
     - auto using (ordered_rings.lt_neq ordered_ring_from_field).
   Qed.
 
+  Theorem mul_denom_l : ∀ a b c, 0 < b → a * b^-1 < c ↔ a < b * c.
+  Proof.
+    intros a b c H.
+    split; intros H0.
+    - rewrite <-(rings.M3 _ a), <-(inv_r _ b), <-rings.M2, (rings.M1 _ _ a);
+        auto using (pos_ne_0 ordered_ring_from_field).
+      apply (O3 ordered_ring_from_field); simpl; auto.
+    - rewrite <-(rings.M3_r _ c), <-(inv_r _ b), rings.M2, (rings.M1 _ c);
+        auto using (pos_ne_0 ordered_ring_from_field).
+      apply (O3_r ordered_ring_from_field); simpl; auto using inv_lt.
+  Qed.
+
 End Ordered_field_theorems.
