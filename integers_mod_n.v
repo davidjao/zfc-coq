@@ -586,10 +586,8 @@ Section Modular_arithmetic.
       exists (1 : Z_).
       rewrite Euler_Phi_unit.
       apply Specify_classification.
-      split; auto using (elts_in_set Z_mod).
       rewrite <-specify_action.
-      exists (1 : Z_).
-      now rewrite M3.
+      auto using (elts_in_set Z_mod), (one_unit ℤ_).
     Qed.
 
     Corollary Euler_Phi_ge_1 : (1 ≤ Euler_Phi)%N.
@@ -786,7 +784,7 @@ Section Modular_arithmetic.
     destruct (excluded_middle_informative (a ∈ QR)).
     - exact 1.
     - destruct (excluded_middle_informative (a ∈ QNR)).
-      + exact (-(1)).
+      + exact (-(1))%Z.
       + exact 0.
   Defined.
 
@@ -840,21 +838,24 @@ Section Modular_arithmetic.
 
     Definition 𝔽 := mkField ℤ_ inv inv_l (Logic.proj2 Z_mod_prime_is_ID).
 
+    Theorem QR_QNR_0 : ∀ a : Z_, a ∉ QR → a ∉ QNR → a = 0.
+    Proof.
+      intros a H H0.
+      apply NNPP.
+      contradict H0.
+      apply nonzero_unit in H0.
+      apply Specify_classification.
+      rewrite <-specify_action.
+      auto using (elts_in_set Z_mod).
+    Qed.
+
     Theorem Euler_Criterion_zero : ∀ a, legendre_symbol a = 0 ↔ a = 0.
     Proof.
       split; unfold legendre_symbol; intros H.
       destruct excluded_middle_informative.
       - contradiction (integers.zero_ne_1).
-      - destruct excluded_middle_informative.
-        + contradiction (minus_one_nonzero 𝔽).
-          simpl.
-          now rewrite <-H, <-Zproj_eq.
-        + apply NNPP.
-          contradict n1.
-          apply nonzero_unit in n1.
-          apply Specify_classification.
-          rewrite <-specify_action.
-          split; auto using (elts_in_set Z_mod).
+      - destruct excluded_middle_informative; auto using QR_QNR_0.
+        contradiction (integral_domains.minus_one_nonzero integers.ℤ_ID).
       - subst; repeat destruct excluded_middle_informative; auto;
           apply Specify_classification in i as [H0 H1];
           rewrite <-(setify_action _ _ H0), <-specify_action in *;
@@ -1057,6 +1058,16 @@ Section Modular_arithmetic.
     Proof.
       eapply integers.lt_trans; eauto.
       apply (ordered_rings.zero_lt_2 ℤ_order).
+    Qed.
+
+    Theorem one_ne_minus_one : (1 : Z_) ≠ ((-(1))%Z : Z_).
+    Proof.
+      intros H.
+      apply IZn_eq, eqm_sym in H.
+      unfold eqm in H.
+      replace (1--(1))%Z with (2%Z) in H by ring.
+      now apply div_le, le_not_gt in H;
+        try apply (ordered_rings.zero_lt_2 ℤ_order).
     Qed.
 
     Theorem number_of_square_roots : ∀ x : Z_,
@@ -1310,12 +1321,9 @@ Section Modular_arithmetic.
       simpl Rset in *.
       rewrite <-(setify_action _ _ H), <-specify_action, <-H2, rings.sub_is_neg,
       ? eval_add, ? eval_neg, ? IRP_1, ? eval_const, ? eval_x_to_n in *.
-      apply (rings.cancellation_add ℤ_), IZn_eq in H1; simpl in H1.
-      rewrite <-Zlift_equiv in H1.
-      unfold eqm in H1.
-      replace (1--(1))%Z with (2%Z) in H1 by ring.
-      now apply div_le, le_not_gt in H1;
-        try apply (ordered_rings.zero_lt_2 ℤ_order).
+      apply (rings.cancellation_add ℤ_) in H1; simpl in H1.
+      contradiction one_ne_minus_one.
+      now rewrite <-H1, IZn_neg.
     Qed.
 
     Theorem Euler_Criterion_QNR :
@@ -1337,19 +1345,58 @@ Section Modular_arithmetic.
     Proof.
       intros a.
       unfold legendre_symbol.
-      repeat destruct excluded_middle_informative.
-      - now apply Euler_Criterion_QR.
-      - rewrite <-Zproj_eq, IZn_neg.
-        now apply Euler_Criterion_QNR.
-      - destruct (classic (a = 0)) as [H | H]; subst.
-        + rewrite rings.pow_0_l; auto.
-          intros H.
-          contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
-          now rewrite size_of_QR, H, naturals.mul_0_r.
-        + apply nonzero_unit in H; auto.
-          contradict n1.
-          apply Specify_classification.
-          rewrite <-specify_action; auto using (elts_in_set Z_mod).
+      repeat destruct excluded_middle_informative;
+        auto using Euler_Criterion_QR, Euler_Criterion_QNR.
+      destruct (classic (a = 0)) as [H | H]; subst.
+      - rewrite rings.pow_0_l; auto.
+        intros H.
+        contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
+        now rewrite size_of_QR, H, naturals.mul_0_r.
+      - contradict H.
+        now apply QR_QNR_0.
+    Qed.
+
+    Definition trinary_value (a : Z) := a = 0 ∨ a = 1 ∨ a = (-(1))%Z.
+
+    Lemma trinary_legendre : ∀ a, trinary_value (legendre_symbol a).
+    Proof.
+      intros a.
+      unfold legendre_symbol, trinary_value.
+      repeat destruct excluded_middle_informative; tauto.
+    Qed.
+
+    Lemma trinary_mul :
+      ∀ a b, trinary_value a → trinary_value b → trinary_value (a*b).
+    Proof.
+      unfold trinary_value.
+      intros a b [H | [H | H]] [H0 | [H0 | H0]]; subst;
+        rewrite ? (mul_0_l ℤ), ? (mul_0_r ℤ), ? integers.M3,
+        ? (rings.mul_neg_neg ℤ), ? (M3_r ℤ); auto.
+    Qed.
+
+    Theorem trinary_IZn_eq : ∀ a b,
+        trinary_value a → trinary_value b → (a : Z_) = (b : Z_) ↔ a = b.
+    Proof.
+      unfold trinary_value.
+      intros a b [H | [H | H]] [H0 | [H0 | H0]]; subst; split; intros H1;
+        try tauto; try now contradiction integers.zero_ne_1;
+          try now contradiction one_ne_minus_one;
+          try now contradiction
+              (integral_domains.nontriviality (ℤ_ID prime_modulus));
+          try now contradiction
+              (integral_domains.minus_one_nonzero (integers.ℤ_ID));
+          try (now contradiction (ordered_rings.one_ne_minus_one ℤ_order));
+          try (rewrite <-IZn_neg in H1;
+               now contradiction (integral_domains.minus_one_nonzero
+                                    (ℤ_ID prime_modulus))).
+    Qed.
+
+    Theorem legendre_mult : ∀ a b : Z_,
+        legendre_symbol (a * b) = ((legendre_symbol a) * (legendre_symbol b))%Z.
+    Proof.
+      intros a b.
+      apply trinary_IZn_eq; auto using trinary_legendre, trinary_mul.
+      now rewrite <-IZn_mul, <-? Euler's_Criterion, rings.pow_mul_l.
     Qed.
 
   End Odd_prime_modulus.

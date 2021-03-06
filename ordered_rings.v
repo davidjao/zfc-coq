@@ -546,4 +546,11 @@ Section Ordered_ring_theorems.
     contradiction (lt_irrefl 0).
   Qed.
 
+  Theorem one_ne_minus_one : 1 ≠ -(1).
+  Proof.
+    intros H.
+    contradiction zero_ne_2.
+    now rewrite H, A1, A4 at 1.
+  Qed.
+
 End Ordered_ring_theorems.

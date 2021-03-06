@@ -1437,7 +1437,7 @@ Proof.
   - now apply or_introl, (inv_lt ℚ_order), IZQ_lt.
 Qed.
 
-Definition QR_epsilon (a b : Z) : N.
+Definition QR_ε_exponent (a b : Z) : N.
 Proof.
   destruct (excluded_middle_informative (0 < b < a)%Z) as [H | H].
   - apply QR_epsilon_construction, le_def in H.
@@ -1446,7 +1446,7 @@ Proof.
   - exact 0%N.
 Defined.
 
-Theorem IZQ_pow : ∀ (a : Z) (n : N), ((rings.pow ℤ a n : Z) : Q) = a^n.
+Theorem IZQ_pow : ∀ (a : Z) (n : N), a^n = (a^n : Z)%Z.
 Proof.
   intros a n.
   destruct (classic (a = 0%Z)); subst.
@@ -1458,22 +1458,20 @@ Proof.
       now apply INZ_eq. }
   induction n using Induction.
   - now rewrite pow_0_r, rings.pow_0_r.
-  - rewrite pow_succ_r, <-add_1_r, <-INZ_add.
-    unfold pow.
-    rewrite pow_add_r, pow_1_r, <-IZQ_mul, <-pow_wf, IHn.
-    + unfold pow_N, pow.
-      now rewrite <-pow_wf.
-    + contradict H.
-      now apply IZQ_eq.
+  - unfold pow in *.
+    rewrite pow_succ_r, <-add_1_r, <-INZ_add, pow_add_r, pow_1_r,
+    <-IZQ_mul, <-pow_wf, <-IHn, <-pow_wf; auto.
+    contradict H.
+    now apply IZQ_eq.
 Qed.
 
+Definition QR_ε (a b : Z) := ((-(1))^(QR_ε_exponent a b) : Z)%Z.
+
 Theorem division_QR : ∀ a b : Z,
-    (0 < b < a →
-     ∃ q r : Z,
-       0 ≤ r ≤ ⌊b / 2⌋ ∧ b*q + (rings.pow ℤ (-(1)) (QR_epsilon a b)) * r = a)%Z.
+    (0 < b < a → ∃ q r : Z, 0 ≤ r ≤ ⌊b / 2⌋ ∧ b*q + QR_ε a b * r = a)%Z.
 Proof.
   intros a b H.
-  unfold QR_epsilon.
+  unfold QR_ε, QR_ε_exponent.
   destruct excluded_middle_informative; try tauto.
   destruct constructive_indefinite_description.
   rewrite integers.A3 in e.
@@ -1483,14 +1481,5 @@ Proof.
   - now apply IZQ_le.
   - now apply IZQ_le, floor_upper.
   - apply IZQ_eq.
-    rewrite <-H1, <-IZQ_add, <-IZQ_mul.
-    f_equal.
-    unfold pow.
-    rewrite e, <-pow_wf, <-IZQ_mul.
-    f_equal.
-    rewrite IZQ_pow.
-    unfold pow.
-    rewrite <-pow_wf.
-    f_equal.
-    now rewrite <-IZQ_neg.
+    now rewrite <-H1, e, <-IZQ_add, <-? IZQ_mul, <-IZQ_pow, <-IZQ_neg.
 Qed.

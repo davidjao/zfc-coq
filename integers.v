@@ -289,6 +289,7 @@ Definition ℤ := mkRing _ zero one add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
 
 Add Ring integer_ring_raw : (ringify ℤ).
 Add Ring integer_ring : (ringify ℤ : ring_theory 0 1 add mul sub neg eq).
+Infix "^" := (rings.pow ℤ) : Z_scope.
 
 Definition lt : Z → Z → Prop.
 Proof.
