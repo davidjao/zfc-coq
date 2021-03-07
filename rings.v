@@ -257,6 +257,11 @@ Section Ring_theorems.
     split; eapply div_trans; eauto.
   Qed.
 
+  Add Parametric Relation : (elts (Rset Ring)) assoc
+      reflexivity proved by (assoc_refl)
+      symmetry proved by (assoc_sym)
+      transitivity proved by (assoc_trans) as assoc_equivalence.
+
   Theorem assoc_zero : ∀ a, a ~ 0 ↔ a = 0.
   Proof.
     split; intros H; subst; auto using assoc_refl.
@@ -404,7 +409,7 @@ Section Ring_theorems.
     - rewrite sum_succ, IHd; auto using zero_le; ring.
   Qed.
 
-  Theorem unit_prod_closure :
+  Theorem unit_prod_closure_0 :
     ∀ n f, (∀ i, 0 ≤ i ≤ n → unit (f i)) → unit (prod f 0 n).
   Proof.
     induction n using Induction; intros f H.
@@ -415,6 +420,22 @@ Section Ring_theorems.
       apply IHn.
       intros i [H0 H1].
       eauto using le_trans, le_succ.
+  Qed.
+
+  Theorem unit_prod_closure :
+    ∀ a b f, (∀ i, a ≤ i ≤ b → unit (f i)) → unit (prod f a b).
+  Proof.
+    intros a b f H.
+    destruct (classic (a ≤ b)%N) as [[c H0] | H0]; subst.
+    2: { unfold prod, iterate_with_bounds.
+         destruct excluded_middle_informative; auto using one_unit; tauto. }
+    unfold prod.
+    rewrite iterate_shift.
+    apply unit_prod_closure_0.
+    intros i H0.
+    apply H.
+    rewrite <-(add_0_l a), ? (add_comm a) at 1.
+    split; apply O1_le; intuition.
   Qed.
 
   Definition pow a n := iterated_op _ (mul _) 1 (λ x, a) n.
@@ -1001,7 +1022,7 @@ Section Ring_theorems.
       now apply lt_irrefl in H0.
   Qed.
 
-  Theorem product_swap : ∀ n f i j,
+  Theorem product_swap_0 : ∀ n f i j,
       0 ≤ i ≤ n → 0 ≤ j ≤ n → prod (swap _ _ i j f) 0 n = prod f 0 n.
   Proof.
     induction n using Induction.
@@ -1027,7 +1048,41 @@ Section Ring_theorems.
     - now rewrite swap_refl.
   Qed.
 
-  Theorem product_bijection : ∀ n f g,
+  Theorem product_swap : ∀ a b f i j,
+      a ≤ i ≤ b → a ≤ j ≤ b → prod (swap _ _ i j f) a b = prod f a b.
+  Proof.
+    intros a b f i j [H H0] [H1 H2].
+    unfold prod.
+    destruct (classic (a ≤ b)) as [[c H3] | H3]; subst.
+    2: { unfold iterate_with_bounds.
+         destruct excluded_middle_informative; tauto. }
+    rewrite ? iterate_shift.
+    fold (prod (λ n : N, f (n + a)%N) 0 c).
+    destruct H as [x H]; subst.
+    destruct H1 as [y H1]; subst.
+    rewrite ? (add_comm a) in *.
+    apply O1_le_iff in H0, H2.
+    erewrite <-product_swap_0.
+    instantiate (2 := x).
+    instantiate (1 := y).
+    2: { split; eauto using zero_le. }
+    2: { split; eauto using zero_le. }
+    apply iterate_extensionality.
+    intros k H.
+    unfold swap.
+    repeat destruct excluded_middle_informative; auto; try now subst.
+    - contradict n.
+      rewrite ? (add_comm _ a) in e.
+      now apply naturals.cancellation_add in e.
+    - contradict n.
+      rewrite ? (add_comm _ a) in e.
+      now apply naturals.cancellation_add in e.
+    - contradict n1.
+      rewrite ? (add_comm _ a) in e.
+      now apply naturals.cancellation_add in e.
+  Qed.
+
+  Theorem product_bijection_0 : ∀ n f g,
       (∀ j, 0 ≤ j ≤ n → exists ! i, 0 ≤ i ≤ n ∧ f i = g j) →
       (∀ i, 0 ≤ i ≤ n → exists ! j, 0 ≤ j ≤ n ∧ f i = g j) →
       prod f 0 n = prod g 0 n.
@@ -1079,7 +1134,7 @@ Section Ring_theorems.
           eauto using le_trans, le_succ. }
     destruct H1 as [H1 H5].
     apply le_lt_or_eq in H5 as [H5 | H5]; try tauto.
-    rewrite <-(product_swap _ f k (S n)); repeat split;
+    rewrite <-(product_swap _ _ f k (S n)); repeat split;
       eauto using le_refl, zero_le.
     2: { eapply lt_le_trans; eauto using le_refl. }
     rewrite ? prod_succ; auto using zero_le.
@@ -1160,6 +1215,85 @@ Section Ring_theorems.
           repeat split; eauto using le_trans, le_succ.
           repeat destruct excluded_middle_informative; subst; try tauto.
           now apply not_succ_le in H7.
+  Qed.
+
+  Theorem product_bijection : ∀ a b f g,
+      (∀ j, a ≤ j ≤ b → exists ! i, a ≤ i ≤ b ∧ f i = g j) →
+      (∀ i, a ≤ i ≤ b → exists ! j, a ≤ j ≤ b ∧ f i = g j) →
+      prod f a b = prod g a b.
+  Proof.
+    intros a b f g H H0.
+    unfold prod.
+    destruct (classic (a ≤ b)) as [[c H1] | H1]; subst.
+    2: { unfold iterate_with_bounds.
+         destruct excluded_middle_informative; tauto. }
+    rewrite ? iterate_shift.
+    apply product_bijection_0.
+    - intros j [H1 H2].
+      destruct (H (j + a)%N) as [y [[[[z H3] H4] H5] H6]]; subst.
+      split.
+      + rewrite <-(add_0_l a) at 1.
+        auto using O1_le.
+      + rewrite (add_comm a).
+        auto using O1_le.
+      + exists z; rewrite ? (add_comm a) in *.
+        repeat split; auto using zero_le.
+        * now apply O1_le_iff in H4.
+        * intros x' [[H3 H7] H8].
+          apply (naturals.cancellation_add a).
+          rewrite ? (add_comm a) in *.
+          apply H6.
+          repeat split; auto using O1_le.
+          exists x'.
+          now rewrite add_comm.
+    - intros i [H1 H2].
+      destruct (H0 (i + a)%N) as [y [[[[z H3] H4] H5] H6]]; subst.
+      split.
+      + rewrite <-(add_0_l a) at 1.
+        auto using O1_le.
+      + rewrite (add_comm a).
+        auto using O1_le.
+      + exists z; rewrite ? (add_comm a) in *.
+        repeat split; auto using zero_le.
+        * now apply O1_le_iff in H4.
+        * intros x' [[H3 H7] H8].
+          apply (naturals.cancellation_add a).
+          rewrite ? (add_comm a) in *.
+          apply H6.
+          repeat split; auto using O1_le.
+          exists x'.
+          now rewrite add_comm.
+  Qed.
+
+  Theorem prod_sum_0 :
+    ∀ k x f, prod (λ n, x^(f n)) 0 k = x^(sum_N (λ n, f n) 0 k).
+  Proof.
+    intros k x f.
+    induction k using Induction.
+    - unfold prod, sum_N.
+      now rewrite ? iterate_0.
+    - rewrite prod_succ, sum_N_succ, IHk, pow_add_r; auto using zero_le.
+  Qed.
+
+  Theorem prod_sum :
+    ∀ a b x f, prod (λ n, x^(f n)) a b = x^(sum_N (λ n, f n) a b).
+  Proof.
+    intros a b x f.
+    destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
+    2: { unfold prod, sum_N, iterate_with_bounds.
+         destruct excluded_middle_informative; try tauto.
+         now rewrite pow_0_r. }
+    unfold prod, sum_N.
+    rewrite ? iterate_shift.
+    now apply prod_sum_0.
+  Qed.
+
+  Theorem pow_neg_1_l : ∀ n, (-(1))^n = 1 ∨ (-(1))^n = -(1).
+  Proof.
+    induction n using Induction.
+    - left.
+      now rewrite pow_0_r.
+    - destruct IHn as [H | H]; [ right | left ]; rewrite pow_succ_r, H; ring.
   Qed.
 
 End Ring_theorems.

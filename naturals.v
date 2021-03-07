@@ -1339,6 +1339,13 @@ Proof.
   now rewrite add_1_r.
 Qed.
 
+Theorem one_le_succ : ∀ n, 1 ≤ S n.
+Proof.
+  intros n.
+  exists n.
+  now rewrite add_comm, add_1_r.
+Qed.
+
 Theorem Strong_Induction : ∀ P : N → Prop,
     (∀ n : N, (∀ k : N, k < n → P k) → P n) → ∀ n : N, P n.
 Proof.

@@ -1610,7 +1610,9 @@ Qed.
 Section Restrictions.
 
   Variable f : function.
-  Variable X : set.
+  Variable X Y : set.
+
+  Hypothesis image_Y : image f ⊂ Y.
 
   Definition restriction_set :=
     {x in graph f | proj1 (domain f) (range f) x ∈ X}.
@@ -1677,6 +1679,50 @@ Section Restrictions.
     - apply restriction_subset, Graph_classification.
       exists x.
       now rewrite restriction_domain, Pairwise_intersection_classification.
+  Qed.
+
+  Theorem restriction_Y_is_function : is_function (graph f) (domain f) Y.
+  Proof.
+    split; intros z H.
+    - apply Graph_classification in H as [a [H H0]]; subst.
+      apply Product_classification.
+      exists a, (f a).
+      eauto using function_maps_domain_to_image.
+    - exists (f z).
+      repeat split.
+      + eauto using function_maps_domain_to_image.
+      + apply Graph_classification; eauto.
+      + intros x' [H0 H1].
+        apply Graph_classification in H1 as [a [H1 H2]].
+        apply Ordered_pair_iff in H2 as [H2 H3]; now subst.
+  Qed.
+
+  Definition restriction_Y := mkFunc _ _ _ restriction_Y_is_function.
+
+  Theorem restriction_Y_domain : domain restriction_Y = domain f.
+  Proof.
+    auto.
+  Qed.
+
+  Theorem restriction_Y_range : range restriction_Y = Y.
+  Proof.
+    auto.
+  Qed.
+
+  Theorem restriction_Y_graph : graph restriction_Y = graph f.
+  Proof.
+    auto.
+  Qed.
+
+  Theorem restriction_Y_action : ∀ a, a ∈ domain f → restriction_Y a = f a.
+  Proof.
+    intros a H.
+    apply function_maps_domain_to_graph; auto.
+    - rewrite restriction_Y_range.
+      auto using function_maps_domain_to_image.
+    - rewrite restriction_Y_graph.
+      apply function_maps_domain_to_graph;
+        auto using function_maps_domain_to_range.
   Qed.
 
 End Restrictions.

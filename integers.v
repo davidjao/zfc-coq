@@ -603,6 +603,32 @@ Proof.
   apply assoc_pm; split; auto using (div_1_l ℤ) with Z.
 Qed.
 
+Theorem pm_refl : ∀ a, a = ± a.
+Proof.
+  intros a.
+  now left.
+Qed.
+
+Theorem pm_sym : ∀ a b, a = ± b → b = ± a.
+Proof.
+  intros a b [H | H].
+  - now left.
+  - right.
+    ring [H].
+Qed.
+
+Theorem pm_trans : ∀ a b c, a = ± b → b = ± c → a = ± c.
+Proof.
+  intros a b c [H | H] [H0 | H0]; subst; intuition.
+  left.
+  ring.
+Qed.
+
+Add Parametric Relation : Z pm
+      reflexivity proved by (pm_refl)
+      symmetry proved by (pm_sym)
+      transitivity proved by (pm_trans) as pm_equivalence.
+
 Theorem division_algorithm_N : ∀ a b,
     0 < a → 0 < b → ∃ q r, b * q + r = a ∧ 0 ≤ r < b.
 Proof.
@@ -1262,6 +1288,36 @@ Section IZR.
     - contradict n0.
       left; simpl.
       now apply (lt_neg_0 ℤ_order), (lt_not_ge ℤ_order).
+  Qed.
+
+  Theorem INZ_pow : ∀ a b : N, ((a : Z)^b) = ((a^b)%N : Z).
+  Proof.
+    intros a b.
+    induction b using Induction.
+    - now rewrite pow_0_r, naturals.pow_0_r.
+    - now rewrite pow_succ_r, naturals.pow_succ_r, IHb, INZ_mul.
+  Qed.
+
+  Theorem INZ_prod_0 : ∀ m (f : N → N),
+      (prod ℤ (λ n, f n : Z) 0 m : Z) = prod_N f 0 m.
+  Proof.
+    intros m f.
+    induction m using Induction.
+    - unfold prod, prod_N.
+      now rewrite ? iterate_0.
+    - rewrite prod_succ, prod_N_succ, IHm, INZ_mul; auto using zero_le.
+  Qed.
+
+  Theorem INZ_prod : ∀ a b (f : N → N),
+      (prod ℤ (λ n, f n : Z) a b : Z) = prod_N f a b.
+  Proof.
+    intros a b f.
+    destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
+    2: { unfold prod, prod_N, iterate_with_bounds.
+         repeat destruct excluded_middle_informative; tauto. }
+    - unfold prod, prod_N.
+      rewrite ? iterate_shift.
+      apply INZ_prod_0.
   Qed.
 
 End IZR.

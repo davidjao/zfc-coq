@@ -285,6 +285,11 @@ Section Modular_arithmetic.
     now rewrite <-IZn_eq, <-Zproj_eq.
   Qed.
 
+  Theorem modulus_zero : (n : Z_) = 0.
+  Proof.
+    apply IZn_eq, eqn_zero.
+  Qed.
+
   Theorem A1 : ∀ a b : Z_, a + b = b + a.
   Proof.
     intros a b.
@@ -431,6 +436,14 @@ Section Modular_arithmetic.
     intros a b.
     apply IZn_eq.
     now rewrite <-? Zlift_equiv.
+  Qed.
+
+  Theorem IZn_pow : ∀ (a : Z) k, ((a : Z_)^k) = ((a^k : Z)%Z : Z_).
+  Proof.
+    intros a k.
+    induction k using Induction.
+    - now rewrite ? rings.pow_0_r.
+    - now rewrite ? rings.pow_succ_r, IHk, IZn_mul.
   Qed.
 
   Section Positive_modulus.
@@ -1163,6 +1176,18 @@ Section Modular_arithmetic.
         auto using odd_prime_positive, size_of_QR_in_Z.
     Qed.
 
+    Theorem size_QR_ge_1 : (1 ≤ # QR)%N.
+    Proof.
+      destruct (classic (# QR = 0%N)) as [H | H].
+      - pose proof size_of_QR.
+        rewrite H in H0.
+        contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
+        now rewrite H0, naturals.mul_0_r.
+      - apply succ_0 in H as [m H].
+        rewrite H.
+        auto using one_le_succ.
+    Qed.
+
     Theorem size_QR_QNR : # QR = # QNR.
     Proof.
       rewrite QNR_QR_c, complement_card;
@@ -1391,6 +1416,13 @@ Section Modular_arithmetic.
                                     (ℤ_ID prime_modulus))).
     Qed.
 
+    Theorem trinary_pow_neg_1_l : ∀ k, trinary_value ((-(1))^k)%Z.
+    Proof.
+      intros k.
+      unfold trinary_value.
+      destruct (pow_neg_1_l ℤ k) as [H | H]; simpl in *; rewrite H; intuition.
+    Qed.
+
     Theorem legendre_mult : ∀ a b : Z_,
         legendre_symbol (a * b) = (legendre_symbol a * legendre_symbol b)%Z.
     Proof.
@@ -1400,6 +1432,7 @@ Section Modular_arithmetic.
     Qed.
 
     Variable a : N.
+    Hypothesis p_ndiv_a : ¬ p｜a.
 
     Definition QR_b (l : N) : Z.
     Proof.
@@ -1423,6 +1456,19 @@ Section Modular_arithmetic.
     Defined.
 
     Definition QR_ε (l : N) := rationals.QR_ε (a*l)%Z p.
+
+    Theorem QR_ε_values : ∀ l, QR_ε l = ± 1.
+    Proof.
+      intros l.
+      unfold QR_ε, rationals.QR_ε.
+      apply (pow_neg_1_l ℤ).
+    Qed.
+
+    Theorem QR_ε_trinary : ∀ l, trinary_value (QR_ε l).
+    Proof.
+      intros l.
+      destruct (QR_ε_values l) as [H | H]; right; intuition.
+    Qed.
 
     Theorem modified_division_algorithm :
       ∀ l : N, (a*l = QR_b l * p + QR_ε l * QR_r l)%Z.
@@ -1465,6 +1511,386 @@ Section Modular_arithmetic.
       - split.
         + apply le_refl.
         + apply INZ_le, zero_le.
+    Qed.
+
+    Definition QR_r_N : N → N.
+    Proof.
+      intros l.
+      destruct (QR_r_bound l) as [H H0].
+      rewrite le_def in H.
+      destruct (constructive_indefinite_description _ H) as [r H1].
+      exact r.
+    Defined.
+
+    Lemma QR_r_N_action : ∀ l, QR_r l = QR_r_N l.
+    Proof.
+      intros l.
+      unfold QR_r_N.
+      destruct QR_r_bound, constructive_indefinite_description.
+      now rewrite integers.A3 in e.
+    Qed.
+
+    Definition QR_r_function := sets.functionify ω ω QR_r_N.
+
+    Lemma QR_lt_p : ¬ p ≤ # QR.
+    Proof.
+      apply lt_not_ge.
+      rewrite lt_def.
+      exists ((# QR) + 1)%N.
+      split.
+      + rewrite add_1_r.
+        intros H4.
+        now apply INZ_eq, PA4 in H4.
+      + rewrite INZ_add, add_assoc, <-mul_2_r, mul_comm, <-size_of_QR,
+        (Prime_Euler_Phi prime_modulus odd_prime_positive), <-INZ_add,
+        <-INZ_sub; rewrite  <-modulus_in_Z; try ring.
+        apply lt_0_le_1, odd_prime_positive.
+    Qed.
+
+    Theorem QR_r_nonzero : ∀ l, (1 ≤ l ≤ # QR)%N → 1 ≤ QR_r l.
+    Proof.
+      intros l [H H0].
+      destruct (QR_r_bound l) as [[H1 | H1] H2]; try now apply lt_0_le_1.
+      assert (p｜a*l) as H3.
+      { rewrite modified_division_algorithm, <-H1.
+        apply div_add; fold divide.
+        - apply div_mul_l, div_refl.
+        - apply div_mul_l, div_0_r. }
+      apply Euclid's_lemma in H3 as [H3 | H3]; try now intuition.
+      apply INZ_le in H, H0.
+      apply div_le in H3.
+      - contradiction QR_lt_p.
+        eapply (ordered_rings.le_trans ℤ_order); eauto.
+      - now apply lt_0_le_1.
+    Qed.
+
+    Theorem QR_r_restriction_construction :
+      (image (restriction QR_r_function {x of type ω | 1 ≤ x ≤ # QR}) ⊂
+             {x of type ω | 1 ≤ x ≤ # QR})%N.
+    Proof.
+      intros z H.
+      apply Specify_classification in H as [H [x [H0 H1]]].
+      rewrite restriction_domain, restriction_range, <-restriction_action,
+      Pairwise_intersection_classification in *; auto.
+      destruct H0 as [H0 H2].
+      apply Specify_classification in H0 as [H0 H3].
+      set (ξ := exist _ _ H0 : N).
+      rewrite <-(setify_action _ _ H0), <-specify_action in *.
+      fold ξ in H1, H2, H3.
+      unfold QR_r_function in *.
+      rewrite sets.functionify_domain, sets.functionify_range,
+      ? functionify_action in *.
+      unfold QR_r_N in H1.
+      destruct QR_r_bound, constructive_indefinite_description as [z'].
+      rewrite integers.A3 in e.
+      subst.
+      apply Specify_classification.
+      rewrite <-specify_action.
+      repeat split; auto using N_in_ω; apply INZ_le; destruct e;
+        auto using QR_r_nonzero.
+    Qed.
+
+    Definition QR_r_res := restriction_Y _ _ QR_r_restriction_construction.
+
+    Theorem QR_r_res_domain : domain QR_r_res = {x of type ω | 1 ≤ x ≤ # QR}%N.
+    Proof.
+      unfold QR_r_res, QR_r_function.
+      rewrite restriction_Y_domain, restriction_domain, sets.functionify_domain.
+      apply Intersection_subset.
+      intros x H.
+      now apply Specify_classification in H.
+    Qed.
+
+    Theorem QR_r_res_action : ∀ i, (1 ≤ i ≤ # QR)%N → QR_r_res i = QR_r_N i.
+    Proof.
+      intros i H.
+      assert (i ∈ {x of type ω | (1 ≤ x ≤ # QR)%N} ∩ domain QR_r_function).
+      { apply Pairwise_intersection_classification.
+        split.
+        - apply Specify_classification.
+          rewrite <-specify_action.
+          split; auto using N_in_ω.
+        - unfold QR_r_function.
+          rewrite sets.functionify_domain.
+          auto using N_in_ω. }
+      unfold QR_r_res.
+      rewrite restriction_Y_action.
+      2: { now rewrite restriction_domain. }
+      rewrite <-restriction_action; auto.
+      unfold QR_r_function.
+      now rewrite functionify_action.
+    Qed.
+
+    Lemma range_constraint : ∀ i j,
+        1 ≤ i ≤ # QR → 1 ≤ j ≤ # QR → (i : Z_) = (j : Z_) → i = j.
+    Proof.
+      intros i j [H H0] [H1 H2] H3.
+      apply injective_mod_n_on_interval; try now apply IZn_eq.
+      - split.
+        eapply (ordered_rings.le_trans ℤ_order); eauto.
+        + apply or_introl, zero_lt_1.
+        + eapply (ordered_rings.le_lt_trans ℤ_order); eauto.
+          apply lt_not_ge, QR_lt_p.
+      - split.
+        eapply (ordered_rings.le_trans ℤ_order); eauto.
+        + apply or_introl, zero_lt_1.
+        + eapply (ordered_rings.le_lt_trans ℤ_order); eauto.
+          apply lt_not_ge, QR_lt_p.
+    Qed.
+
+    Lemma range_constraint_neg : ∀ i j,
+        1 ≤ i ≤ # QR → 1 ≤ j ≤ # QR → (i : Z_) ≠ -(j : Z_).
+    Proof.
+      intros i j [H H0] [H1 H2] H3.
+      Set Printing Coercions.
+      assert (i+j = 0) as H4.
+      { now rewrite H3, A1, A4. }
+      rewrite IZn_add in H4.
+      apply IZn_eq, injective_mod_n_on_interval in H4.
+      - contradiction (ordered_rings.lt_irrefl ℤ_order 0); simpl.
+        rewrite <-H4 at 2.
+        apply (ordered_rings.O0 ℤ_order); simpl; now apply lt_0_le_1.
+      - split.
+        + left.
+          apply (ordered_rings.O0 ℤ_order); simpl; now apply lt_0_le_1.
+        + eapply (ordered_rings.le_lt_trans ℤ_order);
+            try (eapply le_cross_add; eauto); simpl.
+          rewrite <-(integers.M3 (# QR)), <-integers.D1,
+          <-size_of_QR_in_Z, lt_def.
+          exists 1%N.
+          split.
+          * intros H5.
+            now apply INZ_eq, PA4 in H5.
+          * fold integers.one.
+            ring.
+      - split.
+        + apply le_refl.
+        + apply odd_prime_positive.
+    Qed.
+
+    Theorem QR_r_res_bijective : bijective QR_r_res.
+    Proof.
+      pose proof QR_r_res_domain as Q.
+      unfold QR_r_res in Q.
+      rewrite restriction_Y_domain in Q.
+      apply finite_set_injection_is_bijection; try rewrite QR_r_res_domain.
+      { apply (subsets_of_finites_are_finite _ (S (# QR)));
+          auto using naturals_are_finite.
+        intros x H.
+        apply Specify_classification in H as [H H0].
+        set (ξ := exist _ _ H : N).
+        rewrite <-(setify_action _ _ H), <-specify_action in *.
+        fold ξ in H0 |-*.
+        destruct H0 as [H0 H1].
+        now apply lt_is_in, le_lt_succ. }
+      { unfold QR_r_res, QR_r_function.
+        now rewrite restriction_Y_range. }
+      apply Injective_classification.
+      intros x y H H0 H1.
+      rewrite QR_r_res_domain in *.
+      unfold QR_r_res in *.
+      rewrite ? restriction_Y_action in *; try congruence.
+      rewrite restriction_domain in Q.
+      rewrite <-? restriction_action in *; try congruence.
+      clear Q.
+      unfold QR_r_function in *.
+      apply Specify_classification in H as [H H2], H0 as [H0 H3].
+      set (ξ := exist _ _ H : N).
+      set (γ := exist _ _ H0 : N).
+      rewrite <-(setify_action _ _ H), <-(setify_action _ _ H0),
+      <-? specify_action, ? sets.functionify_action in *.
+      fold ξ γ in H1, H2, H3 |-*.
+      unfold QR_r_N in *.
+      repeat destruct QR_r_bound.
+      destruct constructive_indefinite_description as [r_x].
+      destruct constructive_indefinite_description as [r_y].
+      rewrite integers.A3 in e, e0.
+      apply set_proj_injective in H1.
+      assert ((a*ξ : Z_) = (a*γ : Z_) ∨ (a*ξ : Z_) = -(a*γ : Z_)) as [H4 | H4];
+        destruct H2, H3; rewrite <-INZ_le in *.
+      { rewrite ? IZn_mul, ? modified_division_algorithm, ? e, ? e0,
+        <-? IZn_add, <-? IZn_mul, modulus_zero, ? (rings.mul_0_r ℤ_), ? A3,
+        ? IZn_mul.
+        destruct (QR_ε_values ξ) as [H7 | H7], (QR_ε_values γ) as [H8 | H8];
+          rewrite H7, H8; try (left; congruence); right; subst; rewrite IZn_neg;
+            apply IZn_eq; now ring_simplify. }
+      - apply (cancellation_mul_l (ℤ_ID prime_modulus)), range_constraint in H4;
+          auto.
+        + apply INZ_eq in H4; congruence.
+        + intros H7.
+          apply IZn_eq, eqm_sym in H7.
+          unfold eqm in H7.
+          now ring_simplify in H7.
+      - rewrite <-(mul_neg_1_r ℤ_), <-M2 in H4.
+        apply (cancellation_mul_l (ℤ_ID prime_modulus)) in H4.
+        + rewrite (mul_neg_1_r ℤ_) in H4.
+          apply range_constraint_neg in H4; intuition.
+        + intros H7.
+          apply IZn_eq, eqm_sym in H7.
+          unfold eqm in H7.
+          now ring_simplify in H7.
+    Qed.
+
+    Lemma Gauss_Lemma_helper :
+      prod ℤ_ (λ n, n : Z_) 1 (# QR) = prod ℤ_ (λ n, (QR_r n) : Z_) 1 (# QR).
+    Proof.
+      apply product_bijection.
+      - intros j H.
+        exists (QR_r_N j).
+        apply QR_r_nonzero in H.
+        pose proof (QR_r_bound j) as [H0 H1].
+        repeat split.
+        + apply INZ_le.
+          now rewrite <-QR_r_N_action.
+        + apply INZ_le.
+          now rewrite <-QR_r_N_action.
+        + now rewrite <-QR_r_N_action.
+        + intros x' [[H2 H3] H4].
+          apply INZ_eq.
+          rewrite <-QR_r_N_action.
+          apply IZn_eq, injective_mod_n_on_interval in H4; repeat split; auto.
+          * left.
+            now apply lt_0_le_1, INZ_le.
+          * apply INZ_le in H3.
+            eapply (ordered_rings.le_lt_trans ℤ_order); eauto.
+            apply lt_not_ge, QR_lt_p.
+          * eapply (ordered_rings.le_lt_trans ℤ_order); eauto.
+            apply lt_not_ge, QR_lt_p.
+      - intros i H.
+        assert ((inverse QR_r_res) i ∈ ω).
+        { assert ((range (inverse QR_r_res)) ⊂ ω) as H0.
+          { rewrite inverse_range; auto using QR_r_res_bijective.
+            unfold QR_r_res, QR_r_function.
+            rewrite restriction_Y_domain, restriction_domain.
+            intros x H0.
+            apply Pairwise_intersection_classification in H0 as [H0 H1].
+            now apply Specify_classification in H0. }
+          apply H0, function_maps_domain_to_range.
+          rewrite inverse_domain; auto using QR_r_res_bijective.
+          unfold QR_r_res.
+          rewrite restriction_Y_range.
+          apply Specify_classification.
+          rewrite <-specify_action.
+          eauto using N_in_ω. }
+        set (η := exist _ _ H0 : N).
+        exists η.
+        split.
+        + assert (1 ≤ η ≤ # QR)%N as H1.
+          { assert (η ∈ range (inverse QR_r_res)) as H1.
+            { unfold η.
+              simpl.
+              apply function_maps_domain_to_range.
+              rewrite inverse_domain; auto using QR_r_res_bijective.
+              unfold QR_r_res.
+              rewrite restriction_Y_range.
+              apply Specify_classification.
+              rewrite <-specify_action.
+              eauto using N_in_ω. }
+            rewrite inverse_range in H1; auto using QR_r_res_bijective.
+            unfold QR_r_res in H1.
+            rewrite restriction_Y_domain in H1.
+            apply Pairwise_intersection_classification in H1 as [H1 H2].
+            apply Specify_classification in H1.
+            now rewrite <-specify_action in H1. }
+          split; auto.
+          rewrite QR_r_N_action.
+          repeat f_equal.
+          apply set_proj_injective.
+          fold (INS (QR_r_N η)).
+          rewrite <-QR_r_res_action; auto.
+          unfold η.
+          simpl.
+          rewrite right_inverse; try rewrite inverse_domain;
+            auto using QR_r_res_bijective.
+          unfold QR_r_res.
+          rewrite restriction_Y_range.
+          apply Specify_classification.
+          rewrite <-specify_action.
+          auto using N_in_ω.
+        + intros x' [H1 H2].
+          apply range_constraint in H2.
+          2: { split; apply INZ_le; intuition. }
+          2: { split.
+               - now apply QR_r_nonzero.
+               - destruct (QR_r_bound x'); auto. }
+          unfold η.
+          rewrite QR_r_N_action in H2.
+          apply INZ_eq, (f_equal INS) in H2.
+          apply set_proj_injective.
+          simpl.
+          rewrite H2, <-QR_r_res_action, left_inverse;
+            auto using QR_r_res_bijective.
+          unfold QR_r_res.
+          rewrite restriction_Y_domain.
+          apply Pairwise_intersection_classification.
+          split.
+          * apply Specify_classification.
+            rewrite <-specify_action.
+            auto using N_in_ω.
+          * unfold QR_r_function.
+            rewrite sets.functionify_domain.
+            auto using N_in_ω.
+    Qed.
+
+    Theorem Gauss's_Lemma_mod_p :
+      (legendre_symbol a : Z_) =
+      ((-(1))^sum_N (λ l : N, QR_ε_exponent (a*l)%Z p) 1 (# QR)).
+    Proof.
+      pose (eq_refl ((a : Z_)^(# QR) * prod ℤ_ (λ n, n : Z_) 1 (# QR))) as H.
+      replace (# QR) with (S ((# QR) - 1))%N in H at 3.
+      2: { rewrite <-add_1_r, add_comm, sub_abab; auto using size_QR_ge_1. }
+      pose (prod_mul ℤ_ (λ n, n : Z_) 1 (# QR) (a : Z_) size_QR_ge_1)
+        as H0; simpl in H0; rewrite H0 in H; clear H0.
+      replace (λ n : N, a * n) with (λ l : N, (QR_ε l * QR_r l)) in H.
+      2: { extensionality l.
+           rewrite ? IZn_mul, modified_division_algorithm.
+           apply IZn_eq.
+           rewrite (n_mod_n_is_0 p) at 2.
+           now rewrite (rings.mul_0_r ℤ), integers.A3. }
+      unfold QR_ε, rationals.QR_ε in H.
+      rewrite Gauss_Lemma_helper, Euler's_Criterion, prod_dist in H.
+      replace (λ l : N, (((-(1))%Z^ QR_ε_exponent (INZ a * INZ l) p)%Z : Z)
+               : Z_) with
+          (λ l : N, (((-(1))^ QR_ε_exponent (INZ a * INZ l) p))) in H.
+      2: { extensionality l.
+           now rewrite <-IZn_pow, IZn_neg. }
+      apply (cancellation_mul_r (ℤ_ID prime_modulus)) in H;
+        try now rewrite H, prod_sum.
+      rewrite <-Gauss_Lemma_helper.
+      apply unit_nonzero, unit_prod_closure.
+      intros i [H0 H1].
+      apply nonzero_unit; auto.
+      intros H2.
+      apply IZn_eq, eqm_sym in H2.
+      unfold eqm in H2.
+      ring_simplify in H2.
+      apply div_le in H2; try now apply lt_0_le_1, INZ_le.
+      apply INZ_le in H1.
+      assert (p ≤ # QR) as H3 by
+            (eapply (ordered_rings.le_trans ℤ_order); eauto).
+      apply le_not_gt in H3; simpl in H3.
+      apply H3.
+      rewrite lt_def.
+      exists ((# QR) + 1)%N.
+      split.
+      + rewrite add_1_r.
+        intros H4.
+        now apply INZ_eq, PA4 in H4.
+      + rewrite INZ_add, add_assoc, <-mul_2_r, mul_comm, <-size_of_QR,
+        (Prime_Euler_Phi prime_modulus odd_prime_positive), <-INZ_add,
+        <-INZ_sub; rewrite  <-modulus_in_Z; try ring.
+        apply lt_0_le_1, odd_prime_positive.
+    Qed.
+
+    Theorem Gauss's_Lemma :
+      legendre_symbol a =
+      ((-(1))^sum_N (λ l : N, QR_ε_exponent (a*l)%Z p) 1 (# QR))%Z.
+    Proof.
+      apply trinary_IZn_eq.
+      - apply trinary_legendre.
+      - apply trinary_pow_neg_1_l.
+      - rewrite <-IZn_pow, <-IZn_neg.
+        apply Gauss's_Lemma_mod_p.
     Qed.
 
   End Odd_prime_modulus.
