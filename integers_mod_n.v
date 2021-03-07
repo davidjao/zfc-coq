@@ -1642,7 +1642,6 @@ Section Modular_arithmetic.
         1 ≤ i ≤ # QR → 1 ≤ j ≤ # QR → (i : Z_) ≠ -(j : Z_).
     Proof.
       intros i j [H H0] [H1 H2] H3.
-      Set Printing Coercions.
       assert (i+j = 0) as H4.
       { now rewrite H3, A1, A4. }
       rewrite IZn_add in H4.
@@ -1889,8 +1888,7 @@ Section Modular_arithmetic.
       apply trinary_IZn_eq.
       - apply trinary_legendre.
       - apply trinary_pow_neg_1_l.
-      - rewrite <-IZn_pow, <-IZn_neg.
-        apply Gauss's_Lemma_mod_p.
+      - now rewrite <-IZn_pow, <-IZn_neg, Gauss's_Lemma_mod_p.
     Qed.
 
   End Odd_prime_modulus.
