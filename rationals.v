@@ -956,6 +956,25 @@ Proof.
     now replace (1+-(y+-z))%Z with (z+1+-y)%Z by ring.
 Qed.
 
+Theorem floor_plus_1 : ∀ x, x < ⌊x⌋+1.
+Proof.
+  intros x.
+  unfold floor.
+  now destruct constructive_indefinite_description.
+Qed.
+
+Theorem floor_add_int : ∀ x (z : Z), ⌊z+x⌋ = (z + ⌊x⌋)%Z.
+Proof.
+  intros x z.
+  apply IZQ_eq, (ordered_rings.le_antisymm ℚ_ring_order); fold le.
+  - apply floor_lower.
+    rewrite <-IZQ_add, <-A2.
+    apply O1, floor_plus_1.
+  - apply floor_upper.
+    rewrite <-IZQ_add.
+    apply add_le_l, floor_refl.
+Qed.
+
 Theorem Q_archimedean : ∀ x b, 0 < b → ∃ n : Z, n * b ≤ x < (n + 1) * b.
 Proof.
   intros x b H.
@@ -1426,18 +1445,17 @@ Proof.
 Qed.
 
 Theorem QR_epsilon_construction :
-  ∀ a b : Z, (0 < a → 0 < b → 0 ≤ ⌊2 * a / b⌋)%Z.
+  ∀ a b : Z, (0 < a → 0 < b → 0 ≤ ⌊a / b⌋)%Z.
 Proof.
   intros a b H H0.
   apply IZQ_le, floor_upper.
   rewrite inv_div; auto using (pos_ne_0 ℤ_order).
   apply (mul_nonneg_nonneg ℚ_ring_order); simpl; fold le.
-  - apply IZQ_le, (mul_nonneg_nonneg ℤ_order); fold integers.le; left; simpl;
-      auto; apply (ordered_rings.zero_lt_2 ℤ_order).
+  - apply IZQ_le; fold integers.le; left; simpl; auto.
   - now apply or_introl, (inv_lt ℚ_order), IZQ_lt.
 Qed.
 
-Definition QR_ε_exponent (a b : Z) : N.
+Definition QR_ε_exp (a b : Z) : N.
 Proof.
   destruct (excluded_middle_informative (0 < a)%Z) as [H | H].
   - destruct (excluded_middle_informative (0 < b)%Z) as [H0 | H0].
@@ -1467,14 +1485,17 @@ Proof.
     now apply IZQ_eq.
 Qed.
 
-Definition QR_ε (a b : Z) := ((-(1))^(QR_ε_exponent a b) : Z)%Z.
+Definition QR_ε (a b : Z) := ((-(1))^(QR_ε_exp a b) : Z)%Z.
 
 Theorem division_QR : ∀ a b : Z,
-    (0 < a → 0 < b → ∃ q r : Z, 0 ≤ r ≤ ⌊b / 2⌋ ∧ b*q + QR_ε a b * r = a)%Z.
+    (0 < a → 0 < b → ∃ q r : Z, 0 ≤ r ≤ ⌊b / 2⌋ ∧ b*q + QR_ε (2*a) b * r = a)%Z.
 Proof.
   intros a b H H0.
-  unfold QR_ε, QR_ε_exponent.
+  unfold QR_ε, QR_ε_exp.
   repeat destruct excluded_middle_informative; try tauto.
+  2: { contradiction n.
+       apply (ordered_rings.mul_pos_pos ℤ_order);
+       auto; apply (ordered_rings.zero_lt_2 ℤ_order). }
   destruct constructive_indefinite_description.
   rewrite integers.A3 in e.
   eapply division_signed in H0 as [q [r [[H0 H1] H2]]]; try apply H.

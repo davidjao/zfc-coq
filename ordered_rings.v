@@ -539,6 +539,13 @@ Section Ordered_ring_theorems.
     auto using mul_le_l_nonneg.
   Qed.
 
+  Theorem add_nonneg_nonneg : ∀ a b, 0 ≤ a → 0 ≤ b → 0 ≤ a + b.
+  Proof.
+    intros a b [H | H] [H0 | H0]; subst; rewrite ? (A1 _ _ 0), ? A3;
+      unfold le; intuition.
+    auto using O0.
+  Qed.
+
   Theorem pos_ne_0 : ∀ a, 0 < a → a ≠ 0.
   Proof.
     intros a H H0.
