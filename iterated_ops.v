@@ -203,6 +203,18 @@ Proof.
   - rewrite sum_N_succ, IHd, add_0_r; auto using zero_le.
 Qed.
 
+Theorem sum_of_0_a_b : ∀ a b, (sum_N (λ n, 0) a b) = 0.
+Proof.
+  intros a b.
+  destruct (classic (a ≤ b)) as [[c H] | H]; subst.
+  - unfold sum_N.
+    rewrite iterate_shift.
+    fold (sum_N (λ n, 0) 0 c).
+    now rewrite sum_of_0.
+  - unfold sum_N, iterate_with_bounds.
+    destruct excluded_middle_informative; tauto.
+Qed.
+
 Theorem prod_N_mul : ∀ f a b c,
     a ≤ b → c^(S (b-a)) * prod_N f a b = prod_N (λ n, c * (f n)) a b.
 Proof.
