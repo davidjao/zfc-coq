@@ -218,6 +218,16 @@ Section Ordered_ring_theorems.
     destruct (T a b); intuition.
   Qed.
 
+  Theorem O3_iff : ∀ a b c, 0 < a → b < c ↔ a * b < a * c.
+  Proof.
+    split; intros H0; eauto using O3.
+    destruct (T b c) as [[H1 [_ _]] | [[_ [H1 _]] | [_ [_ H1]]]]; auto.
+    - subst.
+      now apply lt_irrefl in H0.
+    - apply (O3 a) in H1; auto.
+      now eapply lt_antisym in H0.
+  Qed.
+
   Theorem le_antisymm : ∀ a b, a ≤ b → b ≤ a → a = b.
   Proof.
     intros a b [H | H] [H0 | H0]; destruct (T a b); intuition.

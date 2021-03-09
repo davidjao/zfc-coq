@@ -82,52 +82,6 @@ Proof.
     now ring_simplify in H.
 Qed.
 
-Definition even (x : Z) := 2｜x.
-Definition odd (x : Z) := ¬ 2｜x.
-
-Theorem odd_classification : ∀ x, odd x ↔ ∃ k, x = 2 * k + 1.
-Proof.
-  split; intros H.
-  - destruct (division_algorithm x 2) as [q [r [H0 H1]]];
-      try apply (ordered_rings.zero_lt_2 ℤ_order).
-    exists q.
-    rewrite <-H0.
-    f_equal.
-    destruct (integers.T r 1) as [[H2 _] | [[_ [H2_]] | [_ [_ H2]]]].
-    + destruct H1 as [[H1 | H1] _]; simpl in *.
-      * contradiction (lt_0_1 r).
-      * subst.
-        contradiction H.
-        exists q; simpl.
-        now replace (2*q+0) with (q*2) by ring.
-    + congruence.
-    + destruct H1 as [_ H1].
-      contradiction (lt_0_1 (r+(-1%Z))%Z).
-      * now rewrite <-(ordered_rings.lt_shift ℤ_order).
-      * rewrite <-(integers.A3 1) at 2.
-        rewrite (integers.A1 0), <-(integers.A4 1), integers.A2,
-        ? (integers.A1 _ (-(1))).
-        now apply (ordered_rings.O1 ℤ_order).
-  - destruct H as [k H].
-    subst.
-    intros [x H]; simpl in *.
-    destruct two_is_prime as [H0 H1].
-    contradict H0.
-    exists (x+-k); simpl.
-    rewrite integers.D1, <-H.
-    now ring_simplify.
-Qed.
-
-Theorem odd_add : ∀ a b, odd a → odd b → even (a+b).
-Proof.
-  intros a b H H0.
-  apply odd_classification in H as [k H], H0 as [l H0].
-  subst.
-  exists (k+l+1).
-  simpl.
-  now replace ((k+l+1)*2) with (2*k+1+(2*l+1)) by ring.
-Qed.
-
 Section Modular_arithmetic.
 
   Variable n : Z.
@@ -1944,6 +1898,7 @@ Section Modular_arithmetic.
     Theorem p_odd : odd p.
     Proof.
       intros H.
+      clear p_ndiv_a.
       apply prime_modulus in H as [H | H].
       - apply unit_pm_1 in H as [H | H].
         + rewrite <-(integers.A3 1) in H at 3.
@@ -2138,9 +2093,9 @@ Section Modular_arithmetic.
 
 End Modular_arithmetic.
 
-Notation "a % n " := ( modulo n a) (at level 45) : Z_scope.
+Notation "a 'mod' p" := (Z_to_Z_n p a) (at level 45) : Z_scope.
 
-Theorem mod_0_r : ∀ a, a % 0 = 0.
+Theorem mod_0_r : ∀ a, modulo 0 a = 0.
 Proof.
   intros a.
   unfold modulo.
@@ -2149,7 +2104,7 @@ Proof.
   contradiction (ordered_rings.lt_irrefl ℤ_order 0).
 Qed.
 
-Theorem mod_1_r : ∀ a, a % 1 = 0.
+Theorem mod_1_r : ∀ a, modulo 1 a = 0.
 Proof.
   intros a.
   unfold modulo.

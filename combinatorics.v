@@ -2456,7 +2456,7 @@ Proof.
   rewrite H; auto using naturals.le_refl.
 Qed.
 
-Theorem sum_card : ∀ n X f,
+Theorem sum_card_0 : ∀ n X f,
     finite X → (∀ k, 0 ≤ k ≤ n → f k ⊂ X)%N →
     (∀ x, x ∈ X ↔ exists ! k : N, 0 ≤ k ≤ n ∧ x ∈ f k)%N →
     sum ℤ (λ k, # (f k) : Z) 0 n = (# X : Z).
@@ -2547,4 +2547,56 @@ Proof.
         rewrite naturals.le_not_gt in H3.
         contradict H3.
         auto using naturals.succ_lt.
+Qed.
+
+Theorem sum_card : ∀ a b X f,
+    finite X → (∀ k, a ≤ k ≤ b → f k ⊂ X)%N →
+    (∀ x, x ∈ X ↔ exists ! k : N, a ≤ k ≤ b ∧ x ∈ f k)%N →
+    sum ℤ (λ k, # (f k) : Z) a b = (# X : Z).
+Proof.
+  intros a b X f H H0 H1.
+  destruct (classic (a ≤ b)%N) as [[c H2] | H2]; subst.
+  - unfold sum.
+    rewrite iterate_shift.
+    apply sum_card_0; auto.
+    + intros k [H2 H3].
+      apply H0.
+      split.
+      * rewrite <-(add_0_l a) at 1.
+        now apply O1_le.
+      * rewrite (add_comm a).
+        now apply O1_le.
+    + split; intros H2.
+      * apply H1 in H2 as [y [[[H2 H3] H4] H5]].
+        exists (y-a)%N.
+        repeat split; try apply zero_le.
+        -- eapply O1_le_iff.
+           rewrite (add_comm c).
+           eapply naturals.le_trans; eauto.
+           rewrite add_comm, sub_abab; auto using naturals.le_refl.
+        -- rewrite add_comm, sub_abab; auto using naturals.le_refl.
+        -- intros x' [H6 H7].
+           replace y with (x'+a)%N; try now rewrite sub_abba.
+           apply eq_sym, H5.
+           repeat split; auto.
+           ++ rewrite <-(add_0_l a) at 1.
+              now apply O1_le.
+           ++ rewrite (add_comm a).
+              now apply O1_le.
+      * destruct H2 as [y [[[H2 H3] H4] H5]].
+        apply (H0 (y+a)%N); auto.
+        repeat split; auto.
+        -- rewrite <-(add_0_l a) at 1.
+           now apply O1_le.
+        -- rewrite (add_comm a).
+           now apply O1_le.
+  - unfold sum, iterate_with_bounds.
+    destruct excluded_middle_informative; try tauto.
+    apply INZ_eq, eq_sym.
+    replace X with ∅; auto using card_empty.
+    apply Extensionality.
+    split; intros H3; try contradiction (Empty_set_classification z).
+    apply H1 in H3 as [y [[[H3 H4] H5] H6]].
+    contradict n.
+    eauto using naturals.le_trans.
 Qed.

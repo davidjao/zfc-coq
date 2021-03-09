@@ -1308,6 +1308,19 @@ Proof.
     now apply PA5.
 Qed.
 
+Theorem lt_le_succ : ∀ n m, m < n ↔ S m ≤ n.
+Proof.
+  split; rewrite lt_def; intros [c H].
+  - destruct H as [H H0].
+    apply neq_sym, succ_0 in H as [d H].
+    subst.
+    exists d.
+    now rewrite add_comm, ? add_succ_r, add_comm.
+  - exists (S c).
+    split; auto using PA4.
+    now rewrite <-H, (add_comm _ c), ? add_succ_r, add_comm.
+Qed.
+
 Theorem no_quines : ∀ n : N, n ∉ n.
 Proof.
   auto using no_quines_ω, N_in_ω.

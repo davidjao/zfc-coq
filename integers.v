@@ -1298,6 +1298,28 @@ Section IZR.
     - now rewrite pow_succ_r, naturals.pow_succ_r, IHb, INZ_mul.
   Qed.
 
+  Theorem INZ_sum_0 : ∀ m (f : N → N),
+      (sum ℤ (λ n, f n : Z) 0 m : Z) = sum_N f 0 m.
+  Proof.
+    intros m f.
+    induction m using Induction.
+    - unfold sum, sum_N.
+      now rewrite ? iterate_0.
+    - rewrite sum_succ, sum_N_succ, IHm, INZ_add; auto using zero_le.
+  Qed.
+
+  Theorem INZ_sum : ∀ a b (f : N → N),
+      (sum ℤ (λ n, f n : Z) a b : Z) = sum_N f a b.
+  Proof.
+    intros a b f.
+    destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
+    2: { unfold sum, sum_N, iterate_with_bounds.
+         repeat destruct excluded_middle_informative; tauto. }
+    - unfold sum, sum_N.
+      rewrite ? iterate_shift.
+      apply INZ_sum_0.
+  Qed.
+
   Theorem INZ_prod_0 : ∀ m (f : N → N),
       (prod ℤ (λ n, f n : Z) 0 m : Z) = prod_N f 0 m.
   Proof.
@@ -1321,3 +1343,49 @@ Section IZR.
   Qed.
 
 End IZR.
+
+Definition even (x : Z) := 2｜x.
+Definition odd (x : Z) := ¬ even x.
+
+Theorem odd_classification : ∀ x, odd x ↔ ∃ k, x = 2 * k + 1.
+Proof.
+  split; intros H.
+  - destruct (division_algorithm x 2) as [q [r [H0 H1]]];
+      try apply (ordered_rings.zero_lt_2 ℤ_order).
+    exists q.
+    rewrite <-H0.
+    f_equal.
+    destruct (integers.T r 1) as [[H2 _] | [[_ [H2_]] | [_ [_ H2]]]].
+    + destruct H1 as [[H1 | H1] _]; simpl in *.
+      * contradiction (lt_0_1 r).
+      * subst.
+        contradiction H.
+        exists q; simpl.
+        now replace (2*q+0) with (q*2) by ring.
+    + congruence.
+    + destruct H1 as [_ H1].
+      contradiction (lt_0_1 (r+(-1%Z))%Z).
+      * now rewrite <-(ordered_rings.lt_shift ℤ_order).
+      * rewrite <-(integers.A3 1) at 2.
+        rewrite (integers.A1 0), <-(integers.A4 1), integers.A2,
+        ? (integers.A1 _ (-(1))).
+        now apply (ordered_rings.O1 ℤ_order).
+  - destruct H as [k H].
+    subst.
+    intros [x H]; simpl in *.
+    destruct two_is_prime as [H0 H1].
+    contradict H0.
+    exists (x+-k); simpl.
+    rewrite integers.D1, <-H.
+    now ring_simplify.
+Qed.
+
+Theorem odd_add : ∀ a b, odd a → odd b → even (a+b).
+Proof.
+  intros a b H H0.
+  apply odd_classification in H as [k H], H0 as [l H0].
+  subst.
+  exists (k+l+1).
+  simpl.
+  now replace ((k+l+1)*2) with (2*k+1+(2*l+1)) by ring.
+Qed.

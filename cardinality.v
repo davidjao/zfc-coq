@@ -21,6 +21,13 @@ Proof.
     now rewrite <-(setify_action _ _ H), functionify_action.
 Qed.
 
+Theorem cardinality_eq : ∀ A B, A = B → A ~ B.
+Proof.
+  intros A B H.
+  subst.
+  auto using cardinality_refl.
+Qed.
+
 Theorem cardinality_sym : ∀ A B, A ~ B → B ~ A.
 Proof.
   intros A B [f [H [H0 H1]]].
@@ -69,24 +76,46 @@ Add Parametric Relation : set equinumerous
 Theorem injective_into_image : ∀ f, injective f → domain f ~ image f.
 Proof.
   intros f H.
-  destruct (function_construction (domain f) (image f) (λ x, f x))
-    as [f' [H0 [H1 H2]]].
-  - intros a H0.
+  exists (restriction_Y _ _ (Set_is_subset (image f))).
+  rewrite restriction_Y_domain, restriction_Y_range.
+  repeat split; auto.
+  - rewrite Injective_classification in *.
+    intros x y H0 H1 H2.
+    rewrite restriction_Y_domain, ? restriction_Y_action in *; auto.
+  - apply Surjective_classification.
+    intros y H0.
+    rewrite restriction_Y_domain, restriction_Y_range in *.
+    apply Specify_classification in H0 as [H0 [x [H1 H2]]].
+    exists x.
+    now rewrite restriction_Y_action.
+Qed.
+
+Theorem injection_restriction :
+  ∀ f S, injective f → S ⊂ domain f → S ~ push_forward f S.
+Proof.
+  intros f S H H0.
+  assert (image (restriction f S) ⊂ push_forward f S).
+  { intros y H1.
     apply Specify_classification.
-    split; eauto using function_maps_domain_to_range.
-  - exists f'.
-    repeat split; auto.
-    + apply Injective_classification.
-      intros x y H3 H4 H5.
-      rewrite ? H2 in H5; try congruence.
-      rewrite Injective_classification in H.
-      apply H; congruence.
-    + apply Surjective_classification.
-      intros y H3.
-      rewrite H1 in H3.
-      apply Specify_classification in H3 as [H3 [x [H4 H5]]].
-      exists x.
-      split; subst; auto; congruence.
+    apply Specify_classification in H1 as [H1 [x [H2 H3]]].
+    rewrite restriction_range, restriction_domain,
+    <-restriction_action in *; eauto. }
+  exists (restriction_Y _ _ H1).
+  rewrite restriction_Y_domain, restriction_Y_range, restriction_domain.
+  repeat split; auto.
+  - now apply Intersection_subset.
+  - rewrite Injective_classification in *.
+    intros x y H2 H3 H4.
+    rewrite restriction_Y_domain, ? restriction_Y_action, restriction_domain,
+    <-? restriction_action in *; auto.
+    apply Intersection_right in H2, H3; auto.
+  - apply Surjective_classification.
+    intros y H2.
+    rewrite restriction_Y_range, ? restriction_Y_action, restriction_Y_domain,
+    restriction_domain, <-? restriction_action in *; auto.
+    apply Specify_classification in H2 as [H2 [x [H3 H4]]].
+    exists x.
+    rewrite restriction_Y_action, <-restriction_action; auto.
 Qed.
 
 Theorem cardinality_of_subsets_of_n :

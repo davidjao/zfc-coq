@@ -5,6 +5,8 @@
 .coqdeps.d
 *.aux
 \#*
+.\#*
 Makefile*
 .Makefile.d
 *.bat
+*.swp

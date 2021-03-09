@@ -1389,10 +1389,34 @@ Qed.
 
 Definition image (f : function) := {y in range f | ∃ x, x ∈ domain f ∧ f x = y}.
 
+Definition push_forward (f : function) S :=
+  {y in range f | ∃ x, x ∈ S ∩ domain f ∧ f x = y}.
+
 Theorem image_subset_range : ∀ f, image f ⊂ range f.
 Proof.
   intros f x H.
   now apply Specify_classification in H as [H H0].
+Qed.
+
+Theorem push_forward_image: ∀ f S, push_forward f S ⊂ image f.
+Proof.
+  intros f S x H.
+  apply Specify_classification in H as [H [z [H0 H1]]].
+  apply Specify_classification.
+  split; auto.
+  exists z.
+  apply Pairwise_intersection_classification in H0 as [H0 H2].
+  split; auto.
+Qed.
+
+Theorem push_forward_domain : ∀ f, push_forward f (domain f) = image f.
+Proof.
+  intros f.
+  apply Subset_equality; auto using push_forward_image.
+  intros x H.
+  apply Specify_classification in H.
+  apply Specify_classification.
+  now rewrite Intersection_idempotent.
 Qed.
 
 Theorem function_maps_domain_to_image :

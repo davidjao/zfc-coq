@@ -1070,16 +1070,9 @@ Section Ring_theorems.
     apply iterate_extensionality.
     intros k H.
     unfold swap.
-    repeat destruct excluded_middle_informative; auto; try now subst.
-    - contradict n.
-      rewrite ? (add_comm _ a) in e.
-      now apply naturals.cancellation_add in e.
-    - contradict n.
-      rewrite ? (add_comm _ a) in e.
-      now apply naturals.cancellation_add in e.
-    - contradict n1.
-      rewrite ? (add_comm _ a) in e.
-      now apply naturals.cancellation_add in e.
+    repeat destruct excluded_middle_informative; auto; try (now subst);
+      [ contradict n | contradict n | contradict n1 ];
+      rewrite ? (add_comm _ a) in e; now apply naturals.cancellation_add in e.
   Qed.
 
   Theorem product_bijection_0 : ∀ n f g,

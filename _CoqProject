@@ -17,6 +17,7 @@ rationals.v
 combinatorics.v
 polynomials.v
 integers_mod_n.v
+quadratic_reciprocity.v
 strings.v
 summation_example.v
 reals.v
