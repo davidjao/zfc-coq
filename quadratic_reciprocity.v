@@ -617,10 +617,10 @@ Section Quadratic_reciprocity.
   Qed.
 
   Theorem quadratic_reciprocity :
-    legendre_symbol _ (q mod p) * legendre_symbol _ (p mod q) =
+    legendre_symbol _ (p mod q) * legendre_symbol _ (q mod p) =
     (-(1))^((# QR p) * (# QR q)).
   Proof.
-    rewrite ? Gauss's_Lemma_a, <-(rings.pow_add_r ℤ), add_comm,
+    rewrite ? Gauss's_Lemma_a, <-(rings.pow_add_r ℤ),
     Pretty_Picture_Lemma; auto using p_odd, q_ndiv_p, odd_prime_positive.
   Qed.
 
