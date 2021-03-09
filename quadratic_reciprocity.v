@@ -329,17 +329,14 @@ Section Quadratic_reciprocity.
   Theorem sum_lower_triangle :
     # lower_triangle = sum_N (λ l, QR_ε_exp (p*l) q) 1 (# QR q).
   Proof.
-    apply INZ_eq.
-    eapply eq_sym.
+    apply INZ_eq, eq_sym.
     rewrite <-INZ_sum, <-(sum_card 1 (# QR q) lower_triangle lower_triangle_f).
     - apply iterate_extensionality.
       intros k H.
       unfold QR_ε_exp.
-      repeat destruct excluded_middle_informative.
-      2: { contradict n.
-           auto using odd_prime_positive. }
-      2: { contradict n.
-           apply integers.O2; auto using odd_prime_positive.
+      repeat destruct excluded_middle_informative; try contradict n.
+      2: { auto using odd_prime_positive. }
+      2: { apply integers.O2; auto using odd_prime_positive.
            apply lt_0_le_1, INZ_le; intuition. }
       destruct constructive_indefinite_description.
       rewrite integers.A3 in e.
@@ -361,13 +358,12 @@ Section Quadratic_reciprocity.
            rewrite sets.functionify_domain, <-(setify_action _ _ H2),
            <-(setify_action _ _ H3 ), ? functionify_action in *.
            f_equal.
-           assert ((k : Z, ((exist _ _ H2 : N) + 1)) =
-                   (k : Z, ((exist _ _ H3 : N) + 1))) as H5 by auto.
-           apply Ordered_pair_iff in H5 as [H5 H6].
-           apply set_proj_injective in H6.
-           unfold integers.one in H6.
-           rewrite ? INZ_add, ? (add_comm _ 1) in H6.
-           now apply INZ_eq, naturals.cancellation_add in H6. }
+           unfold elt_to_set, proj1_sig in H4.
+           apply Ordered_pair_iff in H4 as [H4 H5].
+           apply set_proj_injective in H5.
+           unfold integers.one in H5.
+           rewrite ? INZ_add, ? (add_comm _ 1) in H5.
+           now apply INZ_eq, naturals.cancellation_add in H5. }
       replace (lower_triangle_f k) with (push_forward f x); auto.
       apply Extensionality.
       split; intros H2.
@@ -375,44 +371,35 @@ Section Quadratic_reciprocity.
         subst.
         apply Pairwise_intersection_classification in H3 as [H3 H4].
         apply Specify_classification.
-        unfold f in H4.
+        unfold f in *.
         rewrite sets.functionify_domain in H4.
         set (γ := exist _ _ H4 : N).
         rewrite <-(setify_action _ _ H4) in *; fold γ in H3, H4 |-*.
         apply lt_is_in in H3.
-        split; unfold f; rewrite functionify_action.
-        * apply Specify_classification.
-          split; auto using elts_in_set.
-          exists k, (γ + 1).
-          repeat split; auto.
-          -- apply INZ_le.
-             intuition.
-          -- apply INZ_le.
-             intuition.
-          -- unfold integers.one.
-             rewrite INZ_add, add_1_r.
-             apply INZ_le, one_le_succ.
-          -- unfold integers.one.
-             rewrite INZ_add.
-             apply INZ_le.
-             eapply pp_helper_1; eauto.
-          -- rewrite <-IZQ_add.
-             replace (1%Z : Q) with (1%Q) by auto.
-             eapply pp_helper_2; eauto.
-             now apply INZ_lt.
-        * exists k, (γ + 1).
-          split; auto.
+        split; rewrite functionify_action.
+        2: { exists k, (γ + 1); eauto. }
+        apply Specify_classification.
+        split; auto using elts_in_set.
+        exists k, (γ + 1).
+        repeat split; auto; try (apply INZ_le; intuition); unfold integers.one.
+        * rewrite INZ_add, add_1_r.
+          apply INZ_le, one_le_succ.
+        * rewrite INZ_add.
+          eapply INZ_le, pp_helper_1; eauto.
+        * rewrite <-IZQ_add.
+          replace (1%Z : Q) with (1%Q) by auto.
+          eapply pp_helper_2; eauto.
+          now apply INZ_lt.
       + apply Specify_classification in H2 as [H2 [κ [y [H3 H4]]]].
         subst.
         apply Specify_classification in H2 as
             [H2 [k' [y' [H3 [[H4 H5] [[H6 H7] H8]]]]]].
         apply lt_0_le_1, lt_def in H6 as [c [H6 H9]].
-        unfold integers.zero, not in H6.
+        unfold integers.zero, not, f in *.
         rewrite INZ_eq, integers.A3 in *.
         apply neq_sym, succ_0 in H6 as [m H6].
         subst.
         apply Specify_classification.
-        unfold f at 1 2.
         rewrite sets.functionify_range, sets.functionify_domain.
         split.
         { apply Product_classification; eauto using elts_in_set. }
@@ -420,7 +407,6 @@ Section Quadratic_reciprocity.
         apply Ordered_pair_iff in H3 as [H3 H9].
         apply set_proj_injective in H3, H9.
         subst.
-        unfold f.
         rewrite functionify_action, <-add_1_r, <-INZ_add,
         Pairwise_intersection_classification.
         repeat split; auto using N_in_ω.
@@ -434,8 +420,7 @@ Section Quadratic_reciprocity.
     - intros z; split; intros H.
       + apply Specify_classification in H as
             [H [x [y [H0 [[H1 H2] [[H3 H4] H5]]]]]].
-        apply lt_0_le_1 in H1.
-        apply lt_def in H1 as [c [H1 H6]].
+        apply lt_0_le_1, lt_def in H1 as [c [H1 H6]].
         rewrite integers.A3 in H6.
         subst.
         exists c.
@@ -469,17 +454,14 @@ Section Quadratic_reciprocity.
   Theorem sum_upper_triangle :
     # upper_triangle = sum_N (λ l, QR_ε_exp (q*l) p) 1 (# QR p).
   Proof.
-    apply INZ_eq.
-    eapply eq_sym.
+    apply INZ_eq, eq_sym.
     rewrite <-INZ_sum, <-(sum_card 1 (# QR p) upper_triangle upper_triangle_f).
     - apply iterate_extensionality.
       intros k H.
       unfold QR_ε_exp.
-      repeat destruct excluded_middle_informative.
-      2: { contradict n.
-           auto using odd_prime_positive. }
-      2: { contradict n.
-           apply integers.O2; auto using odd_prime_positive.
+      repeat destruct excluded_middle_informative; try contradict n.
+      2: { auto using odd_prime_positive. }
+      2: { apply integers.O2; auto using odd_prime_positive.
            apply lt_0_le_1, INZ_le; intuition. }
       destruct constructive_indefinite_description.
       rewrite integers.A3 in e.
@@ -501,13 +483,12 @@ Section Quadratic_reciprocity.
            rewrite sets.functionify_domain, <-(setify_action _ _ H2),
            <-(setify_action _ _ H3 ), ? functionify_action in *.
            f_equal.
-           assert ((((exist _ _ H2 : N) + 1), k : Z) =
-                   (((exist _ _ H3 : N) + 1), k : Z)) as H5 by auto.
-           apply Ordered_pair_iff in H5 as [H5 H6].
-           apply set_proj_injective in H5.
-           unfold integers.one in H5.
-           rewrite ? INZ_add, ? (add_comm _ 1) in H5.
-           now apply INZ_eq, naturals.cancellation_add in H5. }
+           unfold elt_to_set, proj1_sig in H4.
+           apply Ordered_pair_iff in H4 as [H4 H5].
+           apply set_proj_injective in H4.
+           unfold integers.one in H4.
+           rewrite ? INZ_add, ? (add_comm _ 1) in H4.
+           now apply INZ_eq, naturals.cancellation_add in H4. }
       replace (upper_triangle_f k) with (push_forward f x); auto.
       apply Extensionality.
       split; intros H2.
@@ -515,44 +496,35 @@ Section Quadratic_reciprocity.
         subst.
         apply Pairwise_intersection_classification in H3 as [H3 H4].
         apply Specify_classification.
-        unfold f in H4.
+        unfold f in *.
         rewrite sets.functionify_domain in H4.
         set (γ := exist _ _ H4 : N).
         rewrite <-(setify_action _ _ H4) in *; fold γ in H3, H4 |-*.
         apply lt_is_in in H3.
-        split; unfold f; rewrite functionify_action.
-        * apply Specify_classification.
-          split; auto using elts_in_set.
-          exists (γ + 1), k.
-          repeat split; auto.
-          -- unfold integers.one.
-             rewrite INZ_add, add_1_r.
-             apply INZ_le, one_le_succ.
-          -- unfold integers.one.
-             rewrite INZ_add.
-             apply INZ_le.
-             eapply (pp_helper_1 q p); eauto.
-          -- apply INZ_le.
-             intuition.
-          -- apply INZ_le.
-             intuition.
-          -- rewrite <-IZQ_add.
-             replace (1%Z : Q) with (1%Q) by auto.
-             eapply pp_helper_2; eauto.
-             now apply INZ_lt.
-        * exists (γ + 1), k.
-          split; auto.
+        split; rewrite functionify_action.
+        2: { exists (γ + 1), k; eauto. }
+        apply Specify_classification.
+        split; auto using elts_in_set.
+        exists (γ + 1), k.
+        repeat split; auto; try (apply INZ_le; intuition); unfold integers.one.
+        * rewrite INZ_add, add_1_r.
+          apply INZ_le, one_le_succ.
+        * rewrite INZ_add.
+          eapply INZ_le, (pp_helper_1 q p); eauto.
+        * rewrite <-IZQ_add.
+          replace (1%Z : Q) with (1%Q) by auto.
+          eapply pp_helper_2; eauto.
+          now apply INZ_lt.
       + apply Specify_classification in H2 as [H2 [κ [y [H3 H4]]]].
         subst.
         apply Specify_classification in H2 as
             [H2 [k' [y' [H3 [[H4 H5] [[H6 H7] H8]]]]]].
         apply lt_0_le_1, lt_def in H4 as [c [H4 H9]].
-        unfold integers.zero, not in H4.
+        unfold integers.zero, not, f in *.
         rewrite INZ_eq, integers.A3 in *.
         apply neq_sym, succ_0 in H4 as [m H4].
         subst.
         apply Specify_classification.
-        unfold f at 1 2.
         rewrite sets.functionify_range, sets.functionify_domain.
         split.
         { apply Product_classification; eauto using elts_in_set. }
@@ -560,7 +532,6 @@ Section Quadratic_reciprocity.
         apply Ordered_pair_iff in H3 as [H3 H9].
         apply set_proj_injective in H3, H9.
         subst.
-        unfold f.
         rewrite functionify_action, <-add_1_r, <-INZ_add,
         Pairwise_intersection_classification.
         repeat split; auto using N_in_ω.
@@ -574,8 +545,7 @@ Section Quadratic_reciprocity.
     - intros z; split; intros H.
       + apply Specify_classification in H as
             [H [x [y [H0 [[H1 H2] [[H3 H4] H5]]]]]].
-        apply lt_0_le_1 in H3.
-        apply lt_def in H3 as [c [H3 H6]].
+        apply lt_0_le_1, lt_def in H3 as [c [H3 H6]].
         rewrite integers.A3 in H6.
         subst.
         exists c.
@@ -620,8 +590,8 @@ Section Quadratic_reciprocity.
     legendre_symbol _ (p mod q) * legendre_symbol _ (q mod p) =
     (-(1))^((# QR p) * (# QR q)).
   Proof.
-    rewrite ? Gauss's_Lemma_a, <-(rings.pow_add_r ℤ),
-    Pretty_Picture_Lemma; auto using p_odd, q_ndiv_p, odd_prime_positive.
+    rewrite ? Gauss's_Lemma_a, <-(rings.pow_add_r ℤ), Pretty_Picture_Lemma;
+      auto using p_odd, q_ndiv_p, odd_prime_positive.
   Qed.
 
 End Quadratic_reciprocity.
