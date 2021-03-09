@@ -1290,59 +1290,59 @@ Section IZR.
       now apply (lt_neg_0 ℤ_order), (lt_not_ge ℤ_order).
   Qed.
 
-  Theorem INZ_pow : ∀ a b : N, ((a : Z)^b) = ((a^b)%N : Z).
-  Proof.
-    intros a b.
-    induction b using Induction.
-    - now rewrite pow_0_r, naturals.pow_0_r.
-    - now rewrite pow_succ_r, naturals.pow_succ_r, IHb, INZ_mul.
-  Qed.
-
-  Theorem INZ_sum_0 : ∀ m (f : N → N),
-      (sum ℤ (λ n, f n : Z) 0 m : Z) = sum_N f 0 m.
-  Proof.
-    intros m f.
-    induction m using Induction.
-    - unfold sum, sum_N.
-      now rewrite ? iterate_0.
-    - rewrite sum_succ, sum_N_succ, IHm, INZ_add; auto using zero_le.
-  Qed.
-
-  Theorem INZ_sum : ∀ a b (f : N → N),
-      (sum ℤ (λ n, f n : Z) a b : Z) = sum_N f a b.
-  Proof.
-    intros a b f.
-    destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
-    2: { unfold sum, sum_N, iterate_with_bounds.
-         repeat destruct excluded_middle_informative; tauto. }
-    - unfold sum, sum_N.
-      rewrite ? iterate_shift.
-      apply INZ_sum_0.
-  Qed.
-
-  Theorem INZ_prod_0 : ∀ m (f : N → N),
-      (prod ℤ (λ n, f n : Z) 0 m : Z) = prod_N f 0 m.
-  Proof.
-    intros m f.
-    induction m using Induction.
-    - unfold prod, prod_N.
-      now rewrite ? iterate_0.
-    - rewrite prod_succ, prod_N_succ, IHm, INZ_mul; auto using zero_le.
-  Qed.
-
-  Theorem INZ_prod : ∀ a b (f : N → N),
-      (prod ℤ (λ n, f n : Z) a b : Z) = prod_N f a b.
-  Proof.
-    intros a b f.
-    destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
-    2: { unfold prod, prod_N, iterate_with_bounds.
-         repeat destruct excluded_middle_informative; tauto. }
-    - unfold prod, prod_N.
-      rewrite ? iterate_shift.
-      apply INZ_prod_0.
-  Qed.
-
 End IZR.
+
+Theorem INZ_pow : ∀ a b : N, ((a : Z)^b) = ((a^b)%N : Z).
+Proof.
+  intros a b.
+  induction b using Induction.
+  - now rewrite pow_0_r, naturals.pow_0_r.
+  - now rewrite pow_succ_r, naturals.pow_succ_r, IHb, INZ_mul.
+Qed.
+
+Theorem INZ_sum_0 : ∀ m (f : N → N),
+    (sum ℤ (λ n, f n : Z) 0 m : Z) = sum_N f 0 m.
+Proof.
+  intros m f.
+  induction m using Induction.
+  - unfold sum, sum_N.
+    now rewrite ? iterate_0.
+  - rewrite sum_succ, sum_N_succ, IHm, INZ_add; auto using zero_le.
+Qed.
+
+Theorem INZ_sum : ∀ a b (f : N → N),
+    (sum ℤ (λ n, f n : Z) a b : Z) = sum_N f a b.
+Proof.
+  intros a b f.
+  destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
+  2: { unfold sum, sum_N, iterate_with_bounds.
+       repeat destruct excluded_middle_informative; tauto. }
+  - unfold sum, sum_N.
+    rewrite ? iterate_shift.
+    apply INZ_sum_0.
+Qed.
+
+Theorem INZ_prod_0 : ∀ m (f : N → N),
+    (prod ℤ (λ n, f n : Z) 0 m : Z) = prod_N f 0 m.
+Proof.
+  intros m f.
+  induction m using Induction.
+  - unfold prod, prod_N.
+    now rewrite ? iterate_0.
+  - rewrite prod_succ, prod_N_succ, IHm, INZ_mul; auto using zero_le.
+Qed.
+
+Theorem INZ_prod : ∀ a b (f : N → N),
+    (prod ℤ (λ n, f n : Z) a b : Z) = prod_N f a b.
+Proof.
+  intros a b f.
+  destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
+  2: { unfold prod, prod_N, iterate_with_bounds.
+       repeat destruct excluded_middle_informative; tauto. }
+  - unfold prod, prod_N.
+    rewrite ? iterate_shift.
+    apply INZ_prod_0.
+Qed.
 
 Definition even (x : Z) := 2｜x.
 Definition odd (x : Z) := ¬ even x.
