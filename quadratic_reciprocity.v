@@ -71,9 +71,8 @@ Section Pretty_picture_lemmas.
       fold ζ in H1 |-*.
       destruct H1 as [H1 H2].
       apply Specify_classification.
-      split.
-      { unfold f.
-        now rewrite sets.functionify_range. }
+      split; unfold f.
+      { now rewrite sets.functionify_range. }
       apply le_def in H1 as [c H1].
       unfold integers.one in H1.
       rewrite H1, integers.A1, INZ_add in *.
@@ -82,9 +81,8 @@ Section Pretty_picture_lemmas.
       apply lt_le_succ, lt_is_in in H2.
       exists c.
       rewrite Pairwise_intersection_classification.
-      repeat split; auto; unfold f.
-      + unfold f.
-        rewrite sets.functionify_domain.
+      repeat split; auto.
+      + rewrite sets.functionify_domain.
         auto using N_in_ω.
       + now rewrite functionify_action, <-INZ_add.
     - apply Specify_classification in H0 as [H0 [c [H1 H2]]].
@@ -476,7 +474,7 @@ Section Quadratic_reciprocity.
       apply Specify_classification in H0, H1.
       pose proof swap_bijective Zset Zset as [H3 H4].
       rewrite Injective_classification, swap_domain in H3.
-      apply H3; intuition.
+      intuition.
   Qed.
 
   Theorem sum_upper_triangle :
