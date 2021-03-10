@@ -2191,3 +2191,65 @@ Proof.
   apply complement_disjoint_union in H0, H1.
   now rewrite <-H0, <-H1, H2, H.
 Qed.
+
+Definition swap_product (S T : set) : elts (S × T) → elts (T × S).
+Proof.
+  intros z.
+  pose proof (elts_in_set _ z).
+  apply Product_classification in H.
+  destruct (constructive_indefinite_description _ H) as [x H0].
+  destruct (constructive_indefinite_description _ H0) as [y [H1 [H2 H3]]].
+  assert ((y, x) ∈ T × S) as H4.
+  { apply Product_classification; eauto. }
+  exact (exist _ _ H4).
+Defined.
+
+Definition swap_function S T := functionify _ _ (swap_product S T).
+
+Theorem swap_domain : ∀ S T, domain (swap_function S T) = S × T.
+Proof.
+  intros S T.
+  apply functionify_domain.
+Qed.
+
+Theorem swap_range : ∀ S T, range (swap_function S T) = T × S.
+Proof.
+  intros S T.
+  apply functionify_range.
+Qed.
+
+Theorem swap_action : ∀ S T x y,
+    x ∈ S → y ∈ T → swap_function S T (x, y) = (y, x).
+Proof.
+  intros S T x y H H0.
+  assert ((x, y) ∈ S × T) as H1.
+  { apply Product_classification; eauto. }
+  unfold swap_function, swap_product.
+  rewrite <-(setify_action _ _ H1), functionify_action.
+  repeat destruct constructive_indefinite_description.
+  repeat destruct a.
+  destruct Product_classification.
+  simpl in *.
+  apply Ordered_pair_iff in e0 as [H2 H3].
+  congruence.
+Qed.
+
+Theorem swap_bijective : ∀ S T, bijective (swap_function S T).
+Proof.
+  split.
+  - apply Injective_classification.
+    intros z1 z2 H H0 H1.
+    rewrite swap_domain in *.
+    apply Product_classification in H as
+        [x [y [H [H2 H3]]]], H0 as [x' [y' [H4 [H5 H6]]]].
+    subst.
+    rewrite ? swap_action in H1; auto.
+    apply Ordered_pair_iff in H1; intuition; congruence.
+  - apply Surjective_classification.
+    intros z H.
+    rewrite swap_domain, swap_range in *.
+    apply Product_classification in H as [x [y [H [H0 H1]]]].
+    subst.
+    exists (y, x).
+    rewrite Product_classification, swap_action; try split; eauto.
+Qed.
