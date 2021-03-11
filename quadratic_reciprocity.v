@@ -13,33 +13,28 @@ Section Pretty_picture_lemmas.
   Lemma pp_helper_1 : ∀ x y k : N,
       (y < x)%N → ⌊p * k / q⌋ = x → (1 ≤ k ≤ # QR q)%N → (y + 1 ≤ # QR p)%N.
   Proof.
-    intros x y k H H0 H1.
-    apply lt_le_succ in H.
+    intros x y k H H0 [H1 H2].
     rewrite add_1_r.
-    eapply naturals.le_trans; eauto.
-    apply INZ_le.
+    apply lt_le_succ, INZ_le in H.
+    eapply INZ_le, (ordered_rings.le_trans ℤ_order); eauto.
     rewrite <-H0.
     apply IZQ_le, floor_lower.
     rewrite inv_div; try now apply (pos_ne_0 ℤ_order), odd_prime_positive.
     apply (mul_denom_l ℚ_order); simpl.
     { now apply IZQ_lt, odd_prime_positive. }
-    destruct H1 as [H1 H2].
-    apply INZ_le in H2.
-    apply (mul_le_l ℤ_order (p : Z)), IZQ_le in H2; simpl in *;
+    apply INZ_le, (mul_le_l ℤ_order (p : Z)), IZQ_le in H2; simpl in *;
       fold integers.le in *; auto using odd_prime_positive.
     eapply (le_lt_trans ℚ_ring_order); eauto; simpl.
     replace 1%Q with (1%Z : Q) by auto.
     rewrite IZQ_add, IZQ_mul.
-    apply IZQ_lt.
-    apply (O3_iff ℤ_order 2); simpl;
+    apply IZQ_lt, (O3_iff ℤ_order 2); simpl;
       try now apply (ordered_rings.zero_lt_2 ℤ_order).
     replace (2 * (p * (# QR q))) with (p * (2 * # QR q)) by ring.
     replace (2 * (q * (# QR p + 1))) with (q * (2 * (# QR p) + 2)) by ring.
     rewrite <-? size_of_QR_in_Z; auto.
     replace (p * (q - 1)) with (p * q + -p) by ring.
     replace (q * (p - 1 + 2)) with (p * q + q) by ring.
-    apply integers.O1.
-    apply (integers.lt_trans _ 0); auto using odd_prime_positive.
+    apply integers.O1, (integers.lt_trans _ 0); auto using odd_prime_positive.
     rewrite (ordered_rings.lt_shift ℤ_order), (neg_neg ℤ), integers.A3;
       now apply odd_prime_positive.
   Qed.
@@ -66,35 +61,28 @@ Section Pretty_picture_lemmas.
     apply cardinality_eq, Extensionality.
     split; intros H0.
     - apply Specify_classification in H0 as [H0 H1].
-      set (ζ := exist _ _ H0 : Z).
       rewrite <-(setify_action _ _ H0), <-specify_action in *.
-      fold ζ in H1 |-*.
       destruct H1 as [H1 H2].
       apply Specify_classification.
       split; unfold f.
       { now rewrite sets.functionify_range. }
       apply le_def in H1 as [c H1].
       unfold integers.one in H1.
-      rewrite H1, integers.A1, INZ_add in *.
-      apply INZ_le in H2.
-      rewrite add_1_r in H2.
-      apply lt_le_succ, lt_is_in in H2.
+      rewrite H1, integers.A1, INZ_add, add_1_r in *.
+      apply INZ_le, lt_le_succ, lt_is_in in H2.
       exists c.
       rewrite Pairwise_intersection_classification.
       repeat split; auto.
       + rewrite sets.functionify_domain.
         auto using N_in_ω.
-      + now rewrite functionify_action, <-INZ_add.
+      + now rewrite functionify_action, <-add_1_r, <-INZ_add.
     - apply Specify_classification in H0 as [H0 [c [H1 H2]]].
       apply Pairwise_intersection_classification in H1 as [H1 H3].
       unfold f in *.
       rewrite sets.functionify_domain, sets.functionify_range in *.
-      set (γ := exist _ _ H3 : N).
       apply Specify_classification.
-      rewrite <-(setify_action _ _ H3), functionify_action in *.
-      fold γ in H1, H2.
-      subst.
-      rewrite <-specify_action.
+      rewrite <-(setify_action _ _ H3), functionify_action, <-H2,
+      <-specify_action in *.
       repeat split; auto; unfold integers.one; rewrite INZ_add, add_1_r;
         apply INZ_le.
       + apply one_le_succ.
@@ -121,32 +109,28 @@ Section Pretty_picture_lemmas.
     intros H0.
     rewrite ? inv_div in H, H0;
       try now apply (pos_ne_0 ℤ_order), odd_prime_positive.
-    apply (O3 ℚ_ring_order (q : Q)) in H; simpl in *;
-      try now apply IZQ_lt, odd_prime_positive.
-    apply (O3_r ℚ_ring_order ((p^-1) : Q)) in H; simpl in *;
-      try now apply (ordered_fields.inv_lt ℚ_order), IZQ_lt, odd_prime_positive.
+    apply (O3 ℚ_ring_order (q : Q)), (O3_r ℚ_ring_order (p^-1 : Q)) in H;
+      simpl in *; try (now apply IZQ_lt, odd_prime_positive);
+        try now apply (inv_lt ℚ_order), IZQ_lt, odd_prime_positive.
     rewrite <-IZQ_mul in *.
     replace (q * (p * x * q^-1) * p^-1)%Q with (x : Q) in H.
     2: { field_simplify_eq; repeat split; auto;
          intros H1; apply IZQ_eq, (pos_ne_0 ℤ_order) in H1; auto;
          now apply odd_prime_positive. }
-    contradiction (lt_irrefl ℚ_ring_order (x : Q)).
-    eapply (lt_le_trans ℚ_ring_order); eauto.
+    eapply (lt_irrefl ℚ_ring_order (x : Q)), (lt_le_trans ℚ_ring_order); eauto.
   Qed.
 
   Lemma q_ndiv_p : ¬ q｜p.
   Proof.
     intros H.
     destruct prime_p as [H0 H1], prime_q as [H2 H3].
-      apply H1 in H as [H | H]; try contradiction.
-      apply assoc_pm in H as [H | H].
-      + contradict distinct.
-        now apply INZ_eq.
-      + contradiction (ordered_rings.lt_antisym ℤ_order 0 (p : Z));
-          try now apply odd_prime_positive.
-        rewrite (ordered_rings.lt_shift ℤ_order); simpl.
-        rewrite <-H, integers.A3.
-        now apply odd_prime_positive.
+    apply H1 in H as [H | H]; try contradiction.
+    apply assoc_pm in H as [H | H]; try now apply distinct, INZ_eq.
+    contradiction (ordered_rings.lt_antisym ℤ_order 0 (p : Z));
+      try now apply odd_prime_positive.
+    rewrite (ordered_rings.lt_shift ℤ_order); simpl.
+    rewrite <-H, integers.A3.
+    auto using odd_prime_positive.
   Qed.
 
   Lemma empty_diagonal : ∀ x y : Z, 1 ≤ x ≤ # QR q → ¬ (p * x / q = y)%Q.
@@ -155,19 +139,18 @@ Section Pretty_picture_lemmas.
     apply Qequiv, eq_sym in H0; auto using integers.zero_ne_1.
     2: { now apply (pos_ne_0 ℤ_order), odd_prime_positive. }
     rewrite (rings.M3_r ℤ), integers.M1 in H0.
-    assert (q｜(p*x)) as H1 by now (exists y).
-    apply Euclid's_lemma in H1 as [H1 | H1]; auto using q_ndiv_p.
-    destruct H as [H H2].
+    destruct H as [H H1], (Euclid's_lemma p x q) as [H2 | H2];
+      unfold divide, rings.divide; eauto using q_ndiv_p.
     apply lt_0_le_1 in H.
-    apply div_le, le_not_gt in H1; auto; simpl in H1.
-    contradict H1.
+    apply div_le, le_not_gt in H2; auto; simpl in H2.
+    contradict H2.
     eapply (le_lt_trans ℤ_order); eauto; simpl.
     replace (q : Z) with (q - 1 + 1) at 2 by ring.
     rewrite size_of_QR_in_Z, <-(integers.A3 (# QR q)) at 1;
       auto using odd_prime_positive.
     replace (2 * (# QR q) + 1) with (# QR q + 1 + # QR q) by ring.
     apply (O1_r ℤ_order), (ordered_rings.O0 ℤ_order); simpl;
-      auto using integers.zero_lt_1.
+      auto using integers.zero_lt_1, naturals.le_refl.
     now apply lt_0_le_1, INZ_le, size_QR_ge_1.
   Qed.
 
@@ -175,10 +158,8 @@ Section Pretty_picture_lemmas.
       y < x → ⌊p * k / q⌋ = x → (1 ≤ k ≤ # QR q)%N → (y + 1 < p * k / q)%Q.
   Proof.
     intros x y k H H0 H1.
-    apply INZ_lt, lt_le_succ in H.
-    rewrite <-add_1_r in H.
-    apply INZ_le, IZQ_le in H.
-    rewrite <-H0, <-INZ_add, <-IZQ_add in H.
+    apply INZ_lt, lt_le_succ, INZ_le, IZQ_le in H.
+    rewrite <-add_1_r, <-H0, <-INZ_add, <-IZQ_add in H.
     eapply (le_lt_trans ℚ_ring_order); eauto; simpl.
     destruct (floor_refl (p * k / q)); auto.
     apply eq_sym, empty_diagonal in H2; intuition; now apply INZ_le.
@@ -250,8 +231,8 @@ Section Pretty_picture_lemmas.
   Lemma disjoint_triangles : lower_triangle ∩ upper_triangle = ∅.
   Proof.
     apply NNPP.
-    intros H.
-    apply Nonempty_classification in H as [z H].
+    rewrite Nonempty_classification.
+    intros [z H].
     apply Pairwise_intersection_classification in H as [H H0].
     apply Specify_classification in H as [H [x1 [y1 [H1 [H2 [H3 H4]]]]]], H0
         as [H0 [x2 [y2 [H5 [H6 [H7 H8]]]]]]; subst.
@@ -259,10 +240,9 @@ Section Pretty_picture_lemmas.
     apply set_proj_injective in H5, H9; subst.
     rewrite ? inv_div in H4, H8;
       try now apply (pos_ne_0 ℤ_order), odd_prime_positive.
-    apply (O3 ℚ_ring_order (p : Q)) in H8; simpl in *;
-      try now apply IZQ_lt, odd_prime_positive.
-    apply (O3_r ℚ_ring_order ((q^-1) : Q)) in H8; simpl in *;
-      try now apply (ordered_fields.inv_lt ℚ_order), IZQ_lt, odd_prime_positive.
+    apply (O3 ℚ_ring_order (p : Q)), (O3_r ℚ_ring_order (q^-1 : Q)) in H8;
+      simpl in *; try (now apply IZQ_lt, odd_prime_positive);
+      try now apply (inv_lt ℚ_order), IZQ_lt, odd_prime_positive.
     rewrite <-IZQ_mul in *.
     replace (p * (q * y2 * p^-1) * q^-1)%Q with (y2 : Q) in H8.
     2: { field_simplify_eq; repeat split; auto;
@@ -284,8 +264,7 @@ Section Pretty_picture_lemmas.
         eauto 7.
       + apply eq_sym, empty_diagonal in H3; intuition.
       + apply or_intror, Specify_classification.
-        apply triangle_duality in H3.
-        eauto 7.
+        eauto 8 using triangle_duality.
   Qed.
 
   Theorem sum_lower_triangle :
@@ -296,10 +275,9 @@ Section Pretty_picture_lemmas.
     - apply iterate_extensionality.
       intros k H.
       unfold QR_ε_exp.
-      repeat destruct excluded_middle_informative; try contradict n.
-      2: { auto using odd_prime_positive. }
-      2: { apply integers.O2; auto using odd_prime_positive.
-           apply lt_0_le_1, INZ_le; intuition. }
+      repeat destruct excluded_middle_informative; try contradict n;
+        try (apply integers.O2); auto using odd_prime_positive.
+      2: { apply lt_0_le_1, INZ_le; intuition. }
       destruct constructive_indefinite_description.
       rewrite integers.A3 in e.
       apply INZ_eq, eq_sym, equivalence_to_card, cardinality_sym.
@@ -320,10 +298,9 @@ Section Pretty_picture_lemmas.
            rewrite sets.functionify_domain, <-(setify_action _ _ H2),
            <-(setify_action _ _ H3 ), ? functionify_action in *.
            f_equal.
-           unfold elt_to_set, proj1_sig in H4.
+           unfold elt_to_set, proj1_sig, integers.one in *.
            apply Ordered_pair_iff in H4 as [H4 H5].
            apply set_proj_injective in H5.
-           unfold integers.one in H5.
            rewrite ? INZ_add, ? (add_comm _ 1) in H5.
            now apply INZ_eq, naturals.cancellation_add in H5. }
       replace (lower_triangle_f k) with (push_forward f x); auto.
@@ -386,28 +363,21 @@ Section Pretty_picture_lemmas.
         rewrite integers.A3 in H6.
         subst.
         exists c.
+        unfold integers.zero, not in H1.
+        rewrite INZ_eq in H1.
+        apply neq_sym, succ_0 in H1 as [m H1].
+        subst.
         repeat split.
-        * unfold integers.zero, not in H1.
-          rewrite INZ_eq in H1.
-          apply neq_sym, succ_0 in H1 as [m H1].
-          subst.
-          apply one_le_succ.
+        * auto using one_le_succ.
         * now apply INZ_le.
-        * apply Specify_classification.
-          split; eauto.
-          apply Specify_classification.
-          split; auto.
-          exists c, y.
+        * do 2 (apply Specify_classification; split; eauto).
+          exists (S m), y.
           repeat split; auto.
-          unfold integers.zero, not in H1.
-          rewrite INZ_eq in H1.
-          apply neq_sym, succ_0 in H1 as [m H1].
-          subst.
           apply INZ_le, one_le_succ.
         * intros x' [[H0 H6] H7].
           apply Specify_classification in H7 as [H7 [x [y' [H8 H9]]]].
+          apply Ordered_pair_iff in H8 as [H8 H10].
           subst.
-          apply Ordered_pair_iff in H8 as [H8 H9].
           now apply set_proj_injective, INZ_eq in H8.
       + destruct H as [y [[[H H0] H1] H2]].
         now apply Specify_classification in H1.
@@ -426,33 +396,28 @@ Section Quadratic_reciprocity.
 
   Theorem lower_to_upper : (lower_triangle q p ~ upper_triangle p q)%set.
   Proof.
-    set (f := restriction (swap_function Zset Zset) (lower_triangle q p)).
     assert (lower_triangle q p = lower_triangle q p ∩ (Zset × Zset)) as H.
     { apply eq_sym, Intersection_subset.
       intros z H.
       now apply Specify_classification in H. }
-    replace (lower_triangle q p) with (domain f).
-    2: { unfold f.
-         now rewrite restriction_domain, swap_domain. }
+    replace (lower_triangle q p) with
+        (domain (restriction (swap_function Zset Zset) (lower_triangle q p))).
+    2: { now rewrite restriction_domain, swap_domain. }
     rewrite injective_into_image.
     - apply cardinality_eq, Extensionality.
       split; intros H0.
       + apply Specify_classification in H0 as [H0 [z' [H1 H2]]].
-        unfold f in H1, H2.
         rewrite restriction_domain, swap_domain, <-H, <-restriction_action in *.
         2: { rewrite swap_domain; congruence. }
         apply Specify_classification in H1 as [H1 [x [y [H3 [H4 [H5 H6]]]]]].
         subst.
         apply Product_classification in H1 as [x' [y' [H1 [H7 H8]]]].
         apply Ordered_pair_iff in H8; intuition; subst.
-        rewrite swap_action; auto.
         apply Specify_classification.
-        rewrite Product_classification.
-        split; eauto 8.
-      + apply Specify_classification in H0 as [H0 [x [y [H1 [H2 [H3 H4]]]]]];
-          subst.
+        rewrite swap_action, Product_classification; repeat split; eauto 8.
+      + apply Specify_classification in H0 as [H0 [x [y [H1 [H2 [H3 H4]]]]]].
+        subst.
         apply Specify_classification.
-        unfold f.
         rewrite restriction_range, swap_range, restriction_domain,
         swap_domain, <-H.
         split; auto.
@@ -467,7 +432,6 @@ Section Quadratic_reciprocity.
         rewrite <-restriction_action, swap_action; auto.
         now rewrite swap_domain, <-H.
     - apply Injective_classification.
-      unfold f.
       intros x y H0 H1 H2.
       rewrite <-? restriction_action in H2;
         rewrite ? restriction_domain, ? swap_domain, <-? H in *; try congruence.
