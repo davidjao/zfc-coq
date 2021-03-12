@@ -608,8 +608,7 @@ Section Polynomial_theorems.
     { intros f [c H].
       assert (degree f = 0%N) as H0.
       { apply naturals.cancellation_0_add in H; tauto. }
-      unfold sum.
-      rewrite iterate_0.
+      rewrite sum_0.
       apply IPS_eq, power_series_extensionality.
       extensionality n.
       fold (coefficient f n) (coefficient (coefficient f 0 * x ^ 0) n).
@@ -661,8 +660,7 @@ Section Polynomial_theorems.
     apply degree_bound; auto.
     intros m H.
     induction d using Induction.
-    - unfold sum.
-      rewrite iterate_0, const_coeff_mul, coeffs_of_x_ne_n;
+    - rewrite sum_0, const_coeff_mul, coeffs_of_x_ne_n;
         try now ring_simplify.
       intros H0.
       subst.
@@ -681,8 +679,7 @@ Section Polynomial_theorems.
   Proof.
     intros d a k.
     induction d using Induction.
-    - unfold sum.
-      now rewrite ? iterate_0.
+    - now rewrite ? sum_0.
     - rewrite ? sum_succ, <-IHd, coefficient_add; auto using zero_le.
   Qed.
 
@@ -952,12 +949,11 @@ Section Polynomial_theorems.
       ((sum _ (λ i, f i * x^i)%poly 0 m : poly) α * α^n)%R.
   Proof.
     induction m using Induction; intros α f n.
-    - unfold sum.
-      rewrite iterate_0, rings.pow_0_r, (rings.M1 _ _ 1), rings.M3,
+    - rewrite sum_0, rings.pow_0_r, (rings.M1 _ _ 1), rings.M3,
       eval_mul_const, eval_x_to_n.
       f_equal.
-      unfold eval, sum.
-      now rewrite degree_const, iterate_0, rings.pow_0_r, coeff_const,
+      unfold eval.
+      now rewrite degree_const, sum_0, rings.pow_0_r, coeff_const,
       rings.M1, rings.M3.
     - rewrite ? sum_succ, rings.D1, ? eval_add, rings.D1, IHm, <-rings.M2,
       ? eval_mul_const, <-rings.M2, <-rings.pow_add_r, ? eval_x_to_n,
@@ -977,10 +973,9 @@ Section Polynomial_theorems.
   Proof.
     intros n f a α.
     induction n using Induction.
-    { unfold sum.
-      now rewrite ? iterate_0, ? rings.M2,
-      ? (rings.M1 _ _ (a 0%N : poly)), ? (rings.M1 _ _ (a 0%N)),
-      <-? rings.M2, eval_mul_const, eval_mul_x_f, eval_x_to_n. }
+    { now rewrite ? sum_0, ? rings.M2, ? (rings.M1 _ _ (a 0%N : poly)),
+      ? (rings.M1 _ _ (a 0%N)), <-? rings.M2, eval_mul_const,
+      eval_mul_x_f, eval_x_to_n. }
     rewrite ? sum_succ, ? rings.D1_l, <-IHn, eval_add; auto using zero_le.
     f_equal.
     rewrite <-eval_x_to_n, rings.M1, <-rings.M2, eval_mul_const,
@@ -1010,8 +1005,8 @@ Section Polynomial_theorems.
            auto using naturals.le_refl. }
       exists (coefficient f 0), (coefficient f 1).
       split.
-      + unfold naturals.one, sum.
-        rewrite iterate_succ, iterate_0, rings.pow_0_r; auto using zero_le.
+      + unfold naturals.one.
+        rewrite sum_succ, sum_0, rings.pow_0_r; auto using zero_le.
         f_equal; try ring.
         now rewrite rings.pow_1_r.
       + intros H0.
@@ -1169,8 +1164,7 @@ Section Polynomial_theorems.
     - subst.
       rewrite ? rings.pow_0_r, <-(rings.pow_0_r _ x), coeffs_of_x_to_n,
       binomial_zero, rings.M1, rings.M3.
-      unfold INR, rings.INR, sum.
-      now rewrite iterate_0.
+      apply eq_sym, sum_0.
     - rewrite pow_succ_r, D1_l, coefficient_add, binomial_zero,
       (rings.M1 _ _ (α : poly)), const_coeff_mul, IHn, <-(rings.pow_1_r _ x),
       coeff_of_x_mul_overflow, binomial_zero, pow_succ_r;
@@ -1180,10 +1174,8 @@ Section Polynomial_theorems.
 
   Lemma INR_0 : (0%R : R) = 0%N.
   Proof.
-    unfold INR, rings.INR, sum, iterate_with_bounds.
-    destruct excluded_middle_informative; auto.
-    exfalso; apply naturals.le_not_gt in l.
-    eauto using naturals.succ_lt.
+    unfold INR, rings.INR.
+    rewrite sum_neg; eauto using naturals.succ_lt.
   Qed.
 
   Theorem generalized_binomial_theorem :
@@ -1194,11 +1186,8 @@ Section Polynomial_theorems.
       - now subst; rewrite binomial_theorem_zero, sub_diag.
       - rewrite rings.pow_0_r, <-(rings.pow_0_r _ x),
         coeffs_of_x_ne_n, binomial_empty_set; auto.
-        unfold INR, rings.INR, sum, iterate_with_bounds.
-        destruct excluded_middle_informative; auto.
-        + apply naturals.le_not_gt in l as H0.
-          exfalso; eauto using naturals.succ_lt.
-        + now rewrite mul_0_l. }
+        unfold INR, rings.INR.
+        rewrite sum_neg, mul_0_l; eauto using naturals.succ_lt. }
     destruct (classic (k = 0%N)) as [H | H].
     { now subst; rewrite binomial_theorem_zero, sub_0_r. }
     apply succ_0 in H as [c H].
@@ -1209,25 +1198,21 @@ Section Polynomial_theorems.
     rewrite <-(rings.pow_1_r _ α) at 2.
     rewrite <-rings.pow_add_r.
     subst.
-    destruct (classic (n = 0%N)) as [H | H].
-    { subst.
-      rewrite binomial_empty_set, sub_0_l, <-INR_0, rings.mul_0_l, rings.A3.
-      2: { intros H.
-           now contradiction (PA4 c). }
+    destruct (classic (n = 0%N)) as [H | H];
+      try apply succ_0 in H as [m H]; subst.
+    { rewrite binomial_empty_set, sub_0_l, <-INR_0, rings.mul_0_l, rings.A3.
+      2: { apply neq_sym, PA4. }
       rewrite sub_succ, ? sub_0_l.
       f_equal.
-      destruct (classic (c = 0%N)) as [H | H].
-      - subst.
-        fold naturals.one.
+      destruct (classic (c = 0%N)) as [H | H];
+        try apply succ_0 in H as [m H]; subst.
+      - fold naturals.one.
         now rewrite sub_diag, binomial_one, binomial_zero.
       - rewrite binomial_empty_set, binomial_overflow; auto.
-        + rewrite naturals.lt_def.
-          exists c.
-          rewrite <-? add_1_r.
-          split; auto; ring.
-        + now rewrite <-add_1_r, sub_abba. }
-    apply succ_0 in H as [m H].
-    subst.
+        + rewrite <-S_lt.
+          apply naturals.lt_succ.
+        + rewrite <-add_1_r, sub_abba.
+          apply neq_sym, PA4. }
     rewrite ? sub_succ, <-(add_1_r c), sub_abba.
     destruct (lt_trichotomy c (S m)) as [H | [H | H]].
     - apply le_lt_succ in H as [d H].
@@ -1378,8 +1363,7 @@ Section Polynomial_theorems.
     split; unfold const; intros H.
     - exists (coefficient f 0).
       rewrite (polynomial_sum_lemma 0 f) at 1.
-      + unfold sum.
-        rewrite iterate_0, rings.pow_0_r.
+      + rewrite sum_0, rings.pow_0_r.
         now ring_simplify.
       + rewrite H.
         auto using naturals.le_refl.

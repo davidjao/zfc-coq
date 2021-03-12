@@ -4,42 +4,29 @@ Require Export rationals.
 Example Gauss : ∀ n, (2 * (sum ℤ (λ k, k : Z) 1 n) = n * (n + 1))%Z.
 Proof.
   intros n.
-  induction n using Induction; unfold sum.
-  - unfold iterate_with_bounds.
-    destruct excluded_middle_informative.
-    + exfalso.
-      rewrite naturals.le_not_gt in l.
-      eauto using naturals.lt_succ.
-    + now rewrite (mul_0_r ℤ), (mul_0_l ℤ).
-  - destruct (classic (n = 0%N)).
-    + subst.
-      rewrite iterate_0.
-      replace (S 0 : Z) with 1%Z by auto.
+  induction n using Induction.
+  - rewrite sum_neg; simpl rings.zero; replace (0%N : Z) with 0%Z;
+      try ring; eauto using naturals.succ_lt.
+  - destruct (classic (n = 0%N)) as [H | H];
+      try apply succ_0 in H as [c H]; subst.
+    + rewrite sum_0; replace (S 0 : Z) with 1%Z by auto; ring.
+    + rewrite sum_succ; simpl; try apply one_le_succ.
+      rewrite integers.M1, integers.D1, (integers.M1 _ 2), IHn,
+      <-add_1_r, <-(add_1_r (c+1)), <-? INZ_add.
+      replace (1%N : Z) with 1%Z by auto.
       ring.
-    + apply succ_0 in H as [c H].
-      subst.
-      rewrite iterate_succ.
-      * rewrite (rings.D1_l ℤ).
-        unfold sum in IHn.
-        simpl in *.
-        rewrite IHn, <-add_1_r, <-(add_1_r (c+1)), <-? INZ_add.
-        replace (1%N : Z) with 1%Z by auto.
-        ring.
-      * exists c.
-        now rewrite add_comm, add_1_r.
 Qed.
 
 Lemma IZQ_sum : ∀ a b f,
     (sum ℚ_ring (compose IZQ f) a b) = IZQ (sum ℤ f a b).
 Proof.
   intros a b f.
-  unfold sum, iterate_with_bounds, compose.
-  destruct excluded_middle_informative; auto.
-  destruct constructive_indefinite_description.
-  clear e.
-  induction x using Induction.
-  - now rewrite ? iterated_op_0.
-  - now rewrite ? iterated_op_succ, IHx, ? IZQ_add.
+  destruct (excluded_middle_informative (a ≤ b)%N) as [[c H] | H]; subst.
+  - induction c using Induction.
+    + now rewrite add_0_r, ? sum_0.
+    + rewrite add_succ_r, ? sum_succ, IHc; simpl;
+        try (now rewrite <-IZQ_add); exists (S c); now rewrite add_succ_r.
+  - now rewrite <-naturals.lt_not_ge, ? sum_neg in *.
 Qed.
 
 Example Gauss_Q : ∀ n, (sum ℚ_ring (λ x, x : Q) 1 n) = n * (n + 1) / 2.

@@ -1305,8 +1305,7 @@ Theorem INZ_sum_0 : ∀ m (f : N → N),
 Proof.
   intros m f.
   induction m using Induction.
-  - unfold sum, sum_N.
-    now rewrite ? iterate_0.
+  - now rewrite sum_0, sum_N_0.
   - rewrite sum_succ, sum_N_succ, IHm, INZ_add; auto using zero_le.
 Qed.
 
@@ -1315,11 +1314,10 @@ Theorem INZ_sum : ∀ a b (f : N → N),
 Proof.
   intros a b f.
   destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
-  2: { unfold sum, sum_N, iterate_with_bounds.
-       repeat destruct excluded_middle_informative; tauto. }
   - unfold sum, sum_N.
     rewrite ? iterate_shift.
     apply INZ_sum_0.
+  - now rewrite <-naturals.lt_not_ge, sum_neg, sum_N_neg in *.
 Qed.
 
 Theorem INZ_prod_0 : ∀ m (f : N → N),
@@ -1327,8 +1325,7 @@ Theorem INZ_prod_0 : ∀ m (f : N → N),
 Proof.
   intros m f.
   induction m using Induction.
-  - unfold prod, prod_N.
-    now rewrite ? iterate_0.
+  - now rewrite prod_0, prod_N_0.
   - rewrite prod_succ, prod_N_succ, IHm, INZ_mul; auto using zero_le.
 Qed.
 
@@ -1337,11 +1334,10 @@ Theorem INZ_prod : ∀ a b (f : N → N),
 Proof.
   intros a b f.
   destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
-  2: { unfold prod, prod_N, iterate_with_bounds.
-       repeat destruct excluded_middle_informative; tauto. }
   - unfold prod, prod_N.
     rewrite ? iterate_shift.
     apply INZ_prod_0.
+  - now rewrite <-naturals.lt_not_ge, prod_neg, prod_N_neg in *.
 Qed.
 
 Definition even (x : Z) := 2｜x.

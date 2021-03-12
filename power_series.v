@@ -235,18 +235,14 @@ Section Power_series_construction.
   Proof.
     induction n using Induction.
     { intros f g.
-      unfold sum.
-      now rewrite ? iterate_0, sub_0_l, M1. }
+      now rewrite ? sum_0, sub_diag, M1. }
     intros f g.
     rewrite sum_succ; auto using zero_le.
     replace (sum _ (λ k : N, f k * g (S n - k)) 0 n)
       with (sum _ (λ k : N, f k * g (n - k + 1)%N) 0 n).
-    2: { unfold sum.
-         replace n with (0+n)%N at 1 2 by ring.
-         apply iterate_extensionality.
+    2: { apply iterate_extensionality.
          intros k [H [c H0]].
          replace (n-k+1)%N with (S n - k); auto.
-         rewrite naturals.add_0_l in H0.
          subst.
          now rewrite <-add_1_r, (naturals.add_comm _ 1%N),
          ? (naturals.add_comm k), naturals.add_assoc,
@@ -262,8 +258,7 @@ Section Power_series_construction.
     clear IHn.
     revert f g.
     induction n using Induction; intros f g; try tauto.
-    { unfold sum.
-      now rewrite add_0_r, ? iterate_0, ? sub_diag, add_1_r. }
+    { now rewrite add_0_r, sum_0, ? iterate_0, ? sub_diag, add_1_r. }
     rewrite sum_succ; auto using zero_le.
     replace (sum _ (λ k : N, g (k + 1)%N * f (S n - k)) 0 n)
       with (sum _ (λ k : N, g (k + 1)%N * f (S n - (n - (n - k)))) 0 n).
@@ -278,17 +273,9 @@ Section Power_series_construction.
       f_equal.
       rewrite sub_0_r, <-? add_1_r, ? (naturals.add_comm _ 1), ? sub_abba.
       f_equal.
-      unfold sum.
-      destruct (classic (n = 0%N)) as [H | H].
-      { subst.
-        unfold iterate_with_bounds.
-        destruct excluded_middle_informative; auto.
-        exfalso.
-        apply le_not_gt in l.
-        contradict l.
-        now apply succ_lt. }
-      apply succ_0 in H as [m H].
-      subst.
+      destruct (classic (n = 0%N)) as [H | H];
+        try apply succ_0 in H as [m H]; subst.
+      { rewrite ? sum_neg; eauto using naturals.succ_lt. }
       rewrite <-add_1_r, (naturals.add_comm m).
       apply iterate_extensionality.
       intros k [[c H] [d H0]].
@@ -333,19 +320,13 @@ Section Power_series_construction.
     intros.
     revert c.
     induction n using Induction; intros c.
-    { unfold sum.
-      now rewrite ? iterate_0, sub_0_r, iterate_0, sub_0_r, M2. }
-    rewrite ? sum_succ, ? sub_diag; auto using zero_le.
-    unfold sum at 3.
-    rewrite iterate_0, sub_diag.
-    destruct (classic (n = 0%N)) as [H | H].
-    { subst.
-      unfold sum.
-      rewrite ? iterate_0, sub_0_r, iterate_succ, iterate_0, ? sub_diag,
-      sub_0_r; auto using le_refl.
+    { now rewrite ? sum_0, sub_0_r, sum_0, sub_0_r, M2. }
+    rewrite ? sum_succ, ? sub_diag, sum_0, sub_diag; auto using zero_le.
+    destruct (classic (n = 0%N)) as [H | H];
+      try apply succ_0 in H as [m H]; subst.
+    { rewrite ? sum_0, sub_0_r, sum_succ, sum_0, ? sub_diag,
+      sub_0_r; auto using zero_le.
       ring. }
-    apply succ_0 in H as [m H].
-    subst.
     replace (sum _ (λ k : N, a k * sum _ (λ j : N, b j * c (S (S m) - k - j))
                                        0 (S (S m) - k)) 0 (S m))%ring with
         (sum _ (λ k : N, a k * sum _ (λ j : N, b j * c (S (S m) - k - j))
@@ -441,8 +422,7 @@ Section Power_series_construction.
     apply functional_extensionality.
     intros n.
     induction n using Induction.
-    { unfold sum.
-      rewrite iterate_0.
+    { rewrite sum_0.
       destruct excluded_middle_informative.
       - now rewrite M1, M3.
       - contradict n.
@@ -456,14 +436,12 @@ Section Power_series_construction.
     f_equal.
     clear IHn e.
     induction n using Induction.
-    { unfold sum.
-      rewrite iterate_0.
+    { rewrite sum_0.
       destruct excluded_middle_informative.
       - rewrite sub_0_r in e.
         now contradiction (PA4 0).
       - now rewrite mul_0_r. }
-    rewrite <-IHn at 1.
-    rewrite sum_succ; auto using zero_le.
+    rewrite <-IHn, sum_succ at 1; auto using zero_le.
     destruct excluded_middle_informative.
     { rewrite <-add_1_r, naturals.add_comm, sub_abba in e.
       now contradiction (PA4 0). }
@@ -558,16 +536,14 @@ Section Power_series_construction.
     intros n.
     destruct excluded_middle_informative.
     - subst.
-      unfold sum.
-      rewrite iterate_0.
+      rewrite sum_0.
       repeat destruct excluded_middle_informative; try tauto.
       contradict n.
       now rewrite sub_0_r.
     - assert (0%ring = sum _ (λ k, 0%ring) 0 n).
       { clear n0.
         induction n using Induction.
-        - unfold sum.
-          now rewrite iterate_0.
+        - now rewrite sum_0.
         - rewrite sum_succ, <-IHn, A3; auto using zero_le. }
       rewrite H.
       apply iterate_extensionality.
@@ -593,24 +569,19 @@ Section Power_series_construction.
     rewrite ? coefficient_seriesify.
     apply functional_extensionality.
     intros n.
-    destruct excluded_middle_informative.
-    - subst.
-      unfold sum.
-      rewrite iterate_0, sub_0_l.
+    destruct excluded_middle_informative; subst.
+    - rewrite sum_0, sub_0_l.
       destruct excluded_middle_informative; try tauto.
       now rewrite mul_0_l.
     - assert (∀ z, (sum _ (λ k, if (excluded_middle_informative (k = 1%N))
                                 then z else 0%ring) 0 n) = z) as H.
       { intros z.
         induction n using Induction.
-        { unfold sum.
-          rewrite iterate_0.
+        { rewrite sum_0.
           destruct excluded_middle_informative; tauto. }
         destruct (classic (n = 0%N)) as [H | H].
         { subst.
-          rewrite sum_succ; auto using zero_le.
-          unfold sum.
-          rewrite iterate_0.
+          rewrite sum_succ, sum_0; auto using zero_le.
           repeat destruct excluded_middle_informative;
             try (now contradiction (PA4 0)); ring. }
         apply IHn in H.
@@ -618,8 +589,7 @@ Section Power_series_construction.
         destruct excluded_middle_informative; try ring.
         apply PA5 in e.
         subst.
-        unfold sum in H.
-        rewrite iterate_0 in H.
+        rewrite sum_0 in H.
         destruct excluded_middle_informative; subst; try ring.
         contradiction (PA4 0). }
       rewrite <-H.
@@ -672,8 +642,7 @@ Section Power_series_construction.
                                  then r else 0%ring) 0 n = r) as H.
     { intros r.
       induction n using Induction.
-      - unfold sum.
-        rewrite iterate_0.
+      - rewrite sum_0.
         now destruct excluded_middle_informative.
       - rewrite sum_succ, IHn; auto using zero_le.
         destruct excluded_middle_informative.

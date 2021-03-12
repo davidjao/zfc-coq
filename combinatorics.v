@@ -837,17 +837,12 @@ Qed.
 Theorem number_of_permutations_n : ∀ n, n! = permutations n.
 Proof.
   intros n.
-  induction n using Induction; unfold factorial in *.
-  - unfold prod_N, iterate_with_bounds.
-    destruct excluded_middle_informative.
-    + exfalso.
-      rewrite naturals.le_not_gt in l.
-      contradict l.
-      apply naturals.lt_succ.
-    + unfold permutations.
-      now rewrite size_of_bijections_of_empty_set.
+  induction n using Induction; unfold factorial, permutations in *.
+  - rewrite prod_N_neg.
+    + now rewrite size_of_bijections_of_empty_set.
+    + apply naturals.lt_succ.
   - rewrite prod_N_succ, IHn.
-    + unfold permutations, size_of_bijections.
+    + unfold size_of_bijections.
       rewrite permutation_succ, finite_products_card, card_of_natural, mul_comm;
         auto using naturals_are_finite, permutations_are_finite.
     + apply (succ_le _ n), zero_le.
@@ -2201,13 +2196,9 @@ Lemma factorial_ne_0 : ∀ k, k! ≠ 0%N.
 Proof.
   intros k H.
   induction k using Induction; unfold factorial in *.
-  - unfold prod_N, iterate_with_bounds in H.
-    destruct excluded_middle_informative.
-    + clear H.
-      rewrite naturals.le_not_gt in l.
-      contradict l.
-      apply naturals.succ_lt.
+  - rewrite prod_N_neg in H.
     + now contradiction (PA4 0).
+    + apply naturals.succ_lt.
   - rewrite prod_N_succ in H.
     + apply naturals.cancellation_0_mul in H as [H | H]; auto.
       now contradiction (PA4 k).
@@ -2216,10 +2207,8 @@ Qed.
 
 Theorem zero_factorial : 0! = 1%N.
 Proof.
-  unfold factorial, prod_N, iterate_with_bounds.
-  destruct excluded_middle_informative; auto.
-  exfalso.
-  apply naturals.le_not_gt in l; eauto using naturals.lt_succ.
+  unfold factorial.
+  rewrite prod_N_neg; auto; apply naturals.succ_lt.
 Qed.
 
 Theorem binomial_zero : ∀ n : N, binomial n 0 = 1%N.
@@ -2435,8 +2424,7 @@ Qed.
 
 Theorem one_factorial : 1! = 1%N.
 Proof.
-  unfold factorial, prod_N.
-  now rewrite iterate_0.
+  apply prod_N_0.
 Qed.
 
 Theorem binomial_one : binomial 1 1 = 1%N.
@@ -2462,8 +2450,7 @@ Theorem sum_card_0 : ∀ n X f,
     sum ℤ (λ k, # (f k) : Z) 0 n = (# X : Z).
 Proof.
   induction n using Induction; intros X f H H0 H1.
-  - unfold sum.
-    rewrite iterate_0.
+  - rewrite sum_0.
     repeat f_equal.
     apply Extensionality.
     split; intros H2.
@@ -2590,13 +2577,12 @@ Proof.
            now apply O1_le.
         -- rewrite (add_comm a).
            now apply O1_le.
-  - unfold sum, iterate_with_bounds.
-    destruct excluded_middle_informative; try tauto.
+  - rewrite <-naturals.lt_not_ge, sum_neg, naturals.lt_not_ge in *; auto.
     apply INZ_eq, eq_sym.
     replace X with ∅; auto using card_empty.
     apply Extensionality.
     split; intros H3; try contradiction (Empty_set_classification z).
     apply H1 in H3 as [y [[[H3 H4] H5] H6]].
-    contradict n.
+    contradict H2.
     eauto using naturals.le_trans.
 Qed.

@@ -693,7 +693,7 @@ Section Modular_arithmetic.
       Lemma Euler_Phi_equal : Euler_Phi_product = Euler_Phi_product_shifted.
       Proof.
         unfold Euler_Phi_product, Euler_Phi_product_shifted.
-        apply (product_bijection ℤ_); intros z H.
+        apply iterate_bijection; auto using M1, M2; intros z H.
         - destruct (Euler_Phi_list_surj (a * Euler_Phi_list z)) as [i [H0 H1]].
           { apply unit_closure; auto using Euler_Phi_list_unit. }
           exists i.
@@ -1638,7 +1638,7 @@ Section Modular_arithmetic.
     Lemma Gauss_Lemma_helper :
       prod ℤ_ (λ n, n : Z_) 1 (# QR) = prod ℤ_ (λ n, (QR_r n) : Z_) 1 (# QR).
     Proof.
-      apply product_bijection.
+      apply iterate_bijection; auto using M1, M2.
       - intros j H.
         exists (QR_r_N j).
         apply QR_r_nonzero in H.
