@@ -42,8 +42,8 @@ Proof.
       ring.
 Qed.
 
-Definition Zset := (ω × ω) / integer_relation.
-Definition Z := (elts Zset).
+Definition 𝐙 := (ω × ω) / integer_relation.
+Definition Z := (elts 𝐙).
 
 Declare Scope Z_scope.
 Delimit Scope Z_scope with Z.

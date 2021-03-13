@@ -263,6 +263,7 @@ Proof.
       congruence.
 Qed.
 
+Definition 𝐍 := ω.
 Definition N := elts ω.
 
 Declare Scope N_scope.

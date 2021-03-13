@@ -165,9 +165,9 @@ Section Modular_arithmetic.
   Qed.
 
   Definition relation_mod :=
-    {z in Zset × Zset | ∃ a b : Z, (a,b) = z ∧ a ≡ b (mod n)}.
+    {z in 𝐙 × 𝐙 | ∃ a b : Z, (a, b) = z ∧ a ≡ b (mod n)}.
 
-  Theorem equivalence_mod : is_equivalence Zset relation_mod.
+  Theorem equivalence_mod : is_equivalence 𝐙 relation_mod.
   Proof.
     repeat split.
     - intros a H.
@@ -197,9 +197,9 @@ Section Modular_arithmetic.
   Delimit Scope Zn_scope with Zn.
   Open Scope Zn_scope.
 
-  Definition Z_mod := Zset / relation_mod.
+  Definition 𝐙_ := 𝐙 / relation_mod.
 
-  Definition Z_ := elts (Z_mod).
+  Definition Z_ := elts (𝐙_).
 
   Bind Scope Zn_scope with Z_.
 
@@ -336,7 +336,7 @@ Section Modular_arithmetic.
   Qed.
 
   Definition ℤ_ :=
-    mkRing Z_mod (0 : Z_) (1 : Z_) add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
+    mkRing 𝐙_ (0 : Z_) (1 : Z_) add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
 
   Add Ring Z_ring_raw : (ringify ℤ_).
   Add Ring Z_ring : (ringify ℤ_ : ring_theory (0 : Z_) _ _ _ _ _ eq).
@@ -503,7 +503,7 @@ Section Modular_arithmetic.
         IZn_eq, eq_eqm, f_equal, set_proj_injective.
     Qed.
 
-    Theorem bijection_of_Z_mod : (Z_mod ~ modulus_in_N)%set.
+    Theorem bijection_of_Z_mod : (𝐙_ ~ modulus_in_N)%set.
     Proof.
       symmetry.
       exists (sets.functionify map_to_mod_n).
@@ -511,22 +511,22 @@ Section Modular_arithmetic.
       auto using bijective_map_to_mod_n.
     Qed.
 
-    Theorem finite_Z_mod : finite Z_mod.
+    Theorem finite_Z_mod : finite 𝐙_.
     Proof.
       exists modulus_in_N.
       auto using bijection_of_Z_mod.
     Qed.
 
-    Theorem Z_mod_card : # Z_mod = modulus_in_N.
+    Theorem Z_mod_card : # 𝐙_ = modulus_in_N.
     Proof.
       auto using equivalence_to_card, bijection_of_Z_mod.
     Qed.
 
-    Definition Euler_Phi_set := {x of type Z_mod | gcd (x : Z_, n) = 1}.
+    Definition Euler_Phi_set := {x of type 𝐙_ | gcd (x : Z_, n) = 1}.
 
     Definition Euler_Phi := # Euler_Phi_set.
 
-    Definition unit_set_mod := {x of type Z_mod | rings.unit ℤ_ x}.
+    Definition unit_set_mod := {x of type 𝐙_ | rings.unit ℤ_ x}.
 
     Theorem Euler_Phi_unit : Euler_Phi_set = unit_set_mod.
     Proof.
@@ -565,7 +565,7 @@ Section Modular_arithmetic.
     Qed.
 
     Theorem Euler_Phi_helper : ∀ f,
-        range f = Euler_Phi_set → ∀ x, x ∈ domain f → f x ∈ Z_mod.
+        range f = Euler_Phi_set → ∀ x, x ∈ domain f → f x ∈ 𝐙_.
     Proof.
       intros f H x H0.
       pose proof function_maps_domain_to_range f x H0 as H1.
@@ -728,8 +728,8 @@ Section Modular_arithmetic.
 
   Definition square_function := sets.functionify square.
 
-  Definition QR := {x of type Z_mod | rings.unit ℤ_ x ∧ ∃ a, square a = x}.
-  Definition QNR := {x of type Z_mod | rings.unit ℤ_ x ∧ (x : Z_) ∉ QR}.
+  Definition QR := {x of type 𝐙_ | rings.unit ℤ_ x ∧ ∃ a, square a = x}.
+  Definition QNR := {x of type 𝐙_ | rings.unit ℤ_ x ∧ (x : Z_) ∉ QR}.
 
   Definition legendre_symbol (a : Z_) : Z.
   Proof.
@@ -935,7 +935,7 @@ Section Modular_arithmetic.
         destruct H0 as [[x H0] [a H1]].
         split; eauto.
         exists a.
-        enough (a ∈ unit_set_mod ∩ Z_mod).
+        enough (a ∈ unit_set_mod ∩ 𝐙_).
         { now rewrite <-restriction_action, @functionify_action, H1;
             try now rewrite sets.functionify_domain. }
         rewrite Pairwise_intersection_classification.
@@ -988,7 +988,7 @@ Section Modular_arithmetic.
 
     Theorem finite_QR : finite QR.
     Proof.
-      apply (subsets_of_finites_are_finite _ Z_mod); auto using finite_Z_mod.
+      apply (subsets_of_finites_are_finite _ 𝐙_); auto using finite_Z_mod.
       intros x H.
       now apply Specify_classification in H.
     Qed.
@@ -1057,7 +1057,7 @@ Section Modular_arithmetic.
           now rewrite eqm_div_n, <-IZn_eq, H2, (mul_0_r ℤ_) in *. }
       apply Extensionality.
       unfold square_function.
-      assert ({a,-a} ⊂ Z_mod) as H2.
+      assert ({a,-a} ⊂ 𝐙_) as H2.
       { intros z H2.
         apply Pairing_classification in H2 as [H2 | H2];
           subst; eauto using elts_in_set. }

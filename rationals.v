@@ -1,12 +1,12 @@
 Set Warnings "-ambiguous-paths".
 Require Export ordered_fields Field.
 
-Definition Z0 := {z in Zset × Zset | (proj2 Zset Zset z) ≠ 0}.
+Definition 𝐙0 := {z in 𝐙 × 𝐙 | (proj2 𝐙 𝐙 z) ≠ 0}.
 
 Definition rational_relation :=
-  {z in Z0 × Z0 | ∃ a b c d : Z, z = ((a, b), (c, d)) ∧ a * d = b * c}.
+  {z in 𝐙0 × 𝐙0 | ∃ a b c d : Z, z = ((a, b), (c, d)) ∧ a * d = b * c}.
 
-Theorem rational_equivalence : is_equivalence Z0 rational_relation.
+Theorem rational_equivalence : is_equivalence 𝐙0 rational_relation.
 Proof.
   repeat split; unfold rational_relation in *.
   - intros a H.
@@ -55,9 +55,9 @@ Proof.
     + now ring_simplify [H5 H9].
 Qed.
 
-Definition Qset := Z0 / rational_relation.
+Definition 𝐐 := 𝐙0 / rational_relation.
 
-Definition Q := elts Qset.
+Definition Q := elts 𝐐.
 
 Definition IQS (a : Q) := elt_to_set a : set.
 Coercion IQS : Q >-> set.
@@ -67,7 +67,7 @@ Delimit Scope Q_scope with Q.
 Open Scope Q_scope.
 Bind Scope Q_scope with Q.
 
-Lemma embed_zero : (0,1) ∈ Z0.
+Lemma embed_zero : (0,1) ∈ 𝐙0.
 Proof.
   apply Specify_classification.
   split.
@@ -89,7 +89,7 @@ Proof.
       unfold IZS; repeat split; auto using elts_in_set.
 Qed.
 
-Lemma embed_nonzero : ∀ a b : Z, b ≠ 0 → (a, b) ∈ Z0.
+Lemma embed_nonzero : ∀ a b : Z, b ≠ 0 → (a, b) ∈ 𝐙0.
 Proof.
   intros a b H.
   apply Specify_classification.
@@ -134,7 +134,7 @@ Proof.
       apply Product_classification; eauto. }
   split; auto.
   apply set_proj_injective.
-  unfold Qset.
+  unfold 𝐐.
   rewrite <-quotient_image, <-H1.
   unfold embed; destruct excluded_middle_informative; simpl; intuition.
 Qed.
@@ -160,7 +160,7 @@ Proof.
     split.
     + apply Product_classification.
       exists (c, d), (a, b).
-      cut (∀ e f (F : f ∈ Zset), e ∈ Zset → exist F ≠ 0 → (e, f) ∈ Z0); eauto.
+      cut (∀ e f (F : f ∈ 𝐙), e ∈ 𝐙 → exist F ≠ 0 → (e, f) ∈ 𝐙0); eauto.
       intros e f F E H2.
       apply Specify_classification.
       split; try apply Product_classification; eauto.
