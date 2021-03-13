@@ -813,6 +813,54 @@ Proof.
   now apply Ordered_pair_iff in H4 as [H4 H5].
 Qed.
 
+Section Projections.
+
+  Context {A B : set}.
+
+  Definition π1 : elts (A × B) → elts A.
+  Proof.
+    intros z.
+    pose proof elts_in_set z.
+    apply Product_classification in H.
+    destruct (constructive_indefinite_description H) as [a H0].
+    destruct (constructive_indefinite_description H0) as [b H1].
+    destruct H1 as [H1 [H2 H3]].
+    exact (exist H1).
+  Defined.
+
+  Definition π2 : elts (A × B) → elts B.
+  Proof.
+    intros z.
+    pose proof elts_in_set z.
+    apply Product_classification in H.
+    destruct (constructive_indefinite_description H) as [a H0].
+    destruct (constructive_indefinite_description H0) as [b H1].
+    destruct H1 as [H1 [H2 H3]].
+    exact (exist H2).
+  Defined.
+
+  Theorem π1_action : ∀ a b (H : (a, b) ∈ A × B), a = π1 (exist H).
+  Proof.
+    intros a b H.
+    unfold π1.
+    repeat destruct constructive_indefinite_description.
+    repeat destruct a0.
+    simpl in *.
+    now apply Ordered_pair_iff in e0.
+  Qed.
+
+  Theorem π2_action : ∀ a b (H : (a, b) ∈ A × B), b = π2 (exist H).
+  Proof.
+    intros a b H.
+    unfold π2.
+    repeat destruct constructive_indefinite_description.
+    repeat destruct a0.
+    simpl in *.
+    now apply Ordered_pair_iff in e0.
+  Qed.
+
+End Projections.
+
 Theorem Product_union_distr_l : ∀ A B X, (A ∪ B) × X = (A × X) ∪ (B × X).
 Proof.
   intros A B X.
@@ -889,7 +937,7 @@ Proof.
   - contradiction (Empty_set_classification z).
 Qed.
 
-Definition quotient X R := {s in P X | ∃ x, x ∈ X ∧ s = {y in X | (x,y) ∈ R}}.
+Definition quotient X R := {{y in X | (x,y) ∈ R} | x in X}.
 
 Infix "/" := quotient : set_scope.
 
@@ -900,20 +948,20 @@ Proof.
   split; intros H; repeat split;
     unfold quotient in *;
     repeat destruct constructive_indefinite_description;
-    try apply i in H as [H [y [H0 H1]]];
-    rewrite Specify_classification in *.
-  - now apply Powerset_classification.
-  - destruct H as [H [y [H0 H1]]].
-    exists y.
-    split; auto.
-    split; intros H2; subst; now rewrite Specify_classification in *.
-  - destruct H as [H [y [H0 H1]]].
-    rewrite Powerset_classification in *.
-    split; auto.
-    exists y.
-    split; auto.
+    rewrite replacement_classification in *; destruct H as [σ H]; subst.
+  - intros x H.
+    now apply Specify_classification in H.
+  - exists σ.
+    split; auto using elts_in_set.
+    split; intros H.
+    + now apply Specify_classification in H.
+    + now apply Specify_classification.
+  - destruct H as [x [H H0]].
+    exists (exist H : elts X).
     apply Extensionality.
-    split; intros H2; rewrite Specify_classification in *; firstorder.
+    split; intros H1.
+    + apply Specify_classification; firstorder.
+    + apply Specify_classification in H1; firstorder.
 Qed.
 
 Definition reflexive X R := ∀ x, x ∈ X → (x,x) ∈ R.
@@ -1786,9 +1834,9 @@ Proof.
   exists (exist H1 : elts X).
   apply set_proj_injective.
   simpl in *.
-  apply Specify_classification in H as [H3 H4].
-  apply Extensionality; split; intros H5.
-  - now apply Specify_classification, H2 in H5.
+  apply replacement_classification in H as [γ H]; subst.
+  apply Extensionality; split; intros H3.
+  - now apply Specify_classification, H2 in H3.
   - now apply Specify_classification, H2.
 Qed.
 

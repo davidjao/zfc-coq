@@ -657,16 +657,14 @@ Proof.
     integers.zero_ne_1.
   rewrite (integers.M1 _ 1), integers.M3, (integers.M1 _ 2) in H.
   assert (2｜(m*m)) as H1.
-  { rewrite H.
-    eauto using (div_mul_r ℤ), (div_refl ℤ) with Z. }
+  { rewrite H; eauto using (div_mul_r ℤ), (div_refl ℤ) with Z. }
   apply Euclid's_lemma in H1; auto using two_is_prime.
   assert (2｜m) as [k H3] by tauto; simpl in *; fold Z in *.
   subst.
   replace (k*2*(k*2))%Z with (2*(2*k*k))%Z in H by ring.
   apply (cancellation_mul_l (integral_domain ℤ_order)) in H.
   - assert (2｜(n*n)) as H3.
-    { rewrite <-H;
-        eauto using (div_mul_r ℤ), (div_refl ℤ) with Z. }
+    { rewrite <-H; eauto using (div_mul_r ℤ), (div_refl ℤ) with Z. }
     apply Euclid's_lemma in H3; auto using two_is_prime.
     assert (2｜n) as [l H4] by tauto.
     subst.
