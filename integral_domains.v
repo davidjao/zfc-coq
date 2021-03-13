@@ -17,8 +17,8 @@ Record integral_domain :=
     }.
 
 Section Integral_domain_construction.
+
   Variable ring : rings.ring.
-  Variable ID : integral_domain.
   Notation R := (elts (Rset ring)).
   Notation "0" := (zero ring).
   Notation "1" := (one ring).

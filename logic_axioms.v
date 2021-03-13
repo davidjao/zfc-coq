@@ -35,3 +35,6 @@ Proof.
   intros P H.
   now destruct (classic P).
 Qed.
+
+Arguments exist {A P x}.
+Arguments constructive_indefinite_description {A P}.

@@ -42,18 +42,18 @@ Section Pretty_picture_lemmas.
   Lemma rectangle_slice_equiv : ∀ n : N, ({x of type Zset | 1 ≤ x ≤ n} ~ n)%set.
   Proof.
     intros n.
-    set (f := sets.functionify _ _ (λ x : N, x + 1)).
+    set (f := sets.functionify (λ x : N, x + 1)).
     assert (n ⊂ domain f) as H.
     { unfold f.
       rewrite sets.functionify_domain.
       intros x H.
-      eauto using elements_of_naturals_are_naturals, N_in_ω. }
+      eauto using elements_of_naturals_are_naturals, elts_in_set. }
     apply injection_restriction in H.
     2: { apply Injective_classification.
          intros x y H0 H1 H2.
          unfold f in *.
-         rewrite sets.functionify_domain, <-(setify_action _ _ H0),
-         <-(setify_action _ _ H1), ? functionify_action in *.
+         rewrite @sets.functionify_domain, (reify H0), (reify H1),
+         ? @functionify_action in *.
          rewrite ? (integers.A1 _ 1) in H2.
          apply set_proj_injective, (cancellation_add ℤ), INZ_eq in H2.
          now f_equal. }
@@ -61,7 +61,7 @@ Section Pretty_picture_lemmas.
     apply cardinality_eq, Extensionality.
     split; intros H0.
     - apply Specify_classification in H0 as [H0 H1].
-      rewrite <-(setify_action _ _ H0), <-specify_action in *.
+      rewrite (reify H0), despecify in *.
       destruct H1 as [H1 H2].
       apply Specify_classification.
       split; unfold f.
@@ -74,15 +74,14 @@ Section Pretty_picture_lemmas.
       rewrite Pairwise_intersection_classification.
       repeat split; auto.
       + rewrite sets.functionify_domain.
-        auto using N_in_ω.
-      + now rewrite functionify_action, <-add_1_r, <-INZ_add.
+        eauto using elts_in_set.
+      + now rewrite @functionify_action, <-add_1_r, <-INZ_add.
     - apply Specify_classification in H0 as [H0 [c [H1 H2]]].
       apply Pairwise_intersection_classification in H1 as [H1 H3].
       unfold f in *.
-      rewrite sets.functionify_domain, sets.functionify_range in *.
+      rewrite @sets.functionify_domain, @sets.functionify_range in *.
       apply Specify_classification.
-      rewrite <-(setify_action _ _ H3), functionify_action, <-H2,
-      <-specify_action in *.
+      rewrite (reify H3), @functionify_action, <-H2, despecify in *.
       repeat split; auto; unfold integers.one; rewrite INZ_add, add_1_r;
         apply INZ_le.
       + apply one_le_succ.
@@ -188,13 +187,11 @@ Section Pretty_picture_lemmas.
     - apply Specify_classification in H as [H [a [b H0]]].
       apply Product_classification.
       exists a, b.
-      repeat split;
-        try (apply Specify_classification; rewrite <-? specify_action);
+      repeat split; try (apply Specify_classification; rewrite ? despecify);
         intuition; eauto using elts_in_set.
     - apply Product_classification in H as [a [b [H [H0 H1]]]]; subst.
       apply Specify_classification in H as [H H1], H0 as [H0 H2].
-      rewrite <-(setify_action _ _ H), <-(setify_action _ _ H0),
-      <-? specify_action in *.
+      rewrite (reify H), (reify H0), despecify in *.
       apply Specify_classification.
       repeat split; eauto.
       apply Product_classification; eauto.
@@ -285,18 +282,18 @@ Section Pretty_picture_lemmas.
       { intros y.
         apply Product_classification.
         eauto using elts_in_set. }
-      set (f := sets.functionify _ _ (λ y : N, exist _ _ (H0 y))).
+      set (f := sets.functionify (λ y : N, exist (H0 y))).
       assert (x ⊂ domain f) as H1.
       { unfold f.
         rewrite sets.functionify_domain.
         intros z H1.
-        eauto using elements_of_naturals_are_naturals, N_in_ω. }
+        eauto using elements_of_naturals_are_naturals, elts_in_set. }
       apply injection_restriction in H1.
       2: { apply Injective_classification.
            intros x1 x2 H2 H3 H4.
            unfold f in *.
-           rewrite sets.functionify_domain, <-(setify_action _ _ H2),
-           <-(setify_action _ _ H3 ), ? functionify_action in *.
+           rewrite @sets.functionify_domain, (reify H2), (reify H3),
+           ? @functionify_action in *.
            f_equal.
            unfold elt_to_set, proj1_sig, integers.one in *.
            apply Ordered_pair_iff in H4 as [H4 H5].
@@ -312,8 +309,8 @@ Section Pretty_picture_lemmas.
         apply Specify_classification.
         unfold f in *.
         rewrite sets.functionify_domain in H4.
-        set (γ := exist _ _ H4 : N).
-        rewrite <-(setify_action _ _ H4) in *; fold γ in H3, H4 |-*.
+        set (γ := exist H4 : N).
+        rewrite (reify H4) in *; fold γ in H3, H4 |-*.
         apply lt_is_in in H3.
         split; rewrite functionify_action.
         2: { exists k, (γ + 1); eauto. }
@@ -346,9 +343,9 @@ Section Pretty_picture_lemmas.
         apply Ordered_pair_iff in H3 as [H3 H9].
         apply set_proj_injective in H3, H9.
         subst.
-        rewrite functionify_action, <-add_1_r, <-INZ_add,
+        rewrite @functionify_action, <-add_1_r, <-INZ_add,
         Pairwise_intersection_classification.
-        repeat split; auto using N_in_ω.
+        repeat split; eauto using elts_in_set.
         apply lt_is_in, lt_le_succ, INZ_le.
         rewrite <-e.
         now apply IZQ_le, floor_upper, or_introl.

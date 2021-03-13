@@ -34,7 +34,7 @@ Section Ring_theorems.
   Infix "*" := (mul Ring) : Ring_scope.
   Notation "- a" := (neg Ring a) : Ring_scope.
 
-  Definition IRS (a : R) := elt_to_set _ a : set.
+  Definition IRS (a : R) := elt_to_set a : set.
 
   Coercion IRS : R >-> set.
 
@@ -335,8 +335,8 @@ Section Ring_theorems.
     intros a b H; split; contradict H; subst; ring.
   Qed.
 
-  Definition sum f a b := iterate_with_bounds _ (add _) f 0 a b.
-  Definition prod f a b := iterate_with_bounds _ (mul _) f 1 a b.
+  Definition sum f a b := iterate_with_bounds (add _) f 0 a b.
+  Definition prod f a b := iterate_with_bounds (mul _) f 1 a b.
 
   Theorem sum_0 : ∀ f a, sum f a a = f a.
   Proof.
@@ -422,14 +422,14 @@ Section Ring_theorems.
   Theorem sum_of_0 : ∀ d, (sum (λ n, 0) 0 d) = 0.
   Proof.
     induction d using Induction.
-    - apply iterate_0.
+    - apply @iterate_0.
     - rewrite sum_succ, IHd; auto using zero_le; ring.
   Qed.
 
   Theorem prod_of_1 : ∀ d, (prod (λ n, 1) 0 d) = 1.
   Proof.
     induction d using Induction.
-    - apply iterate_0.
+    - apply @iterate_0.
     - rewrite prod_succ, IHd; auto using zero_le; ring.
   Qed.
 
@@ -460,7 +460,7 @@ Section Ring_theorems.
     - rewrite <-lt_not_ge, ? prod_neg in *; auto using one_unit.
   Qed.
 
-  Definition pow a n := iterated_op _ (mul _) 1 (λ x, a) n.
+  Definition pow a n := iterated_op (mul _) 1 (λ x, a) n.
 
   Infix "^" := pow : Ring_scope.
 
@@ -603,9 +603,9 @@ Section Ring_theorems.
     Definition ISR : sub_R → R.
     Proof.
       intros x.
-      pose proof (elts_in_set _ x) as H; simpl in H.
+      pose proof (elts_in_set x) as H; simpl in H.
       apply subset in H.
-      exact (exist _ _ H).
+      exact (exist H).
     Defined.
 
     Coercion ISR : sub_R >-> R.
@@ -615,8 +615,8 @@ Section Ring_theorems.
       intros a b.
       assert (a + b ∈ S) as H.
       { destruct SR as [H [H0 [H1 H2]]].
-        apply H; apply (elts_in_set S). }
-      exact (exist _ _ H).
+        apply H; apply (@elts_in_set S). }
+      exact (exist H).
     Defined.
 
     Definition sub_mul : sub_R → sub_R → sub_R.
@@ -624,8 +624,8 @@ Section Ring_theorems.
       intros a b.
       assert (a * b ∈ S) as H.
       { destruct SR as [H [H0 [H1 H2]]].
-        apply H0; apply (elts_in_set S). }
-      exact (exist _ _ H).
+        apply H0; apply (@elts_in_set S). }
+      exact (exist H).
     Defined.
 
     Definition sub_neg : sub_R → sub_R.
@@ -633,8 +633,8 @@ Section Ring_theorems.
       intros a.
       assert (-a ∈ S) as H.
       { destruct SR as [H [H0 [H1 H2]]].
-        apply H1; apply (elts_in_set S). }
-      exact (exist _ _ H).
+        apply H1; apply (@elts_in_set S). }
+      exact (exist H).
     Defined.
 
     Declare Scope Subring_scope.
@@ -650,7 +650,7 @@ Section Ring_theorems.
     Definition sub_one : sub_R.
     Proof.
       destruct SR as [H [H0 [H1 H2]]].
-      exact (exist _ _ H2).
+      exact (exist H2).
     Defined.
     Notation "1" := sub_one : Subring_scope.
 
@@ -688,7 +688,7 @@ Section Ring_theorems.
       auto.
     Qed.
 
-    Definition sub_zero := (exist _ _ zero_construction) : sub_R.
+    Definition sub_zero := (exist zero_construction) : sub_R.
     Notation "0" := sub_zero : Subring_scope.
     Theorem sub_A1 : ∀ a b, a + b = b + a.
     Proof.

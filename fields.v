@@ -127,12 +127,12 @@ Section Field_theorems.
     intros a b.
     destruct (excluded_middle_informative (0 < b)%Z).
     - apply lt_def in l.
-      destruct (constructive_indefinite_description _ l) as [c [H H0]].
+      destruct (constructive_indefinite_description l) as [c [H H0]].
       rewrite integers.A3 in H0.
       exact (a**c).
     - destruct (excluded_middle_informative (b < 0)%Z).
       + rewrite (ordered_rings.lt_neg_0 ℤ_order), lt_def in l.
-        destruct (constructive_indefinite_description _ l) as [c [H H0]].
+        destruct (constructive_indefinite_description l) as [c [H H0]].
         rewrite integers.A3 in H0.
         exact ((a^-1**c)).
       + exact 1.

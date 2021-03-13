@@ -26,25 +26,25 @@ Section Power_series_construction.
   Definition coefficient : power_series → N → R.
   Proof.
     intros f n.
-    pose proof elts_in_set _ f as H; simpl in H.
+    pose proof elts_in_set f as H; simpl in H.
     apply Specify_classification in H as [H H0].
-    set (F := mkFunc _ _ _ H0).
+    set (F := mkFunc H0).
     assert (F n ∈ Rset) as H1
         by apply function_maps_domain_to_range, elts_in_set.
-    exact (exist _ _ H1).
+    exact (exist H1).
   Defined.
 
   Definition seriesify : (N → R) → power_series.
   Proof.
     intros f.
-    pose proof func_hyp (functionify _ _ f) as [H _].
-    pose proof func_hyp (functionify _ _ f) as H0.
+    pose proof func_hyp (functionify f) as [H _].
+    pose proof func_hyp (functionify f) as H0.
     rewrite sets.functionify_domain, sets.functionify_range in H, H0.
     rewrite <-Powerset_classification in H.
-    assert (graph (functionify ω Rset f) ∈
+    assert (graph (functionify f) ∈
                   {x in P (ω × Rset) | is_function x ω Rset})
       as H1 by now apply Specify_classification.
-    exact (exist _ _ H1).
+    exact (exist H1).
   Defined.
 
   Theorem seriesify_coefficient : ∀ f, seriesify (coefficient f) = f.
@@ -69,7 +69,7 @@ Section Power_series_construction.
     apply func_ext; simpl; auto.
     intros x H3.
     assert (x ∈ ω) as H4 by congruence.
-    replace x with ((exist _ _ H4 : elts ω) : set) by auto.
+    replace x with ((exist H4 : elts ω) : set) by auto.
     now rewrite H2.
   Qed.
 
@@ -83,14 +83,14 @@ Section Power_series_construction.
     unfold coefficient.
     destruct Specify_classification, a; simpl in *.
     - apply Specify_classification.
-      pose proof (func_hyp (functionify ω Rset f)) as H.
-      pose proof (func_hyp (functionify ω Rset f)) as [H0 H1].
-      now rewrite sets.functionify_domain, sets.functionify_range,
+      pose proof (func_hyp (functionify f)) as H.
+      pose proof (func_hyp (functionify f)) as [H0 H1].
+      now rewrite @sets.functionify_domain, @sets.functionify_range,
       <-Powerset_classification in *.
     - destruct a0.
       apply set_proj_injective.
       simpl.
-      destruct (functionify_construction _ _ (λ x, f x)) as [f' [H1 [H2 H3]]].
+      destruct (functionify_construction (λ x, f x)) as [f' [H1 [H2 H3]]].
       fold Rset in H2.
       rewrite <-H3.
       f_equal.
@@ -99,7 +99,7 @@ Section Power_series_construction.
       apply func_ext; rewrite ? sets.functionify_domain,
                       ? sets.functionify_range; try congruence.
       intros z H4.
-      replace z with ((exist _ _ H4 : elts ω) : set) by auto.
+      replace z with ((exist H4 : elts ω) : set) by auto.
       rewrite H3.
       simpl.
       unfold functionify.
@@ -116,19 +116,19 @@ Section Power_series_construction.
     unfold coefficient in H.
     repeat destruct Specify_classification.
     destruct a, a0.
-    replace (elt_to_set _ f) with (graph (mkFunc _ _ _ i2)) by auto.
-    replace (elt_to_set _ g) with (graph (mkFunc _ _ _ i4)) by auto.
-    set (f' := {| func_hyp := i2 |}) in *.
-    set (g' := {| func_hyp := i4 |}) in *.
+    replace (elt_to_set f) with (graph (mkFunc i2)) by auto.
+    replace (elt_to_set g) with (graph (mkFunc i4)) by auto.
+    set (f' := mkFunc i2) in *.
+    set (g' := mkFunc i4) in *.
     f_equal.
     apply func_ext; simpl; auto.
     intros n H0.
-    set (η := exist _ _ H0 : N).
+    set (η := exist H0 : N).
     replace n with (η : set) by auto.
-    set (f'' := (λ n : N, exist _ _ (function_maps_domain_to_range
-                                       f' n (elts_in_set (domain f') n)) : R)).
-    set (g'' := (λ n : N, exist _ _ (function_maps_domain_to_range
-                                       g' n (elts_in_set (domain g') n)) : R)).
+    set (f'' := (λ n : N, exist (function_maps_domain_to_range
+                                   f' n (elts_in_set n)) : R)).
+    set (g'' := (λ n : N, exist (function_maps_domain_to_range
+                                   g' n (elts_in_set n)) : R)).
     fold f'' g'' in H.
     replace (f' η : set) with (f'' η : set) by auto.
     replace (g' η : set) with (g'' η : set) by auto.
@@ -170,7 +170,7 @@ Section Power_series_construction.
     ring.
   Qed.
 
-  Definition ISS (a : power_series) := elt_to_set _ a.
+  Definition ISS (a : power_series) := elt_to_set a.
   Definition IRS a := seriesify (λ n, if (excluded_middle_informative (n = 0%N))
                                       then a else 0%ring).
 
@@ -595,7 +595,7 @@ Section Power_series_construction.
       rewrite <-H.
       apply iterate_extensionality.
       intros k H0.
-      repeat destruct excluded_middle_informative; subst; try (now ring_simplify).
+      repeat destruct excluded_middle_informative; subst; try now ring_simplify.
       + contradiction (PA4 0).
       + apply sub_0_le in e.
         apply succ_0 in n1 as [m H1].

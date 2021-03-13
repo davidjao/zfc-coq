@@ -13,8 +13,7 @@ Proof.
     split.
     + apply Product_classification; eauto.
     + apply Product_classification in H as [x [y [H [H0 H1]]]].
-      exists (exist _ _ H : N), (exist _ _ H0 : N),
-      (exist _ _ H : N), (exist _ _ H0 : N).
+      exists (exist H : N), (exist H0 : N), (exist H : N), (exist H0 : N).
       split; simpl; try congruence; ring.
   - intros x y H H0 H1.
     rewrite Specify_classification in *.
@@ -51,7 +50,7 @@ Delimit Scope Z_scope with Z.
 Open Scope Z_scope.
 Bind Scope Z_scope with Z.
 
-Definition IZS (a : Z) := elt_to_set _ a : set.
+Definition IZS (a : Z) := elt_to_set a : set.
 Coercion IZS : Z >-> set.
 
 Definition embed : N → N → Z.
@@ -60,7 +59,7 @@ Proof.
   assert ((a, b) ∈ ω × ω).
   { apply Product_classification.
     now exists a, b. }
-  exact (quotient_map _ _ (exist _ _ H)).
+  exact (quotient_map _ (exist H)).
 Defined.
 
 Infix "-" := embed : set_scope.
@@ -68,10 +67,10 @@ Infix "-" := embed : set_scope.
 Theorem Zlift : ∀ z, ∃ a b, (a - b = z)%set.
 Proof.
   intros z.
-  destruct (quotient_lift _ _ z) as [y H].
-  destruct (unique_set_element _ y) as [x [[H0 H1] H2]].
+  destruct (quotient_lift z) as [y H].
+  destruct (unique_set_element y) as [x [[H0 H1] H2]].
   apply Product_classification in H0 as [a [b [H3 [H4 H5]]]].
-  exists (exist _ _ H3 : N), (exist _ _ H4 : N).
+  exists (exist H3 : N), (exist H4 : N).
   apply set_proj_injective.
   simpl in *.
   now rewrite <-H, <-H5, H1, quotient_image.
@@ -95,8 +94,7 @@ Proof.
     + apply Product_classification.
       exists (a,b), (c,d).
       repeat split; auto; apply Product_classification; eauto.
-    + now exists (exist _ _ A : N), (exist _ _ B : N),
-      (exist _ _ C : N), (exist _ _ D : N).
+    + now exists (exist A : N), (exist B : N), (exist C : N), (exist D : N).
 Qed.
 
 Definition INZ a := (a - 0)%set.
@@ -105,28 +103,28 @@ Coercion INZ : N >-> Z.
 Definition add : Z → Z → Z.
 Proof.
   intros x y.
-  destruct (constructive_indefinite_description _ (Zlift x)) as [a H].
-  destruct (constructive_indefinite_description _ H) as [b H0].
-  destruct (constructive_indefinite_description _ (Zlift y)) as [c H1].
-  destruct (constructive_indefinite_description _ H1) as [d H2].
+  destruct (constructive_indefinite_description (Zlift x)) as [a H].
+  destruct (constructive_indefinite_description H) as [b H0].
+  destruct (constructive_indefinite_description (Zlift y)) as [c H1].
+  destruct (constructive_indefinite_description H1) as [d H2].
   exact ((a + c) - (b + d))%set.
 Defined.
 
 Definition mul : Z → Z → Z.
 Proof.
   intros x y.
-  destruct (constructive_indefinite_description _ (Zlift x)) as [m H].
-  destruct (constructive_indefinite_description _ H) as [n H0].
-  destruct (constructive_indefinite_description _ (Zlift y)) as [p H1].
-  destruct (constructive_indefinite_description _ H1) as [q H2].
+  destruct (constructive_indefinite_description (Zlift x)) as [m H].
+  destruct (constructive_indefinite_description H) as [n H0].
+  destruct (constructive_indefinite_description (Zlift y)) as [p H1].
+  destruct (constructive_indefinite_description H1) as [q H2].
   exact ((m * p + n * q) - (n * p + m * q))%set.
 Defined.
 
 Definition neg : Z → Z.
 Proof.
   intros x.
-  destruct (constructive_indefinite_description _ (Zlift x)) as [a H].
-  destruct (constructive_indefinite_description _ H) as [b H0].
+  destruct (constructive_indefinite_description (Zlift x)) as [a H].
+  destruct (constructive_indefinite_description H) as [b H0].
   exact (b - a)%set.
 Defined.
 
@@ -294,10 +292,10 @@ Infix "^" := (rings.pow ℤ) : Z_scope.
 Definition lt : Z → Z → Prop.
 Proof.
   intros x y.
-  destruct (constructive_indefinite_description _ (Zlift x)) as [a H].
-  destruct (constructive_indefinite_description _ H) as [b H0].
-  destruct (constructive_indefinite_description _ (Zlift y)) as [c H1].
-  destruct (constructive_indefinite_description _ H1) as [d H2].
+  destruct (constructive_indefinite_description (Zlift x)) as [a H].
+  destruct (constructive_indefinite_description H) as [b H0].
+  destruct (constructive_indefinite_description (Zlift y)) as [c H1].
+  destruct (constructive_indefinite_description H1) as [d H2].
   exact (a+d < b+c).
 Defined.
 
@@ -1118,13 +1116,13 @@ Section IZR.
     intros x.
     destruct (excluded_middle_informative (0 ≤ x)).
     - apply le_def in l.
-      destruct (constructive_indefinite_description _ l) as [c H].
+      destruct (constructive_indefinite_description l) as [c H].
       exact (INR _ c).
     - apply lt_not_ge, lt_shift in n.
       simpl in n.
       rewrite A3 in n.
       apply lt_def in n.
-      destruct (constructive_indefinite_description _ n) as [c H].
+      destruct (constructive_indefinite_description n) as [c H].
       exact (rings.neg _ (INR _ c)).
   Defined.
 

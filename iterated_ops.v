@@ -1,6 +1,6 @@
 Require Export naturals.
 
-Definition swap (X Y : Type) (a b : X) (f : X → Y) : X → Y.
+Definition swap {X Y} (a b : X) (f : X → Y) : X → Y.
 Proof.
   intros x.
   destruct (excluded_middle_informative (x = a)).
@@ -10,7 +10,7 @@ Proof.
     + exact (f x).
 Defined.
 
-Theorem swap_refl : ∀ X Y (a : X) f, swap X Y a a f = f.
+Theorem swap_refl : ∀ {X Y} a (f : X → Y), swap a a f = f.
 Proof.
   intros X Y a f.
   extensionality x.
@@ -18,7 +18,7 @@ Proof.
   destruct excluded_middle_informative; auto; now subst.
 Qed.
 
-Theorem swap_sym : ∀ X Y (a b : X) f, swap X Y a b f = swap X Y b a f.
+Theorem swap_sym : ∀ {X Y} a b (f : X → Y), swap a b f = swap b a f.
 Proof.
   intros X Y a b f.
   extensionality x.
@@ -28,7 +28,8 @@ Proof.
 Qed.
 
 Section Iterated_op_construction.
-  Variable R : Type.
+
+  Context {R : Type}.
   Variable op : R → R → R.
   Variable f : N → R.
   Variable start : R.
@@ -39,8 +40,8 @@ Section Iterated_op_construction.
   Proof.
     intros a b.
     destruct (excluded_middle_informative (a ≤ b)).
-    - destruct (constructive_indefinite_description _ l) as [c H].
-      exact (iterated_op R op (f a) (λ x, f (a + x + 1)%N) c).
+    - destruct (constructive_indefinite_description l) as [c H].
+      exact (iterated_op op (f a) (λ x, f (a + x + 1)%N) c).
     - exact start.
   Defined.
 
@@ -124,11 +125,9 @@ Section Iterated_op_construction.
 
 End Iterated_op_construction.
 
-
-Theorem iterate_extensionality : ∀ X op f g start a b,
+Theorem iterate_extensionality : ∀ X op f g (start : X) a b,
       (∀ k, a ≤ k ≤ b → f k = g k) →
-      iterate_with_bounds X op f start a b =
-      iterate_with_bounds X op g start a b.
+      iterate_with_bounds op f start a b = iterate_with_bounds op g start a b.
 Proof.
   intros X op f g start a b H.
   destruct (classic (a ≤ b)) as [[c H0] | H0].
@@ -153,7 +152,8 @@ Proof.
 Qed.
 
 Section Iterated_op_theorems.
-  Variable X : Type.
+
+  Context {X : Type}.
   Variable op : X → X → X.
   Variable s : X.
   Infix "*" := op.
@@ -161,8 +161,8 @@ Section Iterated_op_theorems.
   Hypothesis M2 : ∀ x y z, x * (y * z) = (x * y) * z.
 
   Theorem iterate_shift : ∀ f a c,
-      iterate_with_bounds X op f s a (a+c) =
-      iterate_with_bounds X op (λ n, (f (n+a)%N)) s 0 c.
+      iterate_with_bounds op f s a (a+c) =
+      iterate_with_bounds op (λ n, (f (n+a)%N)) s 0 c.
   Proof.
   intros f a c.
   induction c using Induction.
@@ -173,8 +173,8 @@ Section Iterated_op_theorems.
   Qed.
 
   Lemma iterate_swap_upper_two : ∀ m f,
-    iterate_with_bounds X op f s 0 (S (S m)) =
-    iterate_with_bounds X op (swap _ _ (S m) (S (S m)) f) s 0 (S (S m)).
+    iterate_with_bounds op f s 0 (S (S m)) =
+    iterate_with_bounds op (swap (S m) (S (S m)) f) s 0 (S (S m)).
   Proof.
     intros m f.
     rewrite ? iterate_succ, <-M2, (M1 (f (S m))), M2; auto using zero_le.
@@ -189,8 +189,8 @@ Section Iterated_op_theorems.
   Qed.
 
   Lemma iterate_swap_upper_one : ∀ n f i,
-      0 ≤ i ≤ n → iterate_with_bounds X op (swap _ _ i n f) s 0 n =
-                  iterate_with_bounds X op f s 0 n.
+      0 ≤ i ≤ n → iterate_with_bounds op (swap i n f) s 0 n =
+                  iterate_with_bounds op f s 0 n.
   Proof.
     induction n using Induction; intros f i [H H0].
     { replace i with 0%N by eauto using naturals.le_antisymm.
@@ -231,8 +231,8 @@ Section Iterated_op_theorems.
 
   Theorem iterate_swap_0 : ∀ n f i j,
       0 ≤ i ≤ n → 0 ≤ j ≤ n →
-      iterate_with_bounds X op (swap _ _ i j f) s 0 n =
-      iterate_with_bounds X op f s 0 n.
+      iterate_with_bounds op (swap i j f) s 0 n =
+      iterate_with_bounds op f s 0 n.
   Proof.
     induction n using Induction.
     { intros f i j [H H0] [H1 H2].
@@ -258,8 +258,8 @@ Section Iterated_op_theorems.
 
   Theorem iterate_swap : ∀ a b f i j,
       a ≤ i ≤ b → a ≤ j ≤ b →
-      iterate_with_bounds X op (swap _ _ i j f) s a b =
-      iterate_with_bounds X op f s a b.
+      iterate_with_bounds op (swap i j f) s a b =
+      iterate_with_bounds op f s a b.
   Proof.
     intros a b f i j [H H0] [H1 H2].
     destruct (classic (a ≤ b)) as [[c H3] | H3]; subst.
@@ -285,7 +285,7 @@ Section Iterated_op_theorems.
   Theorem iterate_bijection_0 : ∀ n f g,
       (∀ j, 0 ≤ j ≤ n → exists ! i, 0 ≤ i ≤ n ∧ f i = g j) →
       (∀ i, 0 ≤ i ≤ n → exists ! j, 0 ≤ j ≤ n ∧ f i = g j) →
-      iterate_with_bounds X op f s 0 n = iterate_with_bounds X op g s 0 n.
+      iterate_with_bounds op f s 0 n = iterate_with_bounds op g s 0 n.
   Proof.
     induction n using Induction.
     { intros f g H H0.
@@ -419,7 +419,7 @@ Section Iterated_op_theorems.
   Theorem iterate_bijection : ∀ a b f g,
       (∀ j, a ≤ j ≤ b → exists ! i, a ≤ i ≤ b ∧ f i = g j) →
       (∀ i, a ≤ i ≤ b → exists ! j, a ≤ j ≤ b ∧ f i = g j) →
-      iterate_with_bounds X op f s a b = iterate_with_bounds X op g s a b.
+      iterate_with_bounds op f s a b = iterate_with_bounds op g s a b.
   Proof.
     intros a b f g H H0.
     destruct (classic (a ≤ b)) as [[c H1] | H1]; subst.
@@ -465,8 +465,8 @@ Section Iterated_op_theorems.
 
 End Iterated_op_theorems.
 
-Definition sum_N f a b := iterate_with_bounds _ add f 0 a b.
-Definition prod_N f a b := iterate_with_bounds _ mul f 1 a b.
+Definition sum_N f a b := iterate_with_bounds add f 0 a b.
+Definition prod_N f a b := iterate_with_bounds mul f 1 a b.
 
 Theorem sum_N_0 : ∀ f a, sum_N f a a = f a.
 Proof.

@@ -21,8 +21,7 @@ Proof.
     + destruct a as [H3 [H4 H5]].
       apply Ordered_pair_iff in H5 as [H5 H6].
       subst.
-      exists (exist _ _ H1 : Z), (exist _ _ H2 : Z),
-      (exist _ _ H3 : Z), (exist _ _ H4 : Z).
+      exists (exist H1 : Z), (exist H2 : Z), (exist H3 : Z), (exist H4 : Z).
       simpl.
       split; auto.
       rewrite integers.M1.
@@ -60,7 +59,7 @@ Definition Qset := Z0 / rational_relation.
 
 Definition Q := elts Qset.
 
-Definition IQS (a : Q) := elt_to_set _ a : set.
+Definition IQS (a : Q) := elt_to_set a : set.
 Coercion IQS : Q >-> set.
 
 Declare Scope Q_scope.
@@ -106,9 +105,9 @@ Proof.
   intros a b.
   destruct (excluded_middle_informative (b = 0)).
   - pose proof embed_zero as H.
-    exact (quotient_map Z0 rational_relation (exist _ _ H)).
+    exact (quotient_map rational_relation (exist H)).
   - apply (embed_nonzero a) in n.
-    exact (quotient_map Z0 rational_relation (exist _ _ n)).
+    exact (quotient_map rational_relation (exist n)).
 Defined.
 
 Infix "/" := embed : Q_scope.
@@ -116,15 +115,13 @@ Infix "/" := embed : Q_scope.
 Theorem Qlift : ∀ q, ∃ a b, b ≠ 0 ∧ a / b = q.
 Proof.
   intros q.
-  destruct (quotient_lift _ _ q) as [y H].
-  destruct (unique_set_element _ y) as [x [[H0 H1] H2]].
+  destruct (quotient_lift q) as [y H].
+  destruct (unique_set_element y) as [x [[H0 H1] H2]].
   apply Specify_classification in H0 as [H0 H3].
   apply Product_classification in H0 as [a [b [H0 [H4 H5]]]].
   subst.
-  exists (exist _ _ H0 : Z), (exist _ _ H4 : Z).
-  set (a' := exist _ _ H0 : Z).
-  set (b' := exist _ _ H4 : Z).
-  assert (b' ≠ 0) as H5.
+  exists (exist H0 : Z), (exist H4 : Z).
+  assert (exist H4 ≠ 0) as H5.
   { contradict H3.
     unfold proj2.
     destruct excluded_middle_informative;
@@ -163,8 +160,7 @@ Proof.
     split.
     + apply Product_classification.
       exists (c, d), (a, b).
-      assert (∀ e f (F : f ∈ Zset), e ∈ Zset → (exist _ _ F) ≠ 0 → (e, f) ∈ Z0);
-        eauto.
+      cut (∀ e f (F : f ∈ Zset), e ∈ Zset → exist F ≠ 0 → (e, f) ∈ Z0); eauto.
       intros e f F E H2.
       apply Specify_classification.
       split; try apply Product_classification; eauto.
@@ -177,8 +173,7 @@ Proof.
       contradict H2.
       subst.
       now apply set_proj_injective.
-    + exists (exist _ _ C : Z), (exist _ _ D : Z),
-      (exist _ _ A : Z), (exist _ _ B : Z).
+    + exists (exist C : Z), (exist D : Z), (exist A : Z), (exist B : Z).
       repeat split; auto.
       ring [H1].
 Qed.
@@ -194,36 +189,36 @@ Notation "1" := one : Q_scope.
 Definition add : Q → Q → Q.
 Proof.
   intros x y.
-  destruct (constructive_indefinite_description _ (Qlift x)) as [a e].
-  destruct (constructive_indefinite_description _ e) as [b [e0 e1]].
-  destruct (constructive_indefinite_description _ (Qlift y)) as [c e2].
-  destruct (constructive_indefinite_description _ e2) as [d [e3 e4]].
+  destruct (constructive_indefinite_description (Qlift x)) as [a e].
+  destruct (constructive_indefinite_description e) as [b [e0 e1]].
+  destruct (constructive_indefinite_description (Qlift y)) as [c e2].
+  destruct (constructive_indefinite_description e2) as [d [e3 e4]].
   exact ((a * d + c * b) / (b * d)).
 Defined.
 
 Definition mul : Q → Q → Q.
 Proof.
   intros x y.
-  destruct (constructive_indefinite_description _ (Qlift x)) as [a e].
-  destruct (constructive_indefinite_description _ e) as [b [e0 e1]].
-  destruct (constructive_indefinite_description _ (Qlift y)) as [c e2].
-  destruct (constructive_indefinite_description _ e2) as [d [e3 e4]].
+  destruct (constructive_indefinite_description (Qlift x)) as [a e].
+  destruct (constructive_indefinite_description e) as [b [e0 e1]].
+  destruct (constructive_indefinite_description (Qlift y)) as [c e2].
+  destruct (constructive_indefinite_description e2) as [d [e3 e4]].
   exact ((a * c) / (b * d)).
 Defined.
 
 Definition neg : Q → Q.
 Proof.
   intros x.
-  destruct (constructive_indefinite_description _ (Qlift x)) as [a e].
-  destruct (constructive_indefinite_description _ e) as [b [e0 e1]].
+  destruct (constructive_indefinite_description (Qlift x)) as [a e].
+  destruct (constructive_indefinite_description e) as [b [e0 e1]].
   exact (-a / b).
 Defined.
 
 Definition inv : Q → Q.
 Proof.
   intros x.
-  destruct (constructive_indefinite_description _ (Qlift x)) as [a e].
-  destruct (constructive_indefinite_description _ e) as [b [e0 e1]].
+  destruct (constructive_indefinite_description (Qlift x)) as [a e].
+  destruct (constructive_indefinite_description e) as [b [e0 e1]].
   exact (b / a).
 Defined.
 
@@ -441,8 +436,8 @@ Add Field rational_field :
 Definition positive : Q → Prop.
 Proof.
   intros x.
-  destruct (constructive_indefinite_description _ (Qlift x)) as [a e].
-  destruct (constructive_indefinite_description _ e) as [b [e0 e1]].
+  destruct (constructive_indefinite_description (Qlift x)) as [a e].
+  destruct (constructive_indefinite_description e) as [b [e0 e1]].
   exact (a * b > 0).
 Defined.
 
@@ -901,7 +896,7 @@ Qed.
 
 Definition floor (x : Q) : Z.
 Proof.
-  destruct (constructive_indefinite_description _ (Z_archimedean x)) as [z].
+  destruct (constructive_indefinite_description (Z_archimedean x)) as [z].
   exact z.
 Defined.
 
@@ -1460,7 +1455,7 @@ Proof.
   destruct (excluded_middle_informative (0 < a)%Z) as [H | H].
   - destruct (excluded_middle_informative (0 < b)%Z) as [H0 | H0].
     + eapply QR_epsilon_construction, le_def in H0; try apply H.
-      destruct (constructive_indefinite_description _ H0) as [c H1].
+      destruct (constructive_indefinite_description H0) as [c H1].
       exact c.
     + exact 0%N.
   - exact 0%N.

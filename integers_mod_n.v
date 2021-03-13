@@ -146,8 +146,8 @@ Section Modular_arithmetic.
     intros x.
     destruct (excluded_middle_informative (0 < n)).
     - pose proof division_algorithm x n l as H.
-      destruct (constructive_indefinite_description _ H) as [q H0].
-      destruct (constructive_indefinite_description _ H0) as [r H1].
+      destruct (constructive_indefinite_description H) as [q H0].
+      destruct (constructive_indefinite_description H0) as [r H1].
       exact r.
     - exact 0.
   Defined.
@@ -171,7 +171,7 @@ Section Modular_arithmetic.
   Proof.
     repeat split.
     - intros a H.
-      rewrite <-(setify_action _ _ H).
+      rewrite (reify H).
       apply Specify_classification; split.
       + apply Product_classification; eauto.
       + eauto using eqm_refl.
@@ -203,19 +203,18 @@ Section Modular_arithmetic.
 
   Bind Scope Zn_scope with Z_.
 
-  Definition IZnS := (elt_to_set Z_mod) : Z_ → set.
+  Definition IZnS := elt_to_set : Z_ → set.
   Coercion IZnS : Z_ >-> set.
 
   Definition Z_to_Z_n (x : Z) :=
-    quotient_map _ relation_mod (exist _ _ (elts_in_set _ x)) : Z_.
+    quotient_map relation_mod (exist (elts_in_set x)) : Z_.
 
   Coercion Z_to_Z_n : Z >-> Z_.
 
   Definition Z_n_to_Z : Z_ → Z.
   Proof.
     intros x.
-    destruct (constructive_indefinite_description _ (quotient_lift _ _ x))
-      as [z].
+    destruct (constructive_indefinite_description (quotient_lift x)) as [z].
     exact z.
   Defined.
 
@@ -441,7 +440,7 @@ Section Modular_arithmetic.
     Definition modulus_in_N : N.
     Proof.
       apply lt_def in modulus_pos.
-      destruct (constructive_indefinite_description _ modulus_pos) as [k], a.
+      destruct (constructive_indefinite_description modulus_pos) as [k], a.
       exact k.
     Defined.
 
@@ -456,9 +455,9 @@ Section Modular_arithmetic.
     Definition map_to_N : elts modulus_in_N → N.
     Proof.
       intros x.
-      pose proof (elts_in_set _ x) as H.
-      apply elements_of_naturals_are_naturals in H; auto using N_in_ω.
-      exact (exist _ _ H).
+      pose proof (elts_in_set x) as H.
+      apply elements_of_naturals_are_naturals in H; eauto using elts_in_set.
+      exact (exist H).
     Defined.
 
     Theorem map_to_lt_n : ∀ x, map_to_N x < n.
@@ -478,22 +477,20 @@ Section Modular_arithmetic.
 
     Definition map_to_mod_n (x : elts modulus_in_N) := map_to_N x : Z_.
 
-    Theorem bijective_map_to_mod_n :
-      bijective (sets.functionify _ _ map_to_mod_n).
+    Theorem bijective_map_to_mod_n : bijective (sets.functionify map_to_mod_n).
     Proof.
       split; rewrite ? Injective_classification, ? Surjective_classification,
              ? sets.functionify_domain, ? sets.functionify_range.
       - intros x y H H0 H1.
-        rewrite <-(setify_action _ _ H), <-(setify_action _ _ H0),
-        ? functionify_action in *.
+        rewrite (reify H), (reify H0), ? @functionify_action in *.
         apply set_proj_injective, IZn_eq, injective_mod_n_on_interval,
         INZ_eq in H1; auto using map_to_ge_0, map_to_lt_n.
         inversion H1.
         subst.
         now replace H with H0 in H1 by now apply proof_irrelevance.
       - intros y H.
-        rewrite <-(setify_action _ _ H) in *.
-        destruct (surjective_mod_n_on_interval (exist _ _ H))
+        rewrite (reify H) in *.
+        destruct (surjective_mod_n_on_interval (exist H))
           as [x [[[H0 H1] H2] H3]].
         apply le_def in H0 as [ξ H4].
         ring_simplify in H4; subst.
@@ -501,7 +498,7 @@ Section Modular_arithmetic.
         assert (ξ ∈ modulus_in_N) as H5.
         { now rewrite <-lt_is_in, <-INZ_lt, <-modulus_in_Z. }
         split; auto.
-        rewrite <-(setify_action _ _ H5), functionify_action, H2.
+        rewrite (reify H5), functionify_action, H2.
         now apply f_equal, set_proj_injective, f_equal,
         IZn_eq, eq_eqm, f_equal, set_proj_injective.
     Qed.
@@ -509,11 +506,11 @@ Section Modular_arithmetic.
     Theorem bijection_of_Z_mod : (Z_mod ~ modulus_in_N)%set.
     Proof.
       symmetry.
-      exists (sets.functionify _ _ map_to_mod_n).
+      exists (sets.functionify map_to_mod_n).
       rewrite sets.functionify_domain, sets.functionify_range.
       auto using bijective_map_to_mod_n.
     Qed.
- 
+
     Theorem finite_Z_mod : finite Z_mod.
     Proof.
       exists modulus_in_N.
@@ -535,8 +532,7 @@ Section Modular_arithmetic.
     Proof.
       apply Extensionality.
       split; intros H; apply Specify_classification in H as [H H0];
-        apply Specify_classification;
-        rewrite <-(setify_action _ _ H), <-specify_action in *; split;
+        apply Specify_classification; rewrite (reify H), despecify in *; split;
           try apply units_in_ℤ_; eauto using eqm_gcd.
     Qed.
 
@@ -556,8 +552,8 @@ Section Modular_arithmetic.
       rewrite Nonempty_classification, Euler_Phi_unit.
       exists (1 : Z_).
       apply Specify_classification.
-      rewrite <-specify_action.
-      auto using (elts_in_set Z_mod), (one_unit ℤ_).
+      rewrite despecify.
+      eauto using elts_in_set, (one_unit ℤ_).
     Qed.
 
     Corollary Euler_Phi_ge_1 : (1 ≤ Euler_Phi)%N.
@@ -581,13 +577,13 @@ Section Modular_arithmetic.
     Proof.
       intros x.
       pose proof Euler_Phi_finite.
-      destruct (constructive_indefinite_description _ H)
+      destruct (constructive_indefinite_description H)
         as [m H0], (excluded_middle_informative (x < m)%N).
       - symmetry in H0.
-        destruct (constructive_indefinite_description _ H0) as [f [H1 [H2 H3]]].
+        destruct (constructive_indefinite_description H0) as [f [H1 [H2 H3]]].
         rewrite lt_is_in, <-H1 in l.
         apply Euler_Phi_helper in l; auto.
-        exact (exist _ _ l).
+        exact (exist l).
       - exact 0.
     Defined.
 
@@ -596,13 +592,13 @@ Section Modular_arithmetic.
     Proof.
       split; intros H.
       - apply Specify_classification in H as [H H0].
-        rewrite <-(setify_action _ _ H), <-specify_action in *.
+        rewrite (reify H), despecify in *.
         eapply eqm_gcd; eauto.
         apply IZn_eq, set_proj_injective.
         now rewrite <-? Zproj_eq.
       - apply Specify_classification.
-        rewrite <-specify_action.
-        auto using (elts_in_set Z_mod).
+        rewrite despecify.
+        eauto using elts_in_set.
     Qed.
 
     Lemma Euler_Phi_list_unit :
@@ -633,8 +629,8 @@ Section Modular_arithmetic.
       rewrite units_in_ℤ_ in H.
       assert (a ∈ Euler_Phi_set) as H0.
       { apply Specify_classification.
-        rewrite <-specify_action.
-        auto using (elts_in_set Z_mod). }
+        rewrite despecify.
+        eauto using elts_in_set. }
       destruct constructive_indefinite_description as [f].
       repeat destruct a0.
       assert ((inverse f) a ∈ x) as H1.
@@ -642,8 +638,8 @@ Section Modular_arithmetic.
         apply function_maps_domain_to_range.
         rewrite inverse_domain, e1; auto. }
       assert ((inverse f) a ∈ ω) as H2 by
-            (eapply elements_of_naturals_are_naturals; eauto using N_in_ω).
-      set (ι := exist _ _ H2 : N).
+            (eapply elements_of_naturals_are_naturals; eauto using elts_in_set).
+      set (ι := exist H2 : N).
       exists ι.
       assert (ι < x)%N as H3 by now apply lt_is_in.
       destruct excluded_middle_informative; try tauto.
@@ -730,7 +726,7 @@ Section Modular_arithmetic.
 
   Definition square (a : Z_) := a * a.
 
-  Definition square_function := sets.functionify _ _ square.
+  Definition square_function := sets.functionify square.
 
   Definition QR := {x of type Z_mod | rings.unit ℤ_ x ∧ ∃ a, square a = x}.
   Definition QNR := {x of type Z_mod | rings.unit ℤ_ x ∧ (x : Z_) ∉ QR}.
@@ -751,9 +747,9 @@ Section Modular_arithmetic.
     destruct excluded_middle_informative; auto.
     contradiction n0.
     apply Specify_classification.
-    rewrite <-specify_action.
+    rewrite despecify.
     unfold square.
-    eauto using (elts_in_set Z_mod), (unit_closure ℤ_).
+    eauto using elts_in_set, (unit_closure ℤ_).
   Qed.
 
   Section Prime_modulus.
@@ -791,7 +787,7 @@ Section Modular_arithmetic.
       destruct (excluded_middle_informative (a = 0)).
       - exact 0.
       - apply nonzero_unit in n0.
-        destruct (constructive_indefinite_description _ n0) as [x H].
+        destruct (constructive_indefinite_description n0) as [x H].
         exact x.
     Defined.
 
@@ -812,8 +808,8 @@ Section Modular_arithmetic.
       contradict H0.
       apply nonzero_unit in H0.
       apply Specify_classification.
-      rewrite <-specify_action.
-      auto using (elts_in_set Z_mod).
+      rewrite despecify.
+      eauto using elts_in_set.
     Qed.
 
     Theorem Euler_Criterion_zero : ∀ a, legendre_symbol a = 0 ↔ a = 0.
@@ -825,8 +821,8 @@ Section Modular_arithmetic.
         contradiction (integral_domains.minus_one_nonzero integers.ℤ_ID).
       - subst; repeat destruct excluded_middle_informative; auto;
           apply Specify_classification in i as [H0 H1];
-          rewrite <-(setify_action _ _ H0), <-specify_action in *;
-          replace (exist _ _ H0 : Z_) with (0 : Z_) in *
+          rewrite (reify H0), despecify in *;
+          replace (exist H0 : Z_) with (0 : Z_) in *
             by (now apply set_proj_injective);
           destruct H1 as [[x H1] H2], Z_mod_prime_is_ID as [H3 H4];
           contradiction H4;
@@ -840,12 +836,12 @@ Section Modular_arithmetic.
       2: { intros z H.
            apply Singleton_classification in H.
            subst.
-           auto using (elts_in_set Z_mod). }
+           eauto using elts_in_set. }
       apply f_equal, Extensionality.
       split; intros H; destruct prime_modulus as [H0 H1].
       - apply Specify_classification in H as [H H2].
-        rewrite <-(setify_action _ _ H), <-specify_action,
-        Complement_classification, Singleton_classification in *.
+        rewrite (reify H), despecify, Complement_classification,
+        Singleton_classification in *.
         split; auto.
         intros H3.
         apply set_proj_injective in H3.
@@ -856,8 +852,7 @@ Section Modular_arithmetic.
       - apply Complement_classification in H as [H H2].
         apply Specify_classification.
         split; auto.
-        rewrite <-(setify_action _ _ H), <-specify_action,
-        Singleton_classification in *.
+        rewrite (reify H), despecify, Singleton_classification in *.
         repeat split; try apply div_1_l.
         intros d H3 H4.
         apply H1 in H4 as [H4 | [H4 H5]]; fold integers.divide in *; auto.
@@ -880,7 +875,7 @@ Section Modular_arithmetic.
       intros x H.
       apply Specify_classification in H as [H H0].
       apply Specify_classification.
-      rewrite <-(setify_action _ _ H), <-specify_action in *.
+      rewrite (reify H), despecify in *.
       split; eauto.
       now apply units_in_ℤ_.
     Qed.
@@ -890,17 +885,16 @@ Section Modular_arithmetic.
       apply Extensionality.
       split; intros H.
       - apply Specify_classification in H as [H H0].
-        rewrite <-(setify_action _ _ H), <-specify_action,
-        Complement_classification in *.
+        rewrite (reify H), despecify, Complement_classification in *.
         split; try tauto.
         apply Specify_classification.
-        rewrite <-specify_action.
+        rewrite despecify.
         split; auto.
         now apply units_in_ℤ_.
       - apply Complement_classification in H as [H H0].
         apply Specify_classification in H as [H H1].
         apply Specify_classification.
-        rewrite <-(setify_action _ _ H), <-specify_action in *.
+        rewrite (reify H), despecify in *.
         repeat split; auto.
         now apply units_in_ℤ_.
     Qed.
@@ -923,33 +917,32 @@ Section Modular_arithmetic.
       split; intros H.
       - apply Specify_classification in H as [H [x [H0 H1]]].
         rewrite restriction_domain, restriction_range, <-restriction_action,
-        sets.functionify_domain, sets.functionify_range in *;
+        @sets.functionify_domain, @sets.functionify_range in *;
           try now rewrite sets.functionify_domain in *.
         apply Pairwise_intersection_classification in H0 as [H0 H2].
         apply Specify_classification.
-        rewrite <-(setify_action _ _ H), <-(setify_action _ _ H2),
-        functionify_action, <-specify_action in *.
+        rewrite (reify H), (reify H2), @functionify_action, despecify in *.
         apply set_proj_injective in H1.
         repeat split; eauto.
         apply Specify_classification in H0 as [H0 H3].
-        rewrite <-specify_action, <-H1 in *.
+        rewrite despecify, <-H1 in *.
         now apply unit_closure.
       - apply Specify_classification.
         rewrite restriction_domain, restriction_range,
         sets.functionify_domain, sets.functionify_range.
         apply Specify_classification in H as [H H0].
-        rewrite <-(setify_action _ _ H), <-specify_action in *.
+        rewrite (reify H), despecify in *.
         destruct H0 as [[x H0] [a H1]].
         split; eauto.
         exists a.
         enough (a ∈ unit_set_mod ∩ Z_mod).
-        { now rewrite <-restriction_action, functionify_action, H1;
+        { now rewrite <-restriction_action, @functionify_action, H1;
             try now rewrite sets.functionify_domain. }
         rewrite Pairwise_intersection_classification.
         split; eauto using elts_in_set.
         apply Specify_classification.
         split; eauto using elts_in_set.
-        rewrite <-specify_action, <-H1 in *.
+        rewrite despecify, <-H1 in *.
         exists (x * a).
         now rewrite H0, <-M2.
     Qed.
@@ -975,14 +968,13 @@ Section Modular_arithmetic.
         { apply Specify_classification.
           split; auto.
           apply Specify_classification in H as [H H5].
-          rewrite <-(setify_action _ _ H4), <-(setify_action _ _ H),
-          <-? specify_action in *.
+          rewrite (reify H4), (reify H), despecify in *.
           destruct H5 as [[y H5] [a H6]].
           apply Inverse_image_classification in H2; auto.
           rewrite sets.functionify_action in H2.
           apply set_proj_injective in H2.
           rewrite <-H2 in H5.
-          exists (y * (exist _ _ H4)).
+          exists (y * (exist H4)).
           now rewrite H5, M2. }
         rewrite Inverse_image_classification in *; eauto;
           unfold unit_square_function; rewrite <-? restriction_action; auto;
@@ -1042,7 +1034,7 @@ Section Modular_arithmetic.
     Proof.
       intros x H.
       apply Specify_classification in H as [H H0].
-      rewrite <-specify_action in H0.
+      rewrite despecify in *.
       destruct H0 as [H0 [a H1]].
       replace (inverse_image_of_element square_function x) with {a, -a}.
       { apply pairing_card.
@@ -1073,15 +1065,15 @@ Section Modular_arithmetic.
       - rewrite Inverse_image_classification in *;
           rewrite ? sets.functionify_domain, ? sets.functionify_range; auto.
         apply Pairing_classification in H3 as [H3 | H3]; subst;
-          rewrite functionify_action; auto; now rewrite (rings.mul_neg_neg ℤ_).
+          rewrite @functionify_action; auto; now rewrite (rings.mul_neg_neg ℤ_).
       - apply Inverse_image_subset in H3 as H4;
-          rewrite ? sets.functionify_range, ? sets.functionify_domain in *;
-          auto; rewrite Inverse_image_classification, <-(setify_action _ _ H4),
-                functionify_action in *; rewrite ? sets.functionify_domain,
+          rewrite ? @sets.functionify_range, ? @sets.functionify_domain in *;
+          auto; rewrite Inverse_image_classification, (reify H4),
+                @functionify_action in *; rewrite ? sets.functionify_domain,
                                          ? sets.functionify_range; auto.
         subst.
         apply set_proj_injective in H3.
-        pose proof difference_of_squares ℤ_ (exist _ _ H4) a as H1; simpl in H1.
+        pose proof difference_of_squares ℤ_ (exist H4) a as H1; simpl in H1.
         rewrite H3, A4 in H1.
         apply Pairing_classification.
         apply eq_sym, (integral_domains.cancellation (ℤ_ID prime_modulus)) in H1
@@ -1107,7 +1099,7 @@ Section Modular_arithmetic.
       rewrite image_usf, <-inverse_image_usf in *; auto.
       pose proof H0 as H1.
       apply Specify_classification in H1 as [H1 _].
-      rewrite <-(setify_action _ _ H1).
+      rewrite (reify H1).
       auto using number_of_square_roots.
     Qed.
 
@@ -1170,7 +1162,7 @@ Section Modular_arithmetic.
     Proof.
       intros a H.
       apply Specify_classification in H as [H H0].
-      rewrite <-specify_action in H0.
+      rewrite despecify in H0.
       destruct H0 as [H0 [x H1]].
       subst.
       unfold square.
@@ -1185,7 +1177,7 @@ Section Modular_arithmetic.
         apply Specify_classification; simpl Rset.
         pose proof H as H0.
         apply Specify_classification in H0 as [H0 H1].
-        rewrite <-(setify_action _ _ H0), <-specify_action in *.
+        rewrite (reify H0), despecify in *.
         destruct H1 as [H1 [a H2]].
         split; auto.
         rewrite eval_add, eval_neg, IRP_1, eval_const, eval_x_to_n,
@@ -1230,15 +1222,13 @@ Section Modular_arithmetic.
            split; intros H.
            - apply Pairwise_union_classification in H as [H | H];
              apply Specify_classification in H as [H H0];
-             apply Specify_classification;
-             rewrite <-(setify_action _ _ H), <-specify_action in *;
+             apply Specify_classification; rewrite (reify H), despecify in *;
              split; auto; now rewrite <-units_in_ℤ_.
            - apply Specify_classification in H as [H H0].
              apply Pairwise_union_classification.
              destruct (classic (z ∈ QR)); auto.
              apply or_intror, Specify_classification.
-             now rewrite <-(setify_action _ _ H),
-             <-specify_action, units_in_ℤ_ in *. }
+             now rewrite (reify H), despecify, units_in_ℤ_ in *. }
       replace Euler_Phi_set with
           ((roots _ (x^(# QR) - 1)%poly) ∪ (roots _ (x^(# QR) + 1)%poly)) in E.
       2: { rewrite <-prod_root, <-difference_of_squares, <-rings.pow_mul_l,
@@ -1248,8 +1238,7 @@ Section Modular_arithmetic.
            split; intros H.
            - apply Specify_classification in H as [H H0]; simpl Rset in H.
              apply Specify_classification.
-             rewrite <-(setify_action _ _ H), <-specify_action,
-             <-units_in_ℤ_ in *.
+             rewrite (reify H), despecify, <-units_in_ℤ_ in *.
              split; auto.
              rewrite eval_add, eval_neg, IRP_1, eval_const, eval_x_to_n,
              <-(rings.A4 ℤ_ (1:Z_)), ? (rings.A1 ℤ_ _ (-(1:Z_))) in H0;
@@ -1262,22 +1251,22 @@ Section Modular_arithmetic.
              apply naturals.lt_succ.
            - apply Specify_classification in H as [H H0].
              apply Specify_classification; simpl Rset.
-             rewrite <-(setify_action _ _ H), <-specify_action,
-             <-units_in_ℤ_, eval_add, eval_neg, IRP_1, eval_const, eval_x_to_n,
-             Euler, A4 in *; repeat split; auto using odd_prime_positive. }
+             rewrite (reify H), despecify, <-units_in_ℤ_, eval_add, eval_neg,
+             IRP_1, eval_const, eval_x_to_n, Euler, A4 in *; repeat split;
+               auto using odd_prime_positive. }
       apply Euler_Phi_lemma in E; auto using roots_QR.
       { apply NNPP.
         intros H.
         apply Nonempty_classification in H as [x H].
         apply Pairwise_intersection_classification in H as [H H0].
         apply Specify_classification in H0 as [H0 H1].
-        now rewrite <-(setify_action _ _ H0), <-specify_action in *. }
+        now rewrite (reify H0), despecify in *. }
       apply NNPP.
       intros H.
       apply Nonempty_classification in H as [z H].
       apply Pairwise_intersection_classification in H as [H H0].
       apply Specify_classification in H as [H H1], H0 as [H0 H2].
-      rewrite <-(setify_action _ _ H), <-specify_action, <-H2, rings.sub_is_neg,
+      rewrite (reify H), despecify, <-H2, rings.sub_is_neg,
       ? eval_add, ? eval_neg, ? IRP_1, ? eval_const, ? eval_x_to_n in *.
       apply (rings.cancellation_add ℤ_) in H1; simpl in H1.
       contradiction one_ne_minus_one.
@@ -1290,8 +1279,8 @@ Section Modular_arithmetic.
       intros a H.
       rewrite <-roots_QNR in H.
       apply Specify_classification in H as [H H0]; simpl Rset in *.
-      rewrite <-(setify_action _ _ H), <-specify_action, eval_add, IRP_1,
-      eval_const, eval_x_to_n, (A1 _ 1), <-(rings.A4 ℤ_ (1:Z_)) in H0.
+      rewrite (reify H), despecify, eval_add, IRP_1, eval_const, eval_x_to_n,
+      (A1 _ 1), <-(rings.A4 ℤ_ (1:Z_)) in H0.
       apply (rings.cancellation_add ℤ_) in H0; simpl in H0.
       rewrite <-IZn_neg, <-H0.
       f_equal.
@@ -1369,7 +1358,7 @@ Section Modular_arithmetic.
     Proof.
       destruct (excluded_middle_informative (0 < a * l)%Z) as [H | H].
       - apply (division_QR (a*l)%Z p) in H.
-        + destruct (constructive_indefinite_description _ H) as [q H0].
+        + destruct (constructive_indefinite_description H) as [q H0].
           exact q.
         + apply odd_prime_positive.
       - exact 0.
@@ -1379,8 +1368,8 @@ Section Modular_arithmetic.
     Proof.
       destruct (excluded_middle_informative (0 < a * l)%Z) as [H | H].
       - apply (division_QR (a*l)%Z p) in H.
-        + destruct (constructive_indefinite_description _ H) as [q H0].
-          destruct (constructive_indefinite_description _ H0) as [r H1].
+        + destruct (constructive_indefinite_description H) as [q H0].
+          destruct (constructive_indefinite_description H0) as [r H1].
           exact r.
         + apply odd_prime_positive.
       - exact 0.
@@ -1445,7 +1434,7 @@ Section Modular_arithmetic.
       intros l.
       destruct (QR_r_bound l) as [H H0].
       apply le_def in H.
-      destruct (constructive_indefinite_description _ H) as [r H1].
+      destruct (constructive_indefinite_description H) as [r H1].
       exact r.
     Defined.
 
@@ -1457,7 +1446,7 @@ Section Modular_arithmetic.
       now rewrite integers.A3 in e.
     Qed.
 
-    Definition QR_r_function := sets.functionify ω ω QR_r_N.
+    Definition QR_r_function := sets.functionify QR_r_N.
 
     Lemma QR_lt_p : ¬ p ≤ # QR.
     Proof.
@@ -1499,19 +1488,19 @@ Section Modular_arithmetic.
       Pairwise_intersection_classification in *; auto.
       destruct H0 as [H0 H2].
       apply Specify_classification in H0 as [H0 H3].
-      rewrite <-(setify_action _ _ H0), <-specify_action in *.
+      rewrite (reify H0), despecify in *.
       unfold QR_r_function, QR_r_N in *.
-      rewrite sets.functionify_domain, sets.functionify_range,
-      ? functionify_action in *.
+      rewrite @sets.functionify_domain, @sets.functionify_range,
+      ? @functionify_action in *.
       destruct QR_r_bound, constructive_indefinite_description as [z'].
       rewrite integers.A3 in e.
       subst.
       apply Specify_classification.
-      rewrite <-specify_action.
+      rewrite despecify.
       repeat split; try apply INZ_le; destruct e; auto using QR_r_nonzero.
     Qed.
 
-    Definition QR_r_res := restriction_Y _ _ QR_r_restriction_construction.
+    Definition QR_r_res := restriction_Y QR_r_restriction_construction.
 
     Theorem QR_r_res_domain : domain QR_r_res = {x of type ω | 1 ≤ x ≤ # QR}%N.
     Proof.
@@ -1527,15 +1516,15 @@ Section Modular_arithmetic.
       intros i H.
       unfold QR_r_res, QR_r_function.
       enough (i ∈ {x of type ω | (1 ≤ x ≤ # QR)%N} ∧
-              i ∈ domain (sets.functionify ω ω QR_r_N)).
-      - rewrite <-Pairwise_intersection_classification, restriction_Y_action,
-        <-restriction_action, functionify_action in *; auto.
+              i ∈ domain (sets.functionify QR_r_N)).
+      - rewrite <-Pairwise_intersection_classification, @restriction_Y_action,
+        <-restriction_action, @functionify_action in *; auto.
       - split.
         + apply Specify_classification.
-          rewrite <-specify_action.
-          split; auto using N_in_ω.
+          rewrite despecify.
+          split; eauto using elts_in_set.
         + rewrite sets.functionify_domain.
-          auto using N_in_ω.
+          eauto using elts_in_set.
     Qed.
 
     Lemma range_constraint : ∀ i j,
@@ -1589,21 +1578,20 @@ Section Modular_arithmetic.
           auto using naturals_are_finite.
         intros x H.
         apply Specify_classification in H as [H H0].
-        rewrite <-(setify_action _ _ H), <-specify_action in *.
+        rewrite (reify H), despecify in *.
         destruct H0 as [H0 H1].
         now apply lt_is_in, le_lt_succ. }
       { now rewrite restriction_Y_range. }
       apply Injective_classification.
       intros x y H H0 H1.
-      rewrite restriction_Y_domain, ? restriction_Y_action, restriction_domain,
-      <-? restriction_action, Q in *; try congruence.
+      rewrite @restriction_Y_domain, ? @restriction_Y_action,
+      @restriction_domain, <-? restriction_action, Q in *; try congruence.
       clear Q.
       unfold QR_r_function, QR_r_N in *.
       apply Specify_classification in H as [H H2], H0 as [H0 H3].
-      set (ξ := exist _ _ H : N).
-      set (γ := exist _ _ H0 : N).
-      rewrite <-(setify_action _ _ H), <-(setify_action _ _ H0),
-      <-? specify_action, ? sets.functionify_action in *.
+      set (ξ := exist H : N).
+      set (γ := exist H0 : N).
+      rewrite (reify H), (reify H0), despecify, ? @sets.functionify_action in *.
       fold ξ γ in H1, H2, H3 |-*.
       repeat destruct QR_r_bound.
       destruct constructive_indefinite_description as [r_x].
@@ -1664,9 +1652,9 @@ Section Modular_arithmetic.
           rewrite inverse_domain, restriction_Y_range;
             auto using QR_r_res_bijective.
           apply Specify_classification.
-          rewrite <-specify_action.
-          eauto using N_in_ω. }
-        set (η := exist _ _ H0 : N).
+          rewrite despecify.
+          eauto using elts_in_set. }
+        set (η := exist H0 : N).
         exists η.
         split.
         + assert (1 ≤ η ≤ # QR)%N as H1.
@@ -1678,14 +1666,14 @@ Section Modular_arithmetic.
               unfold QR_r_res.
               rewrite restriction_Y_range.
               apply Specify_classification.
-              rewrite <-specify_action.
-              eauto using N_in_ω. }
+              rewrite despecify.
+              eauto using elts_in_set. }
             unfold QR_r_res in H1.
             rewrite inverse_range, restriction_Y_domain in H1;
               auto using QR_r_res_bijective.
             apply Pairwise_intersection_classification in H1 as [H1 H2].
             apply Specify_classification in H1.
-            now rewrite <-specify_action in H1. }
+            now rewrite despecify in H1. }
           split; auto.
           rewrite QR_r_N_action.
           apply f_equal, f_equal, set_proj_injective.
@@ -1695,8 +1683,8 @@ Section Modular_arithmetic.
             try rewrite inverse_domain, ? restriction_Y_range;
             auto using QR_r_res_bijective.
           apply Specify_classification.
-          rewrite <-specify_action.
-          auto using N_in_ω.
+          rewrite despecify.
+          eauto using elts_in_set.
         + intros x' [H1 H2].
           apply range_constraint in H2.
           2: { split; apply INZ_le; intuition. }
@@ -1713,10 +1701,10 @@ Section Modular_arithmetic.
           apply Pairwise_intersection_classification.
           split.
           * apply Specify_classification.
-            rewrite <-specify_action.
-            auto using N_in_ω.
+            rewrite despecify.
+            eauto using elts_in_set.
           * rewrite sets.functionify_domain.
-            auto using N_in_ω.
+            eauto using elts_in_set.
     Qed.
 
     Theorem Gauss's_Lemma :

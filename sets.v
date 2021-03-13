@@ -31,6 +31,7 @@ Section Set_to_type.
   Definition elt_to_set (x : elts) := proj1_sig x.
   Coercion elt_to_set : elts >-> set.
 End Set_to_type.
+Arguments elt_to_set {S}.
 
 Theorem set_proj_injective :
   ∀ X (n m : elts X), (n : set) = (m : set) → n = m.
@@ -41,13 +42,13 @@ Proof.
   now replace i with i0 by apply proof_irrelevance.
 Qed.
 
-Theorem elts_in_set : ∀ S x, elt_to_set S x ∈ S.
+Theorem elts_in_set : ∀ {S} (x : elts S), elt_to_set x ∈ S.
 Proof.
   intros S x.
   apply (proj2_sig x).
 Qed.
 
-Theorem setify_action : ∀ x S (H : x ∈ S), elt_to_set S (exist _ _ H) = x.
+Theorem reify : ∀ {x} {S} (H : x ∈ S), x = (exist H : elts S).
 Proof.
   auto.
 Qed.
@@ -60,7 +61,7 @@ Qed.
 
 Definition empty_set : set.
 Proof.
-  destruct (constructive_indefinite_description _ Empty_Set) as [w].
+  destruct (constructive_indefinite_description Empty_Set) as [w].
   exact w.
 Defined.
 
@@ -112,7 +113,7 @@ Qed.
 Definition specify : set → (set → Prop) → set.
 Proof.
   intros A p.
-  destruct (constructive_indefinite_description _ (Specification A p)) as [S].
+  destruct (constructive_indefinite_description (Specification A p)) as [S].
   exact S.
 Defined.
 
@@ -120,19 +121,19 @@ Definition specify_lift (A : set) (p : elts A → Prop) : set → Prop.
 Proof.
   intros a.
   destruct (excluded_middle_informative (a ∈ A)).
-  - exact (p (exist _ _ i)).
+  - exact (p (exist i)).
   - exact False.
 Defined.
 
 Definition specify_type (A : set) (p : elts A → Prop) : set.
 Proof.
   destruct (constructive_indefinite_description
-              _ (Specification A (specify_lift A p))) as [S].
+              (Specification A (specify_lift A p))) as [S].
   exact S.
 Defined.
 
-Theorem specify_action :
-  ∀ A (p : elts A → Prop) x, p x = specify_lift A p (x : set).
+Theorem despecify :
+  ∀ A (p : elts A → Prop) (x : elts A), specify_lift A p x = p x.
 Proof.
   intros A p x.
   unfold specify_lift.
@@ -154,7 +155,7 @@ Proof.
   intros S f.
   destruct (Replacement S (λ x y, ∃ s, f s = y ∧ x = s)) as [X H].
   { intros x H.
-    exists (f (exist _ _ H)).
+    exists (f (exist H)).
     split; eauto.
     intros x' [s [H0 H1]].
     rewrite <-H0.
@@ -172,7 +173,7 @@ Qed.
 Definition replacement (S : set) (f : elts S → set) : set.
 Proof.
   destruct (constructive_indefinite_description
-              _ (replacement_construction S f)) as [X H].
+              (replacement_construction S f)) as [X H].
   exact X.
 Defined.
 
@@ -193,7 +194,7 @@ Qed.
 Definition P : set → set.
 Proof.
   intros x.
-  destruct (constructive_indefinite_description _ (Powerset x)) as [y].
+  destruct (constructive_indefinite_description (Powerset x)) as [y].
   exact {s in y | s ⊂ x}.
 Defined.
 
@@ -275,7 +276,7 @@ Qed.
 Definition pair : set → set → set.
 Proof.
   intros x y.
-  destruct (constructive_indefinite_description _ (Pairing x y)) as [z].
+  destruct (constructive_indefinite_description (Pairing x y)) as [z].
   exact {t in z | t = x ∨ t = y}.
 Defined.
 
@@ -285,7 +286,7 @@ Notation " { x } " := (pair x x) : set_scope.
 Definition union : set → set.
 Proof.
   intros F.
-  destruct (constructive_indefinite_description _ (Union F)) as [A].
+  destruct (constructive_indefinite_description (Union F)) as [A].
   exact {x in A | ∃ y, (x ∈ y ∧ y ∈ F)}.
 Defined.
 
@@ -320,10 +321,9 @@ Qed.
 Theorem Specify_type_classification :
   ∀ A p x, p x ∧ x ∈ A ↔ x ∈ {x of type A | p x}.
 Proof.
-  split; intros H; [ apply Specify_classification |
-                     apply Specify_classification in H ];
-  split; intuition; now rewrite <-? (setify_action _ _ H1),
-                    <-? (setify_action _ _ H0), <-specify_action in *.
+  split; intros H;
+    [ apply Specify_classification | apply Specify_classification in H ];
+    split; intuition; now rewrite ? (reify H1), ? (reify H0), ? despecify in *.
 Qed.
 
 Theorem Specify_type_subset : ∀ A P, {x of type A | P x} ⊂ A.
@@ -774,8 +774,8 @@ Proof.
   intros A B x.
   destruct (excluded_middle_informative (x ∈ A × B)).
   - rewrite Product_classification in i.
-    destruct (constructive_indefinite_description _ i) as [a].
-    destruct (constructive_indefinite_description _ e) as [b].
+    destruct (constructive_indefinite_description i) as [a].
+    destruct (constructive_indefinite_description e) as [b].
     exact a.
   - exact ∅.
 Defined.
@@ -785,8 +785,8 @@ Proof.
   intros A B x.
   destruct (excluded_middle_informative (x ∈ A × B)).
   - rewrite Product_classification in i.
-    destruct (constructive_indefinite_description _ i) as [a].
-    destruct (constructive_indefinite_description _ e) as [b].
+    destruct (constructive_indefinite_description i) as [a].
+    destruct (constructive_indefinite_description e) as [b].
     exact b.
   - exact ∅.
 Defined.
@@ -966,7 +966,7 @@ Qed.
 Definition is_function f A B :=
   (f ⊂ A × B) ∧ (∀ a, a ∈ A → exists ! b, b ∈ B ∧ (a,b) ∈ f).
 
-Theorem unique_set_element : ∀ X (x : elts X), exists ! y, y ∈ X ∧ y = x.
+Theorem unique_set_element : ∀ {X} (x : elts X), exists ! y, y ∈ X ∧ y = x.
 Proof.
   intros X [x H].
   exists x.
@@ -979,6 +979,7 @@ Record function : Type :=
            range : set;
            graph : set;
            func_hyp : is_function graph domain range }.
+Arguments mkFunc {domain} {range} {graph} func_hyp.
 
 Definition eval_rel : set → set → set → set → set.
 Proof.
@@ -986,7 +987,7 @@ Proof.
   destruct (excluded_middle_informative (x ∈ A)).
   - destruct (excluded_middle_informative (is_function f A B)).
     + destruct i0.
-      destruct (constructive_indefinite_description _ (H0 x i)) as [y].
+      destruct (constructive_indefinite_description (H0 x i)) as [y].
       exact y.
     + exact B.
   - exact B.
@@ -996,7 +997,7 @@ Definition eval f x := eval_rel (graph f) (domain f) (range f) x.
 
 Coercion eval : function >-> Funclass.
 
-Theorem Function_classification : ∀ f A B a,
+Theorem Function_classification : ∀ {f A B a},
     a ∈ A → is_function f A B →
     unique (λ b : set, b ∈ B ∧ (a, b) ∈ f) (eval_rel f A B a).
 Proof.
@@ -1031,15 +1032,15 @@ Proof.
     repeat split; try congruence; try intros x' [H4 H5]; auto;
       rewrite Specify_classification, proj1_eval, proj2_eval in *;
       intuition. }
-  exists (mkFunc A B {z in A × B | proj2 A B z = p (proj1 A B z)} H1).
+  exists (mkFunc H1).
   repeat split; auto.
   intros a H2.
-  pose proof Function_classification _ _ _ _ H2 H1 as [[H3 H4] H5].
+  destruct (Function_classification H2 H1) as [[H3 H4] H5].
   destruct (H5 (p a)); split; simpl; intuition.
   rewrite Specify_classification, proj1_eval, proj2_eval; auto.
 Qed.
 
-Theorem functionify_construction : ∀ A B (p : elts A → elts B),
+Theorem functionify_construction : ∀ {A B} (p : elts A → elts B),
   ∃ f, domain f = A ∧ range f = B ∧ ∀ a : elts A, f a = p a.
 Proof.
   intros A B p.
@@ -1049,13 +1050,13 @@ Proof.
     eauto using elts_in_set. }
   assert (is_function {z in A × B | ∃ a : elts A, z = (a, p a)} A B) as H0.
   { split; intros a H0; try now rewrite Specify_classification in *.
-    exists (p (exist _ _ H0)).
+    exists (p (exist H0)).
     repeat split; eauto using elts_in_set.
     - rewrite Specify_classification in *.
       split.
       + apply Product_classification.
         eauto using elts_in_set.
-      + now (exists (exist _ _ H0 : elts A)).
+      + now (exists (exist H0 : elts A)).
     - intros x' H1.
       destruct H1 as [H1 H2].
       apply Specify_classification in H2 as [H2 [[a' H3] H4]].
@@ -1064,10 +1065,10 @@ Proof.
       subst.
       repeat apply f_equal.
       apply proof_irrelevance. }
-  exists (mkFunc A B {z in A × B | ∃ a : elts A, z = (a, p a)} H0).
+  exists (mkFunc H0).
   repeat split; auto.
   intros a.
-  destruct (Function_classification _ _ _ _ (elts_in_set _ a) H0)
+  destruct (Function_classification (elts_in_set a) H0)
     as [[H1 H2] H3], (H3 (p a)); try apply H3; split; auto using elts_in_set.
   rewrite Specify_classification.
   split; try now (exists a).
@@ -1099,21 +1100,21 @@ Qed.
 Section Function_evaluation.
 
   Variable f : function.
-  Variable A B : set.
+  Context {A B : set}.
 
   Definition lambdaify : elts (domain f) → elts (range f).
   Proof.
     intros [x H].
     assert (f x ∈ range f)
       by auto using function_maps_domain_to_range.
-    exact (exist _ _ H0).
+    exact (exist H0).
   Defined.
 
   Definition functionify : (elts A → elts B) → function.
   Proof.
     intros p.
     destruct (constructive_indefinite_description
-                _ (functionify_construction _ _ p)) as [g].
+                (functionify_construction p)) as [g].
     exact g.
   Defined.
 
@@ -1199,7 +1200,7 @@ Section Choice.
     destruct (excluded_middle_informative (x ∈ X)).
     - assert (x ≠ ∅) as H0 by congruence.
       apply Nonempty_classification in H0.
-      destruct (constructive_indefinite_description _ H0) as [y].
+      destruct (constructive_indefinite_description H0) as [y].
       exact y.
     - exact X.
   Defined.
@@ -1214,7 +1215,8 @@ Section Choice.
 
   Theorem Choice : ∃ f, domain f = X ∧ range f = ⋃ X  ∧ ∀ x, x ∈ X → f x ∈ x.
   Proof.
-    destruct (function_construction X (⋃ X) choice_function) as [f [H0 [H1 H2]]].
+    destruct (function_construction X (⋃ X) choice_function)
+      as [f [H0 [H1 H2]]].
     { intros a H0.
       rewrite Union_classification.
       eauto using choice_function_classification. }
@@ -1255,9 +1257,9 @@ Section inverse_functions.
     intros b.
     rewrite function_empty_domain in H.
     apply Nonempty_classification in H.
-    destruct (constructive_indefinite_description _ H) as [x Hx].
+    destruct (constructive_indefinite_description H) as [x Hx].
     destruct (excluded_middle_informative (∃ a, a ∈ A ∧ f a = b)) as [e | n].
-    - destruct (constructive_indefinite_description _ e) as [a e0].
+    - destruct (constructive_indefinite_description e) as [a e0].
       exact a.
     - exact x.
   Defined.
@@ -1280,8 +1282,7 @@ Section inverse_functions.
         repeat destruct constructive_indefinite_description.
       + destruct a as [H6 H7].
         rewrite H5.
-        assert ((exist _ _ H6) = (exist _ _ H2)) by
-            now apply H0, set_proj_injective.
+        assert ((exist H6) = (exist H2)) by now apply H0, set_proj_injective.
         now inversion H8.
       + contradiction n.
         now (exists x).
@@ -1306,7 +1307,7 @@ Section inverse_functions.
       exists g; intuition.
       pose proof H2 as H5.
       apply H4 in H5.
-      destruct (H0 (exist _ _ H2)) as [[x H6] H7].
+      destruct (H0 (exist H2)) as [[x H6] H7].
       simpl in *.
       unfold partial_left_inverse in H5.
       repeat destruct excluded_middle_informative;
@@ -1320,7 +1321,7 @@ Section inverse_functions.
       { rewrite <-H1.
         apply function_maps_domain_to_range.
         congruence. }
-      exists (exist _ _ H4 : elts A).
+      exists (exist H4 : elts A).
       simpl.
       now apply set_proj_injective, H2.
   Qed.
@@ -1340,7 +1341,7 @@ Proof.
     { apply NNPP.
       intros H1.
       apply Nonempty_classification in H1 as [y H1].
-      destruct (H0 (exist _ _ H1)) as [[x H2] H3].
+      destruct (H0 (exist H1)) as [[x H2] H3].
       contradiction (Empty_set_classification x).
       congruence. }
     destruct (function_construction (range f) (domain f) (λ x, x)) as [g Hg].
@@ -1364,8 +1365,8 @@ Theorem Injective_classification : ∀ f, injective f ↔ ∀ x y,
 Proof.
   split; intros H.
   - intros x y H0 H1 H2.
-    replace x with ((exist _ _ H0 : elts (domain f)) : set) by auto.
-    replace y with ((exist _ _ H1 : elts (domain f)) : set) by auto.
+    replace x with ((exist H0 : elts (domain f)) : set) by auto.
+    replace y with ((exist H1 : elts (domain f)) : set) by auto.
     auto using f_equal, set_proj_injective.
   - intros [x X] [y Y] H0.
     inversion H0.
@@ -1377,13 +1378,12 @@ Theorem Surjective_classification : ∀ f, surjective f ↔ ∀ y,
 Proof.
   split; intros H.
   - intros y H0.
-    destruct (H (exist (λ x, x ∈ range f) _ H0)) as [[x X] H1].
+    destruct (H (exist H0 : elts (range f))) as [[x X] H1].
     exists x.
     now inversion H1.
   - intros [y Y].
     pose proof (H _ Y) as [x [H0 H1]].
-    exists (exist (λ x, x ∈ domain f) _ H0).
-    simpl.
+    exists (exist H0 : elts (domain f)).
     now apply set_proj_injective.
 Qed.
 
@@ -1442,7 +1442,7 @@ Definition empty_function : function.
 Proof.
   assert (∀ a : set, a ∈ ∅ → (λ x : set, x) a ∈ ∅) as H by auto.
   apply function_construction in H.
-  destruct (constructive_indefinite_description _ H) as [f i].
+  destruct (constructive_indefinite_description H) as [f i].
   exact f.
 Defined.
 
@@ -1452,7 +1452,7 @@ Proof.
   destruct (excluded_middle_informative (bijective f)).
   - destruct b as [H H0].
     apply right_inverse_iff_surjective in H0.
-    destruct (constructive_indefinite_description _ H0) as [g [H1 [H2 H3]]].
+    destruct (constructive_indefinite_description H0) as [g [H1 [H2 H3]]].
     exact g.
   - exact empty_function.
 Defined.
@@ -1544,7 +1544,7 @@ Proof.
       rewrite <-e in H.
       now apply function_maps_domain_to_range in H. }
     apply function_construction in H.
-    destruct (constructive_indefinite_description _ H) as [h i].
+    destruct (constructive_indefinite_description H) as [h i].
     exact h.
   - exact empty_function.
 Defined.
@@ -1587,8 +1587,7 @@ Proof.
   rewrite H in H5.
   destruct (H1 z) as [x [H7 H8]]; auto.
   rewrite <-H2 in H7.
-  exists (exist (λ x, x ∈ domain (f ∘ g)) _ H7).
-  simpl.
+  exists (exist H7 : elts (domain (f ∘ g))).
   apply set_proj_injective.
   simpl.
   rewrite H4; congruence.
@@ -1666,7 +1665,7 @@ Section Restrictions.
         now apply Specify_classification in H2.
   Qed.
 
-  Definition restriction := mkFunc _ _ _ restriction_is_function.
+  Definition restriction := mkFunc restriction_is_function.
 
   Theorem restriction_domain : domain restriction = (X ∩ domain f).
   Proof.
@@ -1721,7 +1720,7 @@ Section Restrictions.
         apply Ordered_pair_iff in H2 as [H2 H3]; now subst.
   Qed.
 
-  Definition restriction_Y := mkFunc _ _ _ restriction_Y_is_function.
+  Definition restriction_Y := mkFunc restriction_Y_is_function.
 
   Theorem restriction_Y_domain : domain restriction_Y = domain f.
   Proof.
@@ -1751,9 +1750,15 @@ Section Restrictions.
 
 End Restrictions.
 
+Arguments restriction_Y {f Y}.
+Arguments restriction_Y_domain {f Y}.
+Arguments restriction_Y_range {f Y}.
+Arguments restriction_Y_action {f Y}.
+
 Section Quotient_maps.
 
-  Variable X R : set.
+  Context {X : set}.
+  Variable R : set.
 
   Definition quotient_map : elts X → elts (X/R).
   Proof.
@@ -1765,20 +1770,20 @@ Section Quotient_maps.
         now rewrite Specify_classification in *.
       - exists x.
         repeat split; auto; rewrite Specify_classification in *; intuition. }
-    exact (exist _ _ H0).
+    exact (exist H0).
   Defined.
 
 End Quotient_maps.
 
-Theorem quotient_lift : ∀ (X R : set) (y : elts (X/R)),
-  ∃ x : elts X, quotient_map X R x = y.
+Theorem quotient_lift : ∀ {X R : set} (y : elts (X/R)),
+  ∃ x : elts X, quotient_map R x = y.
 Proof.
   intros X R y.
   unfold quotient in *.
   destruct y as [y H].
   pose proof H as H0.
   apply quotient_classification in H0 as [H0 [x [H1 H2]]].
-  exists (exist (λ x, x ∈ X) _ H1).
+  exists (exist H1 : elts X).
   apply set_proj_injective.
   simpl in *.
   apply Specify_classification in H as [H3 H4].
@@ -1787,8 +1792,8 @@ Proof.
   - now apply Specify_classification, H2.
 Qed.
 
-Theorem quotient_equiv : ∀ X R x y,
-    is_equivalence X R → quotient_map X R x = quotient_map X R y ↔ (x, y) ∈ R.
+Theorem quotient_equiv : ∀ X R (x y : elts X),
+    is_equivalence X R → quotient_map R x = quotient_map R y ↔ (x, y) ∈ R.
 Proof.
   intros X R [x A] [y B] [H [H0 H1]].
   split; intros H2.
@@ -1808,7 +1813,7 @@ Proof.
 Qed.
 
 Theorem quotient_image :
-  ∀ X R (x : elts X), {z in X | (x,z) ∈ R} = quotient_map X R x.
+  ∀ X R (x : elts X), {z in X | (x,z) ∈ R} = quotient_map R x.
 Proof.
   now intros X R [x H].
 Qed.
@@ -1960,7 +1965,7 @@ Proof.
   apply Extensionality.
   split; intros H0.
   - apply Specify_classification in H0 as [H0 [H1 H2]].
-    pose proof H as H3. 
+    pose proof H as H3.
     apply Nonempty_classification in H3 as [x H3].
     apply H2 in H3 as [y [[H3 H4] _]].
     contradiction (Empty_set_classification y).
@@ -2036,8 +2041,8 @@ Proof.
   apply Subset_equality_iff.
   split; auto.
   intros z H2.
-  set (f1 := mkFunc A B g1 H).
-  set (f2 := mkFunc A B g2 H0).
+  set (f1 := mkFunc H).
+  set (f2 := mkFunc H0).
   unfold is_function in *.
   replace g2 with (graph f2) in H2 by auto.
   apply Graph_classification in H2 as [z1 [H2 H3]].
@@ -2195,16 +2200,16 @@ Qed.
 Definition swap_product (S T : set) : elts (S × T) → elts (T × S).
 Proof.
   intros z.
-  pose proof (elts_in_set _ z).
+  pose proof (elts_in_set z).
   apply Product_classification in H.
-  destruct (constructive_indefinite_description _ H) as [x H0].
-  destruct (constructive_indefinite_description _ H0) as [y [H1 [H2 H3]]].
+  destruct (constructive_indefinite_description H) as [x H0].
+  destruct (constructive_indefinite_description H0) as [y [H1 [H2 H3]]].
   assert ((y, x) ∈ T × S) as H4.
   { apply Product_classification; eauto. }
-  exact (exist _ _ H4).
+  exact (exist H4).
 Defined.
 
-Definition swap_function S T := functionify _ _ (swap_product S T).
+Definition swap_function S T := functionify (swap_product S T).
 
 Theorem swap_domain : ∀ S T, domain (swap_function S T) = S × T.
 Proof.
@@ -2225,7 +2230,7 @@ Proof.
   assert ((x, y) ∈ S × T) as H1.
   { apply Product_classification; eauto. }
   unfold swap_function, swap_product.
-  rewrite <-(setify_action _ _ H1), functionify_action.
+  rewrite (reify H1), functionify_action.
   repeat destruct constructive_indefinite_description.
   repeat destruct a.
   destruct Product_classification.

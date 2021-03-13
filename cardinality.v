@@ -10,15 +10,14 @@ Infix "~" := equinumerous (at level 70) : set_scope.
 Theorem cardinality_refl : ∀ A, A ~ A.
 Proof.
   intros A.
-  exists (functionify A A id).
+  exists (@functionify A A id).
   unfold bijective.
   rewrite Injective_classification, Surjective_classification,
   functionify_domain, functionify_range.
   repeat split; auto; intros.
-  - now rewrite <-(setify_action _ _ H), <-(setify_action _ _ H0),
-    ? functionify_action in H1.
+  - now rewrite (reify H), (reify H0), ? functionify_action in H1.
   - exists y.
-    now rewrite <-(setify_action _ _ H), functionify_action.
+    now rewrite (reify H), functionify_action.
 Qed.
 
 Theorem cardinality_eq : ∀ A B, A = B → A ~ B.
@@ -76,15 +75,15 @@ Add Parametric Relation : set equinumerous
 Theorem injective_into_image : ∀ f, injective f → domain f ~ image f.
 Proof.
   intros f H.
-  exists (restriction_Y _ _ (Set_is_subset (image f))).
+  exists (restriction_Y (Set_is_subset (image f))).
   rewrite restriction_Y_domain, restriction_Y_range.
   repeat split; auto.
   - rewrite Injective_classification in *.
     intros x y H0 H1 H2.
-    rewrite restriction_Y_domain, ? restriction_Y_action in *; auto.
+    rewrite @restriction_Y_domain, ? @restriction_Y_action in *; auto.
   - apply Surjective_classification.
     intros y H0.
-    rewrite restriction_Y_domain, restriction_Y_range in *.
+    rewrite @restriction_Y_domain, @restriction_Y_range in *.
     apply Specify_classification in H0 as [H0 [x [H1 H2]]].
     exists x.
     now rewrite restriction_Y_action.
@@ -100,18 +99,18 @@ Proof.
     apply Specify_classification in H1 as [H1 [x [H2 H3]]].
     rewrite restriction_range, restriction_domain,
     <-restriction_action in *; eauto. }
-  exists (restriction_Y _ _ H1).
+  exists (restriction_Y H1).
   rewrite restriction_Y_domain, restriction_Y_range, restriction_domain.
   repeat split; auto.
   - now apply Intersection_subset.
   - rewrite Injective_classification in *.
     intros x y H2 H3 H4.
-    rewrite restriction_Y_domain, ? restriction_Y_action, restriction_domain,
+    rewrite @restriction_Y_domain, ? @restriction_Y_action, restriction_domain,
     <-? restriction_action in *; auto.
     apply Intersection_right in H2, H3; auto.
   - apply Surjective_classification.
     intros y H2.
-    rewrite restriction_Y_range, ? restriction_Y_action, restriction_Y_domain,
+    rewrite @restriction_Y_range, ? restriction_Y_action, restriction_Y_domain,
     restriction_domain, <-? restriction_action in *; auto.
     apply Specify_classification in H2 as [H2 [x [H3 H4]]].
     exists x.
@@ -278,20 +277,19 @@ Lemma two_sided_inverse_bijective : ∀ A B,
       ((∀ a : elts A, g (f a) = a) ∧ (∀ b : elts B, f (g b) = b))) → A ~ B.
 Proof.
   intros A B [f [g [H H0]]].
-  exists (functionify _ _ f).
+  exists (functionify f).
   unfold bijective.
   rewrite Injective_classification, Surjective_classification,
   functionify_range, functionify_domain.
   repeat split; auto.
   - intros x y H1 H2 H3.
-    rewrite <-(setify_action _ _ H1), <-(setify_action _ _ H2),
-    ? functionify_action in *.
+    rewrite (reify H1), (reify H2), ? @functionify_action in *.
     apply set_proj_injective in H3.
     f_equal.
     now rewrite <-H, <-H3, H.
   - intros y H1.
-    rewrite <-(setify_action _ _ H1) in *.
-    exists (g (exist _ _ H1)).
+    rewrite (reify H1) in *.
+    exists (g (exist H1)).
     rewrite functionify_action, H0.
     auto using elts_in_set.
 Qed.
@@ -403,13 +401,13 @@ Proof.
       auto using PA1_ω. }
     now rewrite Complement_classification, Singleton_classification in *.
   - apply cardinality_sym.
-    set (f := functionify ω ω (λ x, x + 1)).
+    set (f := functionify (λ x, x + 1)).
     destruct (function_construction ω (ω \ {0,0}) (λ x, f x))
       as [f' [H [H0 H1]]].
     { intros a H.
       unfold f.
-      rewrite <-(setify_action _ _ H), functionify_action,
-      Complement_classification, Singleton_classification.
+      rewrite (reify H), functionify_action, Complement_classification,
+      Singleton_classification.
       split; auto using elts_in_set.
       intros H0.
       rewrite add_1_r in H0.
@@ -418,25 +416,22 @@ Proof.
     repeat split; unfold f in *; auto.
     + apply Injective_classification.
       intros x y H2 H3 H4.
-      rewrite H, ? H1, <-(setify_action _ _ H2), <-(setify_action _ _ H3),
-      ? functionify_action in *; auto.
-      rewrite ? (add_comm _ 1) in H4.
+      rewrite H, ? H1, (reify H2), (reify H3), ? @functionify_action in *; auto.
+      rewrite ? (add_comm _ 1) in H4; auto.
       apply set_proj_injective, cancellation_add in H4.
       now inversion H4.
     + apply Surjective_classification.
       intros y H2.
       rewrite H0, H, Complement_classification, Singleton_classification in *.
       destruct H2 as [H2 H3].
-      rewrite <-(setify_action _ _ H2).
-      set (γ := exist _ _ H2 : N) in *.
-      assert (γ ≠ 0) by (contradict H3; now inversion H3).
+      set (γ := exist H2 : N) in *.
       exists (γ - 1).
-      rewrite H1, functionify_action; repeat split; auto using N_in_ω.
-      apply f_equal.
+      assert (γ ≠ 0) as H4 by (contradict H3; now inversion H3).
+      rewrite H1, @functionify_action, add_comm, sub_abab; repeat split;
+        eauto using elts_in_set.
       apply succ_0 in H4 as [m H4].
-      rewrite add_comm, sub_abab; auto.
-      exists m.
-      now rewrite H4, <-add_1_r, add_comm.
+      rewrite H4.
+      apply one_le_succ.
 Qed.
 
 Definition finite S := ∃ n : N, S ~ n.
@@ -1336,7 +1331,7 @@ Theorem natural_powers_are_finite : ∀ m n : N, finite (m^n).
 Proof.
   intros m n.
   induction n as [| n [x H]] using Induction.
-  - rewrite power_0_r, <-(setify_action _ _ PA1_ω).
+  - rewrite power_0_r, (reify PA1_ω).
     apply (naturals_are_finite 1).
   - rewrite <-S_is_succ.
     unfold succ.
@@ -1585,9 +1580,7 @@ Theorem finite_cardinality_equinumerous :
   ∀ A B, finite A → finite B → # A = # B → A ~ B.
 Proof.
   intros A B H H0 H1.
-  apply (card_equiv A) in H.
-  apply (card_equiv B) in H0.
-  now rewrite <-H, <-H0, H1.
+  now rewrite <-(card_equiv A H), <-(card_equiv B H0), H1.
 Qed.
 
 Definition inverse_function_out : set → set → set → set.
@@ -1595,8 +1588,7 @@ Proof.
   intros A B f.
   destruct (excluded_middle_informative (f ∈ bijection_set A B)).
   - apply Specify_classification in i as [H H0].
-    destruct (constructive_indefinite_description _ H0)
-      as [f' [H1 [H2 [H3 H4]]]].
+    destruct (constructive_indefinite_description H0) as [f' [H1 [H2 [H3 H4]]]].
     exact (graph (inverse f')).
   - exact ∅.
 Defined.
@@ -1634,11 +1626,9 @@ Proof.
     destruct a, a0.
     repeat destruct constructive_indefinite_description.
     repeat destruct a1, a2.
-    rewrite <-e5, <-e6.
-    replace x0 with x1; auto.
-    rewrite <-(function_inv_inv x0), <-(function_inv_inv x1); auto.
-    f_equal.
-      apply function_record_injective; auto.
+    rewrite <-e5, <-e6, <-(function_inv_inv x0), <-(function_inv_inv x1); auto.
+    do 2 f_equal.
+    apply function_record_injective; auto.
     rewrite ? inverse_range; congruence.
   - rewrite Surjective_classification.
     intros y H2.
@@ -1687,7 +1677,7 @@ Section inverse_function_sideload.
   Proof.
     destruct (excluded_middle_informative (x ∈ bijection_set (range f) C)).
     - apply Specify_classification in i as [H0 H1].
-      destruct (constructive_indefinite_description _ H1)
+      destruct (constructive_indefinite_description H1)
         as [g [H2 [H3 [H4 H5]]]].
       exact (graph (g ∘ f)).
     - exact ∅.
@@ -1805,7 +1795,7 @@ Proof.
         congruence.
     + apply function_record_injective; try congruence.
 Qed.
-  
+
 Lemma size_of_bijections_wf : ∀ A B C,
     A ~ B → size_of_bijections A C = size_of_bijections B C.
 Proof.
@@ -1817,9 +1807,8 @@ Add Morphism bijection_set with signature
     equinumerous ==> equinumerous ==> equinumerous as bijection_set_equiv.
 Proof.
   intros x y H x0 y0 H0.
-  eapply (bijection_set_wf x y x0) in H.
+  eapply bijection_set_wf in H, H0.
   rewrite (bijection_set_sym y), (bijection_set_sym x) in *.
-  eapply (bijection_set_wf x0 y0 y) in H0.
   now rewrite H, H0.
 Qed.
 
@@ -1827,10 +1816,9 @@ Add Morphism size_of_bijections with signature
     equinumerous ==> equinumerous ==> eq as size_of_bijections_equiv.
 Proof.
   intros x y H x0 y0 H0.
-  eapply (size_of_bijections_wf x y x0) in H.
+  eapply size_of_bijections_wf in H, H0.
   rewrite (size_of_bijections_sym y), (size_of_bijections_sym x) in *.
-  eapply (size_of_bijections_wf x0 y0 y) in H0.
-  congruence.
+  now rewrite H, H0.
 Qed.
 
 Lemma finite_subsets_bijective : ∀ E F, finite F → E ⊂ F → E ~ F → E = F.
@@ -1882,30 +1870,30 @@ Section Powerset_powers.
   Proof.
     intros [x H].
     apply Specify_classification in H as [H H0].
-    set (f := mkFunc _ _ _ H0).
+    set (f := mkFunc H0).
     assert ({x in X | f x = 1} ∈ P X).
     { apply Powerset_classification.
       intros z H1.
       apply Specify_classification in H1.
       tauto. }
-    exact (exist _ _ H1).
+    exact (exist H1).
   Defined.
 
   Theorem powerset_powers : 2^X ~ P X.
   Proof.
-    exists (functionify _ _ powerset_bijection_helper).
+    exists (functionify powerset_bijection_helper).
     rewrite functionify_domain, functionify_range.
     repeat split; auto.
     - apply Injective_classification.
       intros x y H H0 H1.
-      rewrite functionify_domain, <-(setify_action _ _ H),
-      <-(setify_action _ _ H0), ? functionify_action in *.
+      rewrite @functionify_domain, (reify H), (reify H0),
+      ? @functionify_action in *.
       unfold powerset_bijection_helper in *.
       repeat destruct Specify_classification.
       destruct a, a0.
       simpl in H1 |-*.
-      set (f := (mkFunc _ _ _ i2)).
-      set (g := (mkFunc _ _ _ i4)).
+      set (f := (mkFunc i2)).
+      set (g := (mkFunc i4)).
       assert (x = graph f) as H2 by auto.
       assert (y = graph g) as H3 by auto.
       rewrite H2, H3.
@@ -1942,7 +1930,7 @@ Section Powerset_powers.
       { now apply Pairwise_union_classification, or_introl,
         Pairwise_union_classification, or_intror, Singleton_classification. }
       intros y H.
-      rewrite functionify_range, functionify_domain in *.
+      rewrite @functionify_range, functionify_domain in *.
       exists {z in X × 2 | proj2 X 2 z = 1 ↔ proj1 X 2 z ∈ y}.
       assert ({z in X × 2 | proj2 X 2 z = 1 ↔ proj1 X 2 z ∈ y} ∈ 2 ^ X) as Z1.
       { apply Specify_classification.
@@ -1969,13 +1957,13 @@ Section Powerset_powers.
           * rewrite Singleton_classification in H1.
             now apply H4 in H1. }
       split; auto.
-      rewrite <-(setify_action _ _ Z1), functionify_action.
+      rewrite (reify Z1), functionify_action.
       unfold powerset_bijection_helper.
       destruct Specify_classification, a.
       simpl.
       clear a i.
       apply Extensionality.
-      set (f := mkFunc _ _ _ i1).
+      set (f := mkFunc i1).
       split; intros H0.
       + apply Specify_classification in H0 as [H0 H1].
         assert (f z = 1) as H2 by auto.

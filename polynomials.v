@@ -45,7 +45,7 @@ Section Polynomials_construction.
       apply Specify_classification in H as [_ H].
       apply Specify_classification in H0 as [_ H0].
       apply Specify_classification.
-      rewrite <-specify_action in *; destruct H as [n H], H0 as [m H0].
+      rewrite despecify in *; destruct H as [n H], H0 as [m H0].
       simpl in *.
       split; eauto using elts_in_set.
       exists (naturals.max m n).
@@ -56,7 +56,7 @@ Section Polynomials_construction.
       apply Specify_classification in H as [_ H].
       apply Specify_classification in H0 as [_ H0].
       apply Specify_classification.
-      rewrite <-specify_action in *; destruct H as [n H], H0 as [m H0].
+      rewrite despecify in *; destruct H as [n H], H0 as [m H0].
       simpl in *.
       split; eauto using elts_in_set.
       exists (n + m)%N.
@@ -76,7 +76,7 @@ Section Polynomials_construction.
     - intros [a A] H.
       apply Specify_classification in H as [_ H].
       apply Specify_classification.
-      rewrite <-specify_action in *; destruct H as [n H].
+      rewrite despecify in *; destruct H as [n H].
       simpl in *.
       split; eauto using elts_in_set.
       exists n.
@@ -84,7 +84,7 @@ Section Polynomials_construction.
       rewrite coefficient_neg, H; auto; ring.
     - apply Specify_classification.
       split; eauto using elts_in_set.
-      rewrite <-specify_action.
+      rewrite despecify.
       exists 1%N.
       intros m H.
       simpl.
@@ -120,7 +120,7 @@ Section Polynomials_construction.
     apply Specify_classification.
     split; eauto using elts_in_set.
     unfold ISS, power_series.IRS.
-    rewrite <-specify_action.
+    rewrite despecify.
     exists 1%N.
     intros m H.
     rewrite coefficient_seriesify.
@@ -138,7 +138,7 @@ Section Polynomials_construction.
     apply Specify_classification.
     split; eauto using elts_in_set.
     unfold ISS, x, shift, power_series.one, power_series.IRS.
-    rewrite <-specify_action.
+    rewrite despecify.
     exists 2%N.
     intros m [c H].
     rewrite ? coefficient_seriesify.
@@ -233,11 +233,11 @@ Section Polynomial_theorems.
   Add Ring poly_ring : (ringify _ : ring_theory 0 _ _ _ _ _ eq).
   Add Ring poly_ring_raw : (ringify PR).
 
-  Definition IRP (c : R) := (exist _ _ (consts_are_polys _ c)) : poly.
+  Definition IRP (c : R) := (exist (consts_are_polys _ c)) : poly.
   Coercion IRP : R >-> poly.
 
   Definition coefficient (f : poly) n := coefficient _ (f : series) n : R.
-  Definition x := (exist _ _ (x_is_poly _)) : poly.
+  Definition x := (exist (x_is_poly _)) : poly.
 
   Theorem IPS_eq : ∀ f g : poly, (f : series) = (g : series) ↔ f = g.
   Proof.
@@ -351,9 +351,9 @@ Section Polynomial_theorems.
   Proof.
     intros f H.
     apply nonzero_coefficients in H as [m H].
-    pose proof (elts_in_set _ f) as H0; simpl in *.
+    pose proof (elts_in_set f) as H0; simpl in *.
     apply Specify_classification in H0 as [H0 H1].
-    rewrite <-(setify_action _ _ H0), <-specify_action in *.
+    rewrite (reify H0), despecify in *.
     destruct H1 as [n H1].
     destruct (lub (λ x, coefficient f x ≠ 0%R)) as [s [H2 H3]];
       try now (exists m).
@@ -378,7 +378,7 @@ Section Polynomial_theorems.
     destruct (excluded_middle_informative (f = 0)).
     - exact 0%N.
     - apply degree_construction in n.
-      destruct (constructive_indefinite_description _ n) as [d].
+      destruct (constructive_indefinite_description n) as [d].
       exact d.
   Defined.
 
@@ -793,7 +793,7 @@ Section Polynomial_theorems.
         by eauto using elts_in_set; intros H0;
       [ apply Specify_classification in H0 as [H0 H1] |
         apply Specify_classification ];
-      rewrite <-(setify_action _ _ H), <-specify_action, <-? H0, <-? H1 in *;
+      rewrite (reify H), despecify, <-? H0, <-? H1 in *;
       eauto using f_equal, set_proj_injective, elts_in_set.
   Qed.
 
@@ -1481,12 +1481,11 @@ Section Polynomial_theorems.
       split; intros H.
       - apply Pairwise_union_classification.
         apply roots_in_R in H as H0.
-        rewrite <-(setify_action _ _ H0), ? roots_action, eval_mul in *.
+        rewrite (reify H0), ? roots_action, eval_mul in *.
         apply C in H; tauto.
       - apply Pairwise_union_classification in H as [H | H];
           apply roots_in_R in H as H0;
-          rewrite <-(setify_action _ _ H0), ? roots_action, eval_mul, H in *;
-          ring.
+          rewrite (reify H0), ? roots_action, eval_mul, H in *; ring.
     Qed.
 
     Theorem monic_linear_root : ∀ (a : R), roots (x - a) = {a, a}.
@@ -1495,8 +1494,8 @@ Section Polynomial_theorems.
       apply Extensionality.
       split; intros H; rewrite Singleton_classification in *; subst.
       - apply roots_in_R in H as H0.
-        set (ζ := exist _ _ H0 : R).
-        rewrite <-(setify_action _ _ H0) in *; fold ζ in H |-*.
+        set (ζ := exist H0 : R).
+        rewrite (reify H0) in *; fold ζ in H |-*.
         apply roots_action in H.
         unfold rings.sub, IRs, rings.IRS in *.
         rewrite <-(rings.A3 _ a), <-H, eval_add, eval_x, eval_neg, eval_const.
@@ -1540,8 +1539,8 @@ Section Polynomial_theorems.
         now exists 0%N. }
       apply Nonempty_classification in H1 as [a H1].
       apply roots_in_R in H1 as H2.
-      set (α := exist _ _ H2 : R).
-      rewrite <-(setify_action _ _ H2) in *; fold α in H1.
+      set (α := exist H2 : R).
+      rewrite (reify H2) in *; fold α in H1.
       apply root_classification in H1 as [g H1].
       subst.
       rewrite prod_root.
@@ -1567,8 +1566,8 @@ Section Polynomial_theorems.
         apply zero_le. }
       apply Nonempty_classification in H1 as [a H1].
       apply roots_in_R in H1 as H2.
-      set (α := exist _ _ H2 : R).
-      rewrite <-(setify_action _ _ H2) in *; fold α in H1.
+      set (α := exist H2 : R).
+      rewrite (reify H2) in *; fold α in H1.
       apply root_classification in H1 as [g H1].
       subst.
       rewrite prod_root.

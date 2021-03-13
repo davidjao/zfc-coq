@@ -22,7 +22,7 @@ Qed.
 
 Definition ω : set.
 Proof.
-  destruct (constructive_indefinite_description _ Infinity_ω) as [X].
+  destruct (constructive_indefinite_description Infinity_ω) as [X].
   exact (⋂ {x in P X | ∅ ∈ x ∧ Inductive x}).
 Defined.
 
@@ -214,7 +214,7 @@ Proof.
   apply (ω_is_transitive _ x); eauto using elements_of_naturals_are_naturals.
 Qed.
 
-Theorem union_ω : ∀ n, n ∈ ω → ⋃ n ∈ ω.
+Theorem union_ω : ∀ {n}, n ∈ ω → ⋃ n ∈ ω.
 Proof.
   induction n using Induction_ω; rewrite ? Empty_union, ? union_succ; tauto.
 Qed.
@@ -270,20 +270,15 @@ Delimit Scope N_scope with N.
 Open Scope N_scope.
 Bind Scope N_scope with N.
 
-Definition INS (a : N) := elt_to_set _ a : set.
+Definition INS (a : N) := elt_to_set a : set.
 Coercion INS : N >-> set.
 
-Theorem N_in_ω : ∀ a : N, a ∈ ω.
-Proof.
-  eauto using elts_in_set.
-Qed.
-
-Definition zero := (exist _ _ PA1_ω) : N. (* PA1 : Zero is a natural. *)
+Definition zero := (exist PA1_ω) : N. (* PA1 : Zero is a natural. *)
 
 Definition S : N → N. (* PA2 : The successor of a natural is a natural. *)
 Proof.
   intros [n H].
-  exact (exist _ _ (PA2_ω n H)).
+  exact (exist (PA2_ω n H)).
 Defined.
 
 Notation "0" := zero : N_scope.
@@ -302,7 +297,7 @@ Proof.
   intros P H H0 [n H1].
   induction n using Induction_ω; intuition.
   - rewrite <-(set_proj_injective ω 0); auto using set_proj_injective.
-  - replace (exist _ _ H1 : N) with (S (exist _ _ H2 : N));
+  - replace (exist H1 : N) with (S (exist H2 : N));
       eauto using set_proj_injective.
 Qed.
 
@@ -323,7 +318,7 @@ Proof.
     apply Nonempty_classification.
     exists n.
     apply Specify_classification.
-    eauto using N_in_ω. }
+    eauto using elts_in_set. }
   apply ω_WOP in H1 as [s [H1 H2]]; auto.
   apply Specify_classification in H1 as [H1 [σ [H3 H4]]].
   subst.
@@ -334,9 +329,9 @@ Proof.
   intros H4.
   assert (k ∈ S) as H5.
   { apply Specify_classification.
-    eauto using N_in_ω. }
+    eauto using elts_in_set. }
   apply H2 in H5.
-  contradiction (no_quines_ω k); eauto using N_in_ω.
+  contradiction (no_quines_ω k); eauto using elts_in_set.
 Qed.
 
 Theorem PA4 : ∀ n, 0 ≠ S n.
@@ -372,7 +367,7 @@ Qed.
 
 Section Iterated_op_construction.
 
-  Variable X : Type.
+  Context {X : Type}.
   Variable op : X → X → X.
   Variable start : X.
   Variable f : N → X.
@@ -393,11 +388,11 @@ Section Iterated_op_construction.
                    then ((g n) · (f n)) else g x).
       split.
       { destruct excluded_middle_informative; auto.
-        contradiction (PA4_ω n); eauto using N_in_ω.
+        contradiction (PA4_ω n); eauto using elts_in_set.
         now rewrite S_is_succ, <-e. }
       intros m H1.
       repeat destruct excluded_middle_informative; subst;
-        try now contradiction (no_quines_ω (S n)); eauto using N_in_ω.
+        try now contradiction (no_quines_ω (S n)); eauto using elts_in_set.
       + apply PA5 in e.
         now subst.
       + apply H0.
@@ -411,7 +406,7 @@ Section Iterated_op_construction.
   Proof.
     intros n.
     destruct (constructive_indefinite_description
-                _ (iterated_op_construction n)) as [i].
+                (iterated_op_construction n)) as [i].
     exact (i n).
   Defined.
 
@@ -438,7 +433,7 @@ Section Iterated_op_construction.
 
 End Iterated_op_construction.
 
-Definition add a b := (iterated_op N (λ x _, S x) a id b).
+Definition add a b := (iterated_op (λ x _, S x) a id b).
 
 Infix "+" := add : N_scope.
 
@@ -451,10 +446,10 @@ Qed.
 Theorem add_succ_r : ∀ x y, x + S y = S (x + y).
 Proof.
   intros x y.
-  apply iterated_op_succ.
+  apply @iterated_op_succ.
 Qed.
 
-Definition mul a b := (iterated_op N add 0 (λ x, a) b).
+Definition mul a b := (iterated_op add 0 (λ x, a) b).
 
 Infix "*" := mul : N_scope.
 
@@ -568,7 +563,7 @@ Proof.
   now rewrite mul_comm, mul_1_r.
 Qed.
 
-Definition pow a b := (iterated_op N mul 1 (λ x, a) b).
+Definition pow a b := (iterated_op mul 1 (λ x, a) b).
 
 Infix "^" := pow : N_scope.
 
@@ -674,7 +669,7 @@ Proof.
         rewrite <-S_is_succ in H1.
         apply Pairwise_union_classification in H1 as [H1 | H1];
           try now (rewrite Singleton_classification in *; subst).
-        eapply elements_of_naturals_are_subsets; eauto using N_in_ω.
+        eapply elements_of_naturals_are_subsets; eauto using elts_in_set.
       * destruct IHb as [x H1].
         { intros x H1.
           rewrite <-S_is_succ in H.
@@ -690,12 +685,12 @@ Theorem lt_is_in : ∀ a b, a < b ↔ a ∈ b.
   intros a b.
   split; intros H; unfold lt in *; rewrite le_is_subset in *.
   - destruct H as [H H0].
-    eapply subsets_of_naturals_are_elements; auto using N_in_ω.
+    eapply subsets_of_naturals_are_elements; eauto using elts_in_set.
     contradict H0.
     now apply set_proj_injective.
   - split.
-    + apply elements_of_naturals_are_subsets; auto using N_in_ω.
-    + apply pigeonhole_precursor in H; auto using N_in_ω.
+    + apply elements_of_naturals_are_subsets; eauto using elts_in_set.
+    + apply pigeonhole_precursor in H; eauto using elts_in_set.
       contradict H.
       subst.
       auto using Set_is_subset.
@@ -716,7 +711,7 @@ Theorem le_trichotomy : ∀ a b, a ≤ b ∨ b ≤ a.
 Proof.
   intros a b.
   rewrite ? le_is_subset.
-  apply ω_trichotomy; auto using N_in_ω.
+  apply ω_trichotomy; eauto using elts_in_set.
 Qed.
 
 Theorem lt_trichotomy : ∀ a b, a < b ∨ a = b ∨ a > b.
@@ -739,7 +734,7 @@ Theorem lt_antisym : ∀ a b, a < b → ¬ b < a.
 Proof.
   intros a b H H0.
   rewrite ? lt_is_in in *.
-  eapply ω_irreflexive; eauto using N_in_ω.
+  eapply ω_irreflexive; eauto using elts_in_set.
 Qed.
 
 Theorem lt_irrefl : ∀ a, ¬ a < a.
@@ -852,7 +847,7 @@ Proof.
   - subst; ring.
 Qed.
 
-Theorem O1 : ∀ a b c, a < b → a + c < b + c.
+Theorem O1 : ∀ {a b} c, a < b → a + c < b + c.
 Proof.
   intros a b c H.
   rewrite lt_def in *.
@@ -862,7 +857,7 @@ Proof.
   subst; ring.
 Qed.
 
-Theorem O1_iff : ∀ a b c, a < b ↔ a + c < b + c.
+Theorem O1_iff : ∀ {a b} c, a < b ↔ a + c < b + c.
 Proof.
   intros a b c.
   split; intros H; auto using O1.
@@ -875,14 +870,14 @@ Proof.
   ring.
 Qed.
 
-Theorem O1_le : ∀ a b c, a ≤ b → a + c ≤ b + c.
+Theorem O1_le : ∀ {a b} c, a ≤ b → a + c ≤ b + c.
 Proof.
   intros a b c [x H].
   exists x.
   subst; ring.
 Qed.
 
-Theorem O1_le_iff : ∀ a b c, a ≤ b ↔ a + c ≤ b + c.
+Theorem O1_le_iff : ∀ {a b} c, a ≤ b ↔ a + c ≤ b + c.
 Proof.
   intros a b c.
   split; intros H; auto using O1_le.
@@ -906,7 +901,7 @@ Proof.
   apply eq_sym, cancellation_0_mul in H1 as [H1 | H1]; congruence.
 Qed.
 
-Theorem O3 : ∀ a b c, a < b → 0 < c → a * c < b * c.
+Theorem O3 : ∀ {a b} c, a < b → 0 < c → a * c < b * c.
 Proof.
   intros a b c H H0.
   rewrite lt_def in *.
@@ -995,9 +990,9 @@ Proof.
   rewrite <-add_1_r; ring.
 Qed.
 
-Definition pred (n : N) := (exist _ _ (union_ω _ (elts_in_set _ n)) : N).
+Definition pred (n : N) := (exist (union_ω (elts_in_set n)) : N).
 
-Definition sub a b := (iterated_op N (λ x _, pred x) a id b).
+Definition sub a b := (iterated_op (λ x _, pred x) a id b).
 
 Infix "-" := sub : N_scope.
 
@@ -1011,7 +1006,7 @@ Theorem pred_succ : ∀ a, pred (S a) = a.
 Proof.
   intros a.
   apply set_proj_injective; simpl.
-  rewrite <-S_is_succ, union_succ; auto using N_in_ω.
+  rewrite <-S_is_succ, union_succ; eauto using elts_in_set.
 Qed.
 
 Theorem sub_0_r : ∀ a, a - 0 = a.
@@ -1218,8 +1213,8 @@ Qed.
 Theorem lt_cross_add : ∀ a b c d, a < b → c < d → a + c < b + d.
 Proof.
   intros a b c d H H0.
-  apply (O1 _ _ c) in H.
-  apply (O1 _ _ b) in H0.
+  apply (O1 c) in H.
+  apply (O1 b) in H0.
   rewrite ? (add_comm _ b) in H0.
   eauto using lt_trans.
 Qed.
@@ -1323,7 +1318,7 @@ Qed.
 
 Theorem no_quines : ∀ n : N, n ∉ n.
 Proof.
-  auto using no_quines_ω, N_in_ω.
+  eauto using no_quines_ω, elts_in_set.
 Qed.
 
 Theorem disjoint_succ : ∀ n : N, n ∩ {n,n} = ∅.
