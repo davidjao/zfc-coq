@@ -839,24 +839,42 @@ Section Projections.
     exact (exist H2).
   Defined.
 
-  Theorem π1_action : ∀ a b (H : (a, b) ∈ A × B), a = π1 (exist H).
+  Theorem π1_action :
+    ∀ a b (Ha : a ∈ A) (Hb : b ∈ B)
+      (H : (exist Ha : elts A, exist Hb : elts B) ∈ A × B),
+      π1 (exist H) = exist Ha.
   Proof.
-    intros a b H.
+    intros a b Ha Hb H.
     unfold π1.
     repeat destruct constructive_indefinite_description.
     repeat destruct a0.
     simpl in *.
-    now apply Ordered_pair_iff in e0.
+    apply Ordered_pair_iff in e0.
+    now apply set_proj_injective.
   Qed.
 
-  Theorem π2_action : ∀ a b (H : (a, b) ∈ A × B), b = π2 (exist H).
+  Theorem π2_action :
+    ∀ a b (Ha : a ∈ A) (Hb : b ∈ B)
+      (H : (exist Ha : elts A, exist Hb : elts B) ∈ A × B),
+      π2 (exist H) = exist Hb.
   Proof.
-    intros a b H.
+    intros a b Ha Hb H.
     unfold π2.
     repeat destruct constructive_indefinite_description.
     repeat destruct a0.
     simpl in *.
-    now apply Ordered_pair_iff in e0.
+    apply Ordered_pair_iff in e0.
+    now apply set_proj_injective.
+  Qed.
+
+  Theorem π_image : ∀ z, (π1 z, π2 z) = z.
+  Proof.
+    intros z.
+    unfold π1, π2.
+    repeat destruct constructive_indefinite_description.
+    repeat destruct a.
+    rewrite e0.
+    now apply Ordered_pair_iff.
   Qed.
 
 End Projections.

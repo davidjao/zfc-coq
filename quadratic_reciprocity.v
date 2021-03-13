@@ -165,13 +165,13 @@ Section Pretty_picture_lemmas.
   Qed.
 
   Definition rectangle :=
-    {z in 𝐙 × 𝐙 | ∃ x y : Z, z = (x,y) ∧ 1 ≤ x ≤ # QR q ∧ 1 ≤ y ≤ # QR p}.
+    {z of type 𝐙 × 𝐙 | 1 ≤ π1 z ≤ # QR q ∧ 1 ≤ π2 z ≤ # QR p}.
   Definition lower_triangle :=
-    {z in 𝐙 × 𝐙 | ∃ x y : Z,
-       z = (x,y) ∧ 1 ≤ x ≤ # QR q ∧ 1 ≤ y ≤ # QR p ∧ (y < p * x / q)%Q}.
+    {z of type 𝐙 × 𝐙 | 1 ≤ π1 z ≤ # QR q ∧ 1 ≤ π2 z ≤ # QR p ∧
+                       ((π2 z : Z) < p * (π1 z : Z) / q)%Q}.
   Definition upper_triangle :=
-    {z in 𝐙 × 𝐙 | ∃ x y : Z,
-       z = (x,y) ∧ 1 ≤ x ≤ # QR q ∧ 1 ≤ y ≤ # QR p ∧ (x < q * y / p)%Q}.
+    {z of type 𝐙 × 𝐙 | 1 ≤ π1 z ≤ # QR q ∧ 1 ≤ π2 z ≤ # QR p ∧
+                       ((π1 z : Z) < q * (π2 z : Z) / p)%Q}.
 
   Definition lower_triangle_f (a : N) :=
     {z in lower_triangle | ∃ x y : Z, z = (x,y) ∧ x = a}.
@@ -184,17 +184,19 @@ Section Pretty_picture_lemmas.
   Proof.
     apply Extensionality.
     split; intros H.
-    - apply Specify_classification in H as [H [a [b H0]]].
+    - apply Specify_classification in H as [H H0].
+      rewrite (reify H), despecify in *.
       apply Product_classification.
-      exists a, b.
+      exists ((π1 (exist H)) : Z), ((π2 (exist H)) : Z).
       repeat split; try (apply Specify_classification; rewrite ? despecify);
-        intuition; eauto using elts_in_set.
+        intuition; eauto using elts_in_set, eq_sym, π_image.
     - apply Product_classification in H as [a [b [H [H0 H1]]]]; subst.
       apply Specify_classification in H as [H H1], H0 as [H0 H2].
-      rewrite (reify H), (reify H0), despecify in *.
+      assert ((a, b) ∈ 𝐙 × 𝐙) as H3.
+      { apply Product_classification; eauto. }
       apply Specify_classification.
-      repeat split; eauto.
-      apply Product_classification; eauto.
+      now rewrite (reify H), (reify H0), (reify H3), despecify,
+      π1_action, π2_action in *.
   Qed.
 
   Lemma rectangle_finite : finite rectangle.
@@ -212,17 +214,17 @@ Section Pretty_picture_lemmas.
   Lemma lower_subset : lower_triangle ⊂ rectangle.
   Proof.
     intros z H.
-    apply Specify_classification in H as [H [x [y [H0 [H1 [H2 H3]]]]]].
+    apply Specify_classification in H as [H H0].
     apply Specify_classification.
-    eauto 6.
+    now rewrite (reify H), despecify in *.
   Qed.
 
   Lemma upper_subset : upper_triangle ⊂ rectangle.
   Proof.
     intros z H.
-    apply Specify_classification in H as [H [x [y [H0 [H1 [H2 H3]]]]]].
+    apply Specify_classification in H as [H H0].
     apply Specify_classification.
-    eauto 6.
+    now rewrite (reify H), despecify in *.
   Qed.
 
   Lemma disjoint_triangles : lower_triangle ∩ upper_triangle = ∅.
@@ -231,21 +233,22 @@ Section Pretty_picture_lemmas.
     rewrite Nonempty_classification.
     intros [z H].
     apply Pairwise_intersection_classification in H as [H H0].
-    apply Specify_classification in H as [H [x1 [y1 [H1 [H2 [H3 H4]]]]]], H0
-        as [H0 [x2 [y2 [H5 [H6 [H7 H8]]]]]]; subst.
-    apply Ordered_pair_iff in H5 as [H5 H9].
-    apply set_proj_injective in H5, H9; subst.
-    rewrite ? inv_div in H4, H8;
+    apply Specify_classification in H as [H H1], H0 as [_ H2].
+    rewrite (reify H), despecify in *.
+    destruct H1 as [H1 [H3 H4]], H2 as [H2 [H5 H6]].
+    rewrite ? inv_div in H4, H6;
       try now apply (pos_ne_0 ℤ_order), odd_prime_positive.
-    apply (O3 ℚ_ring_order (p : Q)), (O3_r ℚ_ring_order (q^-1 : Q)) in H8;
+    apply (O3 ℚ_ring_order (p : Q)), (O3_r ℚ_ring_order (q^-1 : Q)) in H6;
       simpl in *; try (now apply IZQ_lt, odd_prime_positive);
       try now apply (inv_lt ℚ_order), IZQ_lt, odd_prime_positive.
     rewrite <-IZQ_mul in *.
-    replace (p * (q * y2 * p^-1) * q^-1)%Q with (y2 : Q) in H8.
+    replace (p * (q * (π2 (exist H) : Z) * p^-1) * q^-1)%Q
+      with ((π2 (exist H) : Z) : Q) in H6.
     2: { field_simplify_eq; repeat split; auto;
-         intros H9; apply IZQ_eq, (pos_ne_0 ℤ_order) in H9; auto;
+         intros H7; apply IZQ_eq, (pos_ne_0 ℤ_order) in H7; auto;
          now apply odd_prime_positive. }
-    contradiction (lt_antisym ℚ_ring_order (y2 : Q) (p * x2 * q^-1)%Q).
+    contradiction (lt_antisym ℚ_ring_order ((π2 (exist H) : Z) : Q)
+                              (p * (π1 (exist H) : Z) * q^-1)%Q).
   Qed.
 
   Theorem rectangle_union : lower_triangle ∪ upper_triangle = rectangle.
@@ -253,15 +256,18 @@ Section Pretty_picture_lemmas.
     apply Subset_equality; intros z H.
     - apply Pairwise_union_classification in H as [H | H];
         auto using lower_subset, upper_subset.
-    - apply Specify_classification in H as [H [x [y [H0 [H1 H2]]]]].
+    - apply Specify_classification in H as [H H0].
+      rewrite (reify H), despecify in *.
       apply Pairwise_union_classification.
-      destruct (rationals.T y (p * x / q)) as
+      destruct (rationals.T (π2 (exist H) : Z) (p * (π1 (exist H) : Z) / q)) as
           [[H3 [_ _]] | [[_ [H3 _]] | [_ [_ H3]]]].
       + apply or_introl, Specify_classification.
-        eauto 7.
+        rewrite despecify.
+        intuition.
       + apply eq_sym, empty_diagonal in H3; intuition.
       + apply or_intror, Specify_classification.
-        eauto 8 using triangle_duality.
+        rewrite despecify.
+        intuition eauto using triangle_duality.
   Qed.
 
   Theorem sum_lower_triangle :
@@ -280,8 +286,7 @@ Section Pretty_picture_lemmas.
       apply INZ_eq, eq_sym, equivalence_to_card, cardinality_sym.
       assert (∀ y, (k : Z, y+1) ∈ 𝐙 × 𝐙) as H0.
       { intros y.
-        apply Product_classification.
-        eauto using elts_in_set. }
+        apply Product_classification; eauto using elts_in_set. }
       set (f := sets.functionify (λ y : N, exist (H0 y))).
       assert (x ⊂ domain f) as H1.
       { unfold f.
@@ -294,17 +299,16 @@ Section Pretty_picture_lemmas.
            unfold f in *.
            rewrite @sets.functionify_domain, (reify H2), (reify H3),
            ? @functionify_action in *.
-           f_equal.
            unfold elt_to_set, proj1_sig, integers.one in *.
            apply Ordered_pair_iff in H4 as [H4 H5].
            apply set_proj_injective in H5.
            rewrite ? INZ_add, ? (add_comm _ 1) in H5.
-           now apply INZ_eq, naturals.cancellation_add in H5. }
+           apply INZ_eq, naturals.cancellation_add in H5.
+           now inversion H5. }
       replace (lower_triangle_f k) with (push_forward f x); auto.
       apply Extensionality.
       split; intros H2.
-      + apply Specify_classification in H2 as [H2 [y [H3 H4]]].
-        subst.
+      + apply Specify_classification in H2 as [H2 [y [H3 H4]]]; subst.
         apply Pairwise_intersection_classification in H3 as [H3 H4].
         apply Specify_classification.
         unfold f in *.
@@ -312,70 +316,87 @@ Section Pretty_picture_lemmas.
         set (γ := exist H4 : N).
         rewrite (reify H4) in *; fold γ in H3, H4 |-*.
         apply lt_is_in in H3.
-        split; rewrite functionify_action.
-        2: { exists k, (γ + 1); eauto. }
+        split; rewrite functionify_action; try exists k, (γ + 1); eauto.
         apply Specify_classification.
-        split; auto using elts_in_set.
-        exists k, (γ + 1).
+        split; eauto using elts_in_set.
+        rewrite despecify.
+        replace (π1 (exist (H0 γ))) with (k : Z);
+          replace (π2 (exist (H0 γ))) with (γ + 1 : Z);
+          try (unfold π1, π2;
+               repeat destruct constructive_indefinite_description;
+               repeat destruct a; apply Ordered_pair_iff in e1; destruct e1;
+               now apply set_proj_injective).
         repeat split; auto; try (apply INZ_le; intuition); unfold integers.one.
         * rewrite INZ_add, add_1_r.
           apply INZ_le, one_le_succ.
         * rewrite INZ_add.
           eapply INZ_le, pp_helper_1; eauto.
         * rewrite <-IZQ_add.
-          replace (1%Z : Q) with (1%Q) by auto.
           eapply pp_helper_2; eauto.
           now apply INZ_lt.
-      + apply Specify_classification in H2 as [H2 [κ [y [H3 H4]]]].
-        subst.
-        apply Specify_classification in H2 as
-            [H2 [k' [y' [H3 [[H4 H5] [[H6 H7] H8]]]]]].
-        apply lt_0_le_1, lt_def in H6 as [c [H6 H9]].
-        unfold integers.zero, not, f in *.
-        rewrite INZ_eq, integers.A3 in *.
-        apply neq_sym, succ_0 in H6 as [m H6].
-        subst.
+      + apply Specify_classification in H2 as [H2 [κ [y [H3 H4]]]]; subst.
+        apply Specify_classification in H2 as [H2 H3].
         apply Specify_classification.
+        unfold f in *.
         rewrite sets.functionify_range, sets.functionify_domain.
-        split.
-        { apply Product_classification; eauto using elts_in_set. }
-        exists m.
-        apply Ordered_pair_iff in H3 as [H3 H9].
-        apply set_proj_injective in H3, H9.
+        split; auto.
+        rewrite (reify H2), despecify in *.
+        destruct H3 as [[H3 H4] [[H5 H6] H7]].
+        apply lt_0_le_1, lt_def in H5 as [c [H5 H8]].
+        unfold integers.zero, not in *.
+        rewrite INZ_eq, integers.A3 in *.
+        apply neq_sym, succ_0 in H5 as [m H5].
         subst.
-        rewrite @functionify_action, <-add_1_r, <-INZ_add,
-        Pairwise_intersection_classification.
-        repeat split; eauto using elts_in_set.
-        apply lt_is_in, lt_le_succ, INZ_le.
-        rewrite <-e.
-        now apply IZQ_le, floor_upper, or_introl.
+        exists m.
+        rewrite @functionify_action, Pairwise_intersection_classification.
+        replace (π1 (exist H2)) with (k : Z) in *;
+          replace (π2 (exist H2)) with (y : Z) in *;
+          try (unfold π1, π2;
+               repeat destruct constructive_indefinite_description;
+               repeat destruct a; apply Ordered_pair_iff in e1; destruct e1;
+               now apply set_proj_injective).
+        subst; repeat split; eauto using elts_in_set.
+        * apply lt_is_in, lt_le_succ, INZ_le.
+          rewrite <-e.
+          now apply IZQ_le, floor_upper, or_introl.
+        * simpl.
+          now rewrite <-add_1_r, <-INZ_add.
     - eapply subsets_of_finites_are_finite;
         eauto using rectangle_finite, lower_subset.
     - intros k H z H0.
       now apply Specify_classification in H0.
     - intros z; split; intros H.
-      + apply Specify_classification in H as
-            [H [x [y [H0 [[H1 H2] [[H3 H4] H5]]]]]].
-        apply lt_0_le_1, lt_def in H1 as [c [H1 H6]].
-        rewrite integers.A3 in H6.
-        subst.
+      + apply Specify_classification in H as [H H0].
+        pose proof H as H1.
+        apply Product_classification in H1 as [z1 [z2 [H1 [H2 H3]]]]; subst.
+        rewrite (reify H1), (reify H2), (reify H), despecify in *.
+        rewrite π1_action, π2_action in H0.
+        destruct H0 as [[H0 H3] [[H4 H5] H6]].
+        apply lt_0_le_1, lt_def in H0 as [c [H0 H7]].
+        rewrite integers.A3 in H7.
         exists c.
-        unfold integers.zero, not in H1.
-        rewrite INZ_eq in H1.
-        apply neq_sym, succ_0 in H1 as [m H1].
+        unfold integers.zero, not in H0.
+        rewrite INZ_eq in H0.
+        apply neq_sym, succ_0 in H0 as [m H0].
         subst.
         repeat split.
         * auto using one_le_succ.
-        * now apply INZ_le.
-        * do 2 (apply Specify_classification; split; eauto).
-          exists (S m), y.
-          repeat split; auto.
-          apply INZ_le, one_le_succ.
-        * intros x' [[H0 H6] H7].
-          apply Specify_classification in H7 as [H7 [x [y' [H8 H9]]]].
-          apply Ordered_pair_iff in H8 as [H8 H10].
-          subst.
-          now apply set_proj_injective, INZ_eq in H8.
+        * apply INZ_le; congruence.
+        * apply Specify_classification.
+          split; try now exists (exist H1 : Z), (exist H2 : Z).
+          apply Specify_classification.
+          rewrite despecify, π1_action, π2_action.
+          repeat split; intuition.
+          rewrite H7.
+          apply INZ_le.
+          auto using one_le_succ.
+        * intros x' [[H0 H8] H9].
+          apply Specify_classification in H9 as [H9 [x [y' [H10 H11]]]]; subst.
+          rewrite <-π_image, π1_action, π2_action in H10.
+          apply Ordered_pair_iff in H10 as [H10 H11].
+          unfold IZS in H10, H11.
+          apply set_proj_injective in H10, H11.
+          apply INZ_eq; congruence.
       + destruct H as [y [[[H H0] H1] H2]].
         now apply Specify_classification in H1.
   Qed.
@@ -406,31 +427,40 @@ Section Quadratic_reciprocity.
       + apply Specify_classification in H0 as [H0 [z' [H1 H2]]].
         rewrite restriction_domain, swap_domain, <-H, <-restriction_action in *.
         2: { rewrite swap_domain; congruence. }
-        apply Specify_classification in H1 as [H1 [x [y [H3 [H4 [H5 H6]]]]]].
-        subst.
-        apply Product_classification in H1 as [x' [y' [H1 [H7 H8]]]].
-        apply Ordered_pair_iff in H8; intuition; subst.
+        apply Specify_classification in H1 as [H1 H3].
+        pose proof H1 as H4.
+        apply Product_classification in H4 as [a [b [H4 [H5 H6]]]]; subst.
+        rewrite (reify H4), (reify H5), (reify H1), despecify, <-π_image,
+        swap_action in *; auto using elts_in_set.
         apply Specify_classification.
-        rewrite swap_action, Product_classification; repeat split; eauto 8.
-      + apply Specify_classification in H0 as [H0 [x [y [H1 [H2 [H3 H4]]]]]].
-        subst.
+        assert ((π2 (exist H1) : Z, π1 (exist H1) : Z) ∈ 𝐙 × 𝐙) as H6.
+        { apply Product_classification; eauto using elts_in_set. }
+        unfold IZS in *.
+        rewrite π1_action, π2_action, (reify H6), despecify, π1_action,
+        π2_action in *; intuition.
+      + apply Specify_classification in H0 as [H0 H1].
+        pose proof H0 as H2.
+        apply Product_classification in H2 as [a [b [H2 [H3 H4]]]]; subst.
         apply Specify_classification.
-        rewrite restriction_range, swap_range, restriction_domain,
-        swap_domain, <-H.
+        rewrite (reify H2), (reify H3), (reify H0), despecify, <-π_image,
+        π1_action, π2_action, restriction_range, swap_range, restriction_domain,
+        swap_domain, <-H in *.
+        assert ((exist H3 : Z, exist H2 : Z) ∈ 𝐙 × 𝐙) as H4.
+        { apply Product_classification; eauto using elts_in_set. }
+        unfold IZS in *.
         split; auto.
-        exists (y, x).
-        apply Product_classification in H0 as [x' [y' [H0 [H1 H5]]]].
-        apply Ordered_pair_iff in H5 as [H5 H6]; subst.
-        assert ((y, x) ∈ lower_triangle q p).
+        assert ((exist H3 : Z, exist H2 : Z) ∈ lower_triangle q p) as H5.
         { apply Specify_classification.
           rewrite Product_classification.
-          split; eauto 7. }
-        split; auto.
+          split; eauto using elts_in_set.
+          unfold IZS.
+          rewrite (reify H4), despecify, π1_action, π2_action; intuition. }
+        exists (exist H3 : Z, exist H2 : Z).
         rewrite <-restriction_action, swap_action; auto.
         now rewrite swap_domain, <-H.
     - apply Injective_classification.
       intros x y H0 H1 H2.
-      rewrite <-? restriction_action in H2;
+      rewrite <-? restriction_action in *;
         rewrite ? restriction_domain, ? swap_domain, <-? H in *; try congruence.
       apply Specify_classification in H0, H1.
       pose proof swap_bijective 𝐙 𝐙 as [H3 H4].

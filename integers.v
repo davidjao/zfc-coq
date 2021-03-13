@@ -2,44 +2,36 @@ Set Warnings "-notation-overridden,-uniform-inheritance".
 Set Warnings "-fragile-hint-constr,-ambiguous-paths".
 Require Export naturals rings ordered_rings List Permutation.
 
-Definition integer_relation := {z in (ω × ω) × (ω × ω) | ∃ a b c d : N,
-                                  z = ((a, b), (c, d)) ∧ a + d = b + c}.
+Definition integer_relation :=
+  {z of type (ω × ω) × (ω × ω) | π1 (π1 z) + π2 (π2 z) = π2 (π1 z) + π1 (π2 z)}.
 
 Theorem integer_equivalence : is_equivalence (ω × ω) integer_relation.
 Proof.
   repeat split; unfold integer_relation in *.
   - intros a H.
     apply Specify_classification.
-    split.
-    + apply Product_classification; eauto.
-    + apply Product_classification in H as [x [y [H [H0 H1]]]].
-      exists (exist H : N), (exist H0 : N), (exist H : N), (exist H0 : N).
-      split; simpl; try congruence; ring.
+    assert ((a, a) ∈ (ω × ω) × (ω × ω)) as H0.
+    { apply Product_classification; eauto. }
+    now rewrite (reify H), (reify H0), despecify,
+    ? π2_action, ? π1_action, add_comm in *.
   - intros x y H H0 H1.
-    rewrite Specify_classification in *.
-    destruct H1 as [H1 [a [b [c [d [H2 H3]]]]]].
-    split.
-    + apply Product_classification; eauto.
-    + exists c, d, a, b.
-      split; try now ring_simplify [H3].
-      now rewrite Ordered_pair_iff in *.
+    apply Specify_classification in H1 as [H1 H2].
+    assert ((y, x) ∈ (ω × ω) × (ω × ω)) as H3.
+    { apply Product_classification; eauto. }
+    apply Specify_classification.
+    now rewrite (reify H), (reify H0), (reify H1), (reify H3),
+    despecify, ? π1_action, ? π2_action, add_comm, <-H2 in *.
   - intros x y z H H0 H1 H2 H3.
-    rewrite Specify_classification in *.
-    destruct H2 as [H2 [a [b [c [d [H4 H5]]]]]], H3
-        as [H3 [e [f [g [h [H6 H7]]]]]].
-    split.
-    + apply Product_classification; eauto.
-    + exists a, b, g, h.
-      split; rewrite Ordered_pair_iff in *; intuition.
-      subst.
-      rewrite Ordered_pair_iff in *; intuition.
-      apply set_proj_injective in H6.
-      apply set_proj_injective in H8.
-      subst.
-      apply (naturals.cancellation_add e).
-      ring_simplify [H5 H7].
-      rewrite H7, add_comm, add_assoc, H5.
-      ring.
+    apply Specify_classification in H2 as [H2 H4], H3 as [H3 H5].
+    apply Specify_classification.
+    assert ((x, z) ∈ (ω × ω) × (ω × ω)) as H6.
+    { apply Product_classification; eauto. }
+    rewrite (reify H), (reify H0), (reify H1), (reify H2), (reify H3),
+    (reify H6), despecify, ? π1_action, ? π2_action in *.
+    split; auto.
+    apply (naturals.cancellation_add (π2 (exist H0))).
+    ring_simplify [H4 H5].
+    rewrite <-H5; ring_simplify [H4]; now rewrite H4.
 Qed.
 
 Definition 𝐙 := (ω × ω) / integer_relation.
@@ -57,8 +49,7 @@ Definition embed : N → N → Z.
 Proof.
   intros [a A] [b B].
   assert ((a, b) ∈ ω × ω).
-  { apply Product_classification.
-    now exists a, b. }
+  { apply Product_classification; eauto. }
   exact (quotient_map _ (exist H)).
 Defined.
 
@@ -67,8 +58,8 @@ Infix "-" := embed : set_scope.
 Theorem Zlift : ∀ z, ∃ a b, (a - b = z)%set.
 Proof.
   intros z.
-  destruct (quotient_lift z) as [y H].
-  destruct (unique_set_element y) as [x [[H0 H1] H2]].
+  destruct (quotient_lift z) as [y H], (unique_set_element y)
+      as [x [[H0 H1] H2]].
   apply Product_classification in H0 as [a [b [H3 [H4 H5]]]].
   exists (exist H3 : N), (exist H4 : N).
   apply set_proj_injective.
@@ -79,22 +70,24 @@ Qed.
 Theorem Zequiv : (∀ a b c d, a - b = c - d ↔ a + d = b + c)%set.
 Proof.
   intros [a A] [b B] [c C] [d D].
-  split; intros H; unfold embed in *.
-  - apply quotient_equiv in H; auto using integer_equivalence.
+  assert ((a, b) ∈ ω × ω) as H; assert ((c, d) ∈ ω × ω) as H0;
+    try apply Product_classification; eauto.
+  unfold embed.
+  split; intros H1.
+  - apply quotient_equiv in H1; auto using integer_equivalence.
     simpl in *.
-    apply Specify_classification in H as [H [a0 [b0 [c0 [d0 [H0 H1]]]]]].
-    rewrite ? Ordered_pair_iff in *; intuition; subst.
-    destruct a0, b0, c0, d0.
-    simpl in *.
-    replace A with i; replace B with i0; replace C with i1;
-      replace D with i2; auto using proof_irrelevance.
+    apply Specify_classification in H1 as [H1 H2].
+    rewrite (reify A), (reify B), (reify C), (reify D), (reify H), (reify H0),
+    (reify H1), despecify in *.
+    now repeat rewrite ? π1_action, ? π2_action in H2.
   - apply quotient_equiv; auto using integer_equivalence.
     simpl.
-    apply Specify_classification; split.
-    + apply Product_classification.
-      exists (a,b), (c,d).
-      repeat split; auto; apply Product_classification; eauto.
-    + now exists (exist A : N), (exist B : N), (exist C : N), (exist D : N).
+    assert (((a, b), (c, d)) ∈ (ω × ω) × (ω × ω)) as H2.
+    { apply Product_classification; eauto. }
+    apply Specify_classification.
+    rewrite (reify A), (reify B), (reify C), (reify D), (reify H), (reify H0),
+    (reify H2), despecify in *.
+    now repeat rewrite ? π1_action, ? π2_action.
 Qed.
 
 Definition INZ a := (a - 0)%set.
