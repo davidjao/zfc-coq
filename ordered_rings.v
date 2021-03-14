@@ -570,4 +570,13 @@ Section Ordered_ring_theorems.
     now rewrite H, A1, A4 at 1.
   Qed.
 
+  Theorem pos_mul_nonneg : ∀ a b, 0 < a → 0 ≤ a * b → 0 ≤ b.
+  Proof.
+    intros a b H H0.
+    apply le_not_gt.
+    intros H1.
+    apply le_not_gt in H0.
+    now apply H0, mul_pos_neg.
+  Qed.
+
 End Ordered_ring_theorems.

@@ -384,7 +384,7 @@ End Pretty_picture_lemmas.
 
 Section Quadratic_reciprocity.
 
-  Variable p q : N.
+  Context {p q : N}.
   Hypothesis prime_p : prime p.
   Hypothesis prime_q : prime q.
   Hypothesis distinct : p ≠ q.
@@ -458,7 +458,7 @@ Section Quadratic_reciprocity.
   Qed.
 
   Theorem quadratic_reciprocity :
-    legendre_symbol _ (p mod q) * legendre_symbol _ (q mod p) =
+    legendre_symbol (p mod q) * legendre_symbol (q mod p) =
     (-(1))^((# QR p) * (# QR q)).
   Proof.
     rewrite ? Gauss's_Lemma_a, <-(rings.pow_add_r ℤ), Pretty_Picture_Lemma;

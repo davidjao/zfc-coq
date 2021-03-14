@@ -933,6 +933,16 @@ Proof.
   split; auto using PA4; ring.
 Qed.
 
+Theorem nonzero_lt : ∀ m, m ≠ 0 ↔ 0 < m.
+Proof.
+  split; intros H.
+  - apply succ_0 in H as [k H]; subst.
+    apply lt_succ.
+  - intros H0.
+    subst.
+    contradiction (lt_irrefl 0).
+Qed.
+
 Theorem succ_lt : ∀ m, m < S m.
 Proof.
   intros m.
@@ -1371,4 +1381,25 @@ Proof.
   intros n H.
   apply le_not_gt in H.
   eauto using succ_lt.
+Qed.
+
+Theorem WOP : ∀ P, (∃ n : N, P n) → ∃ m : N, P m ∧ (∀ k : N, P k → m ≤ k).
+Proof.
+  intros P [n H].
+  destruct (ω_WOP {x of type ω | P x}) as [x [H0 H1]].
+  - apply Nonempty_classification.
+    exists n.
+    apply Specify_classification.
+    rewrite despecify.
+    eauto using elts_in_set.
+  - intros x H0.
+    now apply Specify_classification in H0.
+  - apply Specify_classification in H0 as [H0 H2].
+    rewrite (reify H0), despecify in H2.
+    exists (exist H0 : N).
+    split; auto.
+    intros k H3.
+    apply le_is_subset, H1, Specify_classification.
+    rewrite despecify.
+    eauto using elts_in_set.
 Qed.

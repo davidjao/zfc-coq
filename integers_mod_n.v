@@ -1,4 +1,4 @@
-Set Warnings "-ambiguous-paths".
+Set Warnings "-ambiguous-paths,-notation-overridden".
 Require Export polynomials Setoid.
 
 Open Scope Z_scope.
@@ -341,7 +341,8 @@ Section Modular_arithmetic.
   Add Ring Z_ring_raw : (ringify ℤ_).
   Add Ring Z_ring : (ringify ℤ_ : ring_theory (0 : Z_) _ _ _ _ _ eq).
 
-  Infix "^" := (rings.pow ℤ_) : Zn_scope.
+  Infix "^" := (rings.pow ℤ_ : Z_ → N → Z_) : Zn_scope.
+  Notation "a ^ n" := (rings.pow ℤ_ (a : Z_) (n : N) : Z_) : Zn_scope.
 
   Lemma injective_mod_n_on_interval_left :
     ∀ a b, 0 ≤ a < n → 0 ≤ b < n → a ≤ b → a ≡ b (mod n) → a = b.
@@ -392,7 +393,7 @@ Section Modular_arithmetic.
     now rewrite <-? Zlift_equiv.
   Qed.
 
-  Theorem IZn_pow : ∀ (a : Z) k, ((a : Z_)^k) = ((a^k : Z)%Z : Z_).
+  Theorem IZn_pow : ∀ (a : Z) k, (a^k) = (a^k : Z)%Z.
   Proof.
     intros a k.
     induction k using Induction.
@@ -526,9 +527,9 @@ Section Modular_arithmetic.
 
     Definition Euler_Phi := # Euler_Phi_set.
 
-    Definition unit_set_mod := {x of type 𝐙_ | rings.unit ℤ_ x}.
+    Definition 𝐔_ := {x of type 𝐙_ | rings.unit ℤ_ x}.
 
-    Theorem Euler_Phi_unit : Euler_Phi_set = unit_set_mod.
+    Theorem Euler_Phi_unit : Euler_Phi_set = 𝐔_.
     Proof.
       apply Extensionality.
       split; intros H; apply Specify_classification in H as [H H0];
@@ -722,6 +723,59 @@ Section Modular_arithmetic.
 
     End Euler's_Theorem.
 
+    Theorem order_construction : ∀ a : Z_, a ∈ 𝐔_ → ∃ m : N,
+          (a^m = 1 ∧ m ≠ 0%N) ∧ (∀ k : N, (a^k = 1 ∧ k ≠ 0%N) → (m ≤ k)%N).
+    Proof.
+      intros a H.
+      apply Specify_classification in H as [H H0].
+      rewrite despecify in H0.
+      apply naturals.WOP.
+      apply Euler in H0.
+      eauto using Euler_Phi_nonzero.
+    Qed.
+
+    Definition order (a : Z_) : N.
+    Proof.
+      destruct (excluded_middle_informative (a ∈ 𝐔_)).
+      - apply order_construction in i.
+        destruct (constructive_indefinite_description i) as [m].
+        exact m.
+      - exact 0%N.
+    Defined.
+
+    Theorem order_pos : ∀ a : Z_, a ∈ 𝐔_ → (0 < order a)%N.
+    Proof.
+      intros a H.
+      apply nonzero_lt.
+      unfold order.
+      destruct excluded_middle_informative; try tauto.
+      destruct constructive_indefinite_description; intuition.
+    Qed.
+
+    Theorem pow_order : ∀ a : Z_, a ∈ 𝐔_ → a^(order a) = 1.
+    Proof.
+      intros a H.
+      unfold order.
+      destruct excluded_middle_informative; try tauto.
+      destruct constructive_indefinite_description; intuition.
+    Qed.
+
+    Theorem div_order : ∀ (a : Z_) (k : N), a ∈ 𝐔_ → order a｜k → a^k = 1.
+    Proof.
+      intros a k H [x H0]; simpl in *.
+      destruct (classic (k = 0%N)) as [H1 | H1].
+      { now rewrite H1, rings.pow_0_r. }
+      apply succ_0 in H1 as [m H1]; subst.
+      rewrite integers.M1 in H0.
+      assert (0 ≤ x) as H1.
+      { eapply pos_mul_nonneg; simpl; fold integers.le; try rewrite <-H0.
+        - now apply INZ_lt, order_pos.
+        - apply INZ_le, zero_le. }
+      apply le_def in H1 as [c H1].
+      rewrite H1, integers.A3, INZ_mul, INZ_eq in H0.
+      now rewrite H0, rings.pow_mul_r, pow_order, rings.pow_1_l.
+    Qed.
+
   End Positive_modulus.
 
   Definition square (a : Z_) := a * a.
@@ -899,9 +953,9 @@ Section Modular_arithmetic.
         now apply units_in_ℤ_.
     Qed.
 
-    Definition unit_square_function := restriction square_function unit_set_mod.
+    Definition unit_square_function := restriction square_function 𝐔_.
 
-    Lemma domain_usf : domain unit_square_function = unit_set_mod.
+    Lemma domain_usf : domain unit_square_function = 𝐔_.
     Proof.
       unfold unit_square_function, square_function.
       rewrite restriction_domain, sets.functionify_domain.
@@ -935,7 +989,7 @@ Section Modular_arithmetic.
         destruct H0 as [[x H0] [a H1]].
         split; eauto.
         exists a.
-        enough (a ∈ unit_set_mod ∩ 𝐙_).
+        enough (a ∈ 𝐔_ ∩ 𝐙_).
         { now rewrite <-restriction_action, @functionify_action, H1;
             try now rewrite sets.functionify_domain. }
         rewrite Pairwise_intersection_classification.
@@ -964,7 +1018,7 @@ Section Modular_arithmetic.
         pose proof H3 as H4.
         unfold square_function, square in *.
         rewrite sets.functionify_domain in H4.
-        assert (z ∈ unit_set_mod) as H5.
+        assert (z ∈ 𝐔_) as H5.
         { apply Specify_classification.
           split; auto.
           apply Specify_classification in H as [H H5].
@@ -1921,6 +1975,15 @@ Section Modular_arithmetic.
 End Modular_arithmetic.
 
 Notation "a 'mod' p" := (Z_to_Z_n p a) (at level 45) : Z_scope.
+Arguments Gauss's_Lemma_a {n}.
+Arguments trinary_legendre {n}.
+Arguments Euler {n}.
+Arguments legendre_square {n}.
+Arguments legendre_symbol {n}.
+Arguments legendre_mult {n}.
+Arguments nonzero_unit {n}.
+Arguments Euler's_Criterion {n}.
+Arguments Gauss's_Lemma {n}.
 
 Theorem mod_0_r : ∀ a, modulo 0 a = 0.
 Proof.
