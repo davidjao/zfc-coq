@@ -55,7 +55,7 @@ Proof.
     + now ring_simplify [H5 H9].
 Qed.
 
-Definition 𝐐 := 𝐙0 / rational_relation.
+Definition 𝐐 := (𝐙0 / rational_relation)%set.
 
 Definition Q := elts 𝐐.
 
@@ -612,7 +612,7 @@ Proof.
     destruct H1 as [H1 | H1]; simpl in *; subst; eauto using lt_trans.
 Qed.
 
-Theorem pos_denom : ∀ x, ∃ a b, (0 < b ∧ x = a / b)%Z.
+Theorem pos_denom : ∀ x, ∃ a b, (0 < b)%Z ∧ x = a / b.
 Proof.
   intros x.
   destruct (Qlift x) as [a [b [H H0]]].
@@ -1497,4 +1497,12 @@ Proof.
   - now apply IZQ_le, floor_upper.
   - apply IZQ_eq.
     now rewrite <-H2, e, <-IZQ_add, <-? IZQ_mul, <-IZQ_pow, <-IZQ_neg.
+Qed.
+
+Theorem IZQ_div : ∀ a b : Z, b ≠ 0%Z → b｜a → a/b = (a/b)%Z.
+Proof.
+  intros a b H H0.
+  apply Qequiv; auto.
+  - apply integers.zero_ne_1.
+  - now rewrite integers.div_inv_l, integers.M1, integers.M3.
 Qed.

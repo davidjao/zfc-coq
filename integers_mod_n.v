@@ -197,7 +197,7 @@ Section Modular_arithmetic.
   Delimit Scope Zn_scope with Zn.
   Open Scope Zn_scope.
 
-  Definition 𝐙_ := 𝐙 / relation_mod.
+  Definition 𝐙_ := (𝐙 / relation_mod)%set.
 
   Definition Z_ := elts (𝐙_).
 

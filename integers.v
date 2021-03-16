@@ -679,7 +679,7 @@ Global Hint Resolve (div_add ℤ : ∀ a b c, a｜b → a｜c → a｜b+c)
       (square_ne0 ℤ_order : ∀ a : Z, a ≠ 0 → 0 < a * a) : Z.
 
 Theorem Euclidean_algorithm_N :
-  ∀ a b, 0 < a → 0 < b → gcd (a,b) = 1 → ∃ x y, 1 = a * x + b * y.
+  ∀ a b, 0 < a → 0 < b → gcd (a, b) = 1 → ∃ x y, 1 = a * x + b * y.
 Proof.
   intros a b H; revert b.
   induction a as [a IHa] using strong_induction.
@@ -698,37 +698,37 @@ Proof.
       (div_mul_r ℤ), (div_refl ℤ) with Z.
 Qed.
 
-Lemma gcd_0_l : ∀ a d, gcd (0,a) = d → a ~ d.
+Lemma gcd_0_l : ∀ a d, gcd (0, a) = d → a ~ d.
 Proof.
   intros a d [H [H0 H1]].
   split; fold divide; auto using (div_0_r ℤ), (div_refl ℤ) with Z.
 Qed.
 
-Lemma gcd_sym : ∀ a b d, gcd (a,b) = d → gcd(b,a) = d.
+Lemma gcd_sym : ∀ a b d, gcd (a, b) = d → gcd(b, a) = d.
 Proof.
   intros a b d [H [H0 H1]].
   repeat split; auto.
 Qed.
 
-Lemma gcd_0_r : ∀ a d, gcd (a,0) = d → a ~ d.
+Lemma gcd_0_r : ∀ a d, gcd (a, 0) = d → a ~ d.
 Proof.
   intros a d H.
   auto using gcd_0_l, gcd_sym.
 Qed.
 
-Lemma gcd_1_l : ∀ a, gcd (1,a) = 1.
+Lemma gcd_1_l : ∀ a, gcd (1, a) = 1.
 Proof.
   intros a.
   repeat split; auto using (div_1_l ℤ) with Z.
 Qed.
 
-Lemma gcd_1_r : ∀ a, gcd (a,1) = 1.
+Lemma gcd_1_r : ∀ a, gcd (a, 1) = 1.
 Proof.
   intros a.
   repeat split; auto using (div_1_l ℤ) with Z.
 Qed.
 
-Lemma gcd_neg : ∀ a b d, gcd (a,b) = d ↔ gcd(a,-b) = d.
+Lemma gcd_neg : ∀ a b d, gcd (a, b) = d ↔ gcd(a, -b) = d.
 Proof.
   intros a b d.
   split; intros [H [H0 H1]].
@@ -742,8 +742,17 @@ Proof.
     auto.
 Qed.
 
+Lemma neg_gcd : ∀ a b d, gcd (a, b) = d ↔ gcd (a, b) = -d.
+Proof.
+  intros a b d.
+  split; intros [H [H0 H1]]; repeat split; try (now rewrite <-(div_sign_l ℤ));
+    try (now rewrite (div_sign_l ℤ)); intros x H2 H3;
+      [ rewrite <-(div_sign_r ℤ) | rewrite (div_sign_r ℤ) ]; fold divide; auto.
+Qed.
+
+
 Theorem Euclidean_algorithm :
-  ∀ a b, gcd (a,b) = 1 → ∃ x y, 1 = a * x + b * y.
+  ∀ a b, gcd (a, b) = 1 → ∃ x y, 1 = a * x + b * y.
 Proof.
   intros a b H.
   destruct (T a 0), (T b 0); intuition; subst;
@@ -1375,4 +1384,131 @@ Proof.
   exists (k+l+1).
   simpl.
   now replace ((k+l+1)*2) with (2*k+1+(2*l+1)) by ring.
+Qed.
+
+Definition div : Z → Z → Z.
+Proof.
+  intros a b.
+  destruct (excluded_middle_informative (b｜a)).
+  - destruct (constructive_indefinite_description d) as [k].
+    exact k.
+  - exact 0.
+Defined.
+
+Infix "/" := div : Z_scope.
+
+Theorem div_inv_l : ∀ a b, b｜a → b * (a/b) = a.
+Proof.
+  intros a b H.
+  unfold div.
+  destruct excluded_middle_informative; try tauto.
+  destruct constructive_indefinite_description.
+  now rewrite M1.
+Qed.
+
+Theorem div_spec : ∀ a b k, b｜a → b ≠ 0 → a/b = k ↔ a = k * b.
+Proof.
+  intros a b k H H0.
+  unfold div.
+  split; intros H1; destruct excluded_middle_informative; try tauto;
+    try destruct constructive_indefinite_description; subst; auto.
+  now apply (cancellation_mul_r ℤ_ID) in e.
+Qed.
+
+Lemma gcd_pos_pos_exists : ∀ a b, 0 < a → 0 < b → ∃ d, gcd (a, b) = d.
+Proof.
+  induction a using strong_induction.
+  intros b H0 H1.
+  apply (division_algorithm b) in H0 as H2.
+  destruct H2 as [q [r [H2 [[H3 | H3] H4]]]]; simpl in *; subst.
+  - destruct (H r (conj H3 H4) a) as [d [H5 [H6 H7]]]; auto.
+    exists d.
+    repeat split; auto.
+    + apply div_add; try apply div_mul_r; auto.
+    + intros x H2 H8.
+      apply H7; auto.
+      replace r with ((a*q+r) + a*(-q)) by ring.
+      apply div_add; try apply div_mul_r; auto.
+  - exists a.
+    repeat split; try intros; try ring_simplify; auto using div_refl with Z.
+Qed.
+
+Lemma gcd_pos_exists : ∀ a b, 0 < a → ∃ d, gcd (a, b) = d.
+Proof.
+  intros a b H.
+  destruct (T 0 b) as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]]; subst.
+  - now apply gcd_pos_pos_exists.
+  - exists a.
+    repeat split; try tauto; auto using div_refl, div_0_r with Z.
+  - apply (lt_neg_0 ℤ_order) in H0; simpl in *.
+    apply (gcd_pos_pos_exists a) in H0 as [d H0]; eauto.
+    rewrite <-gcd_neg in H0.
+    eauto.
+Qed.
+
+Theorem gcd_exists : ∀ a b, ∃ d, gcd (a, b) = d.
+Proof.
+  intros a b.
+  destruct (T 0 a) as [[H _] | [[_ [H _]] | [_ [_ H]]]]; subst.
+  - now apply gcd_pos_exists.
+  - exists b.
+    repeat split; try tauto; auto using div_refl, div_0_r with Z.
+  - apply (lt_neg_0 ℤ_order) in H; simpl in *.
+    apply (gcd_pos_exists (-a) b) in H as [d H]; eauto.
+    apply gcd_sym, gcd_neg, gcd_sym in H.
+    eauto.
+Qed.
+
+Theorem pos_gcd_exists : ∀ a b, ∃ d, 0 ≤ d ∧ gcd (a, b) = d.
+Proof.
+  intros a b.
+  destruct (gcd_exists a b) as [d H].
+  destruct (classic (0 ≤ d)) as [H0 | H0]; eauto.
+  exists (-d).
+  rewrite <-neg_gcd.
+  split; auto.
+  left.
+  now apply lt_neg_0, lt_not_ge.
+Qed.
+
+Definition gcf : Z → Z → Z.
+Proof.
+  intros a b.
+  destruct (constructive_indefinite_description (pos_gcd_exists a b)) as [d].
+  exact d.
+Defined.
+
+Theorem gcf_is_gcd : ∀ a b, gcd (a, b) = (gcf a b).
+Proof.
+  intros a b.
+  unfold gcf.
+  now destruct constructive_indefinite_description.
+Qed.
+
+Theorem gcf_div_l : ∀ a b, gcf a b｜a.
+Proof.
+  intros a b.
+  unfold gcf.
+  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
+Qed.
+
+Theorem gcf_div_r : ∀ a b, gcf a b｜b.
+Proof.
+  intros a b.
+  unfold gcf.
+  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
+Qed.
+
+Theorem gcf_spec : ∀ a b x, x｜a → x｜b → x｜gcf a b.
+Proof.
+  intros a b.
+  unfold gcf.
+  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
+Qed.
+
+Theorem gcf_pos : ∀ a b, 0 ≤ gcf a b.
+Proof.
+  intros a b.
+  unfold gcf.
+  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
 Qed.
