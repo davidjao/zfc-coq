@@ -98,10 +98,18 @@ Section Ordered_field_theorems.
     + now apply inv_lt.
   Qed.
 
+  Theorem unit_pos : ∀ a, 0 < a → rings.unit a.
+  Proof.
+    intros a H.
+    apply unit_nonzero.
+    intros H0; subst.
+    contradiction (lt_irrefl ordered_ring_from_field 0).
+  Qed.
+
   Theorem pow_pos : ∀ a n, 0 < a → 0 < a^n.
   Proof.
     intros a n H.
-    unfold pow.
+    unfold pow, integer_powers.pow.
     repeat destruct excluded_middle_informative;
       repeat destruct constructive_indefinite_description;
       try destruct a0.
@@ -109,8 +117,11 @@ Section Ordered_field_theorems.
       subst.
       now apply (pow_pos ordered_ring_from_field).
     - apply inv_lt in H.
-      now apply (pow_pos ordered_ring_from_field).
-    - exact (ordered_rings.zero_lt_1 ordered_ring_from_field).
+      apply (pow_pos ordered_ring_from_field); simpl.
+      rewrite inv_ring_to_field; auto.
+      now apply unit_nonzero.
+    - contradict n1.
+      now apply unit_pos.
   Qed.
 
   Theorem inv_lt_1 : ∀ a, 0 < a → 1 < a ↔ a^-1 < 1.

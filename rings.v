@@ -460,20 +460,22 @@ Section Ring_theorems.
     - rewrite <-lt_not_ge, ? prod_neg in *; auto using one_unit.
   Qed.
 
-  Definition pow a n := iterated_op (mul _) 1 (λ x, a) n.
+  Definition pow a n := prod (λ x, a) 1 n.
 
   Infix "^" := pow : Ring_scope.
 
   Theorem pow_0_r : ∀ x, x^0 = 1.
   Proof.
     intros x.
-    apply iterated_op_0.
+    unfold pow.
+    rewrite prod_neg; now try apply lt_succ.
   Qed.
 
   Theorem pow_succ_r : ∀ x y, x^(S y) = x^y * x.
   Proof.
     intros x y.
-    apply iterated_op_succ.
+    unfold pow.
+    rewrite prod_succ; auto using one_le_succ.
   Qed.
 
   Theorem pow_1_r : ∀ x, x^1 = x.
@@ -976,3 +978,6 @@ Section Ring_theorems.
   Qed.
 
 End Ring_theorems.
+
+Arguments assoc {Ring}.
+Arguments unit {Ring}.

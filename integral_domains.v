@@ -104,7 +104,7 @@ Section Integral_domain_theorems.
       tauto.
   Qed.
 
-  Theorem unit_nonzero : ∀ a, unit ring a → a ≠ 0.
+  Theorem unit_nonzero : ∀ a, unit a → a ≠ 0.
   Proof.
     intros a H H0.
     subst.

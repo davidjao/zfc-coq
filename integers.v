@@ -535,9 +535,9 @@ Proof.
     try rewrite M3 in H; eauto.
 Qed.
 
-Definition assoc := assoc ℤ : Z → Z → Prop.
+Definition assoc := @assoc ℤ : Z → Z → Prop.
 Infix "~" := assoc (at level 70) : Z_scope.
-Definition unit := unit ℤ : Z → Prop.
+Definition unit := @unit ℤ : Z → Prop.
 
 Definition pm a b := (a = b ∨ a = -b).
 Notation " a = ± b " := (pm a b) (at level 60) : Z_scope.

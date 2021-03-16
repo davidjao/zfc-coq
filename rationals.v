@@ -1041,14 +1041,13 @@ Theorem pow_0_l : ∀ a : Z, a ≠ 0%Z → 0^a = 0.
 Proof.
   intros a H.
   destruct (classic (a < 0)%Z).
-  - unfold pow, fields.pow.
+  - unfold pow, fields.pow, integer_powers.pow;
     repeat destruct excluded_middle_informative;
       repeat destruct constructive_indefinite_description;
       try destruct a0; try tauto; simpl in *; unfold pow_N.
     + contradiction (ordered_rings.lt_antisym ℤ_order a 0%Z).
-    + rewrite inv_zero, (rings.pow_0_l ℚ_ring); auto.
-      contradict n0.
-      now subst.
+      destruct l; subst; tauto.
+    + now apply (unit_nonzero ℚ) in u.
   - apply (pow_0_l ℚ).
     pose proof (integers.T a 0).
     tauto.

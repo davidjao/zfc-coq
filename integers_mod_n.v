@@ -401,8 +401,7 @@ Section Modular_arithmetic.
     - now rewrite ? rings.pow_succ_r, IHk, IZn_mul.
   Qed.
 
-
-  Theorem units_in_ℤ_ : ∀ a : Z_, rings.unit ℤ_ a ↔ gcd (a, n) = 1.
+  Theorem units_in_ℤ_ : ∀ a : Z_, @rings.unit ℤ_ a ↔ gcd (a, n) = 1.
   Proof.
     split; intros H.
     - destruct H as [x H]; simpl in *.
@@ -527,7 +526,7 @@ Section Modular_arithmetic.
 
     Definition Euler_Phi := # Euler_Phi_set.
 
-    Definition 𝐔_ := {x of type 𝐙_ | rings.unit ℤ_ x}.
+    Definition 𝐔_ := {x of type 𝐙_ | @rings.unit ℤ_ x}.
 
     Theorem Euler_Phi_unit : Euler_Phi_set = 𝐔_.
     Proof.
@@ -603,7 +602,7 @@ Section Modular_arithmetic.
     Qed.
 
     Lemma Euler_Phi_list_unit :
-      ∀ i, (0 ≤ i ≤ Euler_Phi - 1)%N → rings.unit ℤ_ (Euler_Phi_list i).
+      ∀ i, (0 ≤ i ≤ Euler_Phi - 1)%N → @rings.unit ℤ_ (Euler_Phi_list i).
     Proof.
       intros i [H H0].
       unfold Euler_Phi_list.
@@ -621,7 +620,7 @@ Section Modular_arithmetic.
     Qed.
 
     Lemma Euler_Phi_list_surj :
-      ∀ a : Z_, rings.unit ℤ_ a → ∃ i,
+      ∀ a : Z_, @rings.unit ℤ_ a → ∃ i,
           (0 ≤ i ≤ Euler_Phi - 1)%N ∧ a = Euler_Phi_list i.
     Proof.
       intros a H.
@@ -674,7 +673,7 @@ Section Modular_arithmetic.
 
     Definition Euler_Phi_product := prod ℤ_ Euler_Phi_list 0 (Euler_Phi - 1).
 
-    Lemma Euler_Phi_product_unit : rings.unit ℤ_ Euler_Phi_product.
+    Lemma Euler_Phi_product_unit : @rings.unit ℤ_ Euler_Phi_product.
     Proof.
       eauto using unit_prod_closure, Euler_Phi_list_unit.
     Qed.
@@ -682,7 +681,7 @@ Section Modular_arithmetic.
     Section Euler's_Theorem.
 
       Variable a : Z_.
-      Hypothesis unit_a : rings.unit ℤ_ a.
+      Hypothesis unit_a : @rings.unit ℤ_ a.
 
       Definition Euler_Phi_product_shifted :=
         prod ℤ_ (λ x, a * (Euler_Phi_list x)) 0 (Euler_Phi - 1).
@@ -743,10 +742,10 @@ Section Modular_arithmetic.
       - exact 0%N.
     Defined.
 
-    Theorem order_pos : ∀ a : Z_, a ∈ 𝐔_ → (0 < order a)%N.
+    Theorem order_pos : ∀ a : Z_, a ∈ 𝐔_ → 0 < order a.
     Proof.
       intros a H.
-      apply nonzero_lt.
+      apply INZ_lt, nonzero_lt.
       unfold order.
       destruct excluded_middle_informative; try tauto.
       destruct constructive_indefinite_description; intuition.
@@ -760,20 +759,39 @@ Section Modular_arithmetic.
       destruct constructive_indefinite_description; intuition.
     Qed.
 
-    Theorem div_order : ∀ (a : Z_) (k : N), a ∈ 𝐔_ → order a｜k → a^k = 1.
+    Theorem div_order : ∀ (a : Z_) (k : N), a ∈ 𝐔_ → order a｜k ↔ a^k = 1.
     Proof.
-      intros a k H [x H0]; simpl in *.
-      destruct (classic (k = 0%N)) as [H1 | H1].
-      { now rewrite H1, rings.pow_0_r. }
-      apply succ_0 in H1 as [m H1]; subst.
-      rewrite integers.M1 in H0.
-      assert (0 ≤ x) as H1.
-      { eapply pos_mul_nonneg; simpl; fold integers.le; try rewrite <-H0.
-        - now apply INZ_lt, order_pos.
-        - apply INZ_le, zero_le. }
-      apply le_def in H1 as [c H1].
-      rewrite H1, integers.A3, INZ_mul, INZ_eq in H0.
-      now rewrite H0, rings.pow_mul_r, pow_order, rings.pow_1_l.
+      split; intros H0; simpl in *.
+      - destruct H0 as [x H0], (classic (k = 0%N)) as [H1 | H1].
+        { now rewrite H1, rings.pow_0_r. }
+        apply succ_0 in H1 as [m H1]; subst.
+        rewrite integers.M1 in H0.
+        assert (0 ≤ x) as H1.
+        { eapply pos_mul_nonneg; simpl; fold integers.le; try rewrite <-H0.
+          - now apply order_pos.
+          - apply INZ_le, zero_le. }
+        apply le_def in H1 as [c H1].
+        rewrite H1, integers.A3, INZ_mul, INZ_eq in H0.
+        now rewrite H0, rings.pow_mul_r, pow_order, rings.pow_1_l.
+      - destruct (division_algorithm k (order a)) as
+            [q [r [H1 [H2 H3]]]]; auto using order_pos; simpl in *.
+        apply le_def in H2 as [c H2].
+        rewrite integers.A3 in H2.
+        subst.
+        destruct (classic (c = 0)%N) as [H2 | H2]; subst.
+        + exists q.
+          now rewrite <-H1, integers.A1, integers.A3, rings.M1.
+        + apply (ordered_rings.lt_not_ge ℤ_order) in H3; fold integers.le in *.
+          contradict H3.
+          unfold order.
+          destruct excluded_middle_informative; try tauto.
+          destruct constructive_indefinite_description as [m [[H3 H4] H5]].
+          apply INZ_le, H5.
+          split; auto.
+          apply Specify_classification in H as H6.
+          rewrite despecify, <-pow_nonneg, <-H1, integer_powers.pow_add_r,
+          integer_powers.pow_mul_r, pow_nonneg, pow_order,
+          integer_powers.pow_1_l, rings.M3, pow_nonneg in *; intuition.
     Qed.
 
   End Positive_modulus.
@@ -782,8 +800,8 @@ Section Modular_arithmetic.
 
   Definition square_function := sets.functionify square.
 
-  Definition QR := {x of type 𝐙_ | rings.unit ℤ_ x ∧ ∃ a, square a = x}.
-  Definition QNR := {x of type 𝐙_ | rings.unit ℤ_ x ∧ (x : Z_) ∉ QR}.
+  Definition QR := {x of type 𝐙_ | @rings.unit ℤ_ x ∧ ∃ a, square a = x}.
+  Definition QNR := {x of type 𝐙_ | @rings.unit ℤ_ x ∧ (x : Z_) ∉ QR}.
 
   Definition legendre_symbol (a : Z_) : Z.
   Proof.
@@ -794,7 +812,7 @@ Section Modular_arithmetic.
       + exact 0.
   Defined.
 
-  Theorem legendre_square : ∀ a, rings.unit ℤ_ a → legendre_symbol (a * a) = 1.
+  Theorem legendre_square : ∀ a, @rings.unit ℤ_ a → legendre_symbol (a * a) = 1.
   Proof.
     intros a H.
     unfold legendre_symbol.
@@ -827,7 +845,7 @@ Section Modular_arithmetic.
 
     Definition ℤ_ID := integral_domain_from_ring ℤ_ Z_mod_prime_is_ID.
 
-    Lemma nonzero_unit : ∀ a : Z_, a ≠ 0 → rings.unit ℤ_ a.
+    Lemma nonzero_unit : ∀ a : Z_, a ≠ 0 → @rings.unit ℤ_ a.
     Proof.
       intros a H.
       apply units_in_ℤ_, gcd_sym, prime_rel_prime; auto.
@@ -1105,7 +1123,7 @@ Section Modular_arithmetic.
         rewrite <-(integers.M3 a'), <-integers.D1 in H2.
         apply Euclid's_lemma in H2 as [H2 | H2]; auto.
         - now apply div_le, le_not_gt in H2; try apply (zero_lt_2 ℤ_order).
-        - apply (unit_nonzero (ℤ_ID prime_modulus)) in H0.
+        - apply (integral_domains.unit_nonzero (ℤ_ID prime_modulus)) in H0.
           contradict H0; simpl.
           unfold square.
           now rewrite eqm_div_n, <-IZn_eq, H2, (mul_0_r ℤ_) in *. }
@@ -1769,7 +1787,8 @@ Section Modular_arithmetic.
       apply (cancellation_mul_r (ℤ_ID prime_modulus)
                                 (prod ℤ_ (λ n : N, QR_r n : Z_) 1 (# QR)));
         rewrite <-Gauss_Lemma_helper at 1; simpl.
-      - apply (unit_nonzero (ℤ_ID prime_modulus)), unit_prod_closure.
+      - apply (integral_domains.unit_nonzero (ℤ_ID prime_modulus)),
+        unit_prod_closure.
         intros i [H H0].
         apply nonzero_unit; auto.
         intros H1.

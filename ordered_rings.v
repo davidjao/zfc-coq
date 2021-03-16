@@ -94,6 +94,15 @@ Section Ordered_ring_theorems.
       now rewrite A3, <-A2, A4_l, A3_r in H.
   Qed.
 
+  Theorem le_shift : ∀ a b, a ≤ b ↔ 0 ≤ b + -a.
+  Proof.
+    split; intros H.
+    - apply (add_le_r (-a)) in H.
+      now rewrite A4 in H.
+    - apply (add_le_r a) in H.
+      now rewrite A3, <-A2, A4_l, A3_r in H.
+  Qed.
+
   Theorem O3 : ∀ a b c, 0 < a → b < c → a * b < a * c.
   Proof.
     intros a b c H H0.
@@ -126,6 +135,23 @@ Section Ordered_ring_theorems.
   Proof.
     intros a.
     rewrite neg_lt_0.
+    now replace (--a) with a by ring.
+  Qed.
+
+  Theorem neg_le_0 : ∀ a, 0 ≤ a ↔ -a ≤ 0.
+  Proof.
+    split; intros H.
+    - rewrite le_shift in *.
+      replace (a+-0) with a in * by ring.
+      now replace (0+--a) with a by ring.
+    - rewrite le_shift in H.
+      now replace (0+--a) with a in * by ring.
+  Qed.
+
+  Theorem le_neg_0 : ∀ a, a ≤ 0 ↔ 0 ≤ -a.
+  Proof.
+    intros a.
+    rewrite neg_le_0.
     now replace (--a) with a by ring.
   Qed.
 
