@@ -1512,3 +1512,12 @@ Proof.
   unfold gcf.
   now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
 Qed.
+
+Theorem rel_prime_mul : ∀ a b c, gcd (a, b) = 1 → a｜c → b｜c → a * b｜c.
+Proof.
+  intros a b c H [m H0] [n H1].
+  apply Euclidean_algorithm in H as [x [y H]].
+  rewrite <-(M3 c), H, D1, ? (M1 _ c), ? M2.
+  apply div_add; apply div_mul_r;
+    [ exists n; rewrite H1 | exists m; rewrite H0 ]; simpl; now ring_simplify.
+Qed.

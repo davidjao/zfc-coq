@@ -733,8 +733,9 @@ Section Modular_arithmetic.
       eauto using Euler_Phi_nonzero.
     Qed.
 
-    Definition order (a : Z_) : N.
+    Definition order : Z_ → N.
     Proof.
+      intros a.
       destruct (excluded_middle_informative (a ∈ 𝐔_)).
       - apply order_construction in i.
         destruct (constructive_indefinite_description i) as [m].
@@ -792,6 +793,47 @@ Section Modular_arithmetic.
           rewrite despecify, <-pow_nonneg, <-H1, integer_powers.pow_add_r,
           integer_powers.pow_mul_r, pow_nonneg, pow_order,
           integer_powers.pow_1_l, rings.M3, pow_nonneg in *; intuition.
+    Qed.
+
+    Theorem mul_order : ∀ a b : Z_,
+        a ∈ 𝐔_ → b ∈ 𝐔_ →
+        gcd(order a, order b) = 1 → order (a * b) = (order a * order b)%N.
+    Proof.
+      intros a b H H0 H1.
+      apply Specify_classification in H as H2, H0 as H3.
+      apply assoc_N, conj; fold divide.
+      - apply div_order.
+        + apply Specify_classification.
+          rewrite despecify in *.
+          split; eauto using elts_in_set.
+          now apply unit_closure.
+        + now rewrite rings.pow_mul_l, rings.pow_mul_r, mul_comm,
+          rings.pow_mul_r, ? pow_order, ? rings.pow_1_l, M3.
+      - rewrite <-INZ_mul.
+        apply rel_prime_mul; auto.
+        + eapply FTA; eauto.
+          rewrite INZ_mul.
+          apply div_order; auto.
+          rewrite <-(M3 (a^(order b * order (a * b)))), M1,
+          <-(rings.pow_1_l ℤ_ _ : 1^(order (a * b)) = 1), <-(pow_order b),
+          <-rings.pow_mul_r, <-(rings.pow_mul_l ℤ_ a b), mul_comm,
+          rings.pow_mul_r, pow_order, rings.pow_1_l at 1; auto.
+          apply Specify_classification.
+          rewrite despecify in *.
+          split; eauto using elts_in_set.
+          now apply unit_closure.
+        + apply gcd_sym in H1.
+          eapply FTA; eauto.
+          rewrite INZ_mul.
+          apply div_order; auto.
+          rewrite <-(M3 (b^(order a * order (a *b)))), M1,
+          <-(rings.pow_1_l ℤ_ _ : 1^(order (a * b )) = 1), <-(pow_order a),
+          <-rings.pow_mul_r, <-(rings.pow_mul_l ℤ_ b a), M1, mul_comm,
+          rings.pow_mul_r, pow_order, rings.pow_1_l at 1; auto.
+          apply Specify_classification.
+          rewrite despecify in *.
+          split; eauto using elts_in_set.
+          now apply unit_closure.
     Qed.
 
   End Positive_modulus.
