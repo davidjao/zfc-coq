@@ -1547,7 +1547,7 @@ Proof.
   exact d.
 Defined.
 
-Theorem gcf_is_gcd : ∀ a b, gcd (a, b) = gcf a b.
+Theorem gcd_is_gcf : ∀ a b, gcd (a, b) = gcf a b.
 Proof.
   intros a b.
   unfold gcf.
@@ -1590,6 +1590,13 @@ Proof.
   now apply le_neg_0.
 Qed.
 
+Theorem gcf_is_gcd : ∀ a b d, gcd (a, b) = d → 0 ≤ d → gcf a b = d.
+Proof.
+  intros a b d [H [H0 H1]] H2.
+  apply pm_pos; auto using gcf_nonneg.
+  apply assoc_pm, conj; fold divide; auto using gcf_div_l, gcf_div_r, gcf_spec.
+Qed.
+
 Theorem gcf_sym : ∀ a b, gcf a b = gcf b a.
 Proof.
   intros a b.
@@ -1617,7 +1624,7 @@ Proof.
     auto using gcf_div_l, gcf_div_r, gcf_pos.
   rewrite <-M2 in H1, H2.
   assert (x * gcf a b｜gcf a b) as [z H3].
-  { apply gcf_is_gcd; [ now (exists k) | now (exists l) ]. }
+  { apply gcd_is_gcf; [ now (exists k) | now (exists l) ]. }
   exists z.
   apply (cancellation_mul_r ℤ_ID (gcf a b)); simpl in *.
   - now apply gcf_pos.
@@ -1959,7 +1966,7 @@ Proof.
       now apply div_sign_l.
 Qed.
 
-Definition valuation : Z → Z → N.
+Definition v : Z → Z → N.
 Proof.
   intros p m.
   destruct (excluded_middle_informative (prime p)).
@@ -1971,3 +1978,89 @@ Proof.
       exact k.
   - exact 0%N.
 Defined.
+
+Section Valuations.
+
+  Variable p : Z.
+  Hypothesis prime_p : prime p.
+
+  Theorem prime_power_nonzero : ∀ n, p^n ≠ 0.
+  Proof.
+    intros n.
+    apply (pow_ne_0 ℤ_ID).
+    intros H.
+    subst.
+    contradiction zero_not_prime.
+  Qed.
+
+  Theorem val_mul : ∀ a b, a ≠ 0 → b ≠ 0 → v p (a * b) = (v p a + v p b)%N.
+  Proof.
+    intros a b H H0.
+    unfold v.
+    repeat destruct excluded_middle_informative; try tauto;
+      try (apply (integral_domains.cancellation ℤ_ID) in e; tauto).
+    repeat destruct constructive_definite_description; intuition.
+    apply naturals.le_antisymm; apply naturals.le_not_gt; intros H7;
+      rewrite S_lt, <-le_lt_succ, <-add_1_r in H7;
+      destruct H7 as [z H7].
+    - absurd (p^(x0+x1+1)｜a*b).
+      + intros [k H8].
+        rewrite <-(div_inv_r a (p^x0)), <-(div_inv_r b (p^x1)), ? pow_add_r,
+        pow_1_r, <-M2, (M1 _ p), (M2 (p^x0)), (M1 (p^x0)), ? M2 in H8; auto.
+        do 2 apply (cancellation_mul_r ℤ_ID) in H8;
+          auto using prime_power_nonzero.
+        assert (p｜(a / p ^ x0) * (b / p ^ x1)) as H9 by now (exists k).
+        apply Euclid's_lemma in H9 as [[d H9] | [d H9]]; auto; simpl in *;
+          [ contradict H4 | contradict H6 ]; exists d;
+            rewrite add_1_r, pow_succ_r, (M1 _ p), M2, <-H9, div_inv_r; auto.
+      + eapply div_trans; eauto.
+        exists (p^z).
+        rewrite <-H7, ? pow_add_r; simpl; now ring_simplify.
+    - contradict H2.
+      exists (p^z * (a/(p^x0)) * (b/(p^x1))).
+      rewrite (M1 _ (p^(x+1))), ? M2, <-(pow_add_r ℤ), H7, pow_add_r, <-? M2,
+      (M2 (p^x1)), (M1 (p^x1)), ? M2, div_inv_l, <-M2, div_inv_l; auto.
+  Qed.
+
+  Theorem val_lower_bound : ∀ x m, m ≠ 0 → p^x｜m ↔ (x ≤ v p m)%N.
+  Proof.
+    split; intros H0; unfold v in *;
+      repeat destruct excluded_middle_informative; try tauto;
+        destruct constructive_definite_description; intuition.
+    - apply naturals.le_not_gt.
+      contradict H2.
+      rewrite S_lt, <-le_lt_succ, <-add_1_r in H2.
+      destruct H2 as [z H2].
+      clear H1; eapply div_trans; eauto.
+      exists (p^z).
+      rewrite <-H2, ? pow_add_r; simpl; now ring_simplify.
+    - destruct H0 as [z H0].
+      exists (p^z * (m/p^x0)).
+      rewrite M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
+  Qed.
+
+  Theorem val_upper_bound : ∀ x m, m ≠ 0 → ¬ p^x｜m ↔ (v p m < x)%N.
+  Proof.
+    split; intros H0; unfold v in *;
+      repeat destruct excluded_middle_informative; try tauto;
+        destruct constructive_definite_description; intuition.
+    - apply naturals.lt_not_ge.
+      contradict H0.
+      destruct H0 as [z H0].
+      exists (p^z * (m/p^x0)).
+      rewrite M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
+    - contradict H3.
+      rewrite S_lt, <-le_lt_succ, <-add_1_r in H0.
+      destruct H0 as [z H0].
+      exists (p^z * (m/p^x)).
+      rewrite M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
+  Qed.
+
+  Theorem val_div : ∀ m, p^(v p m)｜m.
+  Proof.
+    intros m.
+    destruct (classic (m = 0)); subst; auto using div_0_r with Z.
+    apply val_lower_bound; auto using naturals.le_refl.
+  Qed.
+
+End Valuations.
