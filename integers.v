@@ -1096,6 +1096,29 @@ Proof.
       now apply INZ_eq, PA4 in H0.
 Qed.
 
+Theorem zero_not_prime : ¬ prime 0.
+Proof.
+  intros [H H0].
+  destruct (H0 2) as [H1 | [H1 H2]].
+  - apply div_0_r.
+  - now destruct two_is_prime as [H2 H3].
+  - apply div_0_l in H2.
+    now apply (zero_ne_2 ℤ_order).
+Qed.
+
+Theorem prime_neg : ∀ p, prime p → prime (-p).
+Proof.
+  intros p [H H0].
+  split.
+  - contradict H.
+    now apply div_sign_l in H.
+  - intros d H1.
+    apply div_sign_r, H0 in H1.
+    intuition.
+    right.
+    now apply assoc_sign.
+Qed.
+
 Theorem INZ_sub : ∀ a b : N, b ≤ a → a - b = (a - b)%N.
 Proof.
   intros a b H.
@@ -1452,6 +1475,15 @@ Proof.
   destruct constructive_indefinite_description; subst; simpl in *.
   rewrite M1 in H.
   eapply pos_mul_nonneg; eauto.
+Qed.
+
+Theorem div_pos : ∀ a b, b｜a → 0 < a → 0 < b → 0 < a / b.
+Proof.
+  intros a b H H0 H1.
+  unfold div.
+  destruct excluded_middle_informative; try tauto.
+  destruct constructive_indefinite_description; simpl in *; subst.
+  eapply (pos_div_r ℤ_order); eauto.
 Qed.
 
 Lemma gcd_pos_pos_exists : ∀ a b, 0 < a → 0 < b → ∃ d, gcd (a, b) = d.
@@ -1818,3 +1850,124 @@ Proof.
       subst.
       contradiction (ordered_rings.lt_irrefl ℤ_order 0).
 Qed.
+
+Lemma prime_quotients :
+  ∀ p x, 0 < p → 0 < x → prime p → p｜x → 0 < x/p < x.
+Proof.
+  intros p x H H0 H1 H2.
+  unfold div.
+  destruct excluded_middle_informative; try tauto.
+  destruct constructive_indefinite_description; simpl in *.
+  apply prime_factors_in_interval in H2 as [k [H2 H3]]; auto.
+  replace x0 with k; auto; subst.
+  eapply (cancellation_mul_r ℤ_ID); eauto.
+  intros H4; subst; simpl in *.
+  contradiction (lt_irrefl ℤ_order 0).
+Qed.
+
+Theorem valuation_construction_pos_pos :
+  ∀ p m, prime p → 0 < p → 0 < m → exists ! k : N, p^k｜m ∧ ¬ p^(k+1)｜m.
+Proof.
+  induction m using strong_induction.
+  intros H0 H1 H2.
+  destruct (classic (p｜m)) as [H3 | H3].
+  - apply prime_quotients in H3 as H4; auto.
+    apply H in H4 as [k [[H4 H5] H6]]; auto using div_pos.
+    exists (k+1)%N.
+    assert (p^(k+1)｜m) as H7.
+    { destruct H4 as [d H4]; simpl in *.
+      exists d.
+      rewrite add_1_r, pow_succ_r, M2, <-H4, div_inv_r; auto. }
+    assert (¬ p ^ (k + 1 + 1)｜m) as H8.
+    { contradict H5.
+      destruct H5 as [d H5].
+      exists d.
+      rewrite H5, add_1_r, pow_succ_r, <-? mul_div, div_inv_refl, (M1 _ 1), M3;
+        auto using (pos_ne_0 ℤ_order p H1 : p ≠ 0), div_refl with Z. }
+    repeat split; auto.
+    intros x' [H9 H10].
+    apply naturals.le_antisymm; apply naturals.le_not_gt.
+    + contradict H10; clear H9.
+      eapply div_trans; eauto.
+      rewrite add_1_r, <-le_lt_succ in H10.
+      destruct H10 as [z H10]; subst.
+      exists (p^z).
+      rewrite ? pow_add_r; simpl; now ring_simplify.
+    + contradict H8.
+      eapply div_trans; eauto.
+      rewrite S_lt, <-le_lt_succ, <-add_1_r in H8.
+      destruct H8 as [z H8]; subst.
+      exists (p^z).
+      rewrite ? pow_add_r; simpl; now ring_simplify.
+  - exists 0%N.
+    repeat split; rewrite ? pow_0_r, ? add_0_l, ? pow_1_r;
+      auto using div_1_l with Z.
+    intros x' [H4 H5].
+    apply naturals.le_antisymm; auto using zero_le.
+    rewrite naturals.le_not_gt.
+    contradict H3.
+    eapply div_trans; eauto.
+    apply nonzero_lt, succ_0 in H3 as [z H3]; subst.
+    rewrite pow_succ_r.
+    apply div_mul_l, div_refl.
+Qed.
+
+Theorem valuation_construction_pos :
+  ∀ p m, prime p → 0 < p → m ≠ 0 → exists ! k : N, p^k｜m ∧ ¬ p^(k+1)｜m.
+Proof.
+  intros p m H H0 H1.
+  destruct (T 0 m) as [[H2 _] | [[_ [H2 _]] | [_ [_ H2]]]]; subst; try tauto;
+    auto using valuation_construction_pos_pos.
+  apply (ordered_rings.lt_neg_0 ℤ_order) in H2; simpl in *.
+  eapply valuation_construction_pos_pos in H2 as [k [[H2 H3] H4]]; eauto.
+  exists k.
+  repeat split.
+  - now apply div_sign_r.
+  - contradict H3.
+    now apply div_sign_r in H3.
+  - intros x' [H5 H6].
+    rewrite (div_sign_r ℤ) in H5, H6.
+    now apply H4.
+Qed.
+
+Theorem valuation_construction :
+  ∀ p m, prime p → m ≠ 0 → exists ! k : N, p^k｜m ∧ ¬ p^(k+1)｜m.
+Proof.
+  intros p m H H0.
+  destruct (T 0 p) as [[H1 _] | [[_ [H1 _]] | [_ [_ H1]]]]; subst; try tauto;
+    auto using valuation_construction_pos; try now contradiction zero_not_prime.
+  apply (ordered_rings.lt_neg_0 ℤ_order) in H1; simpl in *.
+  eapply valuation_construction_pos in H1 as [k [[H1 H2] H3]];
+    eauto using prime_neg.
+  exists k.
+  repeat split.
+  - destruct (pow_sign_l ℤ p k) as [H4 | H4]; simpl in *; rewrite H4 in *; auto.
+    now apply div_sign_l.
+  - contradict H2.
+    destruct (pow_sign_l ℤ p (k+1)) as [H4 | H4]; simpl in *;
+      rewrite H4 in *; auto.
+    now apply div_sign_l in H2.
+  - intros x' [H4 H5].
+    apply H3.
+    split.
+    + destruct (pow_sign_l ℤ p x') as [H6 | H6]; simpl in *;
+        rewrite H6 in *; auto.
+      now apply div_sign_l in H4.
+    + contradict H5.
+      destruct (pow_sign_l ℤ p (x'+1)) as [H6 | H6]; simpl in *;
+        rewrite H6 in *; auto.
+      now apply div_sign_l.
+Qed.
+
+Definition valuation : Z → Z → N.
+Proof.
+  intros p m.
+  destruct (excluded_middle_informative (prime p)).
+  - destruct (excluded_middle_informative (m = 0)).
+    + exact 0%N.
+    + destruct
+        (constructive_definite_description _ (valuation_construction _ _ p0 n))
+        as [k].
+      exact k.
+  - exact 0%N.
+Defined.

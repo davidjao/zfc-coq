@@ -977,6 +977,13 @@ Section Ring_theorems.
     - destruct IHn as [H | H]; [ right | left ]; rewrite pow_succ_r, H; ring.
   Qed.
 
+  Theorem pow_sign_l : ∀ a n, (-a)^n = a^n ∨ (-a)^n = -a^n.
+  Proof.
+    intros a n.
+    rewrite <-mul_neg_1_l, ? pow_mul_l.
+    destruct (pow_neg_1_l n) as [H | H]; rewrite H, ? M3, ? mul_neg_1_l; auto.
+  Qed.
+
 End Ring_theorems.
 
 Arguments assoc {Ring}.
