@@ -905,6 +905,16 @@ Proof.
   destruct (classic (p｜a)); eauto using prime_rel_prime, FTA.
 Qed.
 
+Theorem Euclid_power : ∀ k a p, prime p → p｜a^k → p｜a.
+Proof.
+  intros k a p H H0.
+  induction k using Induction.
+  - rewrite pow_0_r in H0.
+    now destruct H.
+  - rewrite pow_succ_r in H0.
+    apply Euclid's_lemma in H0; intuition.
+Qed.
+
 Theorem divisors_are_factors :
   ∀ L p x, 0 < p → 0 < x → x = ∏' L → prime p → p｜x → In p L.
 Proof.
@@ -1104,6 +1114,18 @@ Proof.
   - now destruct two_is_prime as [H2 H3].
   - apply div_0_l in H2.
     now apply (zero_ne_2 ℤ_order).
+Qed.
+
+Theorem not_exists_prime_divisor : ∀ n, 0 ≤ n → (¬ ∃ p, prime p ∧ p｜n) → n = 1.
+Proof.
+  intros n [H | H] H0; simpl in *; subst.
+  - destruct (T n 1) as [[H1 _] | [[_ [H1 _]] | [_ [_ H1]]]]; auto;
+      try now contradiction (lt_0_1 n).
+    apply exists_prime_divisor in H1 as [p [H1 [H2 H3]]].
+    exfalso; eauto.
+  - contradict H0.
+    exists 2.
+    eauto using div_0_r, two_is_prime with Z.
 Qed.
 
 Theorem prime_neg : ∀ p, prime p → prime (-p).
@@ -1486,6 +1508,17 @@ Proof.
   eapply (pos_div_r ℤ_order); eauto.
 Qed.
 
+Theorem div_div : ∀ a b, b｜a → a ≠ 0 → b ≠ 0 → a / (a / b) = b.
+Proof.
+  intros a b H H0 H1.
+  apply div_spec; auto using eq_sym, div_inv_l.
+  - exists b.
+    now apply eq_sym, div_inv_l.
+  - contradict H0.
+    rewrite <-(div_inv_l a b); auto.
+    now rewrite H0, (mul_0_r ℤ).
+Qed.
+
 Lemma gcd_pos_pos_exists : ∀ a b, 0 < a → 0 < b → ∃ d, gcd (a, b) = d.
 Proof.
   induction a using strong_induction.
@@ -1597,12 +1630,53 @@ Proof.
   apply assoc_pm, conj; fold divide; auto using gcf_div_l, gcf_div_r, gcf_spec.
 Qed.
 
+Theorem gcf_refl : ∀ a, 0 ≤ a → gcf a a = a.
+Proof.
+  intros a H.
+  apply gcf_is_gcd; auto.
+  repeat split; auto using div_refl with Z.
+Qed.
+
+Theorem gcf_0_l : ∀ a, gcf 0 a = ± a.
+Proof.
+  intros a.
+  destruct (classic (0 ≤ a)).
+  - apply or_introl, gcf_is_gcd; auto.
+    repeat split; auto using div_0_r with Z.
+  - apply or_intror, gcf_is_gcd; auto.
+    repeat split; rewrite <-? (div_sign_l ℤ); auto using div_refl, (div_0_r ℤ).
+    + intros x H0 H1.
+      now rewrite <-(div_sign_r ℤ).
+    + left.
+      now apply lt_neg_0, lt_not_ge.
+Qed.
+
 Theorem gcf_sym : ∀ a b, gcf a b = gcf b a.
 Proof.
   intros a b.
   apply pm_pos; auto using gcf_nonneg.
   apply assoc_pm.
   split; apply gcf_spec; auto using gcf_div_l, gcf_div_r.
+Qed.
+
+Theorem gcf_0_r : ∀ a, gcf a 0 = ± a.
+Proof.
+  intros a.
+  rewrite gcf_sym.
+  apply gcf_0_l.
+Qed.
+
+Theorem gcf_1_l : ∀ a, gcf 1 a = 1.
+Proof.
+  intros a.
+  apply gcf_is_gcd; auto using gcd_1_l.
+  apply or_introl, zero_lt_1.
+Qed.
+
+Theorem gcf_1_r : ∀ a, gcf a 1 = 1.
+Proof.
+  intros a.
+  now rewrite gcf_sym, gcf_1_l.
 Qed.
 
 Theorem gcf_pos : ∀ a b, a ≠ 0 → gcf a b ≠ 0.
@@ -1631,6 +1705,27 @@ Proof.
   - now rewrite M3, <-M2.
 Qed.
 
+Theorem Euclidean_gcf : ∀ a b, ∃ x y, a * x + b * y = gcf a b.
+Proof.
+  intros a b.
+  destruct (classic (a = 0)) as [H | H], (classic (b = 0)) as [H0 | H0]; subst.
+  - exists 0, 0.
+    rewrite (mul_0_l ℤ), A3.
+    destruct (gcf_0_l 0) as [H | H]; replace (-0) with 0 in * by ring; auto.
+  - destruct (gcf_0_l b) as [H | H]; rewrite H.
+    + exists 0, 1; ring.
+    + exists 0, (-(1)); ring.
+  - destruct (gcf_0_r a) as [H0 | H0]; rewrite H0.
+    + exists 1, 0; ring.
+    + exists (-(1)), 0; ring.
+  - eapply gcf_rel_prime in H; eauto.
+    apply Euclidean_algorithm in H as [x [y H]].
+    rewrite gcf_sym in H.
+    exists y, x.
+    rewrite <-(M3 (gcf a b)), H, D1, ? (M1 _ (gcf a b)), ? M2, ? div_inv_l;
+      auto using gcf_div_l, gcf_div_r; ring.
+Qed.
+
 Theorem rel_prime_mul : ∀ a b c, gcd (a, b) = 1 → a｜c → b｜c → a * b｜c.
 Proof.
   intros a b c H [m H0] [n H1].
@@ -1638,6 +1733,87 @@ Proof.
   rewrite <-(M3 c), H, D1, ? (M1 _ c), ? M2.
   apply div_add; apply div_mul_r;
     [ exists n; rewrite H1 | exists m; rewrite H0 ]; simpl; now ring_simplify.
+Qed.
+
+Lemma gcd_mul_rel_prime : ∀ a b c, gcd (b, c) = 1 → gcd (gcf a b, gcf a c) = 1.
+Proof.
+  intros a b c H.
+  repeat split; auto using div_1_l with Z.
+  intros x H0 H1.
+  apply H.
+  - clear H1; eapply div_trans; eauto; apply gcf_div_r.
+  - clear H0; eapply div_trans; eauto; apply gcf_div_r.
+Qed.
+
+Theorem gcd_mul_r :
+  ∀ a b c, gcd (b, c) = 1 → gcd (a, b * c) = gcf a b * gcf a c.
+Proof.
+  intros a b c H.
+  repeat split;
+    try (apply rel_prime_mul; auto using gcd_mul_rel_prime, gcf_div_l);
+    [ apply div_mul_r | apply div_mul_l | ]; try apply gcf_div_r.
+  intros x H0 H1.
+  destruct (Euclidean_gcf a b) as
+      [x1 [y1 H2]], (Euclidean_gcf a c) as [x2 [y2 H3]]; rewrite <-H2, <-H3.
+  replace ((a*x1+b*y1)*(a*x2+c*y2)) with
+      (a*(a*x1*x2+b*x2*y1+c*x1*y2)+(b*c)*(y1*y2)) by ring.
+  now apply div_add; apply div_mul_r.
+Qed.
+
+Theorem gcf_mul_r : ∀ a b c, gcd (b, c) = 1 → gcf a (b*c) = gcf a b * gcf a c.
+Proof.
+  intros a b c H.
+  apply gcf_is_gcd; auto using gcd_mul_r.
+  apply mul_nonneg_nonneg; apply gcf_nonneg.
+Qed.
+
+Theorem gcd_mul_l :
+  ∀ a b c, gcd (a, b) = 1 → gcd (a * b, c) = gcf a c * gcf b c.
+Proof.
+  intros a b c H.
+  apply gcd_sym.
+  rewrite ? (gcf_sym _ c).
+  now apply gcd_mul_r.
+Qed.
+
+Theorem gcf_mul_l : ∀ a b c, gcd (a, b) = 1 → gcf (a*b) c = gcf a c * gcf b c.
+Proof.
+  intros a b c H.
+  now rewrite gcf_sym, gcf_mul_r, ? (gcf_sym c).
+Qed.
+
+Theorem gcd_pow_l : ∀ a b k, gcd (a, b) = 1 → gcf (a^k) b = 1.
+Proof.
+  intros a b k H.
+  apply not_exists_prime_divisor; auto using gcf_nonneg.
+  intros [p [H0 H1]].
+  pose proof H0 as [H2 H3].
+  contradict H2.
+  apply H.
+  - eapply Euclid_power; auto.
+    eapply div_trans; eauto; fold divide; apply gcf_div_l.
+  - eapply div_trans; eauto; fold divide; apply gcf_div_r.
+Qed.
+
+Theorem gcd_pow_r : ∀ a b k, gcd (a, b) = 1 → gcf a (b^k) = 1.
+Proof.
+  intros a b k H.
+  rewrite gcf_sym.
+  now apply gcd_pow_l, gcd_sym.
+Qed.
+
+Theorem div_l_gcf : ∀ a b, 0 ≤ a → a｜b → gcf a b = a.
+Proof.
+  intros a b H H0.
+  apply gcf_is_gcd; auto.
+  repeat split; auto using (div_refl ℤ) with Z.
+Qed.
+
+Theorem div_r_gcf : ∀ a b, 0 ≤ b → b｜a → gcf a b = b.
+Proof.
+  intros a b H H0.
+  apply gcf_is_gcd; auto.
+  repeat split; auto using (div_refl ℤ) with Z.
 Qed.
 
 Definition lcm (a b m : Z) := a｜m ∧ b｜m ∧ ∀ x, a｜x → b｜x → m｜x.
@@ -1767,7 +1943,7 @@ Proof.
   exact m.
 Defined.
 
-Theorem lcd_is_lcm : ∀ a b, lcm (a, b) = lcd a b.
+Theorem lcm_is_lcd : ∀ a b, lcm (a, b) = lcd a b.
 Proof.
   intros a b.
   unfold lcd.
@@ -1814,12 +1990,37 @@ Proof.
   now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
 Qed.
 
+Theorem lcd_is_lcm : ∀ a b m, lcm (a, b) = m → 0 ≤ m → lcd a b = m.
+Proof.
+  intros a b d [H [H0 H1]] H2.
+  apply pm_pos; auto using lcd_nonneg.
+  apply assoc_pm, conj; fold divide; auto using lcd_div_l, lcd_div_r, lcd_spec.
+Qed.
+
 Theorem lcd_sym : ∀ a b, lcd a b = lcd b a.
 Proof.
   intros a b.
   apply pm_pos; auto using lcd_nonneg.
   apply assoc_pm.
   split; apply lcd_spec; auto using lcd_div_l, lcd_div_r.
+Qed.
+
+Theorem lcd_1_l : ∀ a, 0 ≤ a → lcd 1 a = a.
+Proof.
+  intros a H.
+  apply lcd_is_lcm; auto using lcm_1_l.
+Qed.
+
+Theorem lcd_1_r : ∀ a, 0 ≤ a → lcd a 1 = a.
+Proof.
+  intros a H.
+  apply lcd_is_lcm; auto using lcm_1_r.
+Qed.
+
+Theorem lcd_prod : ∀ a b, lcd a b｜a * b.
+Proof.
+  intros a b.
+  apply lcd_spec; auto using div_mul_r, div_refl with Z.
 Qed.
 
 Theorem lcd_pos : ∀ a b, a ≠ 0 → b ≠ 0 → lcd a b ≠ 0.
@@ -1837,7 +2038,7 @@ Theorem lcd_gcf_ident : ∀ a b, 0 ≤ a → 0 ≤ b → a * b = gcf a b * lcd a
 Proof.
   intros a b [H | H] [H0 | H0]; subst;
     rewrite ? lcd_0_l, ? lcd_0_r, ? (mul_0_r ℤ), ? (mul_0_l ℤ); auto.
-  pose proof lcd_is_lcm a b as H1.
+  pose proof lcm_is_lcd a b as H1.
   pose proof lcm_gcd_ident a b as H2.
   rewrite (M1 (gcf a b)).
   apply div_spec.
@@ -2063,4 +2264,251 @@ Section Valuations.
     apply val_lower_bound; auto using naturals.le_refl.
   Qed.
 
+  Theorem val_ineq : ∀ a b, a ≠ 0 → b｜a → (v p b ≤ v p a)%N.
+  Proof.
+    intros a b H [k H0]; simpl in *; subst.
+    apply (cancellation_ne0 ℤ) in H as [H H0]; simpl.
+    rewrite val_mul, add_comm; auto.
+    now (exists (v p k)).
+  Qed.
+
+  Theorem val_inv : ∀ a b, a ≠ 0 → b｜a → v p (a / b) = (v p a - v p b)%N.
+  Proof.
+    intros a b H H0.
+    unfold div.
+    destruct excluded_middle_informative; try tauto.
+    destruct constructive_indefinite_description; simpl in *; subst.
+    apply (cancellation_ne0 ℤ) in H as [H H1]; simpl.
+    rewrite val_mul, sub_abba; auto.
+  Qed.
+
+  Theorem val_p : v p p = 1%N.
+  Proof.
+    apply naturals.le_antisymm.
+    - apply le_lt_succ, val_upper_bound; intros H; subst.
+      + contradiction zero_not_prime.
+      + destruct prime_p as [H0 H1], H as [k H].
+        contradiction H0.
+        exists k.
+        apply (cancellation_mul_r ℤ_ID p).
+        * intros H2.
+          subst.
+          contradiction zero_not_prime.
+        * now rewrite <-M2, <-(pow_2_r ℤ), M3.
+    - apply val_lower_bound.
+      + intros H; subst.
+        contradiction zero_not_prime.
+      + rewrite pow_1_r.
+        apply div_refl.
+  Qed.
+
+  Theorem val_1 : v p 1 = 0%N.
+  Proof.
+    apply naturals.le_antisymm; auto using zero_le.
+    apply le_lt_succ.
+    apply val_upper_bound; try apply zero_ne_1.
+    rewrite pow_1_r.
+    now destruct prime_p.
+  Qed.
+
+  Theorem val_0 : v p 0 = 0%N.
+  Proof.
+    unfold v.
+    repeat destruct excluded_middle_informative; try tauto; exfalso; tauto.
+  Qed.
+
+  Theorem val_pow : ∀ a k, v p (a^k) = (k * v p a)%N.
+  Proof.
+    intros a.
+    destruct (classic (a = 0)) as [H | H]; subst.
+    - intros k.
+      destruct (classic (k = 0%N)) as [H | H]; subst.
+      + now rewrite pow_0_r, val_0, naturals.mul_0_l, <-val_1.
+      + now rewrite pow_0_l, val_0, naturals.mul_0_r, <-val_0.
+    - induction k using Induction.
+      + now rewrite pow_0_r, naturals.mul_0_l, <-val_1.
+      + rewrite pow_succ_r, val_mul; auto.
+        * now rewrite IHk, <-add_1_r, mul_distr_r, mul_1_l.
+        * now apply (pow_ne_0 ℤ_ID).
+  Qed.
+
+  Lemma val_quotient : ∀ m, m ≠ 0 → ¬ p｜m / p ^ v p m.
+  Proof.
+    intros m H.
+    rewrite <-(pow_1_r ℤ p) at 1.
+    apply val_upper_bound.
+    - contradict H.
+      apply div_spec in H; auto using val_div.
+      + now rewrite (mul_0_l ℤ) in *.
+      + apply (pow_ne_0 ℤ_ID).
+        intros H1.
+        subst.
+        contradiction zero_not_prime.
+    - rewrite val_inv, val_pow, val_p, mul_1_r, sub_diag; auto using val_div.
+      apply naturals.lt_succ.
+  Qed.
+
+  Theorem val_quot_positive : ∀ m, 0 < m → 0 < p → 0 < m / p ^ v p m.
+  Proof.
+    intros m H H0.
+    rewrite <-(div_inv_l m (p^(v p m))) in H; auto using val_div.
+    apply (pos_div_l ℤ_order) in H; eauto using (pow_pos ℤ_order).
+  Qed.
+
+  Theorem quot_le_bound : ∀ m x, 0 < m → 0 < p → p ^ x｜m → m / p ^ x ≤ m.
+  Proof.
+    intros m x H H0 H1.
+    apply (mul_le_l_iff ℤ_order (p^x)); simpl; fold le.
+    - now apply (pow_pos ℤ_order).
+    - rewrite div_inv_l, <-(M3 m) at 1; auto.
+      apply mul_le_r; auto; fold le.
+      now apply lt_0_le_1, (pow_pos ℤ_order).
+  Qed.
+
+  Theorem val_quot_le_bound : ∀ m, 0 < m → 0 < p → m / p ^ v p m ≤ m.
+  Proof.
+    intros m H H0.
+    apply quot_le_bound; auto using val_div.
+  Qed.
+
+  Theorem val_quot_bound : ∀ m, 0 < m → 0 < p → p｜m → m / p ^ v p m < m.
+  Proof.
+    intros m H H0 H1.
+    pose proof H as H2.
+    eapply val_quot_le_bound in H2 as [H2 | H2]; eauto.
+    apply (f_equal (mul (p^v p m))) in H2.
+    rewrite div_inv_l, <-(M3 m) in H2 at 1; auto using val_div.
+    apply (cancellation_mul_r ℤ_ID) in H2; try now apply pos_ne_0.
+    rewrite <-(rings.pow_1_r ℤ p) in H1.
+    apply val_lower_bound in H1; auto using (pos_ne_0 ℤ_order).
+    destruct prime_p as [H3 H4], H1 as [c H1].
+    contradict H3.
+    rewrite <-H1 in H2.
+    exists (p^c).
+    now rewrite pow_add_r, pow_1_r, M1 in H2.
+  Qed.
+
+  Theorem val_gcf : ∀ x m, m ≠ 0 → gcf (p^x) (m / p^v p m) = 1.
+  Proof.
+    intros x m H.
+    apply not_exists_prime_divisor; auto using gcf_nonneg.
+    intros [q [H0 H1]].
+    destruct (classic (q ~ p)) as [H2 | H2].
+    - assert (q｜m / p ^ v p m) as H3.
+      { eapply div_trans; fold divide; eauto using gcf_div_r. }
+      apply assoc_pm in H2 as [H2 | H2]; subst; contradiction (val_quotient m).
+      now apply div_sign_l in H3.
+    - assert (q｜p^x) as H3.
+      { eapply div_trans; fold divide; eauto using gcf_div_l. }
+      apply Euclid_power in H3; auto.
+      destruct prime_p as [H4 H5].
+      apply H5 in H3 as [H3 | H3]; now destruct H0.
+  Qed.
+
+  Theorem val_gcd : ∀ x m, m ≠ 0 → gcd (p^x, m / p^v p m) = 1.
+  Proof.
+    intros x m H.
+    erewrite <-val_gcf; eauto using gcd_is_gcf.
+  Qed.
+
+  Theorem gcf_val : ∀ m, m ≠ 0 → 0 < p → gcf (p^v p m) m = p^v p m.
+  Proof.
+    intros m H H0.
+    rewrite <-(div_inv_l m (p^v p m)) at 2; auto using val_div.
+    rewrite gcf_mul_r, val_gcf, gcf_refl, M1, M3; auto using val_gcd.
+    now apply or_introl, pow_pos.
+  Qed.
+
+  Theorem val_lcd_l : ∀ m n,
+      0 < m → 0 < n → 0 < p →
+      (v p m ≤ v p n)%N → p^v p n * lcd (m / p^v p m) (n / p^v p n) = lcd m n.
+  Proof.
+    intros m n H H0 H1 H2.
+    eapply (cancellation_mul_l ℤ_ID (gcf m n));
+      auto using gcf_pos, (pos_ne_0 ℤ_order); simpl.
+    rewrite <-lcd_gcf_ident, <-(div_inv_r m (p^v p m)), gcf_mul_l at 1;
+      auto using val_div; unfold le, ordered_rings.le; intuition.
+    2: { erewrite <-val_gcf, gcf_sym.
+         apply gcd_is_gcf.
+         auto using (pos_ne_0 ℤ_order). }
+    rewrite <-(div_inv_r n (p^v p n)), gcf_mul_r at 1; auto using val_div.
+    2: { erewrite <-val_gcf, gcf_sym.
+         apply gcd_is_gcf.
+         auto using (pos_ne_0 ℤ_order). }
+    rewrite ? M2, M1, ? M2, (M1 (lcd (m / p ^ v p m) (n / p ^ v p n))),
+    <-lcd_gcf_ident, (M1 (m / p^v p m)), M1, ? M2, div_inv_l, (M1 _ n), <-? M2;
+      try (apply div_nonneg; unfold le, ordered_rings.le; intuition;
+           now apply (pow_pos ℤ_order)); auto using val_div.
+    f_equal.
+    rewrite gcf_sym, val_gcf, M3; auto using (pos_ne_0 ℤ_order).
+    rewrite <-(div_inv_r m (p^v p m)) at 4; auto using val_div.
+    apply f_equal, div_l_gcf; try now apply or_introl, (pow_pos ℤ_order).
+    apply val_lower_bound; auto; now apply (pos_ne_0 ℤ_order).
+  Qed.
+
+  Theorem val_lcd_r : ∀ m n,
+      0 < m → 0 < n → 0 < p →
+      (v p n ≤ v p m)%N → p^v p m * lcd (m / p^v p m) (n / p^v p n) = lcd m n.
+  Proof.
+    intros m n H H0 H1 H2.
+    rewrite lcd_sym, val_lcd_l; auto using lcd_sym.
+  Qed.
+
+  Theorem val_lcd_l_gcf : ∀ m n,
+      0 < m → 0 < n → 0 < p →
+      (v p m ≤ v p n)%N → gcf (p^v p n) (lcd (m / p^v p m) (n / p^v p n)) = 1.
+  Proof.
+    intros m n H H0 H1 H2.
+    apply gcd_pow_l.
+    repeat split; auto using div_1_l with Z.
+    intros x H3 H4.
+    pose proof prime_p as [H5 H6].
+    apply H6 in H3 as [H3 | [H3 H7]]; fold divide in *; auto.
+    eapply div_trans in H4; eauto; fold divide in *.
+    assert (p｜(m / p ^ v p m) * (n / p ^ v p n)) as H8.
+    { eapply div_trans; fold divide; eauto using lcd_prod. }
+    apply Euclid's_lemma in H8 as [H8 | H8]; auto.
+    - destruct (val_gcd 1 m) as [_ [_ H9]]; try now apply (pos_ne_0 ℤ_order).
+      apply H9.
+      + now rewrite pow_1_r.
+      + eauto using div_trans with Z.
+    - destruct (val_gcd 1 n) as [_ [_ H9]]; try now apply (pos_ne_0 ℤ_order).
+      apply H9.
+      + now rewrite pow_1_r.
+      + eauto using div_trans with Z.
+  Qed.
+
+  Theorem val_lcd_r_gcf : ∀ m n,
+      0 < m → 0 < n → 0 < p →
+      (v p n ≤ v p m)%N → gcf (p^v p m) (lcd (m / p^v p m) (n / p^v p n)) = 1.
+  Proof.
+    intros m n H H0 H1 H2.
+    rewrite lcd_sym.
+    auto using val_lcd_l_gcf.
+  Qed.
+
+  Theorem val_lcd_l_rel_prime : ∀ m n,
+      0 < m → 0 < n → 0 < p →
+      (v p m ≤ v p n)%N → gcd (p^v p n, lcd (m / p^v p m) (n / p^v p n)) = 1.
+  Proof.
+    intros m n H H0 H1 H2.
+    erewrite <-val_lcd_l_gcf; eauto using gcd_is_gcf.
+  Qed.
+
+  Theorem val_lcd_r_rel_prime : ∀ m n,
+      0 < m → 0 < n → 0 < p →
+      (v p n ≤ v p m)%N → gcd (p^v p m, lcd (m / p^v p m) (n / p^v p n)) = 1.
+  Proof.
+    intros m n H H0 H1 H2.
+    erewrite <-val_lcd_r_gcf; eauto using gcd_is_gcf.
+  Qed.
+
 End Valuations.
+
+Theorem inv_div_l : ∀ a b c, b｜a → b ≠ 0 → a/b｜c ↔ a｜b*c.
+Proof.
+  split; intros [k H1]; exists k.
+  - rewrite H1, M1, <-M2, div_inv_r; auto.
+  - apply (cancellation_mul_l ℤ_ID b); auto; simpl.
+    rewrite H1, (M1 b), <-M2, div_inv_r; auto.
+Qed.

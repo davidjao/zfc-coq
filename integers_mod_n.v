@@ -536,6 +536,16 @@ Section Modular_arithmetic.
           try apply units_in_ℤ_; eauto using eqm_gcd.
     Qed.
 
+    Theorem unit_classification : ∀ a : Z_, a ∈ 𝐔_ ↔ @rings.unit ℤ_ a.
+    Proof.
+      split; intros H.
+      - apply Specify_classification in H.
+        now rewrite despecify in *.
+      - apply Specify_classification.
+        rewrite despecify.
+        eauto using elts_in_set.
+    Qed.
+
     Theorem Euler_Phi_finite : finite Euler_Phi_set.
     Proof.
       eapply subsets_of_finites_are_finite; eauto using finite_Z_mod.
@@ -752,7 +762,7 @@ Section Modular_arithmetic.
       destruct constructive_indefinite_description; intuition.
     Qed.
 
-    Theorem pow_order : ∀ a : Z_, a ∈ 𝐔_ → a^(order a) = 1.
+    Theorem order_pow : ∀ a : Z_, a ∈ 𝐔_ → a^(order a) = 1.
     Proof.
       intros a H.
       unfold order.
@@ -773,7 +783,7 @@ Section Modular_arithmetic.
           - apply INZ_le, zero_le. }
         apply le_def in H1 as [c H1].
         rewrite H1, integers.A3, INZ_mul, INZ_eq in H0.
-        now rewrite H0, rings.pow_mul_r, pow_order, rings.pow_1_l.
+        now rewrite H0, rings.pow_mul_r, order_pow, rings.pow_1_l.
       - destruct (division_algorithm k (order a)) as
             [q [r [H1 [H2 H3]]]]; auto using order_pos; simpl in *.
         apply le_def in H2 as [c H2].
@@ -791,7 +801,7 @@ Section Modular_arithmetic.
           split; auto.
           apply Specify_classification in H as H6.
           rewrite despecify, <-pow_nonneg, <-H1, integer_powers.pow_add_r,
-          integer_powers.pow_mul_r, pow_nonneg, pow_order,
+          integer_powers.pow_mul_r, pow_nonneg, order_pow,
           integer_powers.pow_1_l, rings.M3, pow_nonneg in *; intuition.
     Qed.
 
@@ -800,40 +810,158 @@ Section Modular_arithmetic.
         gcd(order a, order b) = 1 → order (a * b) = (order a * order b)%N.
     Proof.
       intros a b H H0 H1.
-      apply Specify_classification in H as H2, H0 as H3.
+      apply unit_classification in H as H2, H0 as H3.
       apply assoc_N, conj; fold divide.
       - apply div_order.
-        + apply Specify_classification.
-          rewrite despecify in *.
-          split; eauto using elts_in_set.
-          now apply unit_closure.
+        + now apply unit_classification, unit_closure.
         + now rewrite rings.pow_mul_l, rings.pow_mul_r, mul_comm,
-          rings.pow_mul_r, ? pow_order, ? rings.pow_1_l, M3.
+          rings.pow_mul_r, ? order_pow, ? rings.pow_1_l, M3.
       - rewrite <-INZ_mul.
         apply rel_prime_mul; auto.
         + eapply FTA; eauto.
           rewrite INZ_mul.
           apply div_order; auto.
           rewrite <-(M3 (a^(order b * order (a * b)))), M1,
-          <-(rings.pow_1_l ℤ_ _ : 1^(order (a * b)) = 1), <-(pow_order b),
+          <-(rings.pow_1_l ℤ_ _ : 1^(order (a * b)) = 1), <-(order_pow b),
           <-rings.pow_mul_r, <-(rings.pow_mul_l ℤ_ a b), mul_comm,
-          rings.pow_mul_r, pow_order, rings.pow_1_l at 1; auto.
-          apply Specify_classification.
-          rewrite despecify in *.
-          split; eauto using elts_in_set.
-          now apply unit_closure.
+          rings.pow_mul_r, order_pow, rings.pow_1_l at 1; auto.
+          now apply unit_classification, unit_closure.
         + apply gcd_sym in H1.
           eapply FTA; eauto.
           rewrite INZ_mul.
           apply div_order; auto.
           rewrite <-(M3 (b^(order a * order (a *b)))), M1,
-          <-(rings.pow_1_l ℤ_ _ : 1^(order (a * b )) = 1), <-(pow_order a),
+          <-(rings.pow_1_l ℤ_ _ : 1^(order (a * b )) = 1), <-(order_pow a),
           <-rings.pow_mul_r, <-(rings.pow_mul_l ℤ_ b a), M1, mul_comm,
-          rings.pow_mul_r, pow_order, rings.pow_1_l at 1; auto.
-          apply Specify_classification.
-          rewrite despecify in *.
-          split; eauto using elts_in_set.
+          rings.pow_mul_r, order_pow, rings.pow_1_l at 1; auto.
+          now apply unit_classification, unit_closure.
+    Qed.
+
+    Theorem pow_order :
+      ∀ (k : N) (a : Z_), a ∈ 𝐔_ → order a / gcf k (order a) = order (a^k).
+    Proof.
+      intros k a H.
+      assert (gcf k (order a) ≠ 0) as Z.
+      { rewrite gcf_sym.
+        apply gcf_pos.
+        intros H0.
+        apply INZ_eq in H0.
+        contradict H0.
+        now apply nonzero_lt, INZ_lt, order_pos. }
+      assert (0 ≤ order a / gcf k (order a)) as H0.
+      { apply div_nonneg.
+        - now apply or_introl, order_pos.
+        - destruct (gcf_nonneg k (order a)) as [H0 | H0]; auto.
+          rewrite gcf_sym in H0.
+          apply eq_sym, gcf_pos in H0; intuition.
+          apply order_pos in H.
+          rewrite H1 in H.
+          contradiction (lt_irrefl ℤ_order 0). }
+      apply unit_classification in H as H1.
+      assert ((a^k)%Zn ∈ 𝐔_) as H2.
+      { now apply unit_classification, (unit_prod_closure ℤ_). }
+      apply pm_pos; auto.
+      2: { now apply or_introl, order_pos. }
+      apply assoc_pm, conj; fold divide.
+      - apply inv_div_l; auto using gcf_div_r.
+        assert (0 ≤ gcf k (order a)) as H3 by now apply gcf_nonneg.
+        apply le_def in H3 as [c H3].
+        rewrite integers.A3 in H3.
+        rewrite H3, INZ_mul.
+        apply div_order; auto.
+        destruct (Euclidean_gcf k (order a)) as [x [y H4]].
+        rewrite <-pow_nonneg, <-INZ_mul, <-H3, <-H4, integers.D1,
+        integer_powers.pow_add_r, <-integers.M2, integer_powers.pow_mul_r,
+        integers.M1, integer_powers.pow_mul_r, ? pow_nonneg, order_pow,
+        integer_powers.pow_1_l, M1, <-integers.M2, integer_powers.pow_mul_r,
+        ? pow_nonneg, order_pow, integer_powers.pow_1_l, M3 in *; auto.
+        rewrite pow_nonneg.
+        now apply unit_prod_closure.
+      - apply le_def in H0 as [c H3].
+        rewrite integers.A3 in H3.
+        rewrite H3.
+        apply div_order; auto.
+        rewrite <-? pow_nonneg, <-H3, <-integer_powers.pow_mul_r, mul_div,
+        integers.M1, <-mul_div, integer_powers.pow_mul_r, pow_nonneg, order_pow,
+        integer_powers.pow_1_l in *; auto using gcf_div_r, gcf_div_l.
+    Qed.
+
+    Theorem order_lcm_closed : ∀ a b : Z_,
+        a ∈ 𝐔_ → b ∈ 𝐔_ → ∃ c : Z_, c ∈ 𝐔_ ∧ lcd (order a) (order b) = order c.
+    Proof.
+      intros a b.
+      remember ((order a) * (order b))%N as M.
+      revert M a b HeqM.
+      induction M using Strong_Induction.
+      intros a b HeqM H0 H1.
+      apply (order_pos a) in H0 as H2.
+      apply lt_0_le_1 in H2 as [H2 | H2]; subst.
+      2: { exists b.
+           rewrite <-H2, lcd_1_l; auto.
+           left; now apply order_pos. }
+      apply exists_prime_divisor in H2 as [p [H2 [H3 H4]]].
+      set (k := v p (order a)).
+      set (l := v p (order b)).
+      assert (0 < order a / p^k) as H5; assert (0 < order b / p^l) as H6;
+        eauto using val_quot_positive, order_pos.
+      assert (0 < p^k) as H7; assert (0 < p^l) as H8;
+        try now apply (ordered_rings.pow_pos ℤ_order).
+      assert ((order a / p^k) * (order b / p^l) < order a * order b) as H9.
+      { apply (lt_le_cross_mul ℤ_order); simpl; try apply val_quot_bound;
+            try apply quot_le_bound; eauto using order_pos, val_div. }
+      apply lt_def in H5 as [x [H5 H10]], H6 as [y [H6 H11]], H7
+            as [z [H7 H12]], H8 as [w [H8 H13]].
+      rewrite integers.A3, H10, H11, ? INZ_mul, INZ_lt in *.
+      unfold k, l in H10, H11, H12, H13.
+      pose proof H10 as H14.
+      pose proof H11 as H15.
+      rewrite <-gcf_val in H10, H11; try apply (pos_ne_0 ℤ_order), order_pos;
+        try (rewrite H12, pow_order in H10; rewrite H13, pow_order in H11);
+        auto; apply INZ_eq in H10, H11.
+      rewrite <-H10, <-H11 in H9.
+      eapply H in H9 as [c [H9 H16]]; try reflexivity;
+        try now (rewrite unit_classification in *;
+                 try now apply unit_prod_closure).
+      rewrite H10, H11, <-H14, <-H15 in H16.
+      destruct (le_trichotomy k l) as [H17 | H17].
+      - erewrite <-val_lcd_l; eauto using order_pos.
+        assert (order (b^y) = w) as H18.
+        { rewrite <-INZ_eq, <-pow_order, <-H13, <-H15, div_l_gcf; auto.
+          - rewrite div_div; auto using val_div, prime_power_nonzero.
+            now apply (pos_ne_0 ℤ_order), order_pos.
+          - rewrite H15.
+            apply INZ_le, zero_le.
+          - exists (p^l)%Z; simpl.
+            apply eq_sym, div_inv_l; auto using val_div. }
+        assert ((b^y)%Zn ∈ 𝐔_) as H19.
+        { rewrite unit_classification in *.
+          now apply unit_prod_closure. }
+        exists (b^y * c).
+        rewrite H16, H13, <-H18, mul_order, INZ_mul; auto.
+        + split; auto.
+          rewrite unit_classification in *.
           now apply unit_closure.
+        + rewrite <-H16, H18, <-H13.
+          apply val_lcd_l_rel_prime; auto using order_pos.
+      - erewrite <-val_lcd_r; eauto using order_pos.
+        assert (order (a^x) = z) as H18.
+        { rewrite <-INZ_eq, <-pow_order, <-H12, <-H14, div_l_gcf; auto.
+          - rewrite div_div; auto using val_div, prime_power_nonzero.
+            now apply (pos_ne_0 ℤ_order), order_pos.
+          - rewrite H14.
+            apply INZ_le, zero_le.
+          - exists (p^k)%Z; simpl.
+            apply eq_sym, div_inv_l; auto using val_div. }
+        assert ((a^x)%Zn ∈ 𝐔_) as H19.
+        { rewrite unit_classification in *.
+          now apply unit_prod_closure. }
+        exists (a^x * c).
+        rewrite H16, H12, <-H18, mul_order, INZ_mul; auto.
+        + split; auto.
+          rewrite unit_classification in *.
+          now apply unit_closure.
+        + rewrite <-H16, H18, <-H12.
+          apply val_lcd_r_rel_prime; auto using order_pos.
     Qed.
 
   End Positive_modulus.

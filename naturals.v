@@ -1403,3 +1403,13 @@ Proof.
     rewrite despecify.
     eauto using elts_in_set.
 Qed.
+
+Theorem lt_0_le_1 : ∀ n, 0 < n ↔ 1 ≤ n.
+Proof.
+  split; intros H.
+  - apply nonzero_lt, succ_0 in H as [m H]; subst; apply one_le_succ.
+  - apply nonzero_lt, succ_0.
+    destruct H as [m H].
+    exists m.
+    now rewrite <-add_1_r, add_comm, H.
+Qed.

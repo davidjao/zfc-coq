@@ -336,6 +336,18 @@ Section Ordered_ring_theorems.
     eauto using lt_trans.
   Qed.
 
+  Theorem lt_le_cross_mul : ∀ a b c d,
+      0 < a → 0 < c → a < b → c ≤ d → a * c < b * d.
+  Proof.
+    intros a b c d H H0 H1 [H2 | H2]; subst; auto using lt_cross_mul, O3_r.
+  Qed.
+
+  Theorem le_lt_cross_mul : ∀ a b c d,
+      0 < a → 0 < c → a ≤ b → c < d → a * c < b * d.
+  Proof.
+    intros a b c d H H0 [H1 | H1] H2; subst; auto using lt_cross_mul, O3.
+  Qed.
+
   Theorem lt_or_ge : ∀ a b, a < b ∨ b ≤ a.
   Proof.
     intros a b.
@@ -358,6 +370,21 @@ Section Ordered_ring_theorems.
     unfold le.
     pose proof (T a b).
     tauto.
+  Qed.
+
+  Theorem mul_le_l_iff : ∀ a b c, 0 < a → b ≤ c ↔ a * b ≤ a * c.
+  Proof.
+    split; intros H0; auto using mul_le_l.
+    apply le_not_gt.
+    intros H1.
+    apply (O3 a), le_not_gt in H1; auto.
+  Qed.
+
+  Theorem mul_le_r_iff : ∀ a b c, 0 < a → b ≤ c ↔ b * a ≤ c * a.
+  Proof.
+    intros a b c H.
+    rewrite ? (M1 _ _ a).
+    now apply mul_le_l_iff.
   Qed.
 
   Theorem O0_opp : ∀ a b, 0 < a + b → 0 < a ∨ 0 < b.
@@ -603,6 +630,12 @@ Section Ordered_ring_theorems.
     intros H1.
     apply le_not_gt in H0.
     now apply H0, mul_pos_neg.
+  Qed.
+
+  Theorem le_sym : ∀ a b, a ≤ b ∨ b ≤ a.
+  Proof.
+    intros a b.
+    destruct (T a b); unfold le; tauto.
   Qed.
 
 End Ordered_ring_theorems.
