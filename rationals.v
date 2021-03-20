@@ -625,7 +625,7 @@ Proof.
   contradict H1; ring [H1].
 Qed.
 
-Theorem reduced_form : ∀ x, ∃ a b, gcd (a,b) = 1 ∧ x = a / b ∧ b ≠ 0%Z.
+Theorem reduced_form : ∀ x, ∃ a b, gcd(a, b) = 1 ∧ x = a / b ∧ b ≠ 0%Z.
 Proof.
   intros x.
   destruct (Qlift x) as [a [b [H H0]]], (common_factor a b)
@@ -737,17 +737,17 @@ Qed.
 
 Lemma canonical_form_uniq : ∀ a b c d,
     a / b = c / d → b ≠ 0%Z → d ≠ 0%Z →
-    gcd (a, b) = 1 → gcd (c, d) = 1 → a ~ c ∧ b ~ d.
+    gcd(a, b) = 1 → gcd(c, d) = 1 → a ~ c ∧ b ~ d.
 Proof.
   intros a b c d H H0 H1.
   rewrite Qequiv in H; auto.
-  repeat split; eapply FTA; eauto using gcd_sym;
+  repeat split; eapply FTA; eauto using is_gcd_sym;
     [ rewrite <-H | rewrite integers.M1, H |
       rewrite H | rewrite integers.M1, <-H ];
     auto using (div_mul_l ℤ), (div_mul_r ℤ), (div_refl ℤ) with Z.
 Qed.
 
-Theorem canonical_form : ∀ x, exists ! a b, gcd (a,b) = 1 ∧ x = a / b ∧ b > 0%Z.
+Theorem canonical_form : ∀ x, exists ! a b, gcd(a, b) = 1 ∧ x = a / b ∧ b > 0%Z.
 Proof.
   intros x.
   destruct (reduced_form x) as [a [b [H [H0 H1]]]].
@@ -785,9 +785,9 @@ Proof.
         split.
         -- split.
            ++ rewrite <-gcd_neg.
-              apply gcd_sym.
+              apply is_gcd_sym.
               rewrite <-gcd_neg.
-              now apply gcd_sym.
+              now apply is_gcd_sym.
            ++ split; try now rewrite <-IZQ_lt, <-(lt_neg_0 ℤ_order).
               subst.
               rewrite Qequiv; try ring; contradict H1; ring [H1].
