@@ -2505,33 +2505,25 @@ Proof.
     rewrite H1, (M1 b), <-M2, div_inv_r; auto.
 Qed.
 
-Definition abs : Z → Z.
-Proof.
-  intros a.
-  destruct (excluded_middle_informative (0 ≤ a)).
-  - exact a.
-  - exact (-a).
-Defined.
+Definition abs (a : Z) :=
+  if (excluded_middle_informative (0 ≤ a)) then a else (-a).
 
-Theorem abs_pos : ∀ a, 0 ≤ abs a.
+Notation " '|' a '|' " := (abs a) (at level 30, format "'|' a '|'") : Z_scope.
+
+Theorem abs_pos : ∀ a, 0 ≤ |a|.
 Proof.
   intros a.
   unfold abs.
   destruct excluded_middle_informative; auto.
-  left.
-  apply lt_not_ge.
+  apply or_introl, lt_not_ge.
   contradict n.
   now apply neg_le_0.
 Qed.
 
-Theorem abs_zero : ∀ a, abs a = 0 ↔ a = 0.
+Theorem abs_zero : ∀ a, |a| = 0 ↔ a = 0.
 Proof.
   unfold abs.
-  split; intros H; destruct excluded_middle_informative; auto.
-  - replace a with (--a) by ring.
-    rewrite H.
-    ring.
-  - subst; ring.
+  split; intros H; destruct excluded_middle_informative; ring [H].
 Qed.
 
 Theorem gcd_sign : ∀ a b, gcd a b = gcd a (-b).
@@ -2552,7 +2544,7 @@ Proof.
   - apply lcm_nonneg.
 Qed.
 
-Theorem gcd_abs : ∀ a b, gcd a b = gcd (abs a) (abs b).
+Theorem gcd_abs : ∀ a b, gcd a b = gcd (|a|) (|b|).
 Proof.
   intros a b.
   unfold abs.
@@ -2562,7 +2554,7 @@ Proof.
   - now rewrite gcd_sign, gcd_sym, gcd_sign, gcd_sym.
 Qed.
 
-Theorem lcm_abs : ∀ a b, lcm a b = lcm (abs a) (abs b).
+Theorem lcm_abs : ∀ a b, lcm a b = lcm (|a|) (|b|).
 Proof.
   intros a b.
   unfold abs.
