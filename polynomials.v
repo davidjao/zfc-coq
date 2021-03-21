@@ -1582,6 +1582,42 @@ Section Polynomial_theorems.
         apply naturals.le_refl.
     Qed.
 
+    Theorem cyclotomic_leading_coeff : ∀ (d : N) (a : R),
+        (1 ≤ d)%N → coefficient (x^d - a) d = 1%R.
+    Proof.
+      intros d a H.
+      unfold rings.sub.
+      rewrite coefficient_add, coefficient_neg, coeffs_of_x_to_n,
+      coeffs_above_degree, <-neg_0, rings.A3_r; try now destruct is_ID.
+      rewrite degree_const.
+      now rewrite <-INZ_lt, <-INZ_le, lt_0_le_1 in *.
+    Qed.
+
+    Theorem cyclotomic_degree : ∀ (d : N) (a : R),
+        (1 ≤ d)%N → degree (x^d - a) = d.
+    Proof.
+      intros d a H.
+      apply naturals.le_antisymm.
+      - rewrite <-max_0_r.
+        eapply naturals.le_trans; eauto using add_degree.
+        exists 0%N.
+        rewrite add_0_r.
+        f_equal.
+        + apply degree_x_to_n; now destruct is_ID.
+        + apply const_classification.
+          exists (-a)%R.
+          now rewrite IRP_neg.
+      - apply degree_lower_bound.
+        rewrite cyclotomic_leading_coeff; now destruct is_ID.
+    Qed.
+
+    Theorem cyclotomic_monic : ∀ (d : N) (a : R), (1 ≤ d)%N → monic (x^d - a).
+    Proof.
+      intros d a H.
+      unfold monic.
+      now rewrite cyclotomic_degree, cyclotomic_leading_coeff.
+    Qed.
+
   End Integral_domain_theorems.
 
 End Polynomial_theorems.

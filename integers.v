@@ -2504,3 +2504,91 @@ Proof.
   - apply (cancellation_mul_l ℤ_ID b); auto; simpl.
     rewrite H1, (M1 b), <-M2, div_inv_r; auto.
 Qed.
+
+Definition abs : Z → Z.
+Proof.
+  intros a.
+  destruct (excluded_middle_informative (0 ≤ a)).
+  - exact a.
+  - exact (-a).
+Defined.
+
+Theorem abs_pos : ∀ a, 0 ≤ abs a.
+Proof.
+  intros a.
+  unfold abs.
+  destruct excluded_middle_informative; auto.
+  left.
+  apply lt_not_ge.
+  contradict n.
+  now apply neg_le_0.
+Qed.
+
+Theorem abs_zero : ∀ a, abs a = 0 ↔ a = 0.
+Proof.
+  unfold abs.
+  split; intros H; destruct excluded_middle_informative; auto.
+  - replace a with (--a) by ring.
+    rewrite H.
+    ring.
+  - subst; ring.
+Qed.
+
+Theorem gcd_sign : ∀ a b, gcd a b = gcd a (-b).
+Proof.
+  intros a b.
+  apply eq_sym, gcd_is_gcd.
+  - rewrite <-gcd_neg.
+    apply is_gcd_gcd.
+  - apply gcd_nonneg.
+Qed.
+
+Theorem lcm_sign : ∀ a b, lcm a b = lcm a (-b).
+Proof.
+  intros a b.
+  apply eq_sym, lcm_is_lcm.
+  - rewrite <-lcm_neg.
+    apply is_lcm_lcm.
+  - apply lcm_nonneg.
+Qed.
+
+Theorem gcd_abs : ∀ a b, gcd a b = gcd (abs a) (abs b).
+Proof.
+  intros a b.
+  unfold abs.
+  repeat destruct excluded_middle_informative; auto.
+  - now rewrite gcd_sign.
+  - now rewrite gcd_sym, gcd_sign, gcd_sym.
+  - now rewrite gcd_sign, gcd_sym, gcd_sign, gcd_sym.
+Qed.
+
+Theorem lcm_abs : ∀ a b, lcm a b = lcm (abs a) (abs b).
+Proof.
+  intros a b.
+  unfold abs.
+  repeat destruct excluded_middle_informative; auto.
+  - now rewrite lcm_sign.
+  - now rewrite lcm_sym, lcm_sign, lcm_sym.
+  - now rewrite lcm_sign, lcm_sym, lcm_sign, lcm_sym.
+Qed.
+
+Theorem lcm_0 : ∀ a b, lcm a b = 0 → a = 0 ∨ b = 0.
+Proof.
+  intros a b H.
+  rewrite <-(abs_zero a), <-(abs_zero b), lcm_abs in *.
+  apply (cancellation ℤ_ID); simpl.
+  rewrite gcd_lcm_ident, H, (mul_0_r ℤ); auto using abs_pos.
+Qed.
+
+Theorem lcm_bound : ∀ a b, 0 < a → b ≤ lcm a b.
+Proof.
+  intros a b H.
+  destruct (classic (b = 0)); subst.
+  - rewrite lcm_r_0.
+    apply le_refl.
+  - apply div_le.
+    + destruct (lcm_nonneg a b) as [H1 | H1]; auto.
+      apply eq_sym, lcm_0 in H1 as [H1 | H1]; subst; try tauto.
+      contradiction (lt_irrefl ℤ_order 0).
+    + apply lcm_div_r.
+Qed.
