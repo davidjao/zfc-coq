@@ -1047,16 +1047,24 @@ Record function : Type :=
            func_hyp : is_function graph domain range }.
 Arguments mkFunc {domain} {range} {graph} func_hyp.
 
+Definition outsider B := {x in B | x ∉ x}.
+
+Theorem outsider_not_in : ∀ B, outsider B ∉ B.
+Proof.
+  intros B H.
+  absurd (outsider B ∈ outsider B); try apply Specify_classification;
+    try split; auto; intros H0; now apply Specify_classification in H0 as H1.
+Qed.
+
 Definition eval_rel : set → set → set → set → set.
 Proof.
   intros f A B x.
   destruct (excluded_middle_informative (x ∈ A)).
   - destruct (excluded_middle_informative (is_function f A B)).
-    + destruct i0.
-      destruct (constructive_indefinite_description (H0 x i)) as [y].
+    + destruct i0, (constructive_indefinite_description (H0 x i)) as [y].
       exact y.
-    + exact B.
-  - exact B.
+    + exact (outsider B).
+  - exact (outsider B).
 Defined.
 
 Definition eval f x := eval_rel (graph f) (domain f) (range f) x.
@@ -2217,8 +2225,8 @@ Proof.
   unfold eval in H4 at 2.
   unfold eval_rel in H4.
   destruct excluded_middle_informative; try tauto.
-  contradiction (no_quines (range f)).
-  rewrite H, <-H4 at 1.
+  contradiction (outsider_not_in (range g)).
+  rewrite <-H4, <-H.
   now apply function_maps_domain_to_range.
 Qed.
 
