@@ -35,6 +35,7 @@ Section Ordered_ring_theorems.
   Notation "2" := (1 + 1).
   Infix "*" := (mul Ring).
   Notation "- a" := (neg Ring a).
+  Notation "- 1" := (neg Ring 1).
   Infix "-" := (sub Ring).
   Infix "^" := (pow Ring).
   Infix "<" := (lt OR).
@@ -214,10 +215,10 @@ Section Ordered_ring_theorems.
     destruct (T 0 1) as [[H [H0 H1]] | [[H [H0 H1]] | [H [H0 H1]]]];
       try tauto.
     - now contradiction (nontriviality OR).
-    - apply (O1_r (-(1))) in H1.
+    - apply (O1_r (-1)) in H1.
       rewrite A4, A3 in H1.
       eapply O2 in H1; eauto.
-      now replace 1 with (-(1)*-(1)) by ring.
+      now replace 1 with (-1*-1) by ring.
   Qed.
 
   Lemma lt_succ : ∀ m, m < m + 1.
@@ -616,7 +617,7 @@ Section Ordered_ring_theorems.
     contradiction (lt_irrefl 0).
   Qed.
 
-  Theorem one_ne_minus_one : 1 ≠ -(1).
+  Theorem one_ne_minus_one : 1 ≠ -1.
   Proof.
     intros H.
     contradiction zero_ne_2.

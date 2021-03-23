@@ -53,6 +53,7 @@ Section Integral_domain_theorems.
   Infix "-" := (sub ring).
   Infix "*" := (mul ring).
   Notation "- a" := (neg ring a).
+  Notation "- 1" := (neg ring 1).
   Infix "^" := (pow ring).
 
   Add Ring R_ring : (ringify ring).
@@ -113,7 +114,7 @@ Section Integral_domain_theorems.
     now ring_simplify in H.
   Qed.
 
-  Theorem minus_one_nonzero : -(1) ≠ 0.
+  Theorem minus_one_nonzero : -1 ≠ 0.
   Proof.
     intros H.
     apply (f_equal (neg ring)) in H.

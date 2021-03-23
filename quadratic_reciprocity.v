@@ -447,22 +447,16 @@ Section Quadratic_reciprocity.
       rectangle_finite, lower_subset.
   Qed.
 
-  Theorem Pretty_Picture_Lemma :
-    (sum_N (λ l, QR_ε_exp (p*l) q) 1 (# QR q) +
-     sum_N (λ l, QR_ε_exp (q*l) p) 1 (# QR p) = (# QR p) * (# QR q))%N.
-  Proof.
-    rewrite <-sum_lower_triangle, <-sum_upper_triangle, <-rectangle_card,
-    <-rectangle_union, finite_union_cardinality;
-      eauto using subsets_of_finites_are_finite, lower_subset, upper_subset,
-      rectangle_finite, disjoint_triangles.
-  Qed.
-
   Theorem quadratic_reciprocity :
     legendre_symbol (p mod q) * legendre_symbol (q mod p) =
-    (-(1))^((# QR p) * (# QR q)).
+    (-1)^((# QR p) * (# QR q)).
   Proof.
-    rewrite ? Gauss's_Lemma_a, <-(rings.pow_add_r ℤ), Pretty_Picture_Lemma;
-      auto using p_odd, q_ndiv_p, odd_prime_positive.
+    rewrite ? Gauss's_Lemma_a, <-(rings.pow_add_r ℤ), <-sum_lower_triangle,
+    <-sum_upper_triangle, <-rectangle_card, <-rectangle_union,
+    finite_union_cardinality;
+      eauto using p_odd, q_ndiv_p, odd_prime_positive, disjoint_triangles,
+      subsets_of_finites_are_finite, lower_subset, upper_subset,
+      rectangle_finite.
   Qed.
 
 End Quadratic_reciprocity.

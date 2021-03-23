@@ -127,6 +127,7 @@ Definition one := 1%N : Z.
 Infix "+" := add : Z_scope.
 Infix "*" := mul : Z_scope.
 Notation "- a" := (neg a) : Z_scope.
+Notation "- 1" := (neg one) : Z_scope.
 Notation "0" := zero : Z_scope.
 Notation "1" := one : Z_scope.
 Notation "2" := (1+1) : Z_scope.
@@ -828,7 +829,7 @@ Proof.
     * apply lt_0_le_1 in H3 as [H3 | H3]; simpl in *; auto.
       contradict H0.
       symmetry in H3.
-      replace d with (- (1)) by (rewrite <-H3; ring).
+      replace d with (- 1) by (rewrite <-H3; ring).
       eauto using (unit_sign_r ℤ), (one_unit ℤ) with Z.
     * apply div_sign_l_neg, div_le in H2 as [H2 | H2];
         eauto using lt_trans, zero_lt_1; simpl in *.
@@ -1079,11 +1080,11 @@ Proof.
     { intros d H H0.
       apply div_le in H0 as [H0 | H0].
       - apply lt_0_le_1 in H as [H | H].
-        + contradiction (lt_0_1 (d+-(1))).
-          * rewrite <-(A4 1), ? (A1 _ (-(1))).
+        + contradiction (lt_0_1 (d+-1)).
+          * rewrite <-(A4 1), ? (A1 _ (-1)).
             now apply O1.
           * rewrite <-(A3_r ℤ 1) at 2; simpl.
-            rewrite <-(A4 1), A2, ? (A1 _ (-(1))).
+            rewrite <-(A4 1), A2, ? (A1 _ (-1)).
             now apply O1.
         + subst.
           left.
@@ -1410,7 +1411,7 @@ Proof.
       * now rewrite <-(ordered_rings.lt_shift ℤ_order).
       * rewrite <-(integers.A3 1) at 2.
         rewrite (integers.A1 0), <-(integers.A4 1), integers.A2,
-        ? (integers.A1 _ (-(1))).
+        ? (integers.A1 _ (-1)).
         now apply (ordered_rings.O1 ℤ_order).
   - destruct H as [k H].
     subst.
@@ -1715,10 +1716,10 @@ Proof.
     destruct (gcd_l_0 0) as [H | H]; replace (-0) with 0 in * by ring; auto.
   - destruct (gcd_l_0 b) as [H | H]; rewrite H.
     + exists 0, 1; ring.
-    + exists 0, (-(1)); ring.
+    + exists 0, (-1); ring.
   - destruct (gcd_r_0 a) as [H0 | H0]; rewrite H0.
     + exists 1, 0; ring.
-    + exists (-(1)), 0; ring.
+    + exists (-1), 0; ring.
   - eapply gcd_rel_prime in H; eauto.
     apply Euclidean_algorithm in H as [x [y H]].
     rewrite gcd_sym in H.

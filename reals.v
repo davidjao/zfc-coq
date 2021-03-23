@@ -580,7 +580,7 @@ Proof.
       eapply Dedekind_cut_5.
       * replace z with (ζ : set) in *; eauto.
       * now rewrite <-IZQ_add.
-  - exists (k+(n+-(1)))%Z.
+  - exists (k+(n+-1))%Z.
     rewrite ? IZQ_add.
     split.
     + apply NNPP.
@@ -589,9 +589,9 @@ Proof.
       rewrite (le_not_gt ℤ_order) in H11; simpl in *.
       contradict H11.
       rewrite (ordered_rings.lt_shift ℤ_order); simpl.
-      replace (n+-(n+-(1)))%Z with 1%Z by ring.
+      replace (n+-(n+-1))%Z with 1%Z by ring.
       apply integers.zero_lt_1.
-    + replace (1) with (IZQ 1) by auto.
+    + replace 1 with (IZQ 1) by auto.
       now rewrite IZQ_add, <-? integers.A2, (integers.A1 _ 1), integers.A4,
       (A3_r ℤ).
 Qed.
@@ -689,6 +689,7 @@ Definition mul_pos_set (a b : R) :=
 
 Definition one : R := IQR 1.
 Notation "1" := one : R_scope.
+Notation "- 1" := (neg one) : R_scope.
 
 Theorem pos_nonempty : ∀ a, 0 < a → ∃ c : Q, (0 < c)%Q ∧ c ∈ a.
 Proof.
@@ -1224,17 +1225,17 @@ Proof.
       eauto using integers.lt_trans.
     + replace (m+(n+-m))%Z with n%Z by ring.
       eauto using Dedekind_cut_5.
-  - exists (m+(x+-(1)))%Z.
+  - exists (m+(x+-1))%Z.
     split.
     + apply NNPP.
       intros H9.
-      pose proof (lt_succ ℤ_order (x+-(1))%Z) as H10; simpl in *.
-      replace (x+-(1)+1)%Z with x in H10 by ring.
+      pose proof (lt_succ ℤ_order (x+-1)%Z) as H10; simpl in *.
+      replace (x+-1+1)%Z with x in H10 by ring.
       apply H8 in H9 as [H9 | H9]; simpl in *.
-      * contradiction (ordered_rings.lt_antisym ℤ_order x (x+-(1))%Z).
+      * contradiction (ordered_rings.lt_antisym ℤ_order x (x+-1)%Z).
       * contradiction (ordered_rings.lt_irrefl ℤ_order x).
         now rewrite H9 at 1.
-    + now replace (m + (x + - (1)) + 1)%Z with (m+x)%Z by ring.
+    + now replace (m + (x + - 1) + 1)%Z with (m+x)%Z by ring.
 Qed.
 
 Theorem M4_pos : ∀ a, 0 < a → a^-1 · a = 1.
@@ -1334,12 +1335,12 @@ Proof.
       * now apply (pow_pos ℚ_order).
       * rewrite <-inv_mul, <-? inv_pow, <-pow_mul_r, <-(pow_add_r ℚ);
           auto using (lt_neq ℚ_ring_order).
-        replace (-(n+2)*-(1)+-(1))%Z with (n+1)%Z by ring; auto.
+        replace (-(n+2)*-1+-1)%Z with (n+1)%Z by ring; auto.
     + unfold w in *.
       rewrite <-(pow_add_r ℚ); auto using (lt_neq ℚ_ring_order).
       left; simpl; fold pow.
-      replace (-(n+2)+n)%Z with (-(2))%Z by ring.
-      apply (O3 ℚ_ring_order (ξ * r^(-(2)))) in H6;
+      replace (-(n+2)+n)%Z with (-2%Z)%Z by ring.
+      apply (O3 ℚ_ring_order (ξ * r^(-2%Z))) in H6;
         try (apply O2; try apply (pow_pos ℚ_order); auto).
       rewrite <-M2, (M1 _ (ξ^-1)), ? M2, inv_l, M3 in H6;
         auto using (lt_neq ℚ_ring_order).

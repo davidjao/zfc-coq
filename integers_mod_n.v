@@ -1530,6 +1530,7 @@ Section Modular_arithmetic.
     Notation "0" := (rings.zero ℤ_p_x) : poly_scope.
     Notation "1" := (rings.one ℤ_p_x) : poly_scope.
     Notation "- a" := (rings.neg ℤ_p_x a) : poly_scope.
+    Notation "- 1" := (rings.neg ℤ_p_x 1) : poly_scope.
     Definition IRP := (IRP ℤ_ : Z_ → Z_p_x).
     Coercion IRP : Z_ >-> Z_p_x.
 
@@ -1552,7 +1553,7 @@ Section Modular_arithmetic.
 
     Theorem roots_QR : roots _ (x^(# QR) - 1)%poly = QR.
     Proof.
-      assert (QR ⊂ roots ℤ_ ((x ^ (# QR))%poly + (- (1))%poly)) as S.
+      assert (QR ⊂ roots ℤ_ (x ^ (# QR) + -1%poly)%poly) as S.
       { intros x H.
         apply Specify_classification; simpl Rset.
         pose proof H as H0.
@@ -1562,7 +1563,7 @@ Section Modular_arithmetic.
         split; auto.
         rewrite eval_add, eval_neg, IRP_1, eval_const, eval_x_to_n,
         Euler_Criterion_QR, A4; auto. }
-      assert ((x ^ (# QR) + - (1))%poly ≠ 0%poly) as N.
+      assert ((x ^ (# QR) + -1%poly)%poly ≠ 0%poly) as N.
       { apply nonzero_coefficients.
         exists 0%N.
         rewrite coefficient_add, coefficient_neg, coeffs_of_x_ne_n, IRP_1,
@@ -1573,7 +1574,7 @@ Section Modular_arithmetic.
         - contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
           rewrite size_of_QR, <-H.
           ring. }
-      assert (degree _ (x^(# QR) + (-(1)))%poly = # QR) as D.
+      assert (degree _ (x^(# QR) + -1%poly)%poly = # QR) as D.
       { apply naturals.le_antisymm.
         - rewrite <-max_0_r.
           eapply naturals.le_trans; eauto using (add_degree ℤ_).
@@ -1582,7 +1583,7 @@ Section Modular_arithmetic.
           f_equal.
           + apply degree_x_to_n; now destruct Z_mod_prime_is_ID.
           + apply const_classification.
-            exists (-(1)).
+            exists (-1%Zn).
             now rewrite IRP_1, IRP_neg.
         - apply finite_subsets in S;
             eauto using finite_roots, Z_mod_prime_is_ID,
@@ -1716,7 +1717,7 @@ Section Modular_arithmetic.
                                     (ℤ_ID prime_modulus))).
     Qed.
 
-    Theorem trinary_pow_neg_1_l : ∀ k, trinary_value ((-(1))^k)%Z.
+    Theorem trinary_pow_neg_1_l : ∀ k, trinary_value ((-1)^k)%Z.
     Proof.
       intros k.
       unfold trinary_value.
@@ -2160,7 +2161,7 @@ Section Modular_arithmetic.
 
     Lemma modified_Gauss_Lemma_helper :
       legendre_symbol (2*a)%Z =
-      ((-(1))^sum_N id 1 (#QR)*(-(1))^sum_N (λ l, QR_ε_exp (a*l) p) 1 (#QR))%Z.
+      ((-1)^sum_N id 1 (#QR)*(-1)^sum_N (λ l, QR_ε_exp (a*l) p) 1 (#QR))%Z.
     Proof.
       eapply odd_add in a_odd as [k H]; try apply p_odd; simpl in *.
       rewrite <-IZn_mul, <-(A3 (2*a)), A1, <-(mul_0_r ℤ_ (2 : Z_) : (2*0 = 0)),
@@ -2245,7 +2246,7 @@ Section Modular_arithmetic.
     Hypothesis p_ndiv_a : ¬ p｜a.
     Hypothesis a_positive : 0 < a.
 
-    Theorem Gauss's_Lemma_2 : legendre_symbol 2 = ((-(1))^sum_N id 1 (#QR))%Z.
+    Theorem Gauss's_Lemma_2 : (legendre_symbol 2 = (-1)^sum_N id 1 (#QR))%Z.
     Proof.
       rewrite <-(integers.M3 2), <-integers.M1.
       unfold integers.one at 3.
@@ -2255,9 +2256,9 @@ Section Modular_arithmetic.
            now rewrite (mul_0_r ℤ), integers.A3. }
       2: { destruct prime_modulus as [H H0].
            now contradict H. }
-      rewrite <-(integers.M3 ((- (1)) ^ sum_N id 1 (# QR)))%Z at 2.
+      rewrite <-(integers.M3 ((- 1) ^ sum_N id 1 (# QR)))%Z at 2.
       rewrite (integers.M1 1).
-      replace 1 with ((-(1))^0)%Z at 4 by now rewrite (rings.pow_0_r ℤ).
+      replace 1 with ((-1)^0)%Z at 4 by now rewrite (rings.pow_0_r ℤ).
       repeat f_equal.
       rewrite <-(iterated_ops.sum_of_0_a_b 1 (# QR)).
       apply iterate_extensionality.
@@ -2286,7 +2287,7 @@ Section Modular_arithmetic.
     Qed.
 
     Theorem Gauss's_Lemma_a :
-      legendre_symbol a = ((-(1))^sum_N (λ l, QR_ε_exp (a*l) p) 1 (#QR))%Z.
+      (legendre_symbol a = (-1)^sum_N (λ l, QR_ε_exp (a*l) p) 1 (#QR))%Z.
     Proof.
       apply modified_Gauss_Lemma_helper in a_positive as H; auto.
       rewrite <-IZn_mul, legendre_mult, Gauss's_Lemma_2 in H; auto.

@@ -25,6 +25,7 @@ Section Field_theorems.
   Infix "+" := (rings.add (ring Field)).
   Infix "*" := (rings.mul (ring Field)).
   Notation "- a" := (rings.neg (ring Field) a).
+  Notation "- 1" := (rings.neg (ring Field) 1).
   Notation "a '^-1' " := (inv Field a) (at level 30, format "a '^-1'").
 
   Definition inv_l := (M4 Field).
@@ -181,7 +182,7 @@ Section Field_theorems.
     now rewrite integer_powers.inv_r.
   Qed.
 
-  Theorem inv_pow : ∀ a, a ≠ 0 → a^(-(1)) = a^-1.
+  Theorem inv_pow : ∀ a, a ≠ 0 → a^(-1) = a^-1.
   Proof.
     intros a H.
     apply inv_unique; auto.
@@ -240,7 +241,7 @@ Section Field_theorems.
     apply eq_sym, pow_nonneg.
   Qed.
 
-  Theorem minus_one_nonzero : -(1) ≠ 0.
+  Theorem minus_one_nonzero : -1 ≠ 0.
   Proof.
     intros H.
     apply (f_equal (rings.neg (ring Field))) in H.

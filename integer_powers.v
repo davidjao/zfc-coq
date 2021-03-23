@@ -16,6 +16,7 @@ Section Integer_powers.
   Infix "*" := (rings.mul Ring) : Ring_scope.
   Infix "**" := (rings.pow Ring) (at level 35) : Ring_scope.
   Notation "- a" := (rings.neg Ring a) : Ring_scope.
+  Notation "- 1" := (rings.neg Ring 1) : Ring_scope.
 
   Add Ring generic_ring : (ringify Ring).
 
@@ -52,15 +53,15 @@ Section Integer_powers.
       apply one_unit.
   Qed.
 
-  Theorem inv_neg_1 : inv (-(1)) = -(1).
+  Theorem inv_neg_1 : inv (-1) = -1.
   Proof.
     unfold inv.
     destruct excluded_middle_informative.
     - destruct constructive_indefinite_description.
-      apply (f_equal (λ x, x * (-(1)))) in e.
+      apply (f_equal (λ x, x * (-1))) in e.
       now rewrite <-rings.M2, rings.mul_neg_neg, ? rings.M3_r, rings.M3 in e.
     - contradict n.
-      exists (-(1)).
+      exists (-1).
       now rewrite rings.mul_neg_neg, rings.M3.
   Qed.
 
@@ -217,7 +218,7 @@ Section Integer_powers.
       contradiction (lt_antisym ℤ_order 0%Z b).
   Qed.
 
-  Theorem inv_pow : ∀ a, rings.unit a → a^(-(1)) = inv a.
+  Theorem inv_pow : ∀ a, rings.unit a → a^(-1) = inv a.
   Proof.
     intros a H.
     now rewrite pow_neg, pow_1_r.

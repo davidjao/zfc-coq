@@ -33,6 +33,7 @@ Section Ring_theorems.
   Infix "+" := (add Ring) : Ring_scope.
   Infix "*" := (mul Ring) : Ring_scope.
   Notation "- a" := (neg Ring a) : Ring_scope.
+  Notation "- 1" := (neg Ring 1) : Ring_scope.
 
   Definition IRS (a : R) := elt_to_set a : set.
 
@@ -58,13 +59,13 @@ Section Ring_theorems.
     ring.
   Qed.
 
-  Theorem mul_neg_1_l : ∀ a, (-(1)) * a = -a.
+  Theorem mul_neg_1_l : ∀ a, (-1) * a = -a.
   Proof.
     intros a.
     ring.
   Qed.
 
-  Theorem mul_neg_1_r : ∀ a, a * (-(1)) = -a.
+  Theorem mul_neg_1_r : ∀ a, a * (-1) = -a.
   Proof.
     intros a.
     ring.
@@ -305,7 +306,7 @@ Section Ring_theorems.
     apply div_refl.
   Qed.
 
-  Theorem neg_one_unit : unit (-(1)).
+  Theorem neg_one_unit : unit (-1).
   Proof.
     apply unit_sign_r, one_unit.
   Qed.
@@ -970,7 +971,7 @@ Section Ring_theorems.
     - now rewrite <-lt_not_ge, prod_neg, sum_N_neg, pow_0_r in *.
   Qed.
 
-  Theorem pow_neg_1_l : ∀ n, (-(1))^n = 1 ∨ (-(1))^n = -(1).
+  Theorem pow_neg_1_l : ∀ n, (-1)^n = 1 ∨ (-1)^n = -1.
   Proof.
     induction n using Induction.
     - apply or_introl, pow_0_r.
