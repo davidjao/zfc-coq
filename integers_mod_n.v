@@ -838,7 +838,7 @@ Section Modular_arithmetic.
         + eapply FTA; eauto.
           rewrite INZ_mul.
           apply div_order; auto.
-          rewrite <-(M3 (a^(order b * order (a * b)))), M1,
+          rewrite <-(M3 (a^(order b * order (a * b))%N)), M1,
           <-(rings.pow_1_l ℤ_ _ : 1^(order (a * b)) = 1), <-(order_pow b),
           <-rings.pow_mul_r, <-(rings.pow_mul_l ℤ_ a b), mul_comm,
           rings.pow_mul_r, order_pow, rings.pow_1_l at 1; auto.
@@ -847,7 +847,7 @@ Section Modular_arithmetic.
           eapply FTA; eauto.
           rewrite INZ_mul.
           apply div_order; auto.
-          rewrite <-(M3 (b^(order a * order (a *b)))), M1,
+          rewrite <-(M3 (b^(order a * order (a *b))%N)), M1,
           <-(rings.pow_1_l ℤ_ _ : 1^(order (a * b )) = 1), <-(order_pow a),
           <-rings.pow_mul_r, <-(rings.pow_mul_l ℤ_ b a), M1, mul_comm,
           rings.pow_mul_r, order_pow, rings.pow_1_l at 1; auto.
@@ -940,42 +940,38 @@ Section Modular_arithmetic.
         try now (rewrite unit_classification in *;
                  try now apply unit_prod_closure).
       rewrite H10, H11, <-H14, <-H15 in H16.
-      destruct (le_trichotomy k l) as [H17 | H17].
-      - erewrite <-val_lcm_l; eauto using order_pos.
-        assert (order (b^y) = w) as H18.
-        { rewrite <-INZ_eq, <-pow_order, <-H13, <-H15, div_l_gcd; auto.
-          - rewrite div_div; auto using val_div, prime_power_nonzero.
-            now apply (pos_ne_0 ℤ_order), order_pos.
-          - rewrite H15.
-            apply INZ_le, zero_le.
-          - exists (p^l)%Z; simpl.
-            apply eq_sym, div_inv_l; auto using val_div. }
-        assert ((b^y)%Zn ∈ 𝐔_) as H19.
-        { rewrite unit_classification in *.
-          now apply unit_prod_closure. }
-        exists (b^y * c).
-        rewrite H16, H13, <-H18, mul_order, INZ_mul; auto.
-        + rewrite unit_classification in *.
-          split; auto; now apply unit_closure.
-        + rewrite <-H16, H18, <-H13.
-          apply val_lcm_l_rel_prime; auto using order_pos.
-      - erewrite <-val_lcm_r; eauto using order_pos.
-        assert (order (a^x) = z) as H18.
+      clear H k l.
+      wlog : a b w x y z H0 H1 H4 H5 H6 H7 H8 H10 H11 H12 H13 H14 H15 H16
+               / ((v p (order b) ≤ v p (order a)))%N.
+      - intros x0.
+        destruct (le_trichotomy (v p (order a)) (v p (order b))) as [H | H].
+        + pose proof H as H17.
+          eapply (x0 b a z y x w) in H17 as [d H17]; auto.
+          * exists d.
+            now rewrite lcm_sym.
+          * rewrite <-(rings.pow_1_r ℤ p), val_lower_bound in H4 |-*;
+              eauto using naturals.le_trans;
+              now apply (pos_ne_0 ℤ_order), order_pos.
+          * now rewrite lcm_sym.
+        + eapply (x0 a b w x y z) in H as [d H]; eauto.
+      - intros H.
+        erewrite <-val_lcm_r; eauto using order_pos.
+        assert (order (a^x) = z) as H17.
         { rewrite <-INZ_eq, <-pow_order, <-H12, <-H14, div_l_gcd; auto.
           - rewrite div_div; auto using val_div, prime_power_nonzero.
             now apply (pos_ne_0 ℤ_order), order_pos.
           - rewrite H14.
             apply INZ_le, zero_le.
-          - exists (p^k)%Z; simpl.
+          - exists (p^v p (order a))%Z; simpl.
             apply eq_sym, div_inv_l; auto using val_div. }
-        assert ((a^x)%Zn ∈ 𝐔_) as H19.
+        assert ((a^x)%Zn ∈ 𝐔_) as H18.
         { rewrite unit_classification in *.
           now apply unit_prod_closure. }
         exists (a^x * c).
-        rewrite H16, H12, <-H18, mul_order, INZ_mul; auto.
+        rewrite H16, H12, <-H17, mul_order, INZ_mul; auto.
         + rewrite unit_classification in *.
           split; auto; now apply unit_closure.
-        + rewrite <-H16, H18, <-H12.
+        + rewrite <-H16, H17, <-H12.
           apply val_lcm_r_rel_prime; auto using order_pos.
     Qed.
 
@@ -1363,7 +1359,7 @@ Section Modular_arithmetic.
           rewrite eval_add, eval_neg, eval_const, eval_x_to_n in H0;
             simpl in H0.
           apply unit_classification.
-          exists (ζ^(d-1)).
+          exists (ζ^(d-1)%N).
           rewrite <-(rings.pow_1_r ℤ_ ζ) at 2.
           rewrite <-(rings.pow_add_r ℤ_), add_comm, sub_abab,
           <-(rings.A3_r ℤ_ (ζ^d)); simpl; auto.
@@ -2193,7 +2189,7 @@ Section Modular_arithmetic.
       rewrite <-(rings.pow_add_r ℤ), <-sum_N_dist, (integers.M1 2), <-H.
       repeat f_equal.
       extensionality l.
-      unfold id, QR_ε_exp.
+      unfold QR_ε_exp.
       repeat destruct excluded_middle_informative;
         try (contradict n0; now apply odd_prime_positive);
         try (contradict n1; now apply odd_prime_positive).

@@ -611,7 +611,7 @@ Section Polynomial_theorems.
       rewrite sum_0.
       apply IPS_eq, power_series_extensionality.
       extensionality n.
-      fold (coefficient f n) (coefficient (coefficient f 0 * x ^ 0) n).
+      fold (coefficient f n) (coefficient (coefficient f 0 * x ^ 0%N) n).
       destruct (classic (n = 0%N)) as [H1 | H1].
       - subst.
         now rewrite const_coeff_mul, coeffs_of_x_to_n; ring_simplify.
@@ -854,7 +854,7 @@ Section Polynomial_theorems.
     unfold degree.
     destruct excluded_middle_informative.
     - contradict H.
-      replace 0 with (0%R * x^0) in e.
+      replace 0 with (0%R * x^0%N) in e.
       + rewrite <-(coeffs_of_x_to_n k), e, const_coeff_mul.
         now ring_simplify.
       + replace (0%R : poly) with 0 by now apply set_proj_injective.
@@ -1179,7 +1179,7 @@ Section Polynomial_theorems.
   Qed.
 
   Theorem generalized_binomial_theorem :
-    ∀ n k (α : R), coefficient ((α + x)^n) k = (binomial n k * α^(n-k))%R.
+    ∀ n k (α : R), coefficient ((α + x)^n) k = (binomial n k * α^(n-k)%N)%R.
   Proof.
     induction n using Induction; intros k α.
     { destruct (classic (k = 0%N)) as [H | H].
@@ -1238,7 +1238,7 @@ Section Polynomial_theorems.
   Qed.
 
   Theorem generalized_binomial_sum : ∀ n (α : R),
-      (α + x)^n = sum _ (λ k, binomial n k * α^(n-k) * x^k) 0 n.
+      (α + x)^n = sum _ (λ k, binomial n k * α^(n-k)%N * x^k) 0 n.
   Proof.
     intros n α.
     rewrite (polynomial_sum_lemma n ((α + x)^n)).

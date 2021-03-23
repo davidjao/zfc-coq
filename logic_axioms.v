@@ -1,5 +1,7 @@
 Require Export Utf8 IndefiniteDescription FunctionalExtensionality
-        PropExtensionality ChoiceFacts.
+        PropExtensionality ChoiceFacts ssrfun ssreflect.
+
+Global Unset SsrRewrite.
 
 (* See https://github.com/coq/coq/wiki/CoqAndAxioms for explanations. *)
 
@@ -38,3 +40,9 @@ Qed.
 
 Arguments exist {A P x}.
 Arguments constructive_indefinite_description {A P}.
+
+Notation "'If' P 'then' v1 'else' v2" :=
+  match (excluded_middle_informative P) with
+   | left _ => v1
+   | right _ => v2
+  end (at level 200, right associativity) : type_scope.

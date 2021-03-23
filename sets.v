@@ -195,7 +195,7 @@ Definition P : set → set.
 Proof.
   intros x.
   destruct (constructive_indefinite_description (Powerset x)) as [y].
-  exact {s in y | s ⊂ x}.
+  exact ({s in y | s ⊂ x}).
 Defined.
 
 Theorem Empty_set_is_subset : ∀ X, ∅ ⊂ X.
@@ -277,7 +277,7 @@ Definition pair : set → set → set.
 Proof.
   intros x y.
   destruct (constructive_indefinite_description (Pairing x y)) as [z].
-  exact {t in z | t = x ∨ t = y}.
+  exact ({t in z | t = x ∨ t = y}).
 Defined.
 
 Notation " { x , y } " := (pair x y) : set_scope.
@@ -287,7 +287,7 @@ Definition union : set → set.
 Proof.
   intros F.
   destruct (constructive_indefinite_description (Union F)) as [A].
-  exact {x in A | ∃ y, (x ∈ y ∧ y ∈ F)}.
+  exact ({x in A | ∃ y, (x ∈ y ∧ y ∈ F)}).
 Defined.
 
 Notation "⋃ x" := (union x) (at level 60) : set_scope.
@@ -323,7 +323,7 @@ Theorem Specify_type_classification :
 Proof.
   split; intros H;
     [ apply Specify_classification | apply Specify_classification in H ];
-    split; intuition; now rewrite ? (reify H1), ? (reify H0), ? despecify in *.
+  split; intuition; now rewrite -> ? (reify H1), ? (reify H0), ? despecify in *.
 Qed.
 
 Theorem Specify_type_subset : ∀ A P, {x of type A | P x} ⊂ A.
@@ -1226,9 +1226,6 @@ Section Function_evaluation.
 
 End Function_evaluation.
 
-Notation "f [ x ] " :=
-  ((lambdaify f) x) (at level 60, format "f [ x ]") : set_scope.
-
 Definition power X Y := {f in P (Y × X) | is_function f Y X}.
 
 Infix "^" := power : set_scope.
@@ -1256,9 +1253,9 @@ Proof.
       intuition; congruence.
 Qed.
 
-Definition injective f := ∀ x1 x2, f[x1] = f[x2] → x1 = x2.
+Definition injective f := ∀ x y, (lambdaify f) x = (lambdaify f) y → x = y.
 
-Definition surjective f := ∀ y, ∃ x, f[x] = y.
+Definition surjective f := ∀ y, ∃ x, (lambdaify f) x = y.
 
 Definition bijective f := injective f ∧ surjective f.
 

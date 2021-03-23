@@ -983,9 +983,8 @@ Section Combinations_orbit_stabilizer.
         eauto using naturals_are_finite, subsets_of_finites_are_finite,
         disjoint_intersection_complement, complement_subset. }
     pose proof H5 as [g [H6 [H7 [H8 H9]]]].
-    destruct (function_construction
-                n n (λ x, (if (excluded_middle_informative (x ∈ y)) then
-                             (f x) else (g x)))) as [h [H10 [H11 H12]]].
+    destruct (function_construction n n (λ x, If x ∈ y then f x else g x))
+      as [h [H10 [H11 H12]]].
     { intros a H10.
       destruct excluded_middle_informative.
       - apply nontriviality.
@@ -2233,8 +2232,7 @@ Proof.
   destruct (function_construction
               (set_of_combinations (n+1) k)
               (set_of_combinations n k ∪ set_of_combinations n (k-1))
-              (λ x, if (excluded_middle_informative (n ∈ x))
-                    then x \ {n,n} else x)) as [f [H0 [H1 H2]]].
+              (λ x, If n ∈ x then x \ {n,n} else x)) as [f [H0 [H1 H2]]].
   { intros a H0.
     apply Specify_classification in H0 as [H0 H1].
     apply Powerset_classification in H0.

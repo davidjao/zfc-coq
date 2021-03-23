@@ -171,8 +171,7 @@ Section Power_series_construction.
   Qed.
 
   Definition ISS (a : power_series) := elt_to_set a.
-  Definition IRS a := seriesify (λ n, if (excluded_middle_informative (n = 0%N))
-                                      then a else 0%ring).
+  Definition IRS a := seriesify (λ n, If n = 0%N then a else 0%ring).
 
   Definition zero := IRS 0.
   Definition one := IRS 1.
@@ -490,10 +489,8 @@ Section Power_series_construction.
   Proof.
     intros a b H.
     unfold IRS in H.
-    set (A := (λ n : N, if excluded_middle_informative
-                             (n = 0%N) then a else 0%ring)).
-    set (B := (λ n : N, if excluded_middle_informative
-                             (n = 0%N) then b else 0%ring)).
+    set (A := (λ n : N, If n = 0%N then a else 0%ring)).
+    set (B := (λ n : N, If n = 0%N then b else 0%ring)).
     assert (A = B).
     - unfold A, B.
       rewrite <-coefficient_seriesify.
@@ -556,8 +553,7 @@ Section Power_series_construction.
   Qed.
 
   Definition shift f :=
-    seriesify (λ n, if (excluded_middle_informative (n = 0%N))
-                    then 0%ring else (coefficient f (n - 1))).
+    seriesify (λ n, If n = 0%N then 0%ring else (coefficient f (n - 1))).
 
   Definition x := shift 1.
 
@@ -573,8 +569,7 @@ Section Power_series_construction.
     - rewrite sum_0, sub_0_l.
       destruct excluded_middle_informative; try tauto.
       now rewrite mul_0_l.
-    - assert (∀ z, (sum _ (λ k, if (excluded_middle_informative (k = 1%N))
-                                then z else 0%ring) 0 n) = z) as H.
+    - assert (∀ z, (sum _ (λ k, If k = 1%N then z else 0%ring) 0 n) = z) as H.
       { intros z.
         induction n using Induction.
         { rewrite sum_0.
@@ -638,8 +633,7 @@ Section Power_series_construction.
     intros n c f.
     unfold IRS, mul at 1.
     rewrite coefficient_seriesify.
-    assert (∀ r, sum _ (λ k, if (excluded_middle_informative (k = 0%N))
-                                 then r else 0%ring) 0 n = r) as H.
+    assert (∀ r, sum _ (λ k, If k = 0%N then r else 0%ring) 0 n = r) as H.
     { intros r.
       induction n using Induction.
       - rewrite sum_0.

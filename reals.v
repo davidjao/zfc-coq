@@ -1606,8 +1606,8 @@ Proof.
     + rewrite lt_neg_0 in *; auto using O2_pos.
     + rewrite R_mul_neg_pos, lt_neg_0, neg_neg in *; auto using O2_pos.
   - rewrite R_mul_neg_pos, R_mul_neg_neg, R_mul_pos_neg, R_mul_neg_neg, M2_pos;
-      auto; try (now rewrite lt_neg_0 in *);
-                 rewrite R_mul_neg_neg, lt_neg_0 in *; auto using O2_pos.
+      auto; try (now rewrite lt_neg_0 in * );
+        rewrite R_mul_neg_neg, lt_neg_0 in *; auto using O2_pos.
 Qed.
 
 Theorem M3 : ∀ a, 1 * a = a.

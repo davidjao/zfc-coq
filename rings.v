@@ -912,9 +912,8 @@ Section Ring_theorems.
     now ring_simplify in H0.
   Qed.
 
-  Theorem singleton_sum : ∀ m n a,
-      m ≤ n →
-      sum (λ k, if (excluded_middle_informative (k = m)) then a else 0) 0 n = a.
+  Theorem singleton_sum :
+    ∀ m n a, m ≤ n → sum (λ k, If k = m then a else 0) 0 n = a.
   Proof.
     intros m n a H.
     induction n using Induction.

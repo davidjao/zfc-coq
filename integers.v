@@ -1521,48 +1521,36 @@ Proof.
     now rewrite H0, (mul_0_r ℤ).
 Qed.
 
-Lemma gcd_pos_pos_exists : ∀ a b, 0 < a → 0 < b → ∃ d, gcd(a, b) = d.
-Proof.
-  induction a using strong_induction.
-  intros b H0 H1.
-  apply (division_algorithm b) in H0 as H2.
-  destruct H2 as [q [r [H2 [[H3 | H3] H4]]]]; simpl in *; subst.
-  - destruct (H r (conj H3 H4) a) as [d [H5 [H6 H7]]]; auto.
-    exists d.
-    repeat split; auto.
-    + apply div_add; try apply div_mul_r; auto.
-    + intros x H2 H8.
-      apply H7; auto.
-      replace r with ((a*q+r) + a*(-q)) by ring.
-      apply div_add; try apply div_mul_r; auto.
-  - exists a.
-    repeat split; try intros; try ring_simplify; auto using div_refl with Z.
-Qed.
-
-Lemma gcd_pos_exists : ∀ a b, 0 < a → ∃ d, gcd(a, b) = d.
-Proof.
-  intros a b H.
-  destruct (T 0 b) as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]]; subst.
-  - now apply gcd_pos_pos_exists.
-  - exists a.
-    repeat split; try tauto; auto using div_refl, div_0_r with Z.
-  - apply (lt_neg_0 ℤ_order) in H0; simpl in *.
-    apply (gcd_pos_pos_exists a) in H0 as [d H0]; eauto.
-    rewrite <-gcd_neg in H0.
-    eauto.
-Qed.
-
 Theorem gcd_exists : ∀ a b, ∃ d, gcd(a, b) = d.
 Proof.
   intros a b.
-  destruct (T 0 a) as [[H _] | [[_ [H _]] | [_ [_ H]]]]; subst.
-  - now apply gcd_pos_exists.
-  - exists b.
-    repeat split; try tauto; auto using div_refl, div_0_r with Z.
-  - apply (lt_neg_0 ℤ_order) in H; simpl in *.
-    apply (gcd_pos_exists (-a) b) in H as [d H]; eauto.
-    apply is_gcd_sym, gcd_neg, is_gcd_sym in H.
-    eauto.
+  wlog: a b / 0 < a ∧ 0 < b.
+  - intros x.
+    destruct (T 0 a) as [[H _] | [[_ [H _]] | [_ [_ H]]]], (T 0 b)
+        as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]]; subst; auto;
+      try (now (exists a; repeat split; auto using div_0_r with Z));
+      try (now (exists b; repeat split; auto using div_0_r with Z));
+      try (now (exists 0; repeat split; auto using div_0_r with Z));
+      rewrite (lt_neg_0 ℤ_order) in *; destruct (x _ _ (conj H H0)) as [d H1];
+        exists d.
+    + now rewrite gcd_neg.
+    + now apply is_gcd_sym; rewrite gcd_neg; apply is_gcd_sym.
+    + now rewrite gcd_neg; apply is_gcd_sym; rewrite gcd_neg; apply is_gcd_sym.
+  - revert b.
+    induction a using strong_induction.
+    intros b [H0 H1].
+    apply (division_algorithm b) in H0 as H2.
+    destruct H2 as [q [r [H2 [[H3 | H3] H4]]]]; simpl in *; subst.
+    + destruct (H r (conj H3 H4) a) as [d [H5 [H6 H7]]]; auto.
+      exists d.
+      repeat split; auto.
+      * apply div_add; try apply div_mul_r; auto.
+      * intros x H2 H8.
+        apply H7; auto.
+        replace r with ((a*q+r) + a*(-q)) by ring.
+        apply div_add; try apply div_mul_r; auto.
+    + exists a.
+      repeat split; try intros; try ring_simplify; auto using div_refl with Z.
 Qed.
 
 Theorem pos_gcd_exists : ∀ a b, ∃ d, 0 ≤ d ∧ gcd(a, b) = d.
@@ -2506,8 +2494,7 @@ Proof.
     rewrite H1, (M1 b), <-M2, div_inv_r; auto.
 Qed.
 
-Definition abs (a : Z) :=
-  if (excluded_middle_informative (0 ≤ a)) then a else (-a).
+Definition abs (a : Z) := If 0 ≤ a then a else (-a).
 
 Notation " '|' a '|' " := (abs a) (at level 30, format "'|' a '|'") : Z_scope.
 

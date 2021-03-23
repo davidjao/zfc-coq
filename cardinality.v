@@ -128,9 +128,7 @@ Proof.
   - pose proof H as H0.
     apply proper_subset_inhab in H0 as [z [H0 H1]].
     destruct (classic (n ∈ m)).
-    + destruct
-        (function_construction
-           m n (λ x, if (excluded_middle_informative (x = n)) then z else x))
+    + destruct (function_construction m n (λ x, If x = n then z else x))
         as [f [H3 [H4 H5]]].
       { intros a H3.
         destruct excluded_middle_informative.
@@ -181,9 +179,8 @@ Lemma equivalence_minus_element_singular : ∀ A x y,
 Proof.
   intros A x y H H0.
   destruct (classic (x = y)); subst; auto using cardinality_refl.
-  destruct (function_construction
-              (A \ {x,x}) (A \ {y,y})
-              (λ z, if (excluded_middle_informative (z = y)) then x else z))
+  destruct (function_construction (A \ {x,x}) (A \ {y,y})
+                                  (λ z, If z = y then x else z))
     as [f' [H2 [H3 H4]]].
   { intros a0 H2.
     destruct excluded_middle_informative; apply Complement_classification;
@@ -730,8 +727,7 @@ Proof.
     destruct IHn as [f [H [H0 [H1 H2]]]].
     destruct
       (function_construction
-         (S (m + n) \ m) (S n)
-         (λ x, if (excluded_middle_informative (x = m + n)) then n else (f x)))
+         (S (m + n) \ m) (S n) (λ x, If x = m + n then n else f x))
       as [f' [H3 [H4 H5]]].
     { intros a H3.
       destruct excluded_middle_informative.
@@ -817,8 +813,7 @@ Proof.
   pose proof H2 as [h [H11 [H12 [H13 H14]]]].
   destruct (function_construction
               (n + m) (E ∪ F)
-              (λ x, if (excluded_middle_informative (x ∈ n))
-                    then (f x) else (g (h x)))) as [f' [H15 [H16 H17]]].
+              (λ x, If x ∈ n then f x else g (h x))) as [f' [H15 [H16 H17]]].
   { intros a H15.
     destruct excluded_middle_informative;
       apply Pairwise_union_classification.
@@ -1937,7 +1932,7 @@ Section Powerset_powers.
         rewrite Powerset_classification.
         repeat split; intros z H0;
           try (apply Specify_classification in H0; tauto).
-        exists (if (excluded_middle_informative (z ∈ y)) then 1 else 0).
+        exists (If z ∈ y then 1 else 0).
         destruct excluded_middle_informative; split.
         - rewrite Specify_classification, proj1_eval, proj2_eval,
           Product_classification; repeat split; eauto.

@@ -385,8 +385,7 @@ Section Iterated_op_construction.
       intros H.
       contradiction (Empty_set_classification m).
     - destruct IHn as [g [H H0]].
-      exists (λ x, if (excluded_middle_informative (x = S n)%N)
-                   then ((g n) · (f n)) else g x).
+      exists (λ x, If x = S n then g n · f n else g x).
       split.
       { destruct excluded_middle_informative; auto.
         contradiction (PA4_ω n); eauto using elts_in_set.
