@@ -493,16 +493,13 @@ Qed.
 
 Theorem natural_cardinality_uniqueness : ∀ m n : N, m ~ n → m = n.
 Proof.
-  intros m n H.
-  apply NNPP.
-  intros H0.
-  destruct (lt_trichotomy m n) as [H1 | [H1 | H1]]; auto; rewrite lt_is_in in *.
-  - apply (proper_subsets_of_natural_numbers m n); repeat split; intuition.
-    + apply elements_of_naturals_are_subsets; eauto using elts_in_set.
-    + contradict H0; now apply set_proj_injective.
-  - apply (proper_subsets_of_natural_numbers n m); repeat split; intuition.
-    + apply elements_of_naturals_are_subsets; eauto using elts_in_set.
-    + contradict H0; now apply set_proj_injective.
+  move=> m n; wlog: m n / n < m.
+  - intros x H.
+    destruct (lt_trichotomy m n) as [H0 | [H0 | H0]];
+      auto using eq_sym, cardinality_sym.
+  - intros H0.
+    rewrite lt_is_subsetneq in H0.
+    now apply (proper_subsets_of_natural_numbers n m) in H0.
 Qed.
 
 Theorem finite_cardinality_uniqueness : ∀ S, finite S → exists ! n : N, S ~ n.
@@ -1153,41 +1150,25 @@ Proof.
     apply Specify_classification in H4 as [H4 _].
     rewrite Powerset_classification in *.
     apply Ordered_pair_iff in H5 as [H5 H6].
-    split; intros H7.
-    + pose proof H7 as H8.
-      apply H3, Product_classification in H8 as [y [x [H8 [H9 H10]]]].
-      apply Pairwise_union_classification in H8 as [H8 | H8].
-      * assert (z ∈ {x in v | proj1 (B ∪ C) A x ∈ B}) as H11.
-        { rewrite <-H5.
-          apply Specify_classification.
-          subst.
-          rewrite proj1_eval; auto.
-          apply Pairwise_union_classification; auto. }
+    move=> z; wlog: u v z H3 H4 H5 H6 / z ∈ u.
+    { split; intros H7; [ apply (x u v z) | apply (x v u z) ]; auto. }
+    split; intros H8; try tauto.
+    apply H3, Product_classification in H8 as [y [x [H8 [H9 H10]]]].
+    apply Pairwise_union_classification in H8 as [H8 | H8].
+    + assert (z ∈ {x in v | proj1 (B ∪ C) A x ∈ B}) as H11.
+      { rewrite <-H5.
+        apply Specify_classification.
+        subst.
+        rewrite proj1_eval; auto.
+        apply Pairwise_union_classification; auto. }
         apply Specify_classification in H11; tauto.
-      * assert (z ∈ {x in v | proj1 (B ∪ C) A x ∈ C}) as H11.
-        { rewrite <-H6.
-          apply Specify_classification.
-          subst.
-          rewrite proj1_eval; auto.
-          apply Pairwise_union_classification; auto. }
-        apply Specify_classification in H11; tauto.
-    + pose proof H7 as H8.
-      apply H4, Product_classification in H8 as [y [x [H8 [H9 H10]]]].
-      apply Pairwise_union_classification in H8 as [H8 | H8].
-      * assert (z ∈ {x in u | proj1 (B ∪ C) A x ∈ B}) as H11.
-        { rewrite H5.
-          apply Specify_classification.
-          subst.
-          rewrite proj1_eval; auto.
-          apply Pairwise_union_classification; auto. }
-        apply Specify_classification in H11; tauto.
-      * assert (z ∈ {x in u | proj1 (B ∪ C) A x ∈ C}) as H11.
-        { rewrite H6.
-          apply Specify_classification.
-          subst.
-          rewrite proj1_eval; auto.
-          apply Pairwise_union_classification; auto. }
-        apply Specify_classification in H11; tauto.
+    + assert (z ∈ {x in v | proj1 (B ∪ C) A x ∈ C}) as H11.
+      { rewrite <-H6.
+        apply Specify_classification.
+        subst.
+        rewrite proj1_eval; auto.
+        apply Pairwise_union_classification; auto. }
+      apply Specify_classification in H11; tauto.
   - rewrite Surjective_classification.
     intros y H3.
     rewrite H1, Product_classification in H3.
@@ -1200,50 +1181,42 @@ Proof.
       rewrite Powerset_classification.
       assert (u ∪ v ⊂ (B ∪ C) × A) as H10.
       { intros z H10.
-        apply Pairwise_union_classification in H10 as [H10 | H10].
-        + apply H6 in H10 as H11.
-           apply Product_classification in H11 as [b [a [H11 [H12 H13]]]].
-           apply Product_classification.
-           exists b, a.
-           repeat split; auto.
-           apply Pairwise_union_classification; auto.
-        + apply H8 in H10 as H11.
-           apply Product_classification in H11 as [b [a [H11 [H12 H13]]]].
-           apply Product_classification.
-           exists b, a.
-           repeat split; auto.
-           apply Pairwise_union_classification; auto. }
+        apply Pairwise_union_classification in H10.
+        clear H5 H f H0 H1 H2 Z y.
+        wlog: A B C u v z H3 H4 H6 H7 H8 H9 H10 / z ∈ u.
+        - intros x.
+          destruct H10; eauto.
+          rewrite Union_comm; eauto.
+        - clear H10; intros H.
+          apply H6 in H as H0.
+          apply Product_classification in H0 as [b [a [H0 [H1 H2]]]].
+          apply Product_classification.
+          exists b, a.
+          repeat split; auto.
+          apply Pairwise_union_classification; auto. }
       repeat split; auto.
       intros a H11.
-      apply Pairwise_union_classification in H11 as [H11 | H11].
-      - apply H7 in H11 as [z [[H11 H12] H13]].
+      apply Pairwise_union_classification in H11.
+      clear Z f H0 H1 H2 y H5.
+      wlog: A B C a u v H H3 H4 H6 H7 H8 H9 H10 H11 / a ∈ B.
+      - intros x.
+        destruct H11; eauto.
+        rewrite (Union_comm B C), (Union_comm u v), (Intersection_comm B C)
+          in *; eauto.
+      - clear H11; intros H0.
+        apply H7 in H0 as [z [[H0 H1] H2]].
         exists z.
         repeat split; auto.
         + apply Pairwise_union_classification; auto.
-        + intros x' [H14 H15].
-          apply H13.
-          apply Pairwise_union_classification in H15 as [H15 | H15];
+        + intros x' [H5 H11].
+          apply H2.
+          apply Pairwise_union_classification in H11 as [H11 | H11];
             try tauto.
           contradiction (Empty_set_classification a).
           rewrite <-H.
           apply Pairwise_intersection_classification.
-          apply H6, Product_classification in H12 as [c [d [H12 [H16 H17]]]].
-          apply H8, Product_classification in H15 as [e [g [H15 [H18 H19]]]].
-          rewrite Ordered_pair_iff in *.
-          intuition; subst; auto.
-      - apply H9 in H11 as [z [[H11 H12] H13]].
-        exists z.
-        repeat split; auto.
-        + apply Pairwise_union_classification; auto.
-        + intros x' [H14 H15].
-          apply H13.
-          apply Pairwise_union_classification in H15 as [H15 | H15];
-            try tauto.
-          contradiction (Empty_set_classification a).
-          rewrite <-H.
-          apply Pairwise_intersection_classification.
-          apply H8, Product_classification in H12 as [c [d [H12 [H16 H17]]]].
-          apply H6, Product_classification in H15 as [e [g [H15 [H18 H19]]]].
+          apply H6, Product_classification in H1 as [c [d [H1 [H12 H13]]]].
+          apply H8, Product_classification in H11 as [e [g [H11 [H14 H15]]]].
           rewrite Ordered_pair_iff in *.
           intuition; subst; auto. }
     repeat split; try congruence.
@@ -1408,8 +1381,11 @@ Proof.
     apply Specify_classification in H4 as [H4 [H11 H12]].
     apply Specify_classification in H10 as [H10 [H13 H14]].
     apply Extensionality.
-    split; intros H15.
-    + apply H11 in H15 as H16.
+    clear H2 H6 h H9 H7 H8 H H0.
+    move=> z; wlog: x y z H3 H4 H10 H11 H12 H13 H14 / z ∈ x.
+    + split; intros H; [ apply (x0 x y z) | apply (x0 y x z) ]; auto.
+    + intros H15; split; intros H; try tauto.
+      apply H11 in H15 as H16.
       apply Product_classification in H16 as [a [b [H16 [H17 H18]]]].
       subst.
       assert
@@ -1431,33 +1407,6 @@ Proof.
       rewrite H3 in H18.
       apply Specify_classification in H18 as [H18 [z [H19 [H20 H21]]]].
       apply H13 in H19 as H22.
-      apply Product_classification in H22 as [a' [b' [H22 [H23 H24]]]].
-      subst.
-      rewrite ? proj1_eval, ? proj2_eval in *; auto;
-        try now apply function_maps_domain_to_range.
-      apply H1 in H21; apply H5 in H20; subst; auto.
-    + apply H13 in H15 as H16.
-      apply Product_classification in H16 as [a [b [H16 [H17 H18]]]].
-      subst.
-      assert
-        ((g a, f b)
-           ∈ {z in range g × range f | ∃ x0 : set,
-                x0 ∈ y
-                ∧ g (proj1 (domain g) (domain f) x0) =
-                  proj1 (range g) (range f) z
-                ∧ f (proj2 (domain g) (domain f) x0) =
-                  proj2 (range g) (range f) z}) as H18.
-      { apply Specify_classification.
-        split.
-        - apply Product_classification.
-          exists (g a), (f b).
-          repeat split; auto; now apply function_maps_domain_to_range.
-        - exists (a, b).
-          rewrite ? proj1_eval, ? proj2_eval; auto;
-            now apply function_maps_domain_to_range. }
-      rewrite <-H3 in H18.
-      apply Specify_classification in H18 as [H18 [z [H19 [H20 H21]]]].
-      apply H11 in H19 as H22.
       apply Product_classification in H22 as [a' [b' [H22 [H23 H24]]]].
       subst.
       rewrite ? proj1_eval, ? proj2_eval in *; auto;

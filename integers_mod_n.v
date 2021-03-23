@@ -941,8 +941,8 @@ Section Modular_arithmetic.
                  try now apply unit_prod_closure).
       rewrite H10, H11, <-H14, <-H15 in H16.
       clear H k l.
-      wlog : a b w x y z H0 H1 H4 H5 H6 H7 H8 H10 H11 H12 H13 H14 H15 H16
-               / ((v p (order b) ≤ v p (order a)))%N.
+      wlog: a b w x y z H0 H1 H4 H5 H6 H7 H8 H10 H11 H12 H13 H14 H15 H16
+              / ((v p (order b) ≤ v p (order a)))%N.
       - intros x0.
         destruct (le_trichotomy (v p (order a)) (v p (order b))) as [H | H].
         + pose proof H as H17.

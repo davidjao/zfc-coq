@@ -342,6 +342,13 @@ Proof.
   - destruct H as [H | H]; apply i; intuition; congruence.
 Qed.
 
+Theorem Pairing_comm : ∀ x y, {x,y} = {y,x}.
+Proof.
+  intros x y.
+  apply Extensionality.
+  split; intros; rewrite Pairing_classification in *; tauto.
+Qed.
+
 Lemma Singleton_classification : ∀ x y, y ∈ {x,x} ↔ y = x.
 Proof.
   intros x y.
@@ -1910,15 +1917,14 @@ Proof.
   - exists x.
     apply Pairing_classification; auto.
   - contradict H2.
-    apply Pairing_classification in H1 as [H1 | H1].
+    apply Pairing_classification in H1.
+    wlog: x y H H0 H1 / z = x.
+    + intros x0.
+      destruct H1; [ | rewrite Pairing_comm ]; auto.
     + exists y.
       subst.
-      split; auto.
-      apply Pairing_classification; auto.
-    + exists x.
-      subst.
-      split; auto.
-      apply Pairing_classification; auto.
+      rewrite Pairing_classification.
+      tauto.
 Qed.
 
 Lemma disjoint_succ : ∀ s, s ∩ {s,s} = ∅.
@@ -2182,14 +2188,12 @@ Theorem domain_uniqueness : ∀ f A1 A2 B,
 Proof.
   intros f A1 A2 B [H H0] [H1 H2].
   apply Extensionality.
-  split; intros H3.
-  - apply H0 in H3 as [y [[H3 H4] H5]].
+  intros z.
+  wlog: f A1 A2 B H H0 H1 H2 / z ∈ A1.
+  - split; intros H3; [ apply (x f A1 A2 B) | apply (x f A2 A1 B) ]; auto.
+  - split; intros H4; try tauto; clear H4.
+    apply H0 in H3 as [y [[H3 H4] H5]].
     apply H1 in H4.
-    apply Specify_classification in H4 as [H4 [a [b [H6 [H7 H8]]]]].
-    apply Ordered_pair_iff in H8 as [H8 H9].
-    now subst.
-  - apply H2 in H3 as [y [[H3 H4] H5]].
-    apply H in H4.
     apply Specify_classification in H4 as [H4 [a [b [H6 [H7 H8]]]]].
     apply Ordered_pair_iff in H8 as [H8 H9].
     now subst.

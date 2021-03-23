@@ -269,11 +269,7 @@ Section Iterated_op_theorems.
     destruct H as [x H], H1 as [y H1]; subst.
     rewrite ? (add_comm a) in *.
     apply O1_le_iff in H0, H2.
-    erewrite <-iterate_swap_0.
-    instantiate (2 := x).
-    instantiate (1 := y).
-    2: { split; eauto using zero_le. }
-    2: { split; eauto using zero_le. }
+    erewrite <-(iterate_swap_0 _ _ x y); eauto using zero_le.
     apply iterate_extensionality.
     intros k H.
     unfold swap.
@@ -303,8 +299,7 @@ Section Iterated_op_theorems.
     { intros i j1 j2 H1 H2 H3 H4 H5.
       destruct (H0 i) as [k [[[H6 H7] H8] H9]]; auto.
       replace j1 with k; replace j2 with k; try (apply H9, split); auto. }
-    destruct (H (S n)) as [k [[H1 H2] H3]].
-    { split; auto using le_refl, zero_le. }
+    destruct (H (S n)) as [k [[H1 H2] H3]]; eauto using le_refl, zero_le.
     destruct (classic (k = S n)) as [H4 | H4]; subst.
     { rewrite ? iterate_succ; auto using zero_le.
       f_equal; auto.
