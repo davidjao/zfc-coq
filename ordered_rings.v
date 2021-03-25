@@ -54,6 +54,12 @@ Section Ordered_ring_theorems.
 
   Add Ring generic_ordered_ring : (ringify Ring).
 
+  Theorem trichotomy : ∀ a b, a < b ∨ a = b ∨ b < a.
+  Proof.
+    intros a b.
+    destruct (T a b); tauto.
+  Qed.
+
   Theorem O1_r : ∀ a b c, b < c → b + a < c + a.
   Proof.
     intros a b c H.
@@ -184,20 +190,16 @@ Section Ordered_ring_theorems.
   Proof.
     intros a b H.
     destruct (T (a*b) 0), (T a 0), (T b 0); intuition; subst;
-      try replace (a*0) with 0 in * by ring;
-      try replace (0*b) with 0 in * by ring;
-      try replace (0*0) with 0 in * by ring; auto;
-        exfalso; eauto using mul_neg_pos, mul_pos_neg.
+      rewrite ? mul_0_r, ? mul_0_l in *; auto; exfalso;
+        eauto using mul_neg_pos, mul_pos_neg.
   Qed.
 
   Theorem neg_mul : ∀ a b, a * b < 0 → (0 < a ∧ b < 0) ∨ (a < 0 ∧ 0 < b).
   Proof.
     intros a b H.
     destruct (T (a*b) 0), (T a 0), (T b 0); intuition; subst;
-      try replace (a*0) with 0 in * by ring;
-      try replace (0*b) with 0 in * by ring;
-      try replace (0*0) with 0 in * by ring; auto;
-        exfalso; eauto using mul_neg_neg, mul_pos_pos.
+      rewrite ? mul_0_r, ? mul_0_l in *; exfalso;
+        eauto using mul_neg_neg, mul_pos_pos.
   Qed.
 
   Theorem cancellation_0_mul : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
@@ -216,9 +218,8 @@ Section Ordered_ring_theorems.
       try tauto.
     - now contradiction (nontriviality OR).
     - apply (O1_r (-1)) in H1.
-      rewrite A4, A3 in H1.
-      eapply O2 in H1; eauto.
-      now replace 1 with (-1*-1) by ring.
+      rewrite A4, A3, <-(M3 _ 1), <-(rings.mul_neg_neg _ 1 1) in *.
+      apply mul_pos_pos; refine (@eq_rect _ _ _ _ _ _); eauto; ring.
   Qed.
 
   Lemma lt_succ : ∀ m, m < m + 1.
@@ -251,8 +252,7 @@ Section Ordered_ring_theorems.
     destruct (T b c) as [[H1 [_ _]] | [[_ [H1 _]] | [_ [_ H1]]]]; auto.
     - subst.
       now apply lt_irrefl in H0.
-    - apply (O3 a) in H1; auto.
-      now eapply lt_antisym in H0.
+    - now eapply (O3 a), lt_antisym in H1; auto.
   Qed.
 
   Theorem le_antisymm : ∀ a b, a ≤ b → b ≤ a → a = b.
@@ -263,8 +263,8 @@ Section Ordered_ring_theorems.
   Lemma square_ne0 : ∀ a, a ≠ 0 → a*a > 0.
   Proof.
     intros a H.
-    destruct (T a 0) as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]];
-      try now subst; auto using mul_pos_pos, mul_neg_neg.
+    destruct (T a 0) as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]]; subst;
+      now auto using mul_pos_pos, mul_neg_neg.
   Qed.
 
   Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
@@ -457,25 +457,21 @@ Section Ordered_ring_theorems.
     unfold min.
     destruct excluded_middle_informative.
     - now right.
-    - now rewrite <-le_not_gt in n.
+    - now apply le_not_gt.
   Qed.
 
   Theorem min_le_r : ∀ a b, min a b ≤ b.
   Proof.
     intros a b.
-    unfold min.
-    destruct excluded_middle_informative.
-    - now left.
-    - now right.
+    unfold min, le.
+    destruct excluded_middle_informative; intuition.
   Qed.
 
   Theorem min_eq : ∀ a b, min a b = a ∨ min a b = b.
   Proof.
     intros a b.
-    unfold min.
-    destruct excluded_middle_informative.
-    - now left.
-    - now right.
+    unfold min, le.
+    destruct excluded_middle_informative; intuition.
   Qed.
 
   Definition max : R → R → R.
@@ -489,10 +485,8 @@ Section Ordered_ring_theorems.
   Theorem max_le_l : ∀ a b, a ≤ max a b.
   Proof.
     intros a b.
-    unfold max.
-    destruct excluded_middle_informative.
-    - now left.
-    - now right.
+    unfold max, le.
+    destruct excluded_middle_informative; intuition.
   Qed.
 
   Theorem max_le_r : ∀ a b, b ≤ max a b.
@@ -501,16 +495,14 @@ Section Ordered_ring_theorems.
     unfold max.
     destruct excluded_middle_informative.
     - now right.
-    - now rewrite <-le_not_gt in n.
+    - now apply le_not_gt.
   Qed.
 
   Theorem max_eq : ∀ a b, max a b = a ∨ max a b = b.
   Proof.
     intros a b.
-    unfold max.
-    destruct excluded_middle_informative.
-    - now right.
-    - now left.
+    unfold max, le.
+    destruct excluded_middle_informative; intuition.
   Qed.
 
   Theorem lt_cross_add : ∀ a b c d, a < b → c < d → a + c < b + d.
@@ -567,9 +559,7 @@ Section Ordered_ring_theorems.
 
   Theorem lt_le_trans : ∀ a b c, a < b → b ≤ c → a < c.
   Proof.
-    intros a b c H [H0 | H0].
-    - eauto using lt_trans.
-    - subst; auto.
+    intros a b c H [H0 | H0]; subst; eauto using lt_trans.
   Qed.
 
   Theorem le_refl : ∀ a, a ≤ a.
@@ -580,27 +570,23 @@ Section Ordered_ring_theorems.
 
   Theorem mul_le_l_nonneg : ∀ a b c, 0 ≤ a → b ≤ c → a * b ≤ a * c.
   Proof.
-    intros a b c [H | H] H0.
-    - auto using mul_le_l.
-    - subst.
-      ring_simplify.
-      auto using le_refl.
+    intros a b c [H | H] H0; subst; auto using mul_le_l.
+    ring_simplify.
+    auto using le_refl.
   Qed.
 
   Theorem mul_le_r_nonneg : ∀ a b c, a ≤ b → 0 ≤ c → a * c ≤ b * c.
   Proof.
-    intros a b c H [H0 | H0].
-    - auto using mul_le_r.
-    - subst.
-      ring_simplify.
-      auto using le_refl.
+    intros a b c H [H0 | H0]; subst; auto using mul_le_r.
+    ring_simplify.
+    auto using le_refl.
   Qed.
 
   Theorem mul_nonneg_nonneg : ∀ a b, 0 ≤ a → 0 ≤ b → 0 ≤ a * b.
   Proof.
     intros a b H H0.
-    replace 0 with (a*0) by ring.
-    auto using mul_le_l_nonneg.
+    pattern 0.
+    refine (eq_rect _ _ _ _ _); try eapply mul_le_l_nonneg; eauto; ring.
   Qed.
 
   Theorem add_nonneg_nonneg : ∀ a b, 0 ≤ a → 0 ≤ b → 0 ≤ a + b.
@@ -627,10 +613,9 @@ Section Ordered_ring_theorems.
   Theorem pos_mul_nonneg : ∀ a b, 0 < a → 0 ≤ a * b → 0 ≤ b.
   Proof.
     intros a b H H0.
-    apply le_not_gt.
-    intros H1.
-    apply le_not_gt in H0.
-    now apply H0, mul_pos_neg.
+    rewrite le_not_gt in *.
+    contradict H0.
+    now apply mul_pos_neg.
   Qed.
 
   Theorem le_sym : ∀ a b, a ≤ b ∨ b ≤ a.

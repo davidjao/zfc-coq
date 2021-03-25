@@ -77,6 +77,18 @@ Section Ring_theorems.
     ring.
   Qed.
 
+  Theorem mul_neg_l : ∀ a b, (-a) * b = - (a * b).
+  Proof.
+    intros a b.
+    ring.
+  Qed.
+
+  Theorem mul_neg_r : ∀ a b, a * (-b) = - (a * b).
+  Proof.
+    intros a b.
+    ring.
+  Qed.
+
   Theorem neg_0 : 0 = -0.
   Proof.
     ring.

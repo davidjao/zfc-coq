@@ -90,22 +90,10 @@ Section Power_series_construction.
     - destruct a0.
       apply set_proj_injective.
       simpl.
-      destruct (functionify_construction (λ x, f x)) as [f' [H1 [H2 H3]]].
-      fold Rset in H2.
-      rewrite <-H3.
+      rewrite <-functionify_action.
       f_equal.
       apply function_record_injective; simpl; try congruence.
-      f_equal.
-      apply func_ext; rewrite ? sets.functionify_domain,
-                      ? sets.functionify_range; try congruence.
-      intros z H4.
-      replace z with ((exist H4 : elts ω) : set) by auto.
-      rewrite H3.
-      simpl.
-      unfold functionify.
-      destruct constructive_indefinite_description as [f''].
-      destruct a as [H5 [H6 H7]].
-      now rewrite <-H7.
+      now rewrite functionify_range.
   Qed.
 
   Theorem power_series_extensionality :
@@ -118,21 +106,11 @@ Section Power_series_construction.
     destruct a, a0.
     replace (elt_to_set f) with (graph (mkFunc i2)) by auto.
     replace (elt_to_set g) with (graph (mkFunc i4)) by auto.
-    set (f' := mkFunc i2) in *.
-    set (g' := mkFunc i4) in *.
     f_equal.
     apply func_ext; simpl; auto.
     intros n H0.
-    set (η := exist H0 : N).
-    replace n with (η : set) by auto.
-    set (f'' := (λ n : N, exist (function_maps_domain_to_range
-                                   f' n (elts_in_set n)) : R)).
-    set (g'' := (λ n : N, exist (function_maps_domain_to_range
-                                   g' n (elts_in_set n)) : R)).
-    fold f'' g'' in H.
-    replace (f' η : set) with (f'' η : set) by auto.
-    replace (g' η : set) with (g'' η : set) by auto.
-    congruence.
+    apply (f_equal (λ f: N → R, f (exist H0))) in H.
+    now inversion H.
   Qed.
 
   Definition add : power_series → power_series → power_series.
@@ -423,7 +401,7 @@ Section Power_series_construction.
     induction n using Induction.
     { rewrite sum_0.
       destruct excluded_middle_informative.
-      - now rewrite M1, M3.
+      - ring.
       - contradict n.
         now rewrite sub_0_r. }
     rewrite sum_succ; auto using zero_le.
@@ -439,7 +417,7 @@ Section Power_series_construction.
       destruct excluded_middle_informative.
       - rewrite sub_0_r in e.
         now contradiction (PA4 0).
-      - now rewrite mul_0_r. }
+      - ring. }
     rewrite <-IHn, sum_succ at 1; auto using zero_le.
     destruct excluded_middle_informative.
     { rewrite <-add_1_r, naturals.add_comm, sub_abba in e.
@@ -484,6 +462,8 @@ Section Power_series_construction.
   Definition power_series_ring :=
     mkRing _ zero one add mul neg add_0_l add_comm add_assoc mul_1_l mul_comm
            mul_assoc mul_distr_r add_opp_r.
+
+  Add Ring power_series_ring : (ringify power_series_ring).
 
   Theorem IRS_eq : ∀ a b, IRS a = IRS b → a = b.
   Proof.
