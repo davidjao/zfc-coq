@@ -32,11 +32,6 @@ Section Field_theorems.
 
   Infix "-" := (rings.sub (ring Field)).
 
-  Lemma sub_neg : ∀ a b, a - b = a + -b.
-  Proof.
-    auto.
-  Qed.
-
   Definition div a b := a * b^-1.
 
   Infix "/" := div.
@@ -64,10 +59,8 @@ Section Field_theorems.
   Proof.
     intros a b H.
     destruct (classic (a = 0)) as [H0 | H0]; try tauto.
-    assert (a^-1 * (a * b) = a^-1 * 0) by now rewrite H.
-    right.
-    rewrite rings.M2, M4, rings.M3 in H1; auto.
-    ring [H1].
+    apply (f_equal (rings.mul _ (a^-1))) in H.
+    rewrite rings.M2, M4, rings.M3, rings.mul_0_r in H; auto.
   Qed.
 
   Definition integral_domain_from_field :=
@@ -82,10 +75,9 @@ Section Field_theorems.
   Theorem inv_unique : ∀ a, (∀ b, a * b = 1 → b = a^-1).
   Proof.
     intros a b H.
-    destruct (classic (a = 0)).
-    - subst.
-      replace (0*b) with 0 in H by ring.
-      now contradiction (one_ne_0 Field).
+    destruct (classic (a = 0)) as [H0 | H0]; subst.
+    - contradiction (one_ne_0 Field).
+      now ring_simplify in H.
     - now field [H].
   Qed.
 
@@ -101,28 +93,20 @@ Section Field_theorems.
   Theorem inv_ne_0 : ∀ a, a ≠ 0 → a^-1 ≠ 0.
   Proof.
     intros a H H0.
-    pose proof (inv_r a H) as H1.
-    rewrite H0 in H1.
-    replace (a*0) with 0 in H1 by ring.
-    now contradiction (one_ne_0 Field).
+    contradiction (one_ne_0 Field).
+    now rewrite <-(inv_r a), H0, mul_0_r.
   Qed.
 
   Theorem inv_inv : ∀ a, a ≠ 0 → a^-1^-1 = a.
   Proof.
-    intros a H.
-    assert (a * a^-1 * a = a * a^-1 * a^-1^-1) as H0.
-    - field.
-      eauto using one_ne_0.
-    - field [H0].
-      eauto using one_ne_0.
+    auto using eq_sym, inv_unique, inv_l.
   Qed.
 
   Theorem unit_nonzero : ∀ a, rings.unit a ↔ a ≠ 0.
   Proof.
-    split; intros H.
-    - intros H0.
+    split.
+    - intros [x H] H0.
       subst.
-      destruct H as [x H].
       rewrite mul_0_r in H.
       contradiction (one_ne_0 Field).
     - exists (a^-1).
@@ -174,19 +158,17 @@ Section Field_theorems.
   Theorem pow_neg : ∀ a b, a ≠ 0 → a^(-b) = (a^-1)^b.
   Proof.
     intros a b H.
-    apply unit_nonzero in H.
+    apply unit_nonzero in H as H0.
     rewrite (pow_neg (ring Field)); auto.
     unfold pow, ring_from_field; simpl.
     f_equal.
-    apply inv_unique.
-    now rewrite integer_powers.inv_r.
+    now apply inv_ring_to_field.
   Qed.
 
   Theorem inv_pow : ∀ a, a ≠ 0 → a^(-1) = a^-1.
   Proof.
     intros a H.
-    apply inv_unique; auto.
-    now rewrite pow_neg, pow_1_r, M4_r.
+    now rewrite pow_neg, pow_1_r.
   Qed.
 
   Theorem pow_add_r : ∀ a b c, a ≠ 0 → a^(b+c) = a^b * a^c.
@@ -198,8 +180,7 @@ Section Field_theorems.
   Theorem pow_ne_0 : ∀ a b, a ≠ 0 → a^b ≠ 0.
   Proof.
     intros a b H.
-    rewrite <-unit_nonzero in *.
-    now apply unit_pow.
+    now apply unit_nonzero, unit_pow, unit_nonzero.
   Qed.
 
   Theorem pow_mul_l : ∀ a b c, a ≠ 0 → b ≠ 0 → (a*b)^c = a^c * b^c.
@@ -211,10 +192,9 @@ Section Field_theorems.
   Theorem neg_pow : ∀ a b, a ≠ 0 → a^(-b) = (a^b)^-1.
   Proof.
     intros a b H.
-    apply unit_nonzero in H.
+    apply unit_nonzero in H as H0.
     rewrite (neg_pow (ring Field)); auto.
-    apply inv_unique.
-    rewrite integer_powers.inv_r; auto using unit_pow.
+    now apply inv_ring_to_field, pow_ne_0.
   Qed.
 
   Theorem pow_mul_r : ∀ a b c, a ≠ 0 → a^(b*c) = (a^b)^c.

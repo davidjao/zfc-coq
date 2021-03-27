@@ -814,8 +814,7 @@ Section Polynomial_theorems.
         split; auto using PA4.
         rewrite add_succ_r.
         congruence.
-      + f_equal.
-        apply naturals.le_antisymm; auto.
+      + apply f_equal, naturals.le_antisymm; auto.
         rewrite naturals.le_not_gt, naturals.lt_def.
         contradict H0.
         destruct H0 as [c [H0 H1]].

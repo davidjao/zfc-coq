@@ -888,6 +888,13 @@ Proof.
   ring.
 Qed.
 
+Theorem lt_add : ∀ a b, 0 < a → 0 < b → 0 < a + b.
+Proof.
+  intros a b H H0.
+  rewrite <-(add_0_l b) in H0.
+  eauto using lt_trans, O1.
+Qed.
+
 Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
 Proof.
   intros a b H H0.
