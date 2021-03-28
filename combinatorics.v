@@ -2216,11 +2216,11 @@ Proof.
   intros n k H.
   apply binomial_coefficient in H.
   assert (k! * (n - k)! ≠ 0)%Z as H0.
-  apply (ne0_cancellation ℤ_ID); intro; eapply factorial_ne_0, INZ_eq; eauto.
-  rewrite H, <-? INZ_mul, <-integers.M2, inv_div, <-IZQ_mul; auto.
-  field_simplify; rewrite ? div_inv, ? inv_one; try ring.
-  contradict H0.
-  now apply IZQ_eq.
+  - apply (ne0_cancellation ℤ_ID); intro; eapply factorial_ne_0, INZ_eq; eauto.
+  - rewrite H, <-? INZ_mul, <-integers.M2, inv_div, <-IZQ_mul; auto.
+    field_simplify; rewrite ? div_inv, ? inv_one; try ring.
+    contradict H0.
+    now apply IZQ_eq.
 Qed.
 
 Theorem Pascal's_identity_bijection : ∀ n k,
