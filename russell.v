@@ -40,10 +40,9 @@ Section Russell's_paradox.
   (* Proof that universal set implies universal comprehension. *)
   Theorem US_implies_UC : ∀ P, ∃ x, ∀ y, y ∈ x ↔ P y.
   Proof.
-    intros P.
-    destruct Universal_set as [X H].
+    move: Universal_set => [X H] P.
     exists {x in X | P x}.
-    split; intros H0; rewrite Specify_classification in *; auto; tauto.
+    split; rewrite Specify_classification//; tauto.
   Qed.
 
 End Russell's_paradox.

@@ -40,7 +40,7 @@ Section Integer_powers.
   Theorem inv_r : ∀ a, rings.unit a → a * (inv a) = 1.
   Proof.
     intros a H.
-    now rewrite rings.M1, inv_l.
+    now rewrite rings.M1 inv_l.
   Qed.
 
   Theorem inv_1 : inv 1 = 1.
@@ -62,7 +62,7 @@ Section Integer_powers.
       now rewrite <-rings.M2, rings.mul_neg_neg, ? rings.M3_r, rings.M3 in e.
     - contradict n.
       exists (-1).
-      now rewrite rings.mul_neg_neg, rings.M3.
+      now rewrite rings.mul_neg_neg rings.M3.
   Qed.
 
   Theorem inv_inv : ∀ a, rings.unit a → inv (inv a) = a.
@@ -72,7 +72,7 @@ Section Integer_powers.
     repeat destruct excluded_middle_informative;
       repeat destruct constructive_indefinite_description; try tauto.
     - apply (f_equal (rings.mul _ x0)) in e.
-      now rewrite rings.M2, <-e0, rings.M3, rings.M3_r in e.
+      now rewrite -> rings.M2, <-e0, rings.M3, rings.M3_r in e.
     - contradict n.
       exists a.
       now rewrite rings.M1.
@@ -93,7 +93,7 @@ Section Integer_powers.
     repeat destruct excluded_middle_informative;
       repeat destruct constructive_indefinite_description; try tauto.
     - apply eq_sym, (f_equal (rings.mul _ x0)), (f_equal (rings.mul _ x1)) in e.
-      now rewrite rings.M1, <-? rings.M2, (rings.M1 _ b), <-e1, rings.M3_r,
+      now rewrite -> rings.M1, <-? rings.M2, (rings.M1 _ b), <-e1, rings.M3_r,
       rings.M1, <-rings.M2, (rings.M1 _ a), <-e0, ? rings.M3_r, rings.M1 in e.
     - contradict n.
       now apply unit_closure.
@@ -107,7 +107,7 @@ Section Integer_powers.
       destruct excluded_middle_informative; try tauto.
       destruct constructive_indefinite_description.
       apply (f_equal (rings.mul _ b)) in e.
-      now rewrite ? (rings.M1 _ b), <-rings.M2, H, rings.M3, rings.M3_r in e.
+      now rewrite -> ? (rings.M1 _ b), <-rings.M2, H, rings.M3, rings.M3_r in e.
     - contradiction H0.
       exists b.
       now rewrite rings.M1.
@@ -146,7 +146,7 @@ Section Integer_powers.
   Proof.
     intros a.
     unfold integers.zero.
-    now rewrite pow_nonneg, pow_0_r.
+    now rewrite pow_nonneg pow_0_r.
   Qed.
 
   Theorem pow_0_l : ∀ a : Z, a ≠ 0%Z → 0^a = 0.
@@ -155,10 +155,10 @@ Section Integer_powers.
     destruct (classic (0 ≤ a)) as [[H0 | H0] | H0]; try now subst.
     - apply lt_def in H0 as [c [H0 H1]].
       unfold integers.zero, not in H0.
-      rewrite INZ_eq in H0.
+      rewrite -> INZ_eq in H0.
       apply neq_sym, succ_0 in H0 as [m H0].
       subst.
-      rewrite integers.A3, pow_nonneg, pow_0_l; auto using neq_sym, PA4.
+      rewrite -> integers.A3, pow_nonneg, pow_0_l; auto using neq_sym, PA4.
     - unfold pow.
       repeat destruct excluded_middle_informative; try tauto.
       apply zero_ring_degeneracy.
@@ -170,7 +170,7 @@ Section Integer_powers.
   Proof.
     intros a.
     unfold integers.one.
-    now rewrite pow_nonneg, pow_1_r.
+    now rewrite pow_nonneg pow_1_r.
   Qed.
 
   Theorem pow_1_l : ∀ a, 1^a = 1.
@@ -182,7 +182,7 @@ Section Integer_powers.
       try destruct a0.
     - now rewrite pow_1_l.
     - destruct excluded_middle_informative.
-      + now rewrite inv_1, pow_1_l.
+      + now rewrite inv_1 pow_1_l.
       + contradict n0.
         apply one_unit.
   Qed.
@@ -193,7 +193,7 @@ Section Integer_powers.
     unfold pow.
     repeat destruct excluded_middle_informative;
       repeat destruct constructive_indefinite_description;
-      repeat destruct a0; repeat destruct a1; rewrite ? integers.A3 in *;
+      repeat destruct a0; repeat destruct a1; rewrite -> ? integers.A3 in *;
         subst; auto; simpl in *; try tauto.
     - rewrite <-(le_neg_0 ℤ_order) in l.
       replace x0 with 0%N in *; fold integers.zero in e.
@@ -207,7 +207,7 @@ Section Integer_powers.
       congruence.
     - contradict n0.
       now apply unit_inv.
-    - rewrite (neg_neg ℤ) in H1.
+    - rewrite -> (neg_neg ℤ) in H1.
       apply INZ_eq in H1.
       congruence.
     - apply lt_not_ge in n, n0.
@@ -221,7 +221,7 @@ Section Integer_powers.
   Theorem inv_pow : ∀ a, rings.unit a → a^(-1) = inv a.
   Proof.
     intros a H.
-    now rewrite pow_neg, pow_1_r.
+    now rewrite -> pow_neg, pow_1_r.
   Qed.
 
   Lemma pow_add_r_pos_pos :
@@ -229,7 +229,7 @@ Section Integer_powers.
   Proof.
     intros a b c H H0.
     apply le_def in H as [x H], H0 as [y H0].
-    now rewrite integers.A3, H, H0, INZ_add, ? pow_nonneg, pow_add_r in *.
+    now rewrite -> integers.A3, H, H0, INZ_add, ? pow_nonneg, pow_add_r in *.
   Qed.
 
   Theorem unit_pow : ∀ a b, rings.unit a → rings.unit (a^b).
@@ -250,12 +250,12 @@ Section Integer_powers.
     - apply le_def in H1 as [m H1].
       rewrite integers.A3 in H1.
       subst.
-      now rewrite ? pow_nonneg, pow_mul_l.
+      now rewrite ? pow_nonneg pow_mul_l.
     - apply lt_not_ge, lt_shift in H1; simpl in H1.
       rewrite integers.A3 in H1.
       apply lt_def in H1 as [m [H1 H2]].
       rewrite <-(neg_neg ℤ c); simpl.
-      rewrite H2, integers.A3, ? pow_neg, ? pow_nonneg, inv_mul, pow_mul_l;
+      rewrite -> H2, integers.A3, ? pow_neg, ? pow_nonneg, inv_mul, pow_mul_l;
         auto using unit_closure, unit_inv.
   Qed.
 
@@ -264,9 +264,9 @@ Section Integer_powers.
     intros a b H.
     destruct (classic (b = 0%Z)); try subst.
     - replace (-0)%Z with 0%Z by ring.
-      now rewrite pow_0_r, inv_1.
+      now rewrite pow_0_r inv_1.
     - apply inv_unique.
-      rewrite pow_neg, <-pow_mul_l, inv_r, pow_1_l; auto using unit_inv.
+      rewrite -> pow_neg, <-pow_mul_l, inv_r, pow_1_l; auto using unit_inv.
   Qed.
 
   Theorem pow_mul_r_pos : ∀ a b c, rings.unit a → (0 ≤ c)%Z → a^(b*c) = (a^b)^c.
@@ -275,18 +275,18 @@ Section Integer_powers.
     unfold pow at 2.
     repeat destruct excluded_middle_informative;
       repeat destruct constructive_indefinite_description; try destruct a0;
-        try tauto; try rewrite integers.A3 in *; simpl in *; subst;
+        try tauto; try rewrite -> integers.A3 in *; simpl in *; subst;
           try (contradict n; now left).
     destruct (classic (0 ≤ b)) as [H1 | H1].
     - apply le_def in H1 as [d H1].
-      rewrite integers.A3 in *.
+      rewrite -> integers.A3 in *.
       subst.
-      now rewrite INZ_mul, ? pow_nonneg, pow_mul_r.
+      now rewrite INZ_mul ? pow_nonneg pow_mul_r.
     - replace b with (--b)%Z by ring.
       replace (--b*x)%Z with (-((-b)*x))%Z by ring.
       apply lt_not_ge, lt_neg_0, lt_def in H1 as [c [H1 H2]]; simpl in *.
-      rewrite integers.A3 in *.
-      rewrite H2, ? pow_neg, INZ_mul, ? pow_nonneg, pow_mul_r; auto.
+      rewrite -> integers.A3 in *.
+      rewrite -> H2, ? pow_neg, INZ_mul, ? pow_nonneg, pow_mul_r; auto.
   Qed.
 
   Theorem pow_mul_r : ∀ a b c, rings.unit a → a^(b*c) = (a^b)^c.
@@ -297,8 +297,8 @@ Section Integer_powers.
     - replace c with (--c)%Z by ring.
       replace (b*--c)%Z with (-(b*(-c)))%Z by ring.
       apply lt_not_ge, lt_neg_0, lt_def in H0 as [d [H0 H1]]; simpl in *.
-      rewrite integers.A3 in *.
-      rewrite H1, pow_neg, pow_mul_r_pos, pow_neg, <-neg_pow, pow_neg;
+      rewrite -> integers.A3 in *.
+      rewrite -> H1, pow_neg, pow_mul_r_pos, pow_neg, <-neg_pow, pow_neg;
         auto using unit_inv, unit_pow.
       apply INZ_le, zero_le.
   Qed.
@@ -307,13 +307,14 @@ Section Integer_powers.
       rings.unit a → rings.unit b → (a*(inv b))^c = a^c * inv (b^c).
   Proof.
     intros a b c H H0.
-    rewrite pow_mul_l, <-neg_pow, pow_neg; auto using unit_inv.
+    rewrite -> pow_mul_l, <-neg_pow, pow_neg; auto using unit_inv.
   Qed.
 
   Lemma pow_add_r_opp : ∀ a b, rings.unit a → a^b * a^(-b) = 1.
   Proof.
     intros a b H.
-    rewrite pow_neg, <-pow_mul_l, inv_r, pow_1_l; auto using unit_pow, unit_inv.
+    rewrite -> pow_neg, <-pow_mul_l, inv_r, pow_1_l;
+      auto using unit_pow, unit_inv.
   Qed.
 
   Lemma pow_add_r_pos_neg :
@@ -324,20 +325,20 @@ Section Integer_powers.
     rings.M1; auto; f_equal.
     apply (le_neg_0 ℤ_order) in H1; simpl in *.
     apply le_def in H0 as [x H0], H1 as [y H1].
-    rewrite integers.A3, H0, H1, ? pow_nonneg, <-H0 in *.
+    rewrite -> integers.A3, H0, H1, ? pow_nonneg, <-H0 in *.
     destruct (classic (0 ≤ b+c)) as [H2 | H2].
     - apply le_def in H2 as [z H2].
-      rewrite integers.A3, H2, ? pow_nonneg, <-pow_add_r in *.
+      rewrite -> integers.A3, H2, ? pow_nonneg, <-pow_add_r in *.
       apply f_equal, INZ_eq.
       rewrite <-INZ_add, <-H1, <-H2, H0; ring.
     - apply lt_not_ge, lt_neg_0 in H2; simpl in *.
       replace (b+c)%Z with (-(-(b+c)))%Z by ring.
       apply lt_def in H2 as [z [H2 H3]].
-      rewrite integers.A3, H3, pow_neg in *; auto.
+      rewrite -> integers.A3, H3, pow_neg in *; auto.
       rewrite <-(M3_r _ (a**x)), <-(pow_1_l z), <-(inv_r a), pow_div_distr,
       rings.M2; auto; f_equal.
       2: { now rewrite <-pow_neg, neg_pow. }
-      rewrite pow_nonneg, <-pow_add_r.
+      rewrite pow_nonneg -pow_add_r.
       apply f_equal, INZ_eq.
       rewrite <-INZ_add, <-H0, <-H1, <-H3; ring.
   Qed.
@@ -351,7 +352,7 @@ Section Integer_powers.
       apply le_not_gt.
       contradict H1.
       now left.
-    - rewrite integers.A1, rings.M1.
+    - rewrite integers.A1 rings.M1.
       apply pow_add_r_pos_neg; auto.
       apply le_not_gt.
       contradict H0.

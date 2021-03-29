@@ -76,7 +76,7 @@ Section orbit_stabilizer_cardinality_theorem.
         repeat split; auto using function_maps_domain_to_image.
         rewrite <-e1.
         apply function_maps_domain_to_range.
-        rewrite e0.
+        rewrite -> e0.
         unfold inverse_image_of_element.
         now apply Specify_classification.
       - contradict n.
@@ -85,34 +85,34 @@ Section orbit_stabilizer_cardinality_theorem.
     repeat split; auto.
     - apply Injective_classification.
       intros u v H2 H3 H4.
-      rewrite H in H2, H3.
-      rewrite ? H1 in H4; auto.
+      rewrite -> H in H2, H3.
+      rewrite -> ? H1 in H4; auto.
       apply Ordered_pair_iff in H4 as [H4 H5].
-      rewrite H4 in H5.
+      rewrite -> H4 in H5.
       unfold oschf in H5.
       destruct excluded_middle_informative;
         try (contradict n; auto using function_maps_domain_to_image).
       destruct constructive_indefinite_description as [h].
       repeat destruct a.
       destruct b.
-      rewrite Injective_classification in H6.
-      apply H6 in H5; auto; rewrite e0; unfold inverse_image_of_element;
+      rewrite -> Injective_classification in H6.
+      apply H6 in H5; auto; rewrite -> e0; unfold inverse_image_of_element;
           now apply Specify_classification.
-    - rewrite Surjective_classification.
+    - rewrite -> Surjective_classification.
       intros y H2.
-      rewrite H0 in H2.
+      rewrite -> H0 in H2.
       apply Product_classification in H2 as [a [b [H2 [H3 H4]]]].
       subst.
       pose proof oschf_bijective (inverse_image_of_element f a) (Y_inv a H2)
         as [H4 H5].
-      rewrite Surjective_classification in H5.
+      rewrite -> Surjective_classification in H5.
       destruct (H5 b) as [z [H6 H7]].
-      { rewrite oschf_range; auto. }
-      rewrite oschf_domain in H6; auto.
+      { rewrite -> oschf_range; auto. }
+      rewrite -> oschf_domain in H6; auto.
       apply Specify_classification in H6.
       exists z.
       split; intuition; try congruence.
-      rewrite H1; congruence.
+      rewrite -> H1; congruence.
   Qed.
 
 End orbit_stabilizer_cardinality_theorem.
@@ -204,7 +204,7 @@ Section permutation_succ_helper_functions.
     repeat destruct a1.
     rewrite <-e1.
     apply function_maps_domain_to_range.
-    rewrite e0, <-lt_is_in.
+    rewrite -> e0, <-lt_is_in.
     apply naturals.succ_lt.
   Qed.
 
@@ -235,7 +235,7 @@ Section permutation_succ_helper_functions.
   Definition n_in_Sn : elts (S n).
   Proof.
     pose proof naturals.succ_lt n.
-    rewrite lt_is_in in H.
+    rewrite -> lt_is_in in H.
     exact (exist H).
   Defined.
 
@@ -247,7 +247,7 @@ Section permutation_succ_helper_functions.
     unfold permutation_succ_proj.
     destruct constructive_indefinite_description as [f].
     destruct a as [H [H0 H1]].
-    rewrite H1; auto using elts_in_set.
+    rewrite -> H1; auto using elts_in_set.
     unfold permutation_succ_helper.
     destruct excluded_middle_informative.
     - destruct Specify_classification, a, constructive_indefinite_description
@@ -272,7 +272,7 @@ Section permutation_succ_helper_functions.
     intros [f F].
     unfold inverse_image_of_element in F.
     apply Specify_classification in F as [F F0].
-    rewrite psp_domain in F.
+    rewrite -> psp_domain in F.
     exact (exist F).
   Defined.
 
@@ -296,13 +296,13 @@ Section permutation_succ_helper_functions.
     destruct a1 as [H [H0 [H1 H2]]].
     apply Specify_classification in i0 as [H3 H4]; auto.
     clear i a i1 i2 a0 i3 e0.
-    rewrite psp_domain in H3.
+    rewrite -> psp_domain in H3.
     set (ξ := exist H3 : elts (bijection_set (S n) (S n))).
     replace x with (ξ : set) in * by auto.
     rewrite <-e, psp_action.
     f_equal.
     apply function_record_injective;
-      now rewrite ? functionify_domain, ? functionify_range,
+      now rewrite -> ? functionify_domain, ? functionify_range,
       ? functionify_graph; congruence.
   Qed.
 
@@ -315,23 +315,23 @@ Section permutation_succ_helper_functions.
     split.
     - rewrite <-(functionify_range (S n) (S n) (inverse_image_incl f)).
       apply function_maps_domain_to_range.
-      rewrite functionify_domain, <-S_is_succ.
+      rewrite -> functionify_domain, <-S_is_succ.
       apply Pairwise_union_classification.
       left.
       auto using elts_in_set.
-    - rewrite Singleton_classification, <-(inverse_image_classification f).
+    - rewrite -> Singleton_classification, <-(inverse_image_classification f).
       intros H.
       pose proof (functionify_bijective _ _ (inverse_image_incl f)) as [H0 H1].
-      rewrite Injective_classification in H0.
+      rewrite -> Injective_classification in H0.
       apply H0 in H.
       + contradiction (no_quines n).
         rewrite <-H at 1.
         auto using elts_in_set.
-      + rewrite functionify_domain, <-S_is_succ.
+      + rewrite -> functionify_domain, <-S_is_succ.
         apply Pairwise_union_classification.
         left.
         auto using elts_in_set.
-      + rewrite functionify_domain, <-lt_is_in.
+      + rewrite -> functionify_domain, <-lt_is_in.
         apply naturals.succ_lt.
   Qed.
 
@@ -357,31 +357,31 @@ Section permutation_succ_helper_functions.
   Proof.
     intros f.
     split.
-    - rewrite Injective_classification.
+    - rewrite -> Injective_classification.
       intros x1 x2 H H0 H1.
       unfold sets.functionify in *.
       destruct constructive_indefinite_description as [f'].
       destruct a as [H2 [H3 H4]].
-      rewrite H2 in H, H0.
+      rewrite -> H2 in H, H0.
       set (ξ1 := (exist H : elts n)).
       set (ξ2 := (exist H0 : elts n)).
       replace x1 with (ξ1 : set) in * by auto.
       replace x2 with (ξ2 : set) in * by auto.
-      rewrite ? H4, ? pslh_action in H1.
+      rewrite -> ? H4, ? pslh_action in H1.
       pose proof functionify_bijective _ _ (inverse_image_incl f) as [H5 H6].
-      rewrite Injective_classification in H5.
-      apply H5; auto; rewrite functionify_domain, <-S_is_succ;
+      rewrite -> Injective_classification in H5.
+      apply H5; auto; rewrite -> functionify_domain, <-S_is_succ;
         apply Pairwise_union_classification; left; auto using elts_in_set.
     - apply Surjective_classification.
       intros z H.
       unfold sets.functionify in *.
       destruct constructive_indefinite_description as [f'].
       destruct a as [H0 [H1 H2]].
-      rewrite H1 in H.
+      rewrite -> H1 in H.
       apply Complement_classification in H as [H H3].
-      rewrite Singleton_classification in H3.
+      rewrite -> Singleton_classification in H3.
       pose proof functionify_bijective _ _ (inverse_image_incl f) as [H4 H5].
-      rewrite Surjective_classification, functionify_range,
+      rewrite -> Surjective_classification, functionify_range,
       functionify_domain in H5.
       pose proof H as H6.
       apply H5 in H6 as [x [H6 H7]].
@@ -390,11 +390,11 @@ Section permutation_succ_helper_functions.
       { rewrite <-S_is_succ in H6.
         apply Pairwise_union_classification in H6 as [H6 | H6]; auto.
         apply Singleton_classification in H6; subst.
-        now rewrite inverse_image_classification in H3. }
+        now rewrite -> inverse_image_classification in H3. }
       split; try congruence.
       set (ξ := (exist H8 : elts n)).
       replace x with (ξ : set) by auto.
-      now rewrite H2, <-pslh_action.
+      now rewrite -> H2, <-pslh_action.
   Qed.
 
   Theorem permutation_succ_left_construction : ∀ f,
@@ -441,7 +441,7 @@ Section permutation_succ_helper_functions.
     - assert ((functionify _ _ f) x ∈ S n \ {y, y}).
       { rewrite <-(functionify_range _ _ f).
         apply function_maps_domain_to_range.
-        rewrite functionify_domain.
+        rewrite -> functionify_domain.
         pose proof elts_in_set x as H.
         simpl in *.
         rewrite <-S_is_succ in H.
@@ -468,14 +468,14 @@ Section permutation_succ_helper_functions.
     destruct constructive_indefinite_description as [f'].
     destruct a as [H [H0 H1]].
     split.
-    - rewrite Injective_classification.
+    - rewrite -> Injective_classification.
       intros x1 x2 H2 H3 H4.
-      rewrite H in H2, H3.
+      rewrite -> H in H2, H3.
       set (ξ1 := exist H2 : elts (S n)).
       set (ξ2 := exist H3 : elts (S n)).
       replace x1 with (ξ1 : set) in * by auto.
       replace x2 with (ξ2 : set) in * by auto.
-      rewrite ? H1 in H4.
+      rewrite -> ? H1 in H4.
       unfold permutation_succ_right_helper in H4.
       repeat destruct excluded_middle_informative; simpl in *; try congruence;
         try (destruct Complement_classification, a;
@@ -484,51 +484,51 @@ Section permutation_succ_helper_functions.
       destruct a, a0.
       simpl in *.
       pose proof (functionify_bijective _ _ f) as [H5 H6].
-      rewrite Injective_classification in H5.
+      rewrite -> Injective_classification in H5.
       clear ξ1 ξ2.
-      apply H5; auto; rewrite functionify_domain.
+      apply H5; auto; rewrite -> functionify_domain.
       + rewrite <-S_is_succ in H2.
         apply Pairwise_union_classification in H2 as [H2 | H2]; auto.
-        now rewrite Singleton_classification in H2.
+        now rewrite -> Singleton_classification in H2.
       + rewrite <-S_is_succ in H3.
         apply Pairwise_union_classification in H3 as [H3 | H3]; auto.
-        now rewrite Singleton_classification in H3.
-    - rewrite Surjective_classification.
+        now rewrite -> Singleton_classification in H3.
+    - rewrite -> Surjective_classification.
       intros z H2.
-      rewrite H0 in H2.
+      rewrite -> H0 in H2.
       set (ζ := exist H2 : elts (S n)).
       replace z with (ζ : set) in * by auto.
       destruct (classic (ζ = y)).
       + exists n.
         split.
-        * rewrite H, <-S_is_succ.
+        * rewrite -> H, <-S_is_succ.
           apply Pairwise_union_classification.
-          rewrite Singleton_classification; tauto.
+          rewrite -> Singleton_classification; tauto.
         * replace (n : set) with (n_in_Sn : set) by auto.
-          rewrite H1, psrh_n.
+          rewrite -> H1, psrh_n.
           congruence.
       + pose proof (functionify_bijective _ _ f) as [H4 H5].
-        rewrite Surjective_classification, functionify_range,
+        rewrite -> Surjective_classification, functionify_range,
         functionify_domain in H5.
         assert (z ∈ S n \ {y, y}).
-        { rewrite Complement_classification, Singleton_classification.
+        { rewrite -> Complement_classification, Singleton_classification.
           split; auto.
           contradict H3.
           now apply set_proj_injective. }
         apply H5 in H6 as [x [H6 H7]].
         exists x.
         split.
-        * rewrite H, <-S_is_succ.
+        * rewrite -> H, <-S_is_succ.
           apply Pairwise_union_classification; tauto.
         * assert (x ∈ S n).
           { rewrite <-S_is_succ.
             apply Pairwise_union_classification; tauto. }
           set (ξ := exist H8 : elts (S n)).
           replace x with (ξ : set) in * by auto.
-          rewrite H1.
+          rewrite -> H1.
           unfold permutation_succ_right_helper.
           destruct excluded_middle_informative.
-          -- rewrite e in H6.
+          -- rewrite -> e in H6.
              contradiction (no_quines n).
           -- destruct Complement_classification, a.
              now simpl in *.
@@ -568,11 +568,11 @@ Section permutation_succ_helper_functions.
     - unfold permutation_succ_proj.
       destruct constructive_indefinite_description.
       destruct a as [H0 [H1 H2]].
-      rewrite H0; auto.
+      rewrite -> H0; auto.
     - set (γ := exist H : elts (bijection_set (S n) (S n))).
       replace (graph (sets.functionify (permutation_succ_right_helper f)))
         with (γ : set) in * by auto.
-      rewrite psp_action.
+      rewrite -> psp_action.
       unfold functionify, γ.
       destruct Specify_classification, a, constructive_indefinite_description
         as [f'].
@@ -584,8 +584,8 @@ Section permutation_succ_helper_functions.
         destruct constructive_indefinite_description as [f''].
         destruct a as [H4 [H5 H6]].
         replace (n : set) with (n_in_Sn : set) by auto.
-        now rewrite H6, psrh_n.
-      + now rewrite sets.functionify_range.
+        now rewrite -> H6, psrh_n.
+      + now rewrite -> sets.functionify_range.
   Qed.
 
   Definition permutation_succ_right :
@@ -605,7 +605,7 @@ Proof.
   rewrite <-psp_domain, <-psp_range.
   apply orbit_stabilizer_cardinality.
   intros y H.
-  rewrite psp_range in H.
+  rewrite -> psp_range in H.
   replace (n : set) with (S n \ {n,n}) at 2.
   2: { rewrite <-S_is_succ.
        apply complement_disjoint_union, disjoint_succ. }
@@ -623,34 +623,34 @@ Proof.
     { pose proof func_hyp (sets.functionify
                              (permutation_succ_right_helper
                                 _ _ (permutation_succ_left _ γ a))).
-      now rewrite @sets.functionify_domain, @sets.functionify_range in *. }
+      now rewrite -> @sets.functionify_domain, @sets.functionify_range in *. }
     { pose proof elts_in_set a.
       simpl in *.
       apply Inverse_image_subset in H0.
-      - rewrite psp_domain in H0.
+      - rewrite -> psp_domain in H0.
         apply Specify_classification in H0 as [H0 [f H2]].
         pose proof func_hyp f.
         intuition; congruence.
-      - now rewrite psp_range. }
+      - now rewrite -> psp_range. }
     intros z H1.
     apply Graph_classification in H1 as [z1 [H1 H2]].
     subst.
-    rewrite @sets.functionify_domain, (reify H1), functionify_action in *.
+    rewrite -> @sets.functionify_domain, (reify H1), functionify_action in *.
     unfold permutation_succ_right_helper; simpl.
     destruct excluded_middle_informative.
     * subst.
       apply Inverse_image_classification in H0 as H2.
       2: { apply Specify_classification in H0; tauto. }
-      2: { now rewrite psp_range. }
+      2: { now rewrite -> psp_range. }
       apply Specify_classification in H0 as [H0 H3].
-      rewrite psp_domain in H0.
+      rewrite -> psp_domain in H0.
       set (α := exist H0 : elts (bijection_set (S n) (S n))).
       replace (a : set) with (α : set) in * by auto.
-      rewrite psp_action in H2.
+      rewrite -> psp_action in H2.
       simpl.
       pose proof H0 as H4.
       apply Specify_classification in H4 as [H4 [f' [H5 [H6 [H7 H8]]]]].
-      assert (graph f' = α) as H9 by now rewrite H7.
+      assert (graph f' = α) as H9 by now rewrite -> H7.
       rewrite <-(functionify_graph (S n) (S n) α) in H9.
       apply function_record_injective in H9; try now rewrite functionify_range.
       rewrite <-H7, H9.
@@ -669,22 +669,23 @@ Proof.
         rewrite <-S_is_succ in H1.
         apply Pairwise_union_classification in H1 as [H1 | H1]; try congruence.
         now apply Singleton_classification in H1. }
-      rewrite H4 in H6.
+      rewrite -> H4 in H6.
       apply Graph_classification in H6 as [z1' [H6 H7]].
       apply Ordered_pair_iff in H7 as [H7 H8].
       subst.
-      rewrite H8, @sets.functionify_domain, (reify H6), functionify_action in *.
+      rewrite -> H8, @sets.functionify_domain, (reify H6),
+      functionify_action in *.
       simpl.
       clear H8 H5 H3 H2 H1.
-      rewrite Inverse_image_classification in H0.
-      2: { rewrite psp_domain.
+      rewrite -> Inverse_image_classification in H0.
+      2: { rewrite -> psp_domain.
            pose proof (elts_in_set (inverse_image_incl n (exist H) a)).
            simpl in *.
-           now rewrite inverse_image_incl_value in H1. }
-      2: { now rewrite psp_range. }
+           now rewrite -> inverse_image_incl_value in H1. }
+      2: { now rewrite -> psp_range. }
       replace (a : set) with (inverse_image_incl n (exist H) a : set) in *.
-      2: { now rewrite inverse_image_incl_value. }
-      rewrite psp_action in H0.
+      2: { now rewrite -> inverse_image_incl_value. }
+      rewrite -> psp_action in H0.
       unfold functionify in H0.
       destruct inverse_image_incl, Specify_classification, a0,
       constructive_indefinite_description as [f].
@@ -696,7 +697,7 @@ Proof.
       apply Graph_classification.
       exists z1'.
       split; auto.
-      rewrite H1, <-S_is_succ.
+      rewrite -> H1, <-S_is_succ.
       apply Pairwise_union_classification; tauto.
   - intros b.
     pose proof (elts_in_set b) as H0; simpl in H0.
@@ -705,7 +706,7 @@ Proof.
     { pose proof (func_hyp (sets.functionify
                               (permutation_succ_left_helper
                                  _ _ (permutation_succ_right n γ b)))).
-      now rewrite @sets.functionify_domain, @sets.functionify_range in *. }
+      now rewrite -> @sets.functionify_domain, @sets.functionify_range in *. }
     { apply Specify_classification in H0 as [H0 [f H2]].
       replace (b : set) with (graph f) by intuition.
       pose proof func_hyp f.
@@ -716,10 +717,10 @@ Proof.
     destruct a as [H4 [H5 H6]].
     apply Graph_classification in H3 as [z1 [H3 H7]].
     subst.
-    rewrite H4 in H3.
+    rewrite -> H4 in H3.
     set (ζ := exist H3 : elts n).
     replace z1 with (ζ : set) in * by auto.
-    rewrite H6.
+    rewrite -> H6.
     apply Specify_classification in H0 as [H0 [f' [H7 [H8 [H9 H10]]]]].
     rewrite <-H9.
     apply Graph_classification.
@@ -735,7 +736,7 @@ Proof.
     clear e0 i2 i1 a0 e i0 i a.
     destruct a1 as [H1 [H2 [H4 H5]]].
     apply function_record_injective in H4;
-      rewrite ? sets.functionify_domain, ? sets.functionify_range; auto.
+      rewrite -> ? sets.functionify_domain, ? sets.functionify_range; auto.
     subst.
     unfold sets.functionify.
     destruct constructive_indefinite_description.
@@ -745,7 +746,7 @@ Proof.
       apply Pairwise_union_classification; tauto. }
     set (ζ' := exist H12 : elts (S n)).
     replace (ζ : set) with (ζ' : set) by auto.
-    rewrite H11.
+    rewrite -> H11.
     unfold permutation_succ_right_helper.
     destruct excluded_middle_informative.
     { simpl in e.
@@ -755,7 +756,7 @@ Proof.
     simpl.
     f_equal.
     apply function_record_injective;
-      now rewrite ? functionify_domain, ? functionify_range,
+      now rewrite -> ? functionify_domain, ? functionify_range,
       ? functionify_graph.
 Qed.
 
@@ -765,7 +766,7 @@ Proof.
   split; intros.
   - apply Singleton_classification.
     apply Specify_classification in H as [H H0].
-    rewrite Empty_product_left, Powerset_classification in H.
+    rewrite -> Empty_product_left, Powerset_classification in H.
     apply Extensionality.
     split; intros.
     + now apply H in H1.
@@ -773,11 +774,11 @@ Proof.
   - apply Singleton_classification in H.
     subst.
     apply Specify_classification.
-    split; rewrite ? Empty_product_left; auto using Empty_set_in_powerset.
+    split; rewrite -> ? Empty_product_left; auto using Empty_set_in_powerset.
     exists empty_function.
     unfold empty_function.
     destruct constructive_indefinite_description; repeat split; intuition;
-      rewrite ? Injective_classification, ? Surjective_classification; intros.
+      rewrite ? Injective_classification ? Surjective_classification; intros.
     + apply NNPP.
       contradict H.
       apply Nonempty_classification in H as [z H].
@@ -791,17 +792,17 @@ Qed.
 
 Theorem bijections_of_empty_set : bijection_set 0%N 0%N ~ 1%N.
 Proof.
-  rewrite bijection_empty_is_singleton.
+  rewrite -> bijection_empty_is_singleton.
   apply singleton_card_1.
 Qed.
 
 Theorem bijections_of_one : bijection_set 1%N 1%N ~ 1%N.
 Proof.
   unfold naturals.one.
-  rewrite permutation_succ, bijections_of_empty_set.
+  rewrite -> permutation_succ, bijections_of_empty_set.
   simpl.
   unfold succ.
-  now rewrite Union_comm, Union_empty, singleton_products, ? singleton_card_1.
+  now rewrite Union_comm Union_empty singleton_products ? singleton_card_1.
 Qed.
 
 Theorem permutations_are_finite : ∀ n : N, finite (bijection_set n n).
@@ -812,7 +813,7 @@ Proof.
     apply bijections_of_empty_set. }
   exists ((S n) * m)%N.
   symmetry.
-  now rewrite permutation_succ, H, <-(card_of_natural (S n)),
+  now rewrite -> permutation_succ, H, <-(card_of_natural (S n)),
   <-(card_of_natural m), <-natural_prod_card, card_equiv at 1;
     auto using finite_products_are_finite, naturals_are_finite.
 Qed.
@@ -827,19 +828,19 @@ Qed.
 Theorem size_of_bijections_of_one : size_of_bijections 1%N 1%N = 1%N.
 Proof.
   unfold size_of_bijections.
-  now rewrite bijections_of_one, card_of_natural.
+  now rewrite -> bijections_of_one, card_of_natural.
 Qed.
 
 Theorem number_of_permutations_n : ∀ n, n! = permutations n.
 Proof.
   intros n.
   induction n using Induction; unfold factorial, permutations in *.
-  - rewrite prod_N_neg.
-    + now rewrite size_of_bijections_of_empty_set.
+  - rewrite -> prod_N_neg.
+    + now rewrite -> size_of_bijections_of_empty_set.
     + apply naturals.lt_succ.
-  - rewrite prod_N_succ, IHn.
-    + unfold size_of_bijections.
-      rewrite permutation_succ, finite_products_card, card_of_natural, mul_comm;
+  - rewrite -> prod_N_succ, IHn.
+    + rewrite /size_of_bijections permutation_succ.
+      rewrite -> finite_products_card, card_of_natural, mul_comm;
         auto using naturals_are_finite, permutations_are_finite.
     + apply (succ_le _ n), zero_le.
 Qed.
@@ -848,7 +849,7 @@ Theorem number_of_permutations :
   ∀ S (n : N), S ~ n → n! = size_of_bijections S S.
 Proof.
   intros S n H.
-  now rewrite H, number_of_permutations_n.
+  now rewrite -> H, number_of_permutations_n.
 Qed.
 
 Section Combinations_orbit_stabilizer.
@@ -891,29 +892,29 @@ Section Combinations_orbit_stabilizer.
       exists h.
       pose proof functionify_bijective _ _ η as [H3 H4].
       repeat split; auto.
-      + rewrite Injective_classification in *.
+      + rewrite -> Injective_classification in *.
         intros x y H5 H6 H7.
-        rewrite ? H2 in H7; try congruence.
-        apply H3; rewrite ? functionify_domain, H0 in *; try congruence.
+        rewrite -> ? H2 in H7; try congruence.
+        apply H3; rewrite -> ? functionify_domain, H0 in *; try congruence.
         * apply Specify_classification in H5; tauto.
         * apply Specify_classification in H6; tauto.
-      + rewrite Surjective_classification in *.
+      + rewrite -> Surjective_classification in *.
         intros y H5.
         assert (y ∈ n) as H6 by (apply nontriviality; congruence).
         rewrite <-(functionify_range n n η) in H6.
         apply H4 in H6 as [x [H6 H7]].
-        rewrite functionify_domain in H6.
+        rewrite -> functionify_domain in H6.
         exists x.
         split.
-        * rewrite H0.
+        * rewrite -> H0.
           apply Specify_classification.
           split; auto.
-          rewrite H7.
+          rewrite -> H7.
           congruence.
-        * rewrite H2; try congruence.
+        * rewrite -> H2; try congruence.
           apply Specify_classification.
           split; auto.
-          rewrite H7.
+          rewrite -> H7.
           congruence.
   Qed.
 
@@ -949,7 +950,7 @@ Section Combinations_orbit_stabilizer.
     unfold combinations_proj.
     destruct constructive_indefinite_description.
     destruct a as [H [H0 H1]].
-    rewrite H1; auto.
+    rewrite -> H1; auto.
     unfold combinations_proj_helper.
     destruct excluded_middle_informative; try tauto.
     simpl in *.
@@ -958,9 +959,9 @@ Section Combinations_orbit_stabilizer.
 
   Theorem combinations_proj_surj : surjective combinations_proj.
   Proof.
-    rewrite Surjective_classification.
+    rewrite -> Surjective_classification.
     intros y H.
-    rewrite cp_range in H.
+    rewrite -> cp_range in H.
     apply Specify_classification in H as [H H0].
     apply Powerset_classification in H.
     apply equivalence_to_bijection in H0 as [f [H0 [H1 [H2 H3]]]].
@@ -973,11 +974,11 @@ Section Combinations_orbit_stabilizer.
         replace (n : set) with (y ∪ n \ y) in H5 at 2;
         try now rewrite <-disjoint_union_complement, <-Union_subset.
       apply equinumerous_cardinality in H5.
-      rewrite ? finite_union_cardinality in H5;
+      rewrite -> ? finite_union_cardinality in H5;
         eauto using naturals_are_finite, subsets_of_finites_are_finite,
         disjoint_intersection_complement, complement_subset.
       apply equinumerous_cardinality in H4.
-      rewrite H4 in H5.
+      rewrite -> H4 in H5.
       apply naturals.cancellation_add in H5.
       now apply finite_cardinality_equinumerous in H5;
         eauto using naturals_are_finite, subsets_of_finites_are_finite,
@@ -993,14 +994,14 @@ Section Combinations_orbit_stabilizer.
         congruence.
       - assert (g a ∈ range g) as H11.
         { apply function_maps_domain_to_range.
-          rewrite H6.
+          rewrite -> H6.
           now apply Specify_classification. }
-        rewrite H7 in H11.
+        rewrite -> H7 in H11.
         apply Complement_classification in H11.
         tauto. }
     exists (graph h).
     assert (graph h ∈ domain combinations_proj).
-    { rewrite cp_domain.
+    { rewrite -> cp_domain.
       apply Specify_classification.
       split.
       - apply Powerset_classification.
@@ -1014,15 +1015,15 @@ Section Combinations_orbit_stabilizer.
         now apply function_maps_domain_to_range.
       - exists h.
         repeat split; auto.
-        + rewrite Injective_classification in *.
+        + rewrite -> Injective_classification in *.
           intros x1 x2 H13 H14 H15.
-          rewrite ? H12 in H15; try congruence.
+          rewrite -> ? H12 in H15; try congruence.
           repeat destruct excluded_middle_informative.
           * apply H2; congruence.
           * assert (g x2 ∈ n \ k).
             { rewrite <-H7.
               apply function_maps_domain_to_range.
-              rewrite H6.
+              rewrite -> H6.
               apply Complement_classification; split; congruence. }
             apply Complement_classification in H16 as [H16 H17].
             contradict H17.
@@ -1032,36 +1033,36 @@ Section Combinations_orbit_stabilizer.
           * assert (g x1 ∈ n \ k).
             { rewrite <-H7.
               apply function_maps_domain_to_range.
-              rewrite H6.
+              rewrite -> H6.
               apply Complement_classification; split; congruence. }
             apply Complement_classification in H16 as [H16 H17].
             contradict H17.
-            rewrite H15, <-H1.
+            rewrite -> H15, <-H1.
             apply function_maps_domain_to_range.
             congruence.
-          * apply H8; try congruence; rewrite H6;
+          * apply H8; try congruence; rewrite -> H6;
               apply Complement_classification; split; congruence.
-        + rewrite Surjective_classification in *.
+        + rewrite -> Surjective_classification in *.
           intros z H13.
-          rewrite H11 in H13.
+          rewrite -> H11 in H13.
           destruct (excluded_middle_informative (z ∈ k)).
           * rewrite <-H1 in i.
             apply H3 in i as [x [H14 H15]].
             exists x.
-            rewrite H0 in H14.
+            rewrite -> H0 in H14.
             apply H in H14 as H16.
-            rewrite H12; auto.
+            rewrite -> H12; auto.
             destruct excluded_middle_informative; split; congruence.
           * destruct (H9 z) as [x [H14 H15]].
-            { rewrite H7.
+            { rewrite -> H7.
               now apply Specify_classification. }
             exists x.
-            rewrite H6 in H14.
+            rewrite -> H6 in H14.
             apply Complement_classification in H14 as [H14 H16].
-            rewrite H12; auto.
+            rewrite -> H12; auto.
             destruct excluded_middle_informative; split; congruence. }
     split; auto.
-    rewrite cp_domain in H13.
+    rewrite -> cp_domain in H13.
     replace (graph h)
       with ((exist H13 : elts (bijection_set n n)) : set) by auto.
     rewrite <-cp_action.
@@ -1073,12 +1074,12 @@ Section Combinations_orbit_stabilizer.
       constructive_indefinite_description as [h' [H19 [H20 [H21 H22]]]].
       apply function_record_injective in H21; try congruence.
       subst.
-      rewrite H12 in H18; auto.
+      rewrite -> H12 in H18; auto.
       destruct excluded_middle_informative; try tauto.
       assert (g z ∈ n \ k) as H0.
       { rewrite <-H7.
         apply function_maps_domain_to_range.
-        rewrite H6.
+        rewrite -> H6.
         now apply Complement_classification. }
       apply Complement_classification in H0.
       tauto.
@@ -1089,7 +1090,7 @@ Section Combinations_orbit_stabilizer.
         as [h' [H18 [H19 [H20 H21]]]].
       apply function_record_injective in H20; try congruence.
       subst.
-      rewrite H12; auto.
+      rewrite -> H12; auto.
       destruct excluded_middle_informative; try tauto.
       rewrite <-H1.
       now apply function_maps_domain_to_range.
@@ -1139,22 +1140,22 @@ Section Combinations_orbit_stabilizer.
     constructive_indefinite_description as [f1''].
     destruct a0 as [H5 [H6 [H7 H8]]].
     assert (f2_inv x ∈ y) as H9.
-    { rewrite image_of_comb_proj, H3; auto using elts_in_set.
-      - rewrite functionify_range.
+    { rewrite -> image_of_comb_proj, H3; auto using elts_in_set.
+      - rewrite -> functionify_range.
         eauto using elts_in_set.
       - rewrite <-(functionify_domain _ _ f2), <-H2.
         apply function_maps_domain_to_range.
-        rewrite H1, functionify_range.
+        rewrite -> H1, functionify_range.
         eauto using elts_in_set. }
     replace f1' with ((exist H4 : elts (bijection_set n n)) : set)
       in * by auto.
     rewrite <-functionify_graph in H7.
     apply function_record_injective in H7; subst;
-      rewrite ? functionify_domain, ? functionify_range; try congruence.
+      rewrite -> ? functionify_domain, ? functionify_range; try congruence.
     apply image_of_comb_proj; auto.
     rewrite <-(functionify_domain _ _ f2), <-H2.
     apply function_maps_domain_to_range.
-    rewrite H1, functionify_range.
+    rewrite -> H1, functionify_range.
     eauto using elts_in_set.
   Qed.
 
@@ -1166,9 +1167,9 @@ Section Combinations_orbit_stabilizer.
     pose proof (elts_in_set h) as H; simpl in *.
     pose proof (elts_in_set h0) as H0; simpl in *.
     apply Specify_classification in H as [H H1].
-    rewrite cp_domain in H.
+    rewrite -> cp_domain in H.
     apply Specify_classification in H0 as [H0 H2].
-    rewrite cp_domain in H0.
+    rewrite -> cp_domain in H0.
     exact (exist (combinations_left_helper_k_construction_1
                     (exist H) (exist H0) x H1 H2)).
   Defined.
@@ -1184,12 +1185,12 @@ Section Combinations_orbit_stabilizer.
       split.
       + rewrite <-(functionify_range _ _ f).
         apply function_maps_domain_to_range.
-        now rewrite functionify_domain.
+        now rewrite -> functionify_domain.
       + contradict H5.
         now apply Specify_classification.
     - rewrite <-H, <-cp_action.
       unfold φ.
-      rewrite Complement_classification, Specify_classification in *.
+      rewrite -> Complement_classification, Specify_classification in *.
       split; auto; tauto.
   Qed.
 
@@ -1212,22 +1213,22 @@ Section Combinations_orbit_stabilizer.
     constructive_indefinite_description as [f1''].
     destruct a0 as [H5 [H6 [H7 H8]]].
     assert (f2_inv x ∈ n \ y) as H9.
-    { rewrite image_of_comb_proj_2, H3; auto using elts_in_set.
-      - rewrite functionify_range.
+    { rewrite -> image_of_comb_proj_2, H3; auto using elts_in_set.
+      - rewrite -> functionify_range.
         apply (complement_subset k n); auto using elts_in_set.
       - rewrite <-(functionify_domain _ _ f2), <-H2.
         apply function_maps_domain_to_range.
-        rewrite H1, functionify_range.
+        rewrite -> H1, functionify_range.
         apply (complement_subset k n), elts_in_set. }
     replace f1' with ((exist H4 : elts (bijection_set n n)) : set)
       in * by auto.
     rewrite <-functionify_graph in H7.
     apply function_record_injective in H7; subst;
-      rewrite ? functionify_domain, ? functionify_range; try congruence.
+      rewrite -> ? functionify_domain, ? functionify_range; try congruence.
     apply image_of_comb_proj_2; auto.
     rewrite <-(functionify_domain _ _ f2), <-H2.
     apply function_maps_domain_to_range.
-    rewrite H1, functionify_range.
+    rewrite -> H1, functionify_range.
     apply (complement_subset k n), elts_in_set.
   Qed.
 
@@ -1239,9 +1240,9 @@ Section Combinations_orbit_stabilizer.
     pose proof (elts_in_set h) as H; simpl in *.
     pose proof (elts_in_set h0) as H0; simpl in *.
     apply Specify_classification in H as [H H1].
-    rewrite cp_domain in H.
+    rewrite -> cp_domain in H.
     apply Specify_classification in H0 as [H0 H2].
-    rewrite cp_domain in H0.
+    rewrite -> cp_domain in H0.
     exact (exist (combinations_left_helper_k_construction_2
                     (exist H) (exist H0) x H1 H2)).
   Defined.
@@ -1253,17 +1254,17 @@ Section Combinations_orbit_stabilizer.
     unfold sets.functionify.
     destruct constructive_indefinite_description as [h'' [H [H0 H1]]].
     apply finite_set_injection_is_bijection.
-    - rewrite H.
+    - rewrite -> H.
       apply naturals_are_finite.
-    - now rewrite H, H0.
-    - rewrite Injective_classification.
+    - now rewrite -> H, H0.
+    - rewrite -> Injective_classification.
       intros x1 x2 H2 H3 H4.
-      rewrite ? H, ? H0 in *.
+      rewrite -> ? H, ? H0 in *.
       set (ξ1 := exist H2 : elts k).
       set (ξ2 := exist H3 : elts k).
       replace x1 with (ξ1 : set) in * by auto.
       replace x2 with (ξ2 : set) in * by auto.
-      rewrite ? H1 in H4.
+      rewrite -> ? H1 in H4.
       unfold combinations_left_helper_k in H4.
       destruct Specify_classification, a, Specify_classification, a0.
       simpl in *.
@@ -1274,20 +1275,20 @@ Section Combinations_orbit_stabilizer.
       destruct a4 as [H10 [H11 [H12 H13]]].
       apply inverse_bijective in H13 as H14.
       destruct H14 as [H14 H15].
-      rewrite Injective_classification in *.
+      rewrite -> Injective_classification in *.
       apply H8 in H4; try apply H14 in H4; auto.
-      + rewrite inverse_domain; auto.
-        rewrite H11; auto.
-      + rewrite inverse_domain; auto.
-        rewrite H11; auto.
-      + rewrite H5, <-H10, <-inverse_range; auto.
+      + rewrite -> inverse_domain; auto.
+        rewrite -> H11; auto.
+      + rewrite -> inverse_domain; auto.
+        rewrite -> H11; auto.
+      + rewrite -> H5, <-H10, <-inverse_range; auto.
         apply function_maps_domain_to_range.
-        rewrite inverse_domain; auto.
-        rewrite H11; auto.
-      + rewrite H5, <-H10, <-inverse_range; auto.
+        rewrite -> inverse_domain; auto.
+        rewrite -> H11; auto.
+      + rewrite -> H5, <-H10, <-inverse_range; auto.
         apply function_maps_domain_to_range.
-        rewrite inverse_domain; auto.
-        rewrite H11; auto.
+        rewrite -> inverse_domain; auto.
+        rewrite -> H11; auto.
   Qed.
 
   Lemma combinations_left_helper_n_minus_k_bijective : ∀ h',
@@ -1297,18 +1298,18 @@ Section Combinations_orbit_stabilizer.
     unfold sets.functionify.
     destruct constructive_indefinite_description as [h'' [H [H0 H1]]].
     apply finite_set_injection_is_bijection.
-    - rewrite H.
+    - rewrite -> H.
       eauto using subsets_of_finites_are_finite,
       naturals_are_finite, complement_subset.
-    - now rewrite H, H0.
-    - rewrite Injective_classification.
+    - now rewrite -> H, H0.
+    - rewrite -> Injective_classification.
       intros x1 x2 H2 H3 H4.
-      rewrite ? H, ? H0 in *.
+      rewrite -> ? H, ? H0 in *.
       set (ξ1 := exist H2 : elts (n \ k)).
       set (ξ2 := exist H3 : elts (n \ k)).
       replace x1 with (ξ1 : set) in * by auto.
       replace x2 with (ξ2 : set) in * by auto.
-      rewrite ? H1 in H4.
+      rewrite -> ? H1 in H4.
       unfold combinations_left_helper_n_minus_k in H4.
       destruct Specify_classification, a, Specify_classification, a0.
       simpl in *.
@@ -1319,23 +1320,23 @@ Section Combinations_orbit_stabilizer.
       destruct a4 as [H10 [H11 [H12 H13]]].
       apply inverse_bijective in H13 as H14.
       destruct H14 as [H14 H15].
-      rewrite Injective_classification in *.
+      rewrite -> Injective_classification in *.
       apply H8 in H4; try apply H14 in H4; auto.
-      + rewrite inverse_domain; auto.
-        rewrite H11; auto.
+      + rewrite -> inverse_domain; auto.
+        rewrite -> H11; auto.
         eapply complement_subset; eauto.
-      + rewrite inverse_domain; auto.
-        rewrite H11; auto.
+      + rewrite -> inverse_domain; auto.
+        rewrite -> H11; auto.
         eapply complement_subset; eauto.
-      + rewrite H5, <-H10, <-inverse_range; auto.
+      + rewrite -> H5, <-H10, <-inverse_range; auto.
         apply function_maps_domain_to_range.
-        rewrite inverse_domain; auto.
-        rewrite H11; auto.
+        rewrite -> inverse_domain; auto.
+        rewrite -> H11; auto.
         eapply complement_subset; eauto.
-      + rewrite H5, <-H10, <-inverse_range; auto.
+      + rewrite -> H5, <-H10, <-inverse_range; auto.
         apply function_maps_domain_to_range.
-        rewrite inverse_domain; auto.
-        rewrite H11; auto.
+        rewrite -> inverse_domain; auto.
+        rewrite -> H11; auto.
         eapply complement_subset; eauto.
   Qed.
 
@@ -1353,19 +1354,19 @@ Section Combinations_orbit_stabilizer.
       split.
       + pose proof func_hyp
              (sets.functionify (combinations_left_helper_k h0)) as [H].
-        now rewrite sets.functionify_domain, sets.functionify_range,
+        now rewrite -> sets.functionify_domain, sets.functionify_range,
         <-Powerset_classification in H.
       + exists (sets.functionify (combinations_left_helper_k h0)).
-        rewrite sets.functionify_domain, sets.functionify_range.
+        rewrite -> sets.functionify_domain, sets.functionify_range.
         auto using combinations_left_helper_k_bijective.
     - apply Specify_classification.
       split.
       + pose proof func_hyp
              (sets.functionify (combinations_left_helper_n_minus_k h0)) as [H].
-        now rewrite sets.functionify_domain, sets.functionify_range,
+        now rewrite -> sets.functionify_domain, sets.functionify_range,
         <-Powerset_classification in H.
       + exists (sets.functionify (combinations_left_helper_n_minus_k h0)).
-        rewrite sets.functionify_domain, sets.functionify_range.
+        rewrite -> sets.functionify_domain, sets.functionify_range.
         auto using combinations_left_helper_n_minus_k_bijective.
   Qed.
 
@@ -1383,8 +1384,8 @@ Section Combinations_orbit_stabilizer.
     intros [f F].
     apply Inverse_image_classification_left in F as H;
       apply Inverse_image_classification_domain in F as H0;
-      try (rewrite cp_range; auto using elts_in_set).
-    rewrite cp_domain in H0.
+      try (rewrite -> cp_range; auto using elts_in_set).
+    rewrite -> cp_domain in H0.
     exact (functionify n n (exist H0)).
   Defined.
 
@@ -1418,10 +1419,10 @@ Section Combinations_orbit_stabilizer.
     intros [f F].
     pose proof F as H.
     apply Inverse_image_classification_domain in H.
-    - rewrite cii_graph.
+    - rewrite -> cii_graph.
       simpl.
       now rewrite <-cp_domain.
-    - rewrite cp_range.
+    - rewrite -> cp_range.
       auto using elts_in_set.
   Qed.
 
@@ -1431,7 +1432,7 @@ Section Combinations_orbit_stabilizer.
     pose proof cii_bijection f as H.
     apply Specify_classification in H as [H [f' [H0 [H1 [H2 H3]]]]].
     apply function_record_injective in H2;
-      rewrite ? cii_domain, ? cii_range; congruence.
+      rewrite -> ? cii_domain, ? cii_range; congruence.
   Qed.
 
   Lemma combinations_right_helper_0 :
@@ -1440,8 +1441,8 @@ Section Combinations_orbit_stabilizer.
     pose proof elts_in_set h as H.
     apply Inverse_image_classification_left in H as H1;
       apply Inverse_image_classification_domain in H as H0;
-      try (rewrite cp_range; auto using elts_in_set).
-    rewrite cp_domain in H0.
+      try (rewrite -> cp_range; auto using elts_in_set).
+    rewrite -> cp_domain in H0.
     replace (h : set)
       with ((exist H0 : elts (bijection_set n n)) : set) in H1 by auto.
     rewrite <-cp_action in H1.
@@ -1480,21 +1481,21 @@ Section Combinations_orbit_stabilizer.
     apply combinations_right_helper_0.
     { rewrite <-(cii_domain h), <-inverse_range; auto using cii_bijective.
       apply function_maps_domain_to_range.
-      rewrite inverse_domain, cii_range; auto using cii_bijective.
+      rewrite -> inverse_domain, cii_range; auto using cii_bijective.
       apply nontriviality.
       rewrite <-(functionify_range _ _ z1).
       apply function_maps_domain_to_range.
-      now rewrite functionify_domain. }
-    rewrite right_inverse; auto using cii_bijective.
+      now rewrite -> functionify_domain. }
+    rewrite -> right_inverse; auto using cii_bijective.
     { rewrite <-(functionify_range _ _ z1).
       apply function_maps_domain_to_range.
-      now rewrite functionify_domain. }
-    rewrite inverse_domain; auto using cii_bijective.
-    rewrite cii_range.
+      now rewrite -> functionify_domain. }
+    rewrite -> inverse_domain; auto using cii_bijective.
+    rewrite -> cii_range.
     apply nontriviality.
     rewrite <-(functionify_range _ _ z1).
     apply function_maps_domain_to_range.
-    now rewrite functionify_domain.
+    now rewrite -> functionify_domain.
   Qed.
 
   Lemma combinations_right_helper_l :
@@ -1522,27 +1523,27 @@ Section Combinations_orbit_stabilizer.
               ((functionify (n \ k) (n \ k) z2) x) ∈ n) as H1.
     { rewrite <-(cii_domain h), <-inverse_range; auto using cii_bijective.
       apply function_maps_domain_to_range.
-      rewrite inverse_domain, cii_range; auto using cii_bijective.
+      rewrite -> inverse_domain, cii_range; auto using cii_bijective.
       apply (complement_subset k n).
       rewrite <-(functionify_range _ _ z2).
       apply function_maps_domain_to_range.
-      rewrite functionify_domain.
+      rewrite -> functionify_domain.
       now apply Complement_classification. }
     split; auto.
     intros H2.
     apply combinations_right_helper_0 in H2; auto.
-    rewrite right_inverse in H2; auto using cii_bijective.
-    2: { rewrite inverse_domain; auto using cii_bijective.
-         rewrite cii_range.
+    rewrite -> right_inverse in H2; auto using cii_bijective.
+    2: { rewrite -> inverse_domain; auto using cii_bijective.
+         rewrite -> cii_range.
          apply (complement_subset k n).
          rewrite <-(functionify_range _ _ z2).
          apply function_maps_domain_to_range.
-         rewrite functionify_domain.
+         rewrite -> functionify_domain.
          now apply Complement_classification. }
     assert ((functionify (n \ k) (n \ k) z2) x ∈ n \ k) as H3.
     { rewrite <-(functionify_range _ _ z2).
       apply function_maps_domain_to_range.
-      rewrite functionify_domain.
+      rewrite -> functionify_domain.
       now apply Complement_classification. }
     apply Complement_classification in H3.
     tauto.
@@ -1576,14 +1577,14 @@ Section Combinations_orbit_stabilizer.
   Proof.
     intros z1 z2.
     apply finite_set_injection_is_bijection.
-    - rewrite sets.functionify_domain.
+    - rewrite -> sets.functionify_domain.
       apply naturals_are_finite.
-    - now rewrite sets.functionify_domain, sets.functionify_range.
+    - now rewrite -> sets.functionify_domain, sets.functionify_range.
     - pose proof (cii_bijective h) as H.
       apply inverse_bijective in H as [H H0].
-      rewrite Injective_classification in *.
+      rewrite -> Injective_classification in *.
       intros x1 x2 H1 H2 H3.
-      rewrite @sets.functionify_domain in *.
+      rewrite -> @sets.functionify_domain in *.
       unfold sets.functionify in H3.
       destruct constructive_indefinite_description as [g].
       destruct a as [H4 [H5 H6]].
@@ -1591,25 +1592,25 @@ Section Combinations_orbit_stabilizer.
       set (ξ2 := exist H2 : elts n).
       replace x1 with (ξ1 : set) in * by auto.
       replace x2 with (ξ2 : set) in * by auto.
-      rewrite ? H6 in H3.
+      rewrite -> ? H6 in H3.
       unfold combinations_right_helper in H3.
       repeat destruct excluded_middle_informative; simpl in *.
       + apply H in H3.
-        2: { rewrite inverse_domain; auto using cii_bijective.
-             rewrite cii_range.
+        2: { rewrite -> inverse_domain; auto using cii_bijective.
+             rewrite -> cii_range.
              apply nontriviality.
              rewrite <-(functionify_range _ _ z1).
              apply function_maps_domain_to_range.
-             now rewrite functionify_domain. }
-        2: { rewrite inverse_domain; auto using cii_bijective.
-             rewrite cii_range.
+             now rewrite -> functionify_domain. }
+        2: { rewrite -> inverse_domain; auto using cii_bijective.
+             rewrite -> cii_range.
              apply nontriviality.
              rewrite <-(functionify_range _ _ z1).
              apply function_maps_domain_to_range.
-             now rewrite functionify_domain. }
+             now rewrite -> functionify_domain. }
         pose proof functionify_bijective _ _ z1 as [H7 H8].
-        rewrite Injective_classification in H7.
-        now apply H7 in H3; try now rewrite functionify_domain.
+        rewrite -> Injective_classification in H7.
+        now apply H7 in H3; try now rewrite -> functionify_domain.
       + assert (inverse (comb_inverse_image_incl h) (functionify _ _ z2 x2) ∈ _)
           as H7 by now apply combinations_right_helper_r_1,
                    Complement_classification.
@@ -1620,27 +1621,27 @@ Section Combinations_orbit_stabilizer.
       + assert (inverse (comb_inverse_image_incl h) (functionify _ _ z2 x1) ∈ _)
           as H7 by now apply combinations_right_helper_r_1,
                    Complement_classification.
-        rewrite H3, Complement_classification in H7.
+        rewrite -> H3, Complement_classification in H7.
         destruct H7 as [H7 H8].
         contradiction H8.
         auto using combinations_right_helper_l_1.
       + apply H in H3.
-        2: { rewrite inverse_domain; auto using cii_bijective.
-             rewrite cii_range.
+        2: { rewrite -> inverse_domain; auto using cii_bijective.
+             rewrite -> cii_range.
              apply (complement_subset k n).
              rewrite <-(functionify_range _ _ z2).
              apply function_maps_domain_to_range.
-             now rewrite functionify_domain, Complement_classification. }
-        2: { rewrite inverse_domain; auto using cii_bijective.
-             rewrite cii_range.
+             now rewrite -> functionify_domain, Complement_classification. }
+        2: { rewrite -> inverse_domain; auto using cii_bijective.
+             rewrite -> cii_range.
              apply (complement_subset k n).
              rewrite <-(functionify_range _ _ z2).
              apply function_maps_domain_to_range.
-             now rewrite functionify_domain, Complement_classification. }
+             now rewrite -> functionify_domain, Complement_classification. }
         pose proof functionify_bijective _ _ z2 as [H7 H8].
-        rewrite Injective_classification in H7.
+        rewrite -> Injective_classification in H7.
         now apply H7 in H3;
-          try now rewrite functionify_domain, Complement_classification.
+          try now rewrite -> functionify_domain, Complement_classification.
   Qed.
 
   Theorem combinations_right_construction_proto : ∀ z1 z2,
@@ -1658,13 +1659,13 @@ Section Combinations_orbit_stabilizer.
       exists x1,
       (inverse (sets.functionify (combinations_right_helper z1 z2)) x1).
       repeat split.
-      + rewrite inverse_domain, sets.functionify_range in H;
+      + rewrite -> inverse_domain, sets.functionify_range in H;
           auto using combinations_right_helper_bijective.
       + rewrite <-(sets.functionify_domain (combinations_right_helper z1 z2)),
         <-inverse_range; auto using combinations_right_helper_bijective.
         now apply function_maps_domain_to_range. }
     exists (inverse (sets.functionify (combinations_right_helper z1 z2))).
-    rewrite inverse_domain, inverse_range, sets.functionify_domain,
+    rewrite -> inverse_domain, inverse_range, sets.functionify_domain,
     sets.functionify_range; intuition;
       auto using combinations_right_helper_bijective, inverse_bijective.
   Qed.
@@ -1678,7 +1679,7 @@ Section Combinations_orbit_stabilizer.
       destruct a as [H1 [H2 H3]].
       set (ξ := exist H : elts n).
       replace x with (ξ : set) in * by auto.
-      rewrite H3.
+      rewrite -> H3.
       unfold combinations_right_helper.
       destruct excluded_middle_informative; try now contradict n0.
       simpl.
@@ -1689,7 +1690,7 @@ Section Combinations_orbit_stabilizer.
       destruct a as [H1 [H2 H3]].
       set (ξ := exist H : elts n).
       replace x with (ξ : set) in * by auto.
-      rewrite H3 in H0.
+      rewrite -> H3 in H0.
       unfold combinations_right_helper in H0.
       destruct excluded_middle_informative; auto.
       simpl in *.
@@ -1706,7 +1707,7 @@ Section Combinations_orbit_stabilizer.
     intros z1 z2.
     apply Specify_classification.
     split.
-    - rewrite cp_domain.
+    - rewrite -> cp_domain.
       apply combinations_right_construction_proto.
     - set (g := (inverse (sets.functionify (combinations_right_helper z1 z2)))).
       assert (graph g ∈ bijection_set n n).
@@ -1722,7 +1723,7 @@ Section Combinations_orbit_stabilizer.
         clear a i0 i e.
         destruct a0 as [H4 [H5 [H6 H7]]].
         apply function_record_injective in H6; unfold g in *.
-        2: { rewrite inverse_range, sets.functionify_domain;
+        2: { rewrite -> inverse_range, sets.functionify_domain;
              auto using combinations_right_helper_bijective. }
         subst.
         unfold inverse in H3.
@@ -1731,7 +1732,7 @@ Section Combinations_orbit_stabilizer.
              auto using combinations_right_helper_bijective. }
         destruct b, constructive_indefinite_description as [crh_inv].
         repeat destruct a.
-        rewrite inverse_range, inverse_domain, @sets.functionify_domain,
+        rewrite -> inverse_range, inverse_domain, @sets.functionify_domain,
         @sets.functionify_range in *;
           auto using combinations_right_helper_bijective.
         rewrite <-(e1 z); auto.
@@ -1749,7 +1750,7 @@ Section Combinations_orbit_stabilizer.
         clear a i0 i e.
         destruct a0 as [H4 [H5 [H6 H7]]].
         apply function_record_injective in H6; unfold g in *.
-        2: { rewrite inverse_range, sets.functionify_domain;
+        2: { rewrite -> inverse_range, sets.functionify_domain;
              auto using combinations_right_helper_bijective. }
         subst.
         unfold inverse.
@@ -1758,14 +1759,14 @@ Section Combinations_orbit_stabilizer.
              auto using combinations_right_helper_bijective. }
         destruct b, constructive_indefinite_description as [crh_inv].
         repeat destruct a.
-        rewrite inverse_range, inverse_domain, @sets.functionify_domain,
+        rewrite -> inverse_range, inverse_domain, @sets.functionify_domain,
         @sets.functionify_range in *;
           auto using combinations_right_helper_bijective.
         rewrite <-(e1 z) in H2; auto.
         apply combinatorics_right_construction_helper_2 in H2; auto.
         rewrite <-e0.
         apply function_maps_domain_to_range.
-        now rewrite e.
+        now rewrite -> e.
   Qed.
 
   Definition combinations_right :
@@ -1789,7 +1790,7 @@ Section Combinations_orbit_stabilizer.
     simpl.
     pose proof elts_in_set x as H; simpl in H.
     apply Product_classification in H as [x1 [x2 [H [H0 H1]]]].
-    rewrite H1.
+    rewrite -> H1.
     apply Ordered_pair_iff.
     split.
     - unfold sets.functionify.
@@ -1800,10 +1801,10 @@ Section Combinations_orbit_stabilizer.
       replace x1'' with x1'; auto.
       apply func_ext; try congruence.
       intros z H9.
-      rewrite H6 in H9.
+      rewrite -> H6 in H9.
       set (ζ := exist H9 : elts k).
       replace z with (ζ : set) in * by auto.
-      rewrite H8.
+      rewrite -> H8.
       unfold combinations_left_helper_k.
       destruct Specify_classification, a, Specify_classification, a0.
       simpl.
@@ -1820,7 +1821,7 @@ Section Combinations_orbit_stabilizer.
       repeat destruct a.
       pose proof H9 as Z.
       rewrite <-(e2 z) at 2; rewrite <-(e2 z) in Z;
-        try (rewrite H15; auto).
+        try (rewrite -> H15; auto).
       unfold combinations_right in H16.
       destruct constructive_indefinite_description as [z1].
       destruct constructive_indefinite_description as [z2].
@@ -1831,11 +1832,11 @@ Section Combinations_orbit_stabilizer.
       apply Ordered_pair_iff in H18 as [H18 H19].
       subst.
       apply function_record_injective in H16.
-      2: { rewrite H15, inverse_range, sets.functionify_domain;
+      2: { rewrite -> H15, inverse_range, sets.functionify_domain;
            auto using combinations_right_helper_bijective. }
       clear H17 i s.
       subst.
-      rewrite inverse_domain, inverse_range, @sets.functionify_domain,
+      rewrite -> inverse_domain, inverse_range, @sets.functionify_domain,
       @sets.functionify_range in *;
         auto using combinations_right_helper_bijective.
       unfold inverse in Z |-*.
@@ -1843,26 +1844,26 @@ Section Combinations_orbit_stabilizer.
       2: { exfalso; auto using combinations_right_helper_bijective. }
       destruct b, constructive_indefinite_description as [crh_inv].
       repeat destruct a.
-      rewrite ? inverse_domain, ? inverse_range, @sets.functionify_domain,
+      rewrite -> ? inverse_domain, ? inverse_range, @sets.functionify_domain,
       @sets.functionify_range in *;
         auto using combinations_right_helper_bijective.
       clear i s.
       rewrite <-(e6 (cr_inv z)) at 1.
       2: { rewrite <-e1.
            apply function_maps_domain_to_range.
-           rewrite e; auto. }
+           rewrite -> e; auto. }
       unfold sets.functionify.
       destruct constructive_indefinite_description as [crh].
       destruct a as [H4 [H8 H16]].
       assert (crh_inv (cr_inv z) ∈ n) as H17.
       { rewrite <-e5.
         apply function_maps_domain_to_range.
-        rewrite e3, <-e1.
+        rewrite -> e3, <-e1.
         apply function_maps_domain_to_range.
-        rewrite e; auto. }
+        rewrite -> e; auto. }
       set (ζ' := exist H17 : elts n).
       replace (crh_inv (cr_inv z)) with (ζ' : set) by auto.
-      rewrite H16.
+      rewrite -> H16.
       unfold combinations_right_helper.
       destruct excluded_middle_informative.
       2: { now contradict n0. }
@@ -1879,7 +1880,7 @@ Section Combinations_orbit_stabilizer.
       destruct b, constructive_indefinite_description as [cii].
       repeat destruct a.
       rewrite <-(e9 (x1'' (crh_inv (cr_inv z)))) at 2.
-      2: { rewrite cii_range.
+      2: { rewrite -> cii_range.
            apply nontriviality.
            rewrite <-H19.
            apply function_maps_domain_to_range.
@@ -1902,10 +1903,10 @@ Section Combinations_orbit_stabilizer.
       replace x2'' with x2'; auto.
       apply func_ext; try congruence.
       intros z H9.
-      rewrite H6 in H9.
+      rewrite -> H6 in H9.
       set (ζ := exist H9 : elts (n \ k)).
       replace z with (ζ : set) in * by auto.
-      rewrite H8.
+      rewrite -> H8.
       unfold combinations_left_helper_n_minus_k.
       destruct Specify_classification, a, Specify_classification, a0.
       simpl.
@@ -1922,7 +1923,7 @@ Section Combinations_orbit_stabilizer.
       repeat destruct a.
       pose proof H9 as Z.
       rewrite <-(e2 z) at 2; rewrite <-(e2 z) in Z;
-        try (rewrite H15; apply (complement_subset k n); auto).
+        try (rewrite -> H15; apply (complement_subset k n); auto).
       unfold combinations_right in H16.
       destruct constructive_indefinite_description as [z1].
       destruct constructive_indefinite_description as [z2].
@@ -1933,11 +1934,11 @@ Section Combinations_orbit_stabilizer.
       apply Ordered_pair_iff in H18 as [H18 H19].
       subst.
       apply function_record_injective in H16.
-      2: { rewrite H15, inverse_range, sets.functionify_domain;
+      2: { rewrite -> H15, inverse_range, sets.functionify_domain;
            auto using combinations_right_helper_bijective. }
       clear H17 i s.
       subst.
-      rewrite inverse_domain, inverse_range, @sets.functionify_domain,
+      rewrite -> inverse_domain, inverse_range, @sets.functionify_domain,
       @sets.functionify_range in *;
         auto using combinations_right_helper_bijective.
       unfold inverse in Z |-*.
@@ -1945,26 +1946,26 @@ Section Combinations_orbit_stabilizer.
       2: { exfalso; auto using combinations_right_helper_bijective. }
       destruct b, constructive_indefinite_description as [crh_inv].
       repeat destruct a.
-      rewrite ? inverse_domain, ? inverse_range, @sets.functionify_domain,
+      rewrite -> ? inverse_domain, ? inverse_range, @sets.functionify_domain,
       @sets.functionify_range in *;
         auto using combinations_right_helper_bijective.
       clear i s.
       rewrite <-(e6 (cr_inv z)) at 1.
       2: { rewrite <-e1.
            apply function_maps_domain_to_range.
-           rewrite e; apply (complement_subset k n); auto. }
+           rewrite -> e; apply (complement_subset k n); auto. }
       unfold sets.functionify.
       destruct constructive_indefinite_description as [crh].
       destruct a as [H4 [H8 H16]].
       assert (crh_inv (cr_inv z) ∈ n) as H17.
       { rewrite <-e5.
         apply function_maps_domain_to_range.
-        rewrite e3, <-e1.
+        rewrite -> e3, <-e1.
         apply function_maps_domain_to_range.
-        rewrite e; apply (complement_subset k n); auto. }
+        rewrite -> e; apply (complement_subset k n); auto. }
       set (ζ' := exist H17 : elts n).
       replace (crh_inv (cr_inv z)) with (ζ' : set) by auto.
-      rewrite H16.
+      rewrite -> H16.
       unfold combinations_right_helper.
       destruct excluded_middle_informative.
       { simpl in i.
@@ -1983,7 +1984,7 @@ Section Combinations_orbit_stabilizer.
       destruct b, constructive_indefinite_description as [cii].
       repeat destruct a.
       rewrite <-(e9 (x2'' (crh_inv (cr_inv z)))) at 2.
-      2: { rewrite cii_range.
+      2: { rewrite -> cii_range.
            apply (complement_subset k n).
            rewrite <-H19.
            apply function_maps_domain_to_range.
@@ -2017,35 +2018,35 @@ Section Combinations_orbit_stabilizer.
     subst.
     pose proof elts_in_set x as H; simpl in H.
     apply Inverse_image_classification_domain in H as H0.
-    2: { rewrite cp_range.
+    2: { rewrite -> cp_range.
          auto using elts_in_set. }
-    rewrite cp_domain in H0.
+    rewrite -> cp_domain in H0.
     apply Specify_classification in H0 as [H0 [x' [H1 [H2 [H3 H4]]]]].
     rewrite <-H3.
     f_equal.
     apply func_ext.
-    { rewrite inverse_domain; auto using combinations_right_helper_bijective.
-      rewrite sets.functionify_range.
+    { rewrite -> inverse_domain; auto using combinations_right_helper_bijective.
+      rewrite -> sets.functionify_range.
       congruence. }
-    { rewrite inverse_range; auto using combinations_right_helper_bijective.
-      rewrite sets.functionify_domain.
+    { rewrite -> inverse_range; auto using combinations_right_helper_bijective.
+      rewrite -> sets.functionify_domain.
       congruence. }
     intros z H5.
-    rewrite inverse_domain, sets.functionify_range in H5;
+    rewrite -> inverse_domain, sets.functionify_range in H5;
       auto using combinations_right_helper_bijective.
     assert (x' z ∈ n) as H6.
     { rewrite <-H2.
       apply function_maps_domain_to_range.
       congruence. }
     rewrite inverse_shift_right; auto using combinations_right_helper_bijective.
-    2: { now rewrite sets.functionify_range. }
-    2: { now rewrite sets.functionify_domain. }
+    2: { now rewrite -> sets.functionify_range. }
+    2: { now rewrite -> sets.functionify_domain. }
     unfold sets.functionify.
     destruct constructive_indefinite_description as [crh].
     destruct a as [H7 [H8 H9]].
     set (ξ'ζ := exist H6 : elts n).
     replace (x' z) with (ξ'ζ : set) by auto.
-    rewrite H9.
+    rewrite -> H9.
     clear H9.
     unfold combinations_right_helper.
     destruct excluded_middle_informative.
@@ -2060,7 +2061,7 @@ Section Combinations_orbit_stabilizer.
       subst.
       set (ξ'ζ' := exist i1 : elts k).
       replace (x' z) with (ξ'ζ' : set) by auto.
-      rewrite H11.
+      rewrite -> H11.
       unfold combinations_left_helper_k.
       destruct Specify_classification, a, Specify_classification, a0.
       simpl.
@@ -2073,13 +2074,13 @@ Section Combinations_orbit_stabilizer.
       destruct a4 as [H20 [H21 [H22 H23]]].
       replace x'' with x'.
       2: { apply function_record_injective; congruence. }
-      rewrite left_inverse; auto; try congruence.
+      rewrite -> left_inverse; auto; try congruence.
       symmetry.
-      rewrite inverse_shift_right; auto using cii_bijective.
-      2: { rewrite cii_range, <-H17.
+      rewrite -> inverse_shift_right; auto using cii_bijective.
+      2: { rewrite -> cii_range, <-H17.
            apply function_maps_domain_to_range.
            congruence. }
-      2: { now rewrite cii_domain. }
+      2: { now rewrite -> cii_domain. }
       destruct h as [h'' H''].
       unfold comb_inverse_image_incl, functionify.
       destruct Specify_classification, a,
@@ -2102,7 +2103,7 @@ Section Combinations_orbit_stabilizer.
       subst.
       set (ξ'ζ' := exist Z : elts (n \ k)).
       replace (x' z) with (ξ'ζ' : set) by auto.
-      rewrite H11.
+      rewrite -> H11.
       unfold combinations_left_helper_n_minus_k.
       destruct Specify_classification, a, Specify_classification, a0.
       simpl.
@@ -2115,13 +2116,13 @@ Section Combinations_orbit_stabilizer.
       destruct a4 as [H20 [H21 [H22 H23]]].
       replace x'' with x'.
       2: { apply function_record_injective; congruence. }
-      rewrite left_inverse; auto; try congruence.
+      rewrite -> left_inverse; auto; try congruence.
       symmetry.
-      rewrite inverse_shift_right; auto using cii_bijective.
-      2: { rewrite cii_range, <-H17.
+      rewrite -> inverse_shift_right; auto using cii_bijective.
+      2: { rewrite -> cii_range, <-H17.
            apply function_maps_domain_to_range.
            congruence. }
-      2: { now rewrite cii_domain. }
+      2: { now rewrite -> cii_domain. }
       destruct h as [h'' H''].
       unfold comb_inverse_image_incl, functionify.
       destruct Specify_classification, a,
@@ -2143,7 +2144,7 @@ Proof.
   rewrite <-(cp_domain n k H), <-(cp_range n k H).
   apply orbit_stabilizer_cardinality.
   intros y H0.
-  rewrite cp_range in H0.
+  rewrite -> cp_range in H0.
   set (γ := exist H0 : elts (set_of_combinations n k)).
   replace y with (γ : set) in * by auto.
   apply two_sided_inverse_bijective.
@@ -2166,9 +2167,9 @@ Proof.
   { rewrite <-le_is_subset, add_comm.
     now exists n. }
   pose proof (combinations_orbit_stabilizer (n+m) m) H as H0.
-  rewrite add_comm, (naturals_sum_diff n m), add_comm in H0.
+  rewrite -> add_comm, (naturals_sum_diff n m), add_comm in H0.
   apply equinumerous_cardinality in H0.
-  rewrite ? finite_products_card, ? number_of_permutations_n, <-mul_assoc
+  rewrite -> ? finite_products_card, ? number_of_permutations_n, <-mul_assoc
     in *; auto using permutations_are_finite, binomials_are_finite,
           finite_products_are_finite.
 Qed.
@@ -2178,7 +2179,7 @@ Theorem binomial_coefficient :
 Proof.
   intros n k [m H].
   subst.
-  rewrite (add_comm k), sub_abba.
+  rewrite -> (add_comm k), sub_abba.
   apply binomial_coefficient_plus_form.
 Qed.
 
@@ -2186,10 +2187,10 @@ Lemma factorial_ne_0 : ∀ k, k! ≠ 0%N.
 Proof.
   intros k H.
   induction k using Induction; unfold factorial in *.
-  - rewrite prod_N_neg in H.
+  - rewrite -> prod_N_neg in H.
     + now contradiction (PA4 0).
     + apply naturals.succ_lt.
-  - rewrite prod_N_succ in H.
+  - rewrite -> prod_N_succ in H.
     + apply naturals.cancellation_0_mul in H as [H | H]; auto.
       now contradiction (PA4 k).
     + apply (succ_le _ k), zero_le.
@@ -2198,7 +2199,7 @@ Qed.
 Theorem zero_factorial : 0! = 1%N.
 Proof.
   unfold factorial.
-  rewrite prod_N_neg; auto; apply naturals.succ_lt.
+  rewrite -> prod_N_neg; auto; apply naturals.succ_lt.
 Qed.
 
 Theorem binomial_zero : ∀ n : N, binomial n 0 = 1%N.
@@ -2206,7 +2207,7 @@ Proof.
   intros n.
   assert (0 ≤ n)%N as H by auto using zero_le.
   apply binomial_coefficient in H.
-  rewrite sub_0_r, ? zero_factorial, mul_1_r, <-(mul_1_l (n!)) in H at 1.
+  rewrite -> sub_0_r, ? zero_factorial, mul_1_r, <-(mul_1_l (n!)) in H at 1.
   apply cancellation_mul in H; auto using factorial_ne_0.
 Qed.
 
@@ -2217,8 +2218,8 @@ Proof.
   apply binomial_coefficient in H.
   assert (k! * (n - k)! ≠ 0)%Z as H0.
   - apply (ne0_cancellation ℤ_ID); intro; eapply factorial_ne_0, INZ_eq; eauto.
-  - rewrite H, <-? INZ_mul, <-integers.M2, inv_div, <-IZQ_mul; auto.
-    field_simplify; rewrite ? div_inv, ? inv_one; try ring.
+  - rewrite -> H, <-? INZ_mul, <-integers.M2, inv_div, <-IZQ_mul; auto.
+    field_simplify; rewrite -> ? div_inv, ? inv_one; try ring.
     contradict H0.
     now apply IZQ_eq.
 Qed.
@@ -2241,85 +2242,85 @@ Proof.
     - right.
       apply Specify_classification.
       split.
-      + rewrite Powerset_classification.
+      + rewrite -> Powerset_classification.
         intros x H2.
-        rewrite Complement_classification, Singleton_classification in H2.
+        rewrite -> Complement_classification, Singleton_classification in H2.
         destruct H2 as [H2 H3].
-        rewrite add_1_r, <-S_is_succ in H0.
+        rewrite -> add_1_r, <-S_is_succ in H0.
         apply H0, Pairwise_union_classification in H2 as [H2 | H2]; auto.
-        now rewrite Singleton_classification in H2.
+        now rewrite -> Singleton_classification in H2.
       + replace a with ({n,n} ∪ (a \ {n,n})) in H1.
         2: { rewrite <-disjoint_union_complement, <-Union_subset.
              intros x H2.
-             rewrite Singleton_classification in H2; congruence. }
-        rewrite finite_union_cardinality, singleton_card in H1;
+             rewrite -> Singleton_classification in H2; congruence. }
+        rewrite -> finite_union_cardinality, singleton_card in H1;
           eauto using disjoint_intersection_complement, singletons_are_finite,
           subsets_of_finites_are_finite, complement_subset, naturals_are_finite.
         now apply sub_spec in H1.
     - left.
       apply Specify_classification.
       split; auto.
-      rewrite Powerset_classification.
+      rewrite -> Powerset_classification.
       intros x H2.
-      rewrite add_1_r, <-S_is_succ in H0.
+      rewrite -> add_1_r, <-S_is_succ in H0.
       apply H0 in H2 as H3.
       apply Pairwise_union_classification in H3 as [H3 | H3]; auto.
       apply Singleton_classification in H3.
       now subst. }
   exists f.
   repeat split; auto.
-  - rewrite Injective_classification.
+  - rewrite -> Injective_classification.
     intros x y H3 H4 H5.
-    rewrite ? H2 in H5; try congruence.
+    rewrite -> ? H2 in H5; try congruence.
     repeat destruct excluded_middle_informative; auto.
     + apply Extensionality.
       split; intros H6; destruct (classic (z = n)) as [H7 | H7];
         try congruence.
       * eapply complement_subset.
         rewrite <-H5.
-        now rewrite Complement_classification, Singleton_classification.
+        now rewrite -> Complement_classification, Singleton_classification.
       * eapply complement_subset.
-        rewrite H5.
-        now rewrite Complement_classification, Singleton_classification.
+        rewrite -> H5.
+        now rewrite -> Complement_classification, Singleton_classification.
     + unfold set_of_combinations in *.
-      rewrite H0, Specify_classification in *.
+      rewrite -> H0, Specify_classification in *.
       destruct H3 as [H3 H6], H4 as [H4 H7].
-      rewrite Powerset_classification in *.
+      rewrite -> Powerset_classification in *.
       rewrite <-H5 in H7.
       replace x with ({n,n} ∪ (x \ {n,n})) in H6.
       2: { rewrite <-disjoint_union_complement, <-Union_subset.
            intros z H8.
-           rewrite Singleton_classification in H8; congruence. }
-      rewrite finite_union_cardinality, singleton_card, H7,
+           rewrite -> Singleton_classification in H8; congruence. }
+      rewrite -> finite_union_cardinality, singleton_card, H7,
       naturals.add_comm, add_1_r in H6;
           eauto using disjoint_intersection_complement, singletons_are_finite,
           subsets_of_finites_are_finite, complement_subset, naturals_are_finite.
       now contradiction (neq_succ k).
     + unfold set_of_combinations in *.
-      rewrite H0, Specify_classification in *.
+      rewrite -> H0, Specify_classification in *.
       destruct H3 as [H3 H6], H4 as [H4 H7].
-      rewrite Powerset_classification in *.
-      rewrite H5 in H6.
+      rewrite -> Powerset_classification in *.
+      rewrite -> H5 in H6.
       replace y with ({n,n} ∪ (y \ {n,n})) in H7.
       2: { rewrite <-disjoint_union_complement, <-Union_subset.
            intros z H8.
-           rewrite Singleton_classification in H8; congruence. }
-      rewrite finite_union_cardinality, singleton_card, H6,
+           rewrite -> Singleton_classification in H8; congruence. }
+      rewrite -> finite_union_cardinality, singleton_card, H6,
       naturals.add_comm, add_1_r in H7;
           eauto using disjoint_intersection_complement, singletons_are_finite,
           subsets_of_finites_are_finite, complement_subset, naturals_are_finite.
       now contradiction (neq_succ k).
-  - rewrite Surjective_classification.
+  - rewrite -> Surjective_classification.
     intros y H3.
-    rewrite H1 in H3.
+    rewrite -> H1 in H3.
     apply Pairwise_union_classification in H3 as [H3 | H3];
       apply Specify_classification in H3 as [H3 H4];
       apply Powerset_classification in H3.
     + exists y.
       assert (y ∈ domain f) as H5.
-      { rewrite H0.
+      { rewrite -> H0.
         apply Specify_classification.
-        rewrite Powerset_classification.
+        rewrite -> Powerset_classification.
         split; auto.
         intros z H5.
         apply H3 in H5.
@@ -2328,7 +2329,7 @@ Proof.
           now exists 1%N. }
         auto. }
       split; auto.
-      rewrite H2; try congruence.
+      rewrite -> H2; try congruence.
       destruct excluded_middle_informative; auto.
       apply H3 in i.
       contradiction (no_quines n).
@@ -2337,28 +2338,28 @@ Proof.
       { apply Extensionality.
         split; intros H5; try contradiction (Empty_set_classification z).
         apply Pairwise_intersection_classification in H5 as [H5 H6].
-        rewrite Singleton_classification in H6.
+        rewrite -> Singleton_classification in H6.
         subst.
         apply H3 in H5.
         contradiction (no_quines n). }
       assert (y ∪ {n,n} ∈ domain f) as H6.
-      { rewrite H0.
+      { rewrite -> H0.
         apply Specify_classification.
-        rewrite Powerset_classification, add_1_r, <-S_is_succ.
+        rewrite -> Powerset_classification, add_1_r, <-S_is_succ.
         split.
         - intros z H6.
           apply Pairwise_union_classification.
           apply Pairwise_union_classification in H6 as [H6 | H6]; try tauto.
           left.
           auto.
-        - rewrite finite_union_cardinality, H4, singleton_card,
+        - rewrite -> finite_union_cardinality, H4, singleton_card,
           naturals.add_comm, sub_abab;
             eauto using singletons_are_finite,
             subsets_of_finites_are_finite, naturals_are_finite. }
       split; auto.
-      rewrite H2; try congruence.
+      rewrite -> H2; try congruence.
       destruct excluded_middle_informative.
-      * rewrite complement_disjoint_union; auto.
+      * rewrite -> complement_disjoint_union; auto.
       * contradiction n0.
         apply Pairwise_union_classification.
         right.
@@ -2377,7 +2378,7 @@ Proof.
   apply Pairwise_intersection_classification in H0 as [H0 H1].
   apply Specify_classification in H0 as [H0 H2].
   apply Specify_classification in H1 as [H1 H3].
-  erewrite H2, <-sub_abab, (naturals.add_comm 1), add_1_r in H3 at 1; auto.
+  erewrite -> H2, <-sub_abab, (naturals.add_comm 1), add_1_r in H3 at 1; auto.
   now contradiction (neq_succ (k-1)).
 Qed.
 
@@ -2398,14 +2399,14 @@ Theorem binomial_overflow : ∀ n k, (n < k)%N → binomial n k = 0%N.
 Proof.
   intros n k H.
   unfold binomial.
-  rewrite combinations_overflow, <-card_of_natural; auto.
+  rewrite -> combinations_overflow, <-card_of_natural; auto.
 Qed.
 
 Theorem binomial_empty_set : ∀ k, k ≠ 0%N → binomial 0 k = 0%N.
 Proof.
   intros k H.
   apply binomial_overflow.
-  rewrite naturals.lt_def.
+  rewrite -> naturals.lt_def.
   exists k.
   split; auto.
   ring.
@@ -2419,8 +2420,8 @@ Qed.
 Theorem binomial_one : binomial 1 1 = 1%N.
 Proof.
   pose proof binomial_coefficient 1 1 as H.
-  rewrite ? one_factorial, sub_diag, zero_factorial in H.
-  rewrite H at 3; try ring.
+  rewrite -> ? one_factorial, sub_diag, zero_factorial in H.
+  rewrite -> H at 3; try ring.
   eauto using naturals.le_refl.
 Qed.
 
@@ -2428,9 +2429,9 @@ Theorem binomial_n_n : ∀ n, binomial n n = 1%N.
 Proof.
   intros n.
   pose proof binomial_coefficient n n as H.
-  rewrite sub_diag, zero_factorial, mul_1_r, <-(mul_1_l (n!)) in H at 1.
+  rewrite -> sub_diag, zero_factorial, mul_1_r, <-(mul_1_l (n!)) in H at 1.
   eapply cancellation_mul; eauto using factorial_ne_0.
-  rewrite H; auto using naturals.le_refl.
+  rewrite -> H; auto using naturals.le_refl.
 Qed.
 
 Theorem sum_card_0 : ∀ n X f,
@@ -2439,7 +2440,7 @@ Theorem sum_card_0 : ∀ n X f,
     sum ℤ (λ k, # (f k) : Z) 0 n = (# X : Z).
 Proof.
   induction n using Induction; intros X f H H0 H1.
-  - rewrite sum_0.
+  - rewrite -> sum_0.
     repeat f_equal.
     apply Extensionality.
     split; intros H2.
@@ -2451,15 +2452,15 @@ Proof.
     + apply H1 in H2 as [y [[[H2 H3] H4] H5]].
       replace 0%N with y by now apply naturals.le_antisymm.
       auto.
-  - rewrite sum_succ; auto using zero_le.
+  - rewrite -> sum_succ; auto using zero_le.
     simpl.
-    rewrite (IHn (X \ (f (S n))) f);
+    rewrite -> (IHn (X \ (f (S n))) f);
       eauto using subsets_of_finites_are_finite, complement_subset,
       subsets_of_finites_are_finite.
-    + rewrite INZ_add, <-finite_union_cardinality;
+    + rewrite -> INZ_add, <-finite_union_cardinality;
         eauto using subsets_of_finites_are_finite, complement_subset,
         subsets_of_finites_are_finite, zero_le, naturals.le_refl.
-      * rewrite Union_comm, <-disjoint_union_complement.
+      * rewrite -> Union_comm, <-disjoint_union_complement.
         apply f_equal, f_equal, Union_subset, H0.
         split; eauto using zero_le, naturals.le_refl.
       * apply NNPP.
@@ -2487,7 +2488,7 @@ Proof.
           repeat split; auto.
           eapply naturals.le_lt_trans; eauto using naturals.succ_lt. }
         subst.
-        rewrite naturals.le_not_gt in H3.
+        rewrite -> naturals.le_not_gt in H3.
         contradict H3.
         auto using naturals.succ_lt.
     + split; intros H2.
@@ -2495,7 +2496,7 @@ Proof.
         apply H1 in H2 as [y [[[H2 H4] H5] H6]].
         exists y.
         repeat split; auto.
-        -- rewrite naturals.le_not_gt.
+        -- rewrite -> naturals.le_not_gt.
            intros H7.
            apply squeeze_upper in H4; auto.
            now subst.
@@ -2520,7 +2521,7 @@ Proof.
           repeat split; auto.
           eapply naturals.le_lt_trans; eauto using naturals.succ_lt. }
         subst.
-        rewrite naturals.le_not_gt in H3.
+        rewrite -> naturals.le_not_gt in H3.
         contradict H3.
         auto using naturals.succ_lt.
 Qed.
@@ -2533,38 +2534,38 @@ Proof.
   intros a b X f H H0 H1.
   destruct (classic (a ≤ b)%N) as [[c H2] | H2]; subst.
   - unfold sum.
-    rewrite iterate_shift.
+    rewrite -> iterate_shift.
     apply sum_card_0; auto.
     + intros k [H2 H3].
       apply H0.
       split.
       * rewrite <-(add_0_l a) at 1.
         now apply O1_le.
-      * rewrite (add_comm a).
+      * rewrite -> (add_comm a).
         now apply O1_le.
     + split; intros H2.
       * apply H1 in H2 as [y [[[H2 H3] H4] H5]].
         exists (y-a)%N.
         repeat split; try apply zero_le.
         -- eapply O1_le_iff.
-           rewrite (add_comm c).
+           rewrite -> (add_comm c).
            eapply naturals.le_trans; eauto.
-           rewrite add_comm, sub_abab; auto using naturals.le_refl.
-        -- rewrite add_comm, sub_abab; auto using naturals.le_refl.
+           rewrite -> add_comm, sub_abab; auto using naturals.le_refl.
+        -- rewrite -> add_comm, sub_abab; auto using naturals.le_refl.
         -- intros x' [H6 H7].
-           replace y with (x'+a)%N; try now rewrite sub_abba.
+           replace y with (x'+a)%N; try now rewrite -> sub_abba.
            apply eq_sym, H5.
            repeat split; auto.
            ++ rewrite <-(add_0_l a) at 1.
               now apply O1_le.
-           ++ rewrite (add_comm a).
+           ++ rewrite -> (add_comm a).
               now apply O1_le.
       * destruct H2 as [y [[[H2 H3] H4] H5]].
         apply (H0 (y+a)%N); auto.
         repeat split; auto.
         -- rewrite <-(add_0_l a) at 1.
            now apply O1_le.
-        -- rewrite (add_comm a).
+        -- rewrite -> (add_comm a).
            now apply O1_le.
   - rewrite <-naturals.lt_not_ge, sum_neg, naturals.lt_not_ge in *; auto.
     apply INZ_eq, eq_sym.

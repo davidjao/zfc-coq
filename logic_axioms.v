@@ -1,7 +1,5 @@
 Require Export Utf8 IndefiniteDescription FunctionalExtensionality
-        PropExtensionality ChoiceFacts ssrfun ssreflect.
-
-Global Unset SsrRewrite.
+        PropExtensionality ChoiceFacts ssrfun ssreflect ssrbool.
 
 (* See https://github.com/coq/coq/wiki/CoqAndAxioms for explanations. *)
 
@@ -19,7 +17,7 @@ Proof.
   { extensionality x.
     firstorder using propositional_extensionality. }
   destruct EB.
-  now rewrite (proof_irrelevance _ H1 H2), H in *.
+  now rewrite -> (proof_irrelevance _ H1 H2), H in *.
 Qed.
 
 (* Strong law of the excluded middle: We can always construct P or ¬ P. *)
@@ -34,8 +32,7 @@ Qed.
 
 Lemma NNPP : ∀ P, ¬ ¬ P → P.
 Proof.
-  intros P H.
-  now destruct (classic P).
+  move: classic => / [swap] P / [swap] H / (λ x, x P); by tauto.
 Qed.
 
 Arguments exist {A P x}.

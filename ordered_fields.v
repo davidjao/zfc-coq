@@ -62,7 +62,7 @@ Section Ordered_field_theorems.
       rewrite <-(inv_r _ x), <-H0, mul_0_r;
         auto using (ordered_rings.lt_neq ordered_ring_from_field).
     - do 2 eapply (O3 ordered_ring_from_field x) in H0; auto; simpl in *.
-      rewrite ? mul_0_r, inv_r, rings.M1, rings.M3 in H0;
+      rewrite -> ? mul_0_r, inv_r, rings.M1, rings.M3 in H0;
         auto using (ordered_rings.lt_neq ordered_ring_from_field).
       contradiction (lt_antisym ordered_ring_from_field 0 x).
   Qed.
@@ -107,7 +107,7 @@ Section Ordered_field_theorems.
     repeat destruct excluded_middle_informative;
       repeat destruct constructive_indefinite_description;
       try destruct a0.
-    - rewrite integers.A3, e in *.
+    - rewrite -> integers.A3, e in *.
       now apply (pow_pos ordered_ring_from_field).
     - rewrite inv_ring_to_field; auto using (lt_neq ordered_ring_from_field).
       now apply (pow_pos ordered_ring_from_field), O4.
@@ -120,7 +120,7 @@ Section Ordered_field_theorems.
     split; intros H0.
     - destruct (T _ 1 (a^-1)) as [[H1 _] | [[_ [H1 _]] | [_ [_ H1]]]]; auto.
       + apply (O3_r ordered_ring_from_field a) in H1; simpl in *; auto.
-        rewrite inv_l, rings.M3 in H1;
+        rewrite -> inv_l, rings.M3 in H1;
           auto using (lt_neq ordered_ring_from_field).
         contradiction (lt_antisym ordered_ring_from_field a 1).
       + rewrite <-inv_inv, <-H1, inv_one in H0;
@@ -130,7 +130,7 @@ Section Ordered_field_theorems.
       + rewrite <-H1, inv_one in H0.
         contradiction (ordered_rings.lt_irrefl ordered_ring_from_field 1).
       + apply (O3_r ordered_ring_from_field a) in H0; simpl in *; auto.
-        rewrite inv_l, rings.M3 in H0;
+        rewrite -> inv_l, rings.M3 in H0;
           auto using (lt_neq ordered_ring_from_field).
   Qed.
 
@@ -139,7 +139,7 @@ Section Ordered_field_theorems.
     intros a n H H0.
     apply lt_def in H0 as H1.
     destruct H1 as [c [H1 H2]].
-    rewrite H2, integers.A3, <-pow_wf, (INZ_lt 0 c) in *.
+    rewrite -> H2, integers.A3, <-pow_wf, (INZ_lt 0 c) in *.
     now apply (ordered_rings.pow_gt_1 ordered_ring_from_field).
   Qed.
 

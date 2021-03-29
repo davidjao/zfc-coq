@@ -14,10 +14,8 @@ Proof.
     apply H1 in H2 as [Y [H2 H3]].
     replace (y ∪ {y,y}) with Y; auto.
     apply Extensionality.
-    split; intros H4;
-      rewrite Pairwise_union_classification, Singleton_classification in *.
-    + apply H3 in H4 as [H4 | H4]; intuition.
-    + apply H3; auto.
+    split; rewrite Pairwise_union_classification Singleton_classification;
+      apply H3.
 Qed.
 
 Definition ω : set.
@@ -107,8 +105,8 @@ Proof.
   intros P H H0 H1 n.
   destruct (classic (n ∈ ω)); auto.
   replace ω with {x in ω | P x} in H2;
-    try (now rewrite Specify_classification in H2); clear n H H2.
-  apply PA3_ω; try intros y H; try rewrite Specify_classification in *;
+    try (now rewrite -> Specify_classification in H2); clear n H H2.
+  apply PA3_ω; try intros y H; try rewrite -> Specify_classification in *;
     intuition; auto using PA1_ω, PA2_ω.
 Qed.
 
@@ -207,16 +205,16 @@ Proof.
   intros n H.
   unfold succ.
   apply Extensionality.
-  split; intros H0; rewrite Union_classification in *; eauto using in_succ.
+  split; intros H0; rewrite -> Union_classification in *; eauto using in_succ.
   destruct H0 as [x [H0 H1]].
-  rewrite Pairwise_union_classification, Singleton_classification in H0.
+  rewrite -> Pairwise_union_classification, Singleton_classification in H0.
   destruct H0; try congruence.
   apply (ω_is_transitive _ x); eauto using elements_of_naturals_are_naturals.
 Qed.
 
 Theorem union_ω : ∀ {n}, n ∈ ω → ⋃ n ∈ ω.
 Proof.
-  induction n using Induction_ω; rewrite ? Empty_union, ? union_succ; tauto.
+  induction n using Induction_ω; rewrite -> ? Empty_union, ? union_succ; tauto.
 Qed.
 
 Theorem PA5_ω : ∀ n m, n ∈ ω → m ∈ ω → succ n = succ m → n = m.
@@ -233,22 +231,22 @@ Proof.
   revert x X H0 H1 H.
   induction x using Induction_ω; intuition; eauto using Empty_set_is_subset.
   destruct (IHx (X ∪ {x,x})) as [y [H3 H4]];
-    rewrite ? Pairwise_union_classification, ? Singleton_classification; auto.
+    rewrite ? Pairwise_union_classification ? Singleton_classification; auto.
   { intros y H3.
-    rewrite Pairwise_union_classification, Singleton_classification in H3.
+    rewrite -> Pairwise_union_classification, Singleton_classification in H3.
     destruct H3; subst; auto. }
   destruct (classic (x ∈ X)) as [H5 | H5].
   - assert (X ∪ {x,x} = X); auto.
     apply Extensionality.
     split; intros H6;
-      rewrite Pairwise_union_classification, Singleton_classification in *;
+      rewrite -> Pairwise_union_classification, Singleton_classification in *;
       try destruct H6; subst; auto.
   - apply Pairwise_union_classification in H3 as [H3 | H3].
     + exists y.
       split; auto.
       intros y0 H7.
       now apply H4, Pairwise_union_classification, or_introl.
-    + rewrite Singleton_classification in H3.
+    + rewrite -> Singleton_classification in H3.
       subst.
       exists (x ∪ {x,x}).
       split; auto.
@@ -256,7 +254,7 @@ Proof.
       assert (x ⊂ y) as H7.
       { apply H4; auto.
         now apply Pairwise_union_classification, or_introl. }
-      rewrite Pairwise_union_classification, Singleton_classification in H6.
+      rewrite -> Pairwise_union_classification, Singleton_classification in H6.
       destruct H6; subst; auto.
       apply subsets_of_naturals_are_elements; auto.
       contradict H5.
@@ -359,6 +357,11 @@ Proof.
   now apply set_proj_injective, PA5_ω.
 Qed.
 
+Theorem PA5_iff : ∀ n m, S n = S m ↔ n = m.
+Proof.
+  intuition eauto using PA5; congruence.
+Qed.
+
 Theorem neq_succ : ∀ n, n ≠ S n.
 Proof.
   induction n using Induction; intros H.
@@ -389,7 +392,7 @@ Section Iterated_op_construction.
       split.
       { destruct excluded_middle_informative; auto.
         contradiction (PA4_ω n); eauto using elts_in_set.
-        now rewrite S_is_succ, <-e. }
+        now rewrite -> S_is_succ, <-e. }
       intros m H1.
       repeat destruct excluded_middle_informative; subst;
         try now contradiction (no_quines_ω (S n)); eauto using elts_in_set.
@@ -426,8 +429,8 @@ Section Iterated_op_construction.
     f_equal.
     enough (∀ k : N, k ⊂ n → g k = iterated_op k); auto using Set_is_subset.
     induction k using Induction; intros H2; rewrite <-? S_is_succ in *.
-    - now rewrite H0, iterated_op_0.
-    - rewrite H1, H, IHk; try eapply Subset_transitive;
+    - now rewrite -> H0, iterated_op_0.
+    - rewrite -> H1, H, IHk; try eapply Subset_transitive;
         eauto using in_succ, subset_succ, Set_is_subset, Subset_transitive.
   Qed.
 
@@ -469,36 +472,36 @@ Theorem add_1_r : ∀ a, a + 1 = S a.
 Proof.
   intros a.
   unfold one.
-  now rewrite add_succ_r, add_0_r.
+  now rewrite -> add_succ_r, add_0_r.
 Qed.
 
 Theorem add_comm : ∀ a b, a + b = b + a.
 Proof.
   induction a using Induction; induction b using Induction; auto.
-  - now rewrite add_0_r, add_succ_r, IHb in *.
-  - now rewrite add_0_r, add_succ_r, <-IHa, add_0_r.
-  - now rewrite ? add_succ_r, IHb, <-? IHa, ? add_succ_r, IHa.
+  - now rewrite -> add_0_r, add_succ_r, IHb in *.
+  - now rewrite -> add_0_r, add_succ_r, <-IHa, add_0_r.
+  - now rewrite -> ? add_succ_r, IHb, <-? IHa, ? add_succ_r, IHa.
 Qed.
 
 Theorem add_assoc : ∀ a b c, a + (b + c) = (a + b) + c.
 Proof.
   induction c using Induction.
   - now rewrite ? add_0_r.
-  - now rewrite ? add_succ_r, IHc.
+  - now rewrite -> ? add_succ_r, IHc.
 Qed.
 
 Theorem add_0_l : ∀ x, 0 + x = x.
 Proof.
   intros x.
-  now rewrite add_comm, add_0_r.
+  now rewrite -> add_comm, add_0_r.
 Qed.
 
 Theorem cancellation_add : ∀ a b c, a + b = a + c → b = c.
 Proof.
   induction a using Induction; intros b c H.
-  - now rewrite ? add_0_l in *.
+  - now rewrite -> ? add_0_l in *.
   - apply IHa, PA5.
-    now rewrite ? (add_comm a), <-? add_succ_r, ? (add_comm _ (S a)).
+    now rewrite -> ? (add_comm a), <-? add_succ_r, ? (add_comm _ (S a)).
 Qed.
 
 Theorem cancellation_0 : ∀ a b, a + b = a → b = 0.
@@ -512,55 +515,55 @@ Theorem mul_1_r : ∀ a, a * 1 = a.
 Proof.
   intros a.
   unfold one.
-  now rewrite mul_succ_r, mul_0_r, add_0_l.
+  now rewrite -> mul_succ_r, mul_0_r, add_0_l.
 Qed.
 
 Theorem mul_2_r : ∀ x, x * 2 = x + x.
 Proof.
   intros x.
-  now rewrite mul_succ_r, mul_1_r.
+  now rewrite -> mul_succ_r, mul_1_r.
 Qed.
 
 Theorem mul_distr_r : ∀ a b c, (a + b) * c = a * c + b * c.
 Proof.
   induction c using Induction.
-  - now rewrite ? mul_0_r, add_0_r.
-  - now rewrite ? (mul_succ_r), IHc, ? add_assoc,
+  - now rewrite -> ? mul_0_r, add_0_r.
+  - now rewrite -> ? (mul_succ_r), IHc, ? add_assoc,
     <-(add_assoc (a*c)), (add_comm _ a), ? add_assoc.
 Qed.
 
 Theorem mul_comm : ∀ a b, a * b = b * a.
 Proof.
   induction a using Induction; induction b using Induction; auto.
-  - now rewrite mul_succ_r, IHb, ? mul_0_r, add_0_r.
-  - now rewrite mul_succ_r, <-IHa, ? mul_0_r, add_0_r.
-  - now rewrite ? mul_succ_r, ? IHb, <-? IHa, ? mul_succ_r,
+  - now rewrite -> mul_succ_r, IHb, ? mul_0_r, add_0_r.
+  - now rewrite -> mul_succ_r, <-IHa, ? mul_0_r, add_0_r.
+  - now rewrite -> ? mul_succ_r, ? IHb, <-? IHa, ? mul_succ_r,
     <-? add_assoc, ? add_succ_r, IHa, (add_comm a).
 Qed.
 
 Theorem mul_distr_l : ∀ a b c, a * (b + c) = a * b + a * c.
 Proof.
   intros a b c.
-  now rewrite mul_comm, mul_distr_r, ? (mul_comm a).
+  now rewrite -> mul_comm, mul_distr_r, ? (mul_comm a).
 Qed.
 
 Theorem mul_assoc : ∀ a b c, a * (b * c) = (a * b) * c.
 Proof.
   induction c using Induction.
   - now rewrite ? mul_0_r.
-  - now rewrite ? (mul_succ_r), mul_distr_l, IHc.
+  - now rewrite -> ? (mul_succ_r), mul_distr_l, IHc.
 Qed.
 
 Theorem mul_0_l : ∀ a, 0 * a = 0.
 Proof.
   intros a.
-  now rewrite mul_comm, mul_0_r.
+  now rewrite -> mul_comm, mul_0_r.
 Qed.
 
 Theorem mul_1_l : ∀ a, 1 * a = a.
 Proof.
   intros a.
-  now rewrite mul_comm, mul_1_r.
+  now rewrite -> mul_comm, mul_1_r.
 Qed.
 
 Definition pow a b := (iterated_op mul 1 (λ x, a) b).
@@ -583,7 +586,7 @@ Theorem pow_1_r : ∀ x, x^1 = x.
 Proof.
   intros x.
   unfold one.
-  now rewrite pow_succ_r, pow_0_r, mul_comm, mul_1_r.
+  now rewrite -> pow_succ_r, pow_0_r, mul_comm, mul_1_r.
 Qed.
 
 Theorem pow_0_l : ∀ x, x ≠ 0 → 0^x = 0.
@@ -591,42 +594,42 @@ Proof.
   intros x H.
   apply succ_0 in H as [m H].
   subst.
-  now rewrite pow_succ_r, mul_0_r.
+  now rewrite -> pow_succ_r, mul_0_r.
 Qed.
 
 Theorem pow_1_l : ∀ x, 1^x = 1.
 Proof.
   induction x using Induction.
   - now rewrite pow_0_r.
-  - now rewrite pow_succ_r, mul_1_r.
+  - now rewrite -> pow_succ_r, mul_1_r.
 Qed.
 
 Theorem pow_2_r : ∀ x, x^2 = x*x.
 Proof.
   intros x.
-  now rewrite pow_succ_r, pow_1_r.
+  now rewrite -> pow_succ_r, pow_1_r.
 Qed.
 
 Theorem pow_add_r : ∀ a b c, a^(b+c) = a^b * a^c.
 Proof.
   induction c using Induction.
-  - now rewrite add_0_r, pow_0_r, mul_1_r.
-  - now rewrite add_succ_r, ? pow_succ_r, IHc, mul_assoc.
+  - now rewrite -> add_0_r, pow_0_r, mul_1_r.
+  - now rewrite -> add_succ_r, ? pow_succ_r, IHc, mul_assoc.
 Qed.
 
 Theorem pow_mul_l : ∀ a b c, (a*b)^c = a^c * b^c.
 Proof.
   induction c using Induction.
-  - now rewrite ? pow_0_r, mul_1_r.
-  - now rewrite ? pow_succ_r, <-? mul_assoc,
+  - now rewrite -> ? pow_0_r, mul_1_r.
+  - now rewrite -> ? pow_succ_r, <-? mul_assoc,
     (mul_assoc a), (mul_comm _ (b^c)), IHc, ? mul_assoc.
 Qed.
 
 Theorem pow_mul_r : ∀ a b c, a^(b*c) = (a^b)^c.
 Proof.
   induction c using Induction.
-  - now rewrite mul_0_r, ? pow_0_r.
-  - now rewrite mul_succ_r, pow_succ_r, pow_add_r, IHc.
+  - now rewrite -> mul_0_r, ? pow_0_r.
+  - now rewrite -> mul_succ_r, pow_succ_r, pow_add_r, IHc.
 Qed.
 
 Definition le a b := ∃ c, a + c = b.
@@ -653,7 +656,7 @@ Proof.
     + rewrite add_0_r.
       auto using Set_is_subset.
     + eapply Subset_transitive; eauto.
-      rewrite add_succ_r, <-S_is_succ.
+      rewrite -> add_succ_r, <-S_is_succ.
       apply subset_succ.
   - induction b using Induction.
     + exists 0.
@@ -668,22 +671,19 @@ Proof.
         intros x H1.
         rewrite <-S_is_succ in H1.
         apply Pairwise_union_classification in H1 as [H1 | H1];
-          try now (rewrite Singleton_classification in *; subst).
+          try now (rewrite -> Singleton_classification in *; subst).
         eapply elements_of_naturals_are_subsets; eauto using elts_in_set.
       * destruct IHb as [x H1].
-        { intros x H1.
-          rewrite <-S_is_succ in H.
-          unfold succ in H.
-          apply H in H1 as H2.
-          rewrite Pairwise_union_classification, Singleton_classification in H2.
-          destruct H2; subst; tauto. }
+        { move: H => /[swap] => x /[swap] /[dup] => H => /[swap] /[apply].
+          rewrite -S_is_succ /succ Pairwise_union_classification.
+          rewrite Singleton_classification; elim => ?; subst; tauto. }
         exists (S x).
-        now rewrite add_succ_r, H1.
+        now rewrite -> add_succ_r, H1.
 Qed.
 
 Theorem lt_is_in : ∀ a b, a < b ↔ a ∈ b.
   intros a b.
-  split; intros H; unfold lt in *; rewrite le_is_subset in *.
+  split; intros H; unfold lt in *; rewrite -> le_is_subset in *.
   - destruct H as [H H0].
     eapply subsets_of_naturals_are_elements; eauto using elts_in_set.
     contradict H0.
@@ -699,7 +699,7 @@ Qed.
 Theorem lt_is_subsetneq : ∀ a b, a < b ↔ a ⊊ b.
 Proof.
   split; intros [H H0].
-  - rewrite le_is_subset in H.
+  - rewrite -> le_is_subset in H.
     split; auto.
     contradict H0.
     now apply set_proj_injective.
@@ -726,14 +726,14 @@ Qed.
 Theorem le_antisymm : ∀ a b, a ≤ b → b ≤ a → a = b.
 Proof.
   intros a b H H0.
-  rewrite ? le_is_subset in *.
+  rewrite -> ? le_is_subset in *.
   now apply set_proj_injective, Subset_equality_iff.
 Qed.
 
 Theorem lt_antisym : ∀ a b, a < b → ¬ b < a.
 Proof.
   intros a b H H0.
-  rewrite ? lt_is_in in *.
+  rewrite -> ? lt_is_in in *.
   eapply ω_irreflexive; eauto using elts_in_set.
 Qed.
 
@@ -775,8 +775,8 @@ Theorem cancellation_0_add : ∀ a b, a + b = 0 → a = 0 ∧ b = 0.
 Proof.
   intros a b H.
   induction a using Induction; induction b using Induction;
-    rewrite ? add_0_l, ? add_0_r in *; try tauto.
-  rewrite add_succ_r in *.
+    rewrite -> ? add_0_l, ? add_0_r in *; try tauto.
+  rewrite -> add_succ_r in *.
   now contradiction (PA4 (S a + b)).
 Qed.
 
@@ -786,7 +786,7 @@ Proof.
   induction a using Induction; induction b using Induction; auto.
   rewrite add_succ_r in H.
   apply PA5 in H.
-  rewrite add_comm, add_succ_r in H.
+  rewrite -> add_comm, add_succ_r in H.
   now contradiction (PA4 (b+a)).
 Qed.
 
@@ -794,14 +794,14 @@ Theorem cancellation_0_mul : ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
 Proof.
   induction a using Induction; induction b using Induction; auto.
   intros H.
-  rewrite mul_succ_r, add_succ_r in H.
+  rewrite -> mul_succ_r, add_succ_r in H.
   now contradiction (PA4 (S a * b + a)).
 Qed.
 
 Theorem mul_lt_r : ∀ a b c, a ≠ 0 → b < c → a * b < a * c.
 Proof.
   intros a b c H H0.
-  rewrite lt_def in *.
+  rewrite -> lt_def in *.
   destruct H0 as [n [H0 H1]].
   exists (a*n).
   split.
@@ -821,7 +821,7 @@ Theorem cancellation_mul : ∀ a b c : N, c ≠ 0 → a * c = b * c → a = b.
 Proof.
   intros a b c H H0.
   destruct (lt_trichotomy a b) as [H1 | [H1 | H1]]; auto;
-    eapply mul_lt_r in H1; eauto; rewrite ? (mul_comm c), H0 in H1;
+    eapply mul_lt_r in H1; eauto; rewrite -> ? (mul_comm c), H0 in H1;
       exfalso; eapply lt_irrefl; eauto.
 Qed.
 
@@ -837,7 +837,7 @@ Qed.
 Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
 Proof.
   intros a b c H H0.
-  rewrite lt_def in *.
+  rewrite -> lt_def in *.
   destruct H as [x [H H1]], H0 as [y [H0 H2]].
   exists (x+y).
   split.
@@ -850,7 +850,7 @@ Qed.
 Theorem O1 : ∀ {a b} c, a < b → a + c < b + c.
 Proof.
   intros a b c H.
-  rewrite lt_def in *.
+  rewrite -> lt_def in *.
   destruct H as [x [H H0]].
   exists x.
   split; auto.
@@ -861,12 +861,12 @@ Theorem O1_iff : ∀ {a b} c, a < b ↔ a + c < b + c.
 Proof.
   intros a b c.
   split; intros H; auto using O1.
-  rewrite lt_def in *.
+  rewrite -> lt_def in *.
   destruct H as [x [H H0]].
   exists x.
   split; auto.
   apply (cancellation_add c).
-  rewrite (add_comm _ b), <-H0.
+  rewrite -> (add_comm _ b), <-H0.
   ring.
 Qed.
 
@@ -884,7 +884,7 @@ Proof.
   destruct H as [x H].
   exists x.
   apply (cancellation_add c).
-  rewrite (add_comm _ b), <-H.
+  rewrite -> (add_comm _ b), <-H.
   ring.
 Qed.
 
@@ -898,10 +898,10 @@ Qed.
 Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
 Proof.
   intros a b H H0.
-  rewrite lt_def in *.
+  rewrite -> lt_def in *.
   destruct H as [x [H H1]], H0 as [y [H0 H2]].
   exists (x*y).
-  rewrite add_0_l in *.
+  rewrite -> add_0_l in *.
   subst.
   split; auto.
   intros H1.
@@ -911,9 +911,9 @@ Qed.
 Theorem O3 : ∀ {a b} c, a < b → 0 < c → a * c < b * c.
 Proof.
   intros a b c H H0.
-  rewrite lt_def in *.
+  rewrite -> lt_def in *.
   destruct H as [x [H H1]], H0 as [y [H0 H2]].
-  rewrite add_0_l in *.
+  rewrite -> add_0_l in *.
   subst.
   exists (x*c).
   split; try ring.
@@ -925,9 +925,9 @@ Theorem lt_0_1 : ∀ a, ¬ 0 < a < 1.
 Proof.
   induction a using Induction; intros [H H0].
   - eapply lt_irrefl; eauto.
-  - rewrite lt_def in *.
+  - rewrite -> lt_def in *.
     destruct H0 as [c [H0 H1]].
-    rewrite add_comm, add_succ_r, neq_sym in *.
+    rewrite -> add_comm, add_succ_r, neq_sym in *.
     now apply PA5, cancellation_0_add in H1 as [H1 H2].
 Qed.
 
@@ -964,7 +964,7 @@ Proof.
   - rewrite <-? (add_1_r m), <-? (add_1_r n).
     now apply O1.
   - apply lt_def in H as [c [H H0]].
-    rewrite add_comm, add_succ_r, add_comm in H0.
+    rewrite -> add_comm, add_succ_r, add_comm in H0.
     apply lt_def.
     eauto using PA5.
 Qed.
@@ -1037,27 +1037,27 @@ Theorem sub_0_l : ∀ a, 0 - a = 0.
 Proof.
   induction a using Induction; unfold sub in *.
   - now rewrite iterated_op_0.
-  - now rewrite iterated_op_succ, IHa, pred_0.
+  - now rewrite -> iterated_op_succ, IHa, pred_0.
 Qed.
 
 Theorem sub_succ_r : ∀ a b, a - S b = pred (a - b).
 Proof.
   induction b using Induction; unfold sub;
-    now rewrite iterated_op_succ, ? iterated_op_0.
+    now rewrite -> iterated_op_succ, ? iterated_op_0.
 Qed.
 
 Theorem sub_succ : ∀ a b, S a - S b = a - b.
 Proof.
   induction b using Induction.
-  - now rewrite sub_succ_r, ? sub_0_r, pred_succ.
-  - now rewrite sub_succ_r, IHb, sub_succ_r.
+  - now rewrite -> sub_succ_r, ? sub_0_r, pred_succ.
+  - now rewrite -> sub_succ_r, IHb, sub_succ_r.
 Qed.
 
 Theorem sub_abba : ∀ a b, a + b - b = a.
 Proof.
   induction b using Induction.
-  - now rewrite add_0_r, sub_0_r.
-  - now rewrite add_succ_r, sub_succ.
+  - now rewrite -> add_0_r, sub_0_r.
+  - now rewrite -> add_succ_r, sub_succ.
 Qed.
 
 Theorem sub_diag : ∀ a, a - a = 0.
@@ -1085,7 +1085,7 @@ Theorem sub_abab : ∀ a b, a ≤ b → a + (b - a) = b.
 Proof.
   intros a b [c H].
   subst.
-  now rewrite (add_comm _ c), sub_abba, add_comm.
+  now rewrite -> (add_comm _ c), sub_abba, add_comm.
 Qed.
 
 Theorem sub_ne_0_lt : ∀ a b, a - b ≠ 0 → b < a.
@@ -1096,8 +1096,8 @@ Proof.
   destruct H as [c H].
   subst.
   induction c using Induction.
-  - now rewrite add_0_r, <-(add_0_l a), sub_abba at 1.
-  - now rewrite add_succ_r, sub_succ_r, IHc, pred_0.
+  - now rewrite -> add_0_r, <-(add_0_l a), sub_abba at 1.
+  - now rewrite -> add_succ_r, sub_succ_r, IHc, pred_0.
 Qed.
 
 Definition min : N → N → N.
@@ -1191,7 +1191,7 @@ Qed.
 Theorem max_0_r : ∀ a, max a 0 = a.
 Proof.
   intros a.
-  now rewrite max_sym, max_0_l.
+  now rewrite -> max_sym, max_0_l.
 Qed.
 
 Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
@@ -1210,7 +1210,7 @@ Proof.
   - intros H2.
     apply eq_sym, cancellation_0_add in H2 as [H2 H3].
     subst.
-    now rewrite ? add_0_r in *.
+    now rewrite -> ? add_0_r in *.
   - subst; ring.
 Qed.
 
@@ -1223,7 +1223,7 @@ Proof.
   - intros H2.
     apply eq_sym, cancellation_0_add in H2 as [H2 H3].
     subst.
-    now rewrite ? add_0_r in *.
+    now rewrite -> ? add_0_r in *.
   - subst; ring.
 Qed.
 
@@ -1294,7 +1294,7 @@ Proof.
   intros H1.
   apply neq_sym, succ_0 in H1 as [d H1].
   subst.
-  rewrite add_succ_r, <-S_lt in H0.
+  rewrite -> add_succ_r, <-S_lt in H0.
   contradiction (lt_irrefl n).
   eapply le_lt_trans; eauto.
   now exists d.
@@ -1303,7 +1303,7 @@ Qed.
 Theorem succ_le : ∀ a b, a ≤ b ↔ S a ≤ S b.
 Proof.
   split; intros [c H]; exists c; subst; [ | apply PA5 ];
-    now rewrite add_comm, add_succ_r, add_comm in *.
+    now rewrite -> add_comm, add_succ_r, add_comm in *.
 Qed.
 
 Theorem le_lt_succ : ∀ n m, m ≤ n ↔ m < S n.
@@ -1327,7 +1327,7 @@ Proof.
     apply neq_sym, succ_0 in H as [d H].
     subst.
     exists d.
-    now rewrite add_comm, ? add_succ_r, add_comm.
+    now rewrite -> add_comm, ? add_succ_r, add_comm.
   - exists (S c).
     split; auto using PA4.
     now rewrite <-H, (add_comm _ c), ? add_succ_r, add_comm.
@@ -1368,7 +1368,7 @@ Theorem one_le_succ : ∀ n, 1 ≤ S n.
 Proof.
   intros n.
   exists n.
-  now rewrite add_comm, add_1_r.
+  now rewrite -> add_comm, add_1_r.
 Qed.
 
 Theorem Strong_Induction : ∀ P : N → Prop,
@@ -1401,7 +1401,7 @@ Proof.
   - intros x H0.
     now apply Specify_classification in H0.
   - apply Specify_classification in H0 as [H0 H2].
-    rewrite (reify H0), despecify in H2.
+    rewrite -> (reify H0), despecify in H2.
     exists (exist H0 : N).
     split; auto.
     intros k H3.

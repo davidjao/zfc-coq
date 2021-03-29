@@ -346,13 +346,13 @@ Theorem Pairing_comm : ∀ x y, {x,y} = {y,x}.
 Proof.
   intros x y.
   apply Extensionality.
-  split; intros; rewrite Pairing_classification in *; tauto.
+  split; intros; rewrite -> Pairing_classification in *; tauto.
 Qed.
 
 Lemma Singleton_classification : ∀ x y, y ∈ {x,x} ↔ y = x.
 Proof.
   intros x y.
-  split; intros H; auto; rewrite Pairing_classification in *; tauto.
+  split; intros H; auto; rewrite -> Pairing_classification in *; tauto.
 Qed.
 
 Definition proper_subset a b := a ⊂ b ∧ a ≠ b.
@@ -392,7 +392,7 @@ Theorem Subset_extensionality :
 Proof.
   split; intros H.
   - intros X.
-    split; intros H0; now rewrite H in *.
+    split; intros H0; now rewrite -> H in *.
   - apply Subset_equality_iff.
     split; apply H; now intros x H0.
 Qed.
@@ -445,7 +445,7 @@ Qed.
 Theorem Empty_union : ⋃ ∅ = ∅.
 Proof.
   apply Extensionality.
-  split; intros H; rewrite Union_classification in *;
+  split; intros H; rewrite -> Union_classification in *;
     repeat destruct H; now apply Empty_set_classification in H.
 Qed.
 
@@ -454,8 +454,8 @@ Lemma Pairwise_union_classification :
 Proof.
   intros A B x.
   unfold pairwise_union.
-  split; intros H; rewrite Union_classification in *; repeat destruct H;
-    try rewrite Pairing_classification in *; try destruct H; subst; auto;
+  split; intros H; rewrite -> Union_classification in *; repeat destruct H;
+    try rewrite -> Pairing_classification in *; try destruct H; subst; auto;
   [ exists A | exists B ]; split; try rewrite Pairing_classification; tauto.
 Qed.
 
@@ -465,7 +465,7 @@ Proof.
   apply Extensionality.
   split; intros H; [ apply Pairwise_union_classification |
                      apply Pairwise_union_classification in H ];
-  rewrite Pairing_classification, Singleton_classification in *; tauto.
+  rewrite -> Pairing_classification, Singleton_classification in *; tauto.
 Qed.
 
 Theorem Singleton_union : ∀ A, ⋃ {A, A} = A.
@@ -480,21 +480,21 @@ Theorem Union_comm : ∀ A B, A ∪ B = B ∪ A.
 Proof.
   intros A B.
   apply Extensionality.
-  split; intros H; rewrite Pairwise_union_classification in *; tauto.
+  split; intros H; rewrite -> Pairwise_union_classification in *; tauto.
 Qed.
 
 Theorem Union_assoc : ∀ A B C, A ∪ (B ∪ C) = (A ∪ B) ∪ C.
 Proof.
   intros A B C.
   apply Extensionality.
-  split; intros H; repeat rewrite Pairwise_union_classification in *; tauto.
+  split; intros H; repeat rewrite -> Pairwise_union_classification in *; tauto.
 Qed.
 
 Theorem Union_empty : ∀ A, A ∪ ∅ = A.
 Proof.
   intros A.
   apply Extensionality.
-  split; intros H; rewrite Pairwise_union_classification in *;
+  split; intros H; rewrite -> Pairwise_union_classification in *;
     intuition; now apply Empty_set_classification in H0.
 Qed.
 
@@ -502,7 +502,7 @@ Theorem Union_idempotent : ∀ A, A ∪ A = A.
 Proof.
   intros A.
   apply Extensionality.
-  split; intros H; repeat rewrite Pairwise_union_classification in *; tauto.
+  split; intros H; repeat rewrite -> Pairwise_union_classification in *; tauto.
 Qed.
 
 Theorem Union_subset : ∀ A B, A ⊂ B ↔ A ∪ B = B.
@@ -555,7 +555,7 @@ Theorem Pairwise_intersection_classification :
 Proof.
   intros A B x.
   split; intros H; unfold pairwise_intersection in *;
-    rewrite Intersection_classification in *;
+    rewrite -> Intersection_classification in *;
     try (apply Nonempty_classification; exists A;
          apply Pairing_classification; tauto).
   - split; apply H; apply Pairing_classification; tauto.
@@ -569,7 +569,7 @@ Proof.
   split; intros H.
   - apply Extensionality.
     split; intros H0.
-    + rewrite Pairwise_intersection_classification,
+    + rewrite -> Pairwise_intersection_classification,
       ? Singleton_classification in *.
       destruct H0; contradict H; congruence.
     + exfalso; firstorder using Empty_set_classification.
@@ -577,7 +577,7 @@ Proof.
     subst.
     apply Nonempty_classification.
     exists y.
-    now rewrite Pairwise_intersection_classification, Singleton_classification.
+    rewrite Pairwise_intersection_classification Singleton_classification//.
 Qed.
 
 Theorem Empty_intersection : (⋂ ∅ = ∅).
@@ -585,7 +585,7 @@ Proof.
   unfold intersection, specify.
   repeat destruct constructive_indefinite_description.
   apply Extensionality.
-  split; intros H; try apply i in H as [H H0]; rewrite Empty_union in *;
+  split; intros H; try apply i in H as [H H0]; rewrite -> Empty_union in *;
     now apply Empty_set_classification in H.
 Qed.
 
@@ -593,7 +593,7 @@ Theorem Intersection_empty : ∀ A, A ∩ ∅ = ∅.
 Proof.
   intros A.
   apply Extensionality.
-  split; intros H; rewrite Pairwise_intersection_classification in *;
+  split; intros H; rewrite -> Pairwise_intersection_classification in *;
     intuition; now apply Empty_set_classification in H.
 Qed.
 
@@ -601,14 +601,14 @@ Theorem Intersection_comm : ∀ A B, A ∩ B = B ∩ A.
 Proof.
   intros A B.
   apply Extensionality.
-  split; intros H; rewrite Pairwise_intersection_classification in *; tauto.
+  split; intros H; rewrite -> Pairwise_intersection_classification in *; tauto.
 Qed.
 
 Theorem Intersection_assoc : ∀ A B C, A ∩ (B ∩ C) = (A ∩ B) ∩ C.
 Proof.
   intros A B C.
   apply Extensionality.
-  split; intros H; repeat rewrite Pairwise_intersection_classification in *;
+  split; intros H; repeat rewrite -> Pairwise_intersection_classification in *;
     tauto.
 Qed.
 
@@ -616,7 +616,7 @@ Theorem Intersection_idempotent : ∀ A, A ∩ A = A.
 Proof.
   intros A.
   apply Extensionality.
-  split; intros H; repeat rewrite Pairwise_intersection_classification in *;
+  split; intros H; repeat rewrite -> Pairwise_intersection_classification in *;
     tauto.
 Qed.
 
@@ -625,10 +625,10 @@ Proof.
   intros A B.
   rewrite <-Subset_equality_iff.
   split; intros H; repeat split; intros x H0;
-    try rewrite Pairwise_intersection_classification in *; eauto; try tauto.
+    try rewrite -> Pairwise_intersection_classification in *; eauto; try tauto.
   destruct H as [H H1].
   apply H1 in H0.
-  rewrite Pairwise_intersection_classification in H0.
+  rewrite -> Pairwise_intersection_classification in H0.
   tauto.
 Qed.
 
@@ -637,7 +637,7 @@ Proof.
   intros A B C.
   apply Extensionality.
   split; intros H;
-    repeat rewrite Pairwise_union_classification,
+    repeat rewrite -> Pairwise_union_classification,
     Pairwise_intersection_classification in *; tauto.
 Qed.
 
@@ -646,7 +646,7 @@ Proof.
   intros A B C.
   apply Extensionality.
   split; intros H;
-    repeat rewrite Pairwise_intersection_classification,
+    repeat rewrite -> Pairwise_intersection_classification,
     Pairwise_union_classification in *; tauto.
 Qed.
 
@@ -657,12 +657,12 @@ Proof.
   - apply Subset_equality_iff in H as [H H0].
     intros x H1.
     pose proof (H x).
-    repeat rewrite Pairwise_intersection_classification,
+    repeat rewrite -> Pairwise_intersection_classification,
     Pairwise_union_classification in *.
     tauto.
   - apply Extensionality.
     intros z; split; intros H0;
-      repeat rewrite Pairwise_union_classification,
+      repeat rewrite -> Pairwise_union_classification,
       Pairwise_intersection_classification,
       Pairwise_union_classification in *; pose proof (H z); tauto.
 Qed.
@@ -683,7 +683,7 @@ Proof.
   intros A B.
   split; intros H.
   - apply Extensionality; split; intros;
-      rewrite Complement_classification in *;
+      rewrite -> Complement_classification in *;
       firstorder using Empty_set_classification.
   - apply Subset_equality_iff in H as [H H0].
     intros x H1.
@@ -696,8 +696,8 @@ Theorem Complement_intersection : ∀ A B, A \ (A \ B) = A ∩ B.
 Proof.
   intros A B.
   apply Extensionality.
-  split; intros H; rewrite Pairwise_intersection_classification in *;
-    repeat rewrite Complement_classification in *;
+  split; intros H; rewrite -> Pairwise_intersection_classification in *;
+    repeat rewrite -> Complement_classification in *;
     pose proof (classic (z ∈ B)); tauto.
 Qed.
 
@@ -705,7 +705,7 @@ Theorem Intersection_complement : ∀ A B C, A ∩ (B \ C) = (A ∩ B) \ (A ∩ 
 Proof.
   intros A B C.
   apply Extensionality.
-  split; intros H; repeat rewrite Complement_classification,
+  split; intros H; repeat rewrite -> Complement_classification,
                    Pairwise_intersection_classification in *; tauto.
 Qed.
 
@@ -741,7 +741,7 @@ Proof.
       apply Pairing_classification in H2 as [H2 | H2];
         replace c with a in *; symmetry; [ | | | symmetry ];
           apply Singleton_classification; rewrite <-H0, <-H2 in *;
-            [ | | | rewrite H2 in * ]; apply Pairing_classification; auto.
+            [ | | | rewrite -> H2 in * ]; apply Pairing_classification; auto.
   - assert (d ∈ {a,b}) as H1
         by (rewrite H0; apply Pairing_classification; auto).
     apply Pairing_classification in H1 as [H1 | H1]; subst; auto.
@@ -780,7 +780,7 @@ Definition proj1 : set → set → set → set.
 Proof.
   intros A B x.
   destruct (excluded_middle_informative (x ∈ A × B)).
-  - rewrite Product_classification in i.
+  - rewrite -> Product_classification in i.
     destruct (constructive_indefinite_description i) as [a].
     destruct (constructive_indefinite_description e) as [b].
     exact a.
@@ -791,7 +791,7 @@ Definition proj2 : set → set → set → set.
 Proof.
   intros A B x.
   destruct (excluded_middle_informative (x ∈ A × B)).
-  - rewrite Product_classification in i.
+  - rewrite -> Product_classification in i.
     destruct (constructive_indefinite_description i) as [a].
     destruct (constructive_indefinite_description e) as [b].
     exact b.
@@ -890,11 +890,11 @@ Theorem Product_union_distr_l : ∀ A B X, (A ∪ B) × X = (A × X) ∪ (B × X
 Proof.
   intros A B X.
   apply Extensionality.
-  split; intros H; rewrite Pairwise_union_classification in *;
-    repeat rewrite Product_classification in *; repeat destruct H;
-      try (rewrite Pairwise_union_classification in *;
+  split; intros H; rewrite -> Pairwise_union_classification in *;
+    repeat rewrite -> Product_classification in *; repeat destruct H;
+      try (rewrite -> Pairwise_union_classification in *;
            destruct H; [ left | right ]; exists x, x0; tauto);
-      exists x, x0; rewrite Pairwise_union_classification in *; tauto.
+      exists x, x0; rewrite -> Pairwise_union_classification in *; tauto.
 Qed.
 
 Theorem Product_intersection :
@@ -902,12 +902,11 @@ Theorem Product_intersection :
 Proof.
   intros A B X Y.
   apply Extensionality.
-  split; intros H;
-    rewrite Product_classification, Pairwise_intersection_classification in *;
-    repeat rewrite Product_classification in *; repeat destruct H;
-      repeat destruct H0; intuition; subst; try rewrite Ordered_pair_iff in *;
-      exists x, x0; repeat rewrite Pairwise_intersection_classification in *;
-      intuition; congruence.
+  split; rewrite Product_classification Pairwise_intersection_classification;
+    intros H; rewrite -> ? Product_classification in *; repeat destruct H;
+      repeat destruct H0; intuition; subst; rewrite -> ? Ordered_pair_iff in *;
+        exists x, x0; rewrite -> ? Pairwise_intersection_classification in *;
+          intuition; congruence.
 Qed.
 
 Theorem Product_intersection_distr_l :
@@ -922,20 +921,20 @@ Proof.
   intros A B X.
   apply Extensionality.
   split; intros H;
-    repeat rewrite Complement_classification, Product_classification in *.
+    repeat rewrite -> Complement_classification, Product_classification in *.
   - destruct H as [a [b [H [H0 H1]]]].
-    rewrite Complement_classification in *.
+    rewrite -> Complement_classification in *.
     destruct H as [H H2].
     split; try now exists a, b.
     contradict H2.
-    rewrite Product_classification in *.
+    rewrite -> Product_classification in *.
     destruct H2 as [x [y [H2 [H3 H4]]]].
     subst.
-    rewrite Ordered_pair_iff in *.
+    rewrite -> Ordered_pair_iff in *.
     intuition; congruence.
   - destruct H as [[a [b [H [H0 H1]]]] H2].
     exists a, b.
-    rewrite Complement_classification in *.
+    rewrite -> Complement_classification in *.
     repeat split; auto.
     contradict H2.
     rewrite Product_classification.
@@ -973,7 +972,7 @@ Proof.
   split; intros H; repeat split;
     unfold quotient in *;
     repeat destruct constructive_indefinite_description;
-    rewrite replacement_classification in *; destruct H as [σ H]; subst.
+    rewrite -> replacement_classification in *; destruct H as [σ H]; subst.
   - intros x H.
     now apply Specify_classification in H.
   - exists σ.
@@ -1015,9 +1014,9 @@ Proof.
       now apply H2.
     + apply Union_classification.
       exists {y in X | (z,y) ∈ R}.
-      split; try rewrite quotient_classification in *; try split;
+      split; try rewrite -> quotient_classification in *; try split;
         [ intros y H3 | exists z; intuition | ];
-        rewrite Specify_classification in *; intuition.
+        rewrite -> Specify_classification in *; intuition.
   - intros c H2.
     apply quotient_classification in H2 as [H2 [x [H3 H4]]].
     rewrite Nonempty_classification.
@@ -1108,17 +1107,17 @@ Proof.
     rewrite Product_classification.
     exists a, (p a); intuition; congruence. }
   assert (is_function {z in A × B | proj2 A B z = p (proj1 A B z)} A B) as H1.
-  { split; intros x H1; try now rewrite Specify_classification in *.
+  { split; intros x H1; try now rewrite -> Specify_classification in *.
     exists (p x).
     repeat split; try congruence; try intros x' [H4 H5]; auto;
-      rewrite Specify_classification, proj1_eval, proj2_eval in *;
+      rewrite -> Specify_classification, proj1_eval, proj2_eval in *;
       intuition. }
   exists (mkFunc H1).
   repeat split; auto.
   intros a H2.
   destruct (Function_classification H2 H1) as [[H3 H4] H5].
   destruct (H5 (p a)); split; simpl; intuition.
-  rewrite Specify_classification, proj1_eval, proj2_eval; auto.
+  rewrite -> Specify_classification, proj1_eval, proj2_eval; auto.
 Qed.
 
 Theorem functionify_construction : ∀ {A B} (p : elts A → elts B),
@@ -1130,10 +1129,10 @@ Proof.
     rewrite Product_classification.
     eauto using elts_in_set. }
   assert (is_function {z in A × B | ∃ a : elts A, z = (a, p a)} A B) as H0.
-  { split; intros a H0; try now rewrite Specify_classification in *.
+  { split; intros a H0; try now rewrite -> Specify_classification in *.
     exists (p (exist H0)).
     repeat split; eauto using elts_in_set.
-    - rewrite Specify_classification in *.
+    - rewrite -> Specify_classification in *.
       split.
       + apply Product_classification.
         eauto using elts_in_set.
@@ -1219,7 +1218,7 @@ Section Function_evaluation.
   Proof.
     intros g z H.
     apply graph_elements_are_pairs in H.
-    now rewrite functionify_domain, functionify_range in H.
+    now rewrite -> functionify_domain, functionify_range in H.
   Qed.
 
   Theorem functionify_action :
@@ -1256,7 +1255,7 @@ Proof.
     + intros x' [H1 H2].
       apply Specify_classification in H2.
       destruct H2 as [H2 [z [H3 H4]]].
-      rewrite Ordered_pair_iff in H4.
+      rewrite -> Ordered_pair_iff in H4.
       intuition; congruence.
 Qed.
 
@@ -1310,7 +1309,7 @@ Theorem function_empty_domain : ∀ f, graph f = ∅ ↔ domain f = ∅.
 Proof.
   intros f.
   split; intros H; apply NNPP; contradict H.
-  - rewrite Nonempty_classification in *.
+  - rewrite -> Nonempty_classification in *.
     destruct H as [x H].
     destruct (func_hyp f) as [H0 H1].
     apply H1 in H as [y [H2 H3]].
@@ -1333,7 +1332,7 @@ Section inverse_functions.
   Definition partial_left_inverse : set → set.
   Proof.
     intros b.
-    rewrite function_empty_domain in H.
+    rewrite -> function_empty_domain in H.
     apply Nonempty_classification in H.
     destruct (constructive_indefinite_description H) as [x Hx].
     destruct (excluded_middle_informative (∃ a, a ∈ A ∧ f a = b)) as [e | n].
@@ -1511,7 +1510,7 @@ Proof.
   apply Extensionality.
   split; intros H0.
   - apply Specify_classification.
-    rewrite Surjective_classification in H.
+    rewrite -> Surjective_classification in H.
     split; auto.
   - now apply Specify_classification in H0.
 Qed.
@@ -1543,7 +1542,7 @@ Proof.
   destruct excluded_middle_informative; try tauto.
   destruct b, constructive_indefinite_description as [g].
   repeat destruct a.
-  rewrite Injective_classification in i.
+  rewrite -> Injective_classification in i.
   apply i; auto.
   - rewrite <-e0.
     apply function_maps_domain_to_range.
@@ -1591,7 +1590,7 @@ Proof.
   split; intros H2.
   - rewrite <-H2, right_inverse; auto.
     now rewrite inverse_domain.
-  - rewrite H2, left_inverse; auto.
+  - rewrite -> H2, left_inverse; auto.
 Qed.
 
 Theorem inverse_bijective : ∀ f, bijective f → bijective (inverse f).
@@ -1599,15 +1598,15 @@ Proof.
   intros f H.
   pose proof H as [H0 H1].
   split.
-  - rewrite Injective_classification in *.
+  - rewrite -> Injective_classification in *.
     intros x y H2 H3 H4.
     rewrite <-(right_inverse f); auto.
     symmetry.
     rewrite <-(right_inverse f), H4; auto.
-  - rewrite Surjective_classification in *.
+  - rewrite -> Surjective_classification in *.
     intros y H2.
     exists (f y).
-    rewrite inverse_domain, left_inverse; repeat split; auto;
+    rewrite -> inverse_domain, left_inverse; repeat split; auto;
       try (now destruct H); try apply function_maps_domain_to_range;
         now rewrite <-inverse_range.
 Qed.
@@ -1648,7 +1647,7 @@ Proof.
   apply set_proj_injective.
   simpl in *.
   inversion H2.
-  rewrite Injective_classification in H1, H0.
+  rewrite -> Injective_classification in H1, H0.
   apply H1; try congruence.
   apply H0; try (rewrite H; apply function_maps_domain_to_range;
                  now rewrite <-H3).
@@ -1660,7 +1659,7 @@ Theorem composition_surjective : ∀ f g,
 Proof.
   intros f g H H0 H1 [y Y].
   destruct (Composition_classification f g) as [H2 [H3 H4]]; try congruence.
-  rewrite Surjective_classification in H0, H1.
+  rewrite -> Surjective_classification in H0, H1.
   destruct (H0 y) as [z [H5 H6]]; try now rewrite <-H3.
   rewrite H in H5.
   destruct (H1 z) as [x [H7 H8]]; auto.
@@ -1723,12 +1722,12 @@ Section Restrictions.
   Proof.
     split; intros z H.
     - apply Specify_classification in H as [H H0].
-      rewrite Product_intersection_distr_l,
+      rewrite -> Product_intersection_distr_l,
       Pairwise_intersection_classification.
       apply graph_elements_are_pairs in H as H1.
       split; auto.
       apply Product_classification in H1 as [a [b [H1 [H2 H3]]]]; subst.
-      rewrite Product_classification, proj1_eval in *; eauto.
+      rewrite -> Product_classification, proj1_eval in *; eauto.
     - exists (f z).
       apply Pairwise_intersection_classification in H as [H H0].
       repeat split.
@@ -1779,7 +1778,7 @@ Section Restrictions.
       now apply Pairwise_intersection_classification.
     - apply restriction_subset, Graph_classification.
       exists x.
-      now rewrite restriction_domain, Pairwise_intersection_classification.
+      now rewrite -> restriction_domain, Pairwise_intersection_classification.
   Qed.
 
   Theorem restriction_Y_is_function : is_function (graph f) (domain f) Y.
@@ -1845,9 +1844,9 @@ Section Quotient_maps.
     { apply quotient_classification.
       split.
       - intros y H0.
-        now rewrite Specify_classification in *.
+        now rewrite -> Specify_classification in *.
       - exists x.
-        repeat split; auto; rewrite Specify_classification in *; intuition. }
+        repeat split; auto; rewrite -> Specify_classification in *; intuition. }
     exact (exist H0).
   Defined.
 
@@ -1880,13 +1879,13 @@ Proof.
     simpl.
     apply Subset_equality_iff in H3 as [H4 H5].
     pose proof (H5 y) as H6.
-    rewrite ? Specify_classification in H6.
+    rewrite -> ? Specify_classification in H6.
     apply H6.
     auto.
   - apply set_proj_injective.
     simpl in *.
     apply Extensionality.
-    split; intros H3; rewrite Specify_classification in *; split; try tauto;
+    split; intros H3; rewrite -> Specify_classification in *; split; try tauto;
       [ apply (H1 y x) | eapply H1 ]; eauto; intuition.
 Qed.
 
@@ -1956,7 +1955,7 @@ Lemma in_succ : ∀ s, s ∈ succ s.
 Proof.
   intros s.
   unfold succ.
-  rewrite Pairwise_union_classification, Singleton_classification.
+  rewrite -> Pairwise_union_classification, Singleton_classification.
   now right.
 Qed.
 
@@ -1988,8 +1987,8 @@ Theorem disjoint_intersection_complement : ∀ E F, E ∩ (F \ E) = ∅.
 Proof.
   intros E F.
   apply Extensionality.
-  split; intros H; rewrite Pairwise_intersection_classification in *.
-  - rewrite Complement_classification in *.
+  split; intros H; rewrite -> Pairwise_intersection_classification in *.
+  - rewrite -> Complement_classification in *.
     tauto.
   - contradiction (Empty_set_classification z).
 Qed.
@@ -1999,7 +1998,7 @@ Proof.
   intros E F.
   apply Extensionality.
   split; intros H;
-    rewrite Pairwise_union_classification, Complement_classification,
+    rewrite -> Pairwise_union_classification, Complement_classification,
     Pairwise_intersection_classification in *.
   - tauto.
   - destruct (classic (z ∈ E)); tauto.
@@ -2010,7 +2009,7 @@ Proof.
   intros E F.
   apply Extensionality.
   split; intros H.
-  - rewrite ? Pairwise_intersection_classification,
+  - rewrite -> ? Pairwise_intersection_classification,
     Complement_classification in *.
     tauto.
   - contradiction (Empty_set_classification z).
@@ -2025,14 +2024,14 @@ Qed.
 Theorem Intersection_left : ∀ E F, E ∩ F ⊂ E.
 Proof.
   intros E F x H.
-  rewrite Pairwise_intersection_classification in H.
+  rewrite -> Pairwise_intersection_classification in H.
   tauto.
 Qed.
 
 Theorem Intersection_right : ∀ E F, E ∩ F ⊂ F.
 Proof.
   intros E F x H.
-  rewrite Pairwise_intersection_classification in H.
+  rewrite -> Pairwise_intersection_classification in H.
   tauto.
 Qed.
 
@@ -2067,7 +2066,7 @@ Proof.
     tauto.
   - apply Pairwise_union_classification in H as [H | H].
     + contradiction (Empty_set_classification z).
-    + rewrite Singleton_classification in H.
+    + rewrite -> Singleton_classification in H.
       subst.
       apply Specify_classification.
       repeat split.
@@ -2084,7 +2083,7 @@ Theorem Inverse_image_classification : ∀ f a b,
 Proof.
   intros f a b H H0.
   split; intros H1; unfold inverse_image_of_element in *;
-    rewrite Specify_classification in *; tauto.
+    rewrite -> Specify_classification in *; tauto.
 Qed.
 
 Theorem Inverse_image_classification_domain : ∀ f a b,
@@ -2154,11 +2153,11 @@ Proof.
   apply Extensionality.
   split; intros H.
   - apply Product_classification in H as [a [b [H H0]]].
-    rewrite Singleton_classification in *.
+    rewrite -> Singleton_classification in *.
     intuition; congruence.
   - apply Product_classification.
     exists x, y.
-    now rewrite ? Singleton_classification in *.
+    now rewrite -> ? Singleton_classification in *.
 Qed.
 
 Theorem singleton_functions :
@@ -2174,13 +2173,13 @@ Proof.
     + intros a H2.
       exists y.
       split.
-      * rewrite ? Singleton_classification in *.
+      * rewrite -> ? Singleton_classification in *.
         now subst.
       * intros x' H4.
-        rewrite ? Singleton_classification, Ordered_pair_iff in *.
+        rewrite -> ? Singleton_classification, Ordered_pair_iff in *.
         intuition; congruence.
   - pose proof func_hyp f as [H1].
-    now rewrite H, H0, singleton_products in *.
+    now rewrite -> H, H0, singleton_products in *.
 Qed.
 
 Theorem domain_uniqueness : ∀ f A1 A2 B,
@@ -2246,28 +2245,28 @@ Theorem function_inv_inv : ∀ f, bijective f → inverse (inverse f) = f.
 Proof.
   intros f H.
   apply func_ext.
-  - rewrite inverse_domain, inverse_range; auto using inverse_bijective.
-  - rewrite inverse_range, inverse_domain; auto using inverse_bijective.
+  - rewrite -> inverse_domain, inverse_range; auto using inverse_bijective.
+  - rewrite -> inverse_range, inverse_domain; auto using inverse_bijective.
   - intros x H0.
-    rewrite inverse_domain, inverse_range in H0; auto using inverse_bijective.
-    assert (bijective (inverse f)) as H1 by auto using inverse_bijective.
+    rewrite -> inverse_domain, inverse_range in H0;
+      assert (bijective (inverse f)) as H1; auto using inverse_bijective.
     pose proof H1 as [H2 H3].
-    rewrite Injective_classification in H2.
+    rewrite -> Injective_classification in H2.
     apply H2.
       * rewrite <-inverse_range; auto.
         apply function_maps_domain_to_range.
-        rewrite inverse_domain, inverse_range; auto.
+        rewrite -> inverse_domain, inverse_range; auto.
       * rewrite inverse_domain; auto.
         now apply function_maps_domain_to_range.
-      * rewrite left_inverse, right_inverse; auto.
-        rewrite inverse_domain, inverse_range; auto.
+      * rewrite -> left_inverse, right_inverse; auto.
+        rewrite -> inverse_domain, inverse_range; auto.
 Qed.
 
 Lemma Euler_Phi_lemma :
   ∀ A B C D, A = B → A ∩ C = ∅ → B ∩ D = ∅ → A ∪ C = B ∪ D → C = D.
 Proof.
   intros A B C D H H0 H1 H2.
-  rewrite Intersection_comm, Union_comm, (Union_comm B D) in *.
+  rewrite -> Intersection_comm, Union_comm, (Union_comm B D) in *.
   apply complement_disjoint_union in H0, H1.
   now rewrite <-H0, <-H1, H2, H.
 Qed.
@@ -2305,7 +2304,7 @@ Proof.
   assert ((x, y) ∈ S × T) as H1.
   { apply Product_classification; eauto. }
   unfold swap_function, swap_product.
-  rewrite (reify H1), functionify_action.
+  rewrite -> (reify H1), functionify_action.
   repeat destruct constructive_indefinite_description.
   repeat destruct a.
   destruct Product_classification.
@@ -2319,7 +2318,7 @@ Proof.
   split.
   - apply Injective_classification.
     intros z1 z2 H H0 H1.
-    rewrite swap_domain in *.
+    rewrite -> swap_domain in *.
     apply Product_classification in H as
         [x [y [H [H2 H3]]]], H0 as [x' [y' [H4 [H5 H6]]]].
     subst.
@@ -2327,9 +2326,9 @@ Proof.
     apply Ordered_pair_iff in H1; intuition; congruence.
   - apply Surjective_classification.
     intros z H.
-    rewrite swap_domain, swap_range in *.
+    rewrite -> swap_domain, swap_range in *.
     apply Product_classification in H as [x [y [H [H0 H1]]]].
     subst.
     exists (y, x).
-    rewrite Product_classification, swap_action; try split; eauto.
+    rewrite -> Product_classification, swap_action; try split; eauto.
 Qed.

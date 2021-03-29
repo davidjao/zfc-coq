@@ -219,7 +219,7 @@ Section Ring_theorems.
   Theorem div_sign_neg_r : ∀ a b, a｜-b → a｜b.
   Proof.
     intros a b H.
-    now rewrite div_sign_r.
+    now rewrite -> div_sign_r.
   Qed.
 
   Theorem div_sign_r_neg : ∀ a b, a｜b → a｜-b.
@@ -236,7 +236,7 @@ Section Ring_theorems.
   Theorem div_sign_neg_l : ∀ a b, -a｜b → a｜b.
   Proof.
     intros a b H.
-    now rewrite div_sign_l.
+    now rewrite -> div_sign_l.
   Qed.
 
   Theorem div_sign_l_neg : ∀ a b, a｜b → -a｜b.
@@ -299,7 +299,7 @@ Section Ring_theorems.
   Proof.
     intros u [x H].
     exists (x*u).
-    rewrite H.
+    rewrite -> H.
     ring.
   Qed.
 
@@ -355,7 +355,7 @@ Section Ring_theorems.
   Proof.
     intros f a.
     unfold sum.
-    now rewrite iterate_0.
+    now rewrite -> iterate_0.
   Qed.
 
   Theorem sum_neg : ∀ f a b, b < a → sum f a b = 0.
@@ -363,7 +363,7 @@ Section Ring_theorems.
     intros f a b H.
     unfold sum, iterate_with_bounds.
     destruct excluded_middle_informative; auto.
-    now rewrite lt_not_ge in H.
+    now rewrite -> lt_not_ge in H.
   Qed.
 
   Theorem sum_succ : ∀ f a b,
@@ -378,7 +378,7 @@ Section Ring_theorems.
   Proof.
     intros f a.
     unfold prod.
-    now rewrite iterate_0.
+    now rewrite -> iterate_0.
   Qed.
 
   Theorem prod_neg : ∀ f a b, b < a → prod f a b = 1.
@@ -386,7 +386,7 @@ Section Ring_theorems.
     intros f a b H.
     unfold prod, iterate_with_bounds.
     destruct excluded_middle_informative; auto.
-    now rewrite lt_not_ge in H.
+    now rewrite -> lt_not_ge in H.
   Qed.
 
   Theorem prod_succ : ∀ f a b,
@@ -403,9 +403,9 @@ Section Ring_theorems.
     intros f g a b.
     destruct (classic (a ≤ b)) as [[c H] | H]; subst.
     - induction c using Induction.
-      + now rewrite add_0_r, ? sum_0.
-      + rewrite add_succ_r, ? sum_succ, IHc; try ring;
-          exists (c+1)%N; now rewrite add_1_r, add_succ_r.
+      + now rewrite -> add_0_r, ? sum_0.
+      + rewrite -> add_succ_r, ? sum_succ, IHc; try ring;
+          exists (c+1)%N; now rewrite -> add_1_r, add_succ_r.
     - now rewrite <-lt_not_ge, ? sum_neg, A3 in *.
   Qed.
 
@@ -414,9 +414,9 @@ Section Ring_theorems.
     intros f a b c.
     destruct (classic (a ≤ b)) as [[d H] | H]; subst.
     - induction d using Induction.
-      + now rewrite add_0_r, ? sum_0.
-      + now rewrite add_succ_r, ? sum_succ, D1_l, IHd;
-          try (exists (d+1)%N; now rewrite add_1_r, add_succ_r).
+      + now rewrite -> add_0_r, ? sum_0.
+      + now rewrite -> add_succ_r, ? sum_succ, D1_l, IHd;
+          try (exists (d+1)%N; now rewrite -> add_1_r, add_succ_r).
     - now rewrite <-lt_not_ge, ? sum_neg, mul_0_r in *.
   Qed.
 
@@ -426,9 +426,9 @@ Section Ring_theorems.
     intros f g a b.
     destruct (classic (a ≤ b)) as [[c H] | H]; subst.
     - induction c using Induction.
-      + now rewrite add_0_r, ? prod_0.
-      + rewrite add_succ_r, ? prod_succ, IHc; try ring;
-          exists (c+1)%N; now rewrite add_1_r, add_succ_r.
+      + now rewrite -> add_0_r, ? prod_0.
+      + rewrite -> add_succ_r, ? prod_succ, IHc; try ring;
+          exists (c+1)%N; now rewrite -> add_1_r, add_succ_r.
     - now rewrite <-lt_not_ge, ? prod_neg, M3 in *.
   Qed.
 
@@ -436,21 +436,21 @@ Section Ring_theorems.
   Proof.
     induction d using Induction.
     - apply @iterate_0.
-    - rewrite sum_succ, IHd; auto using zero_le; ring.
+    - rewrite -> sum_succ, IHd; auto using zero_le; ring.
   Qed.
 
   Theorem prod_of_1 : ∀ d, (prod (λ n, 1) 0 d) = 1.
   Proof.
     induction d using Induction.
     - apply @iterate_0.
-    - rewrite prod_succ, IHd; auto using zero_le; ring.
+    - rewrite -> prod_succ, IHd; auto using zero_le; ring.
   Qed.
 
   Theorem unit_prod_closure_0 :
     ∀ n f, (∀ i, 0 ≤ i ≤ n → unit (f i)) → unit (prod f 0 n).
   Proof.
     induction n using Induction; intros f H.
-    - rewrite prod_0.
+    - rewrite -> prod_0.
       auto using le_refl.
     - rewrite prod_succ; try apply unit_closure; eauto using le_refl, zero_le.
       apply IHn.
@@ -464,7 +464,7 @@ Section Ring_theorems.
     intros a b f H.
     destruct (classic (a ≤ b)%N) as [[c H0] | H0]; subst.
     - unfold prod.
-      rewrite iterate_shift.
+      rewrite -> iterate_shift.
       apply unit_prod_closure_0.
       intros i H0.
       apply H.
@@ -481,61 +481,61 @@ Section Ring_theorems.
   Proof.
     intros x.
     unfold pow.
-    rewrite prod_neg; now try apply lt_succ.
+    rewrite -> prod_neg; now try apply lt_succ.
   Qed.
 
   Theorem pow_succ_r : ∀ x y, x^(S y) = x^y * x.
   Proof.
     intros x y.
     unfold pow.
-    rewrite prod_succ; auto using one_le_succ.
+    rewrite -> prod_succ; auto using one_le_succ.
   Qed.
 
   Theorem pow_1_r : ∀ x, x^1 = x.
   Proof.
     intros x.
     unfold naturals.one.
-    now rewrite pow_succ_r, pow_0_r, M3.
+    now rewrite -> pow_succ_r, pow_0_r, M3.
   Qed.
 
   Theorem pow_1_l : ∀ x, 1^x = 1.
   Proof.
     induction x using Induction.
-    - now rewrite pow_0_r.
-    - now rewrite pow_succ_r, IHx, M3.
+    - now rewrite -> pow_0_r.
+    - now rewrite -> pow_succ_r, IHx, M3.
   Qed.
 
   Theorem pow_0_l : ∀ x, x ≠ 0%N → 0^x = 0.
   Proof.
     induction x using Induction; intros H; try tauto.
-    now rewrite pow_succ_r, mul_0_r.
+    now rewrite -> pow_succ_r, mul_0_r.
   Qed.
 
   Theorem pow_2_r : ∀ x, x^2 = x * x.
   Proof.
     intros x.
-    now rewrite pow_succ_r, pow_1_r.
+    now rewrite -> pow_succ_r, pow_1_r.
   Qed.
 
   Theorem pow_add_r : ∀ a b c, a^(b+c) = a^b * a^c.
   Proof.
     induction c using Induction.
-    - now rewrite add_0_r, pow_0_r, M3_r.
-    - now rewrite add_succ_r, ? pow_succ_r, IHc, M2.
+    - now rewrite -> add_0_r, pow_0_r, M3_r.
+    - now rewrite -> add_succ_r, ? pow_succ_r, IHc, M2.
   Qed.
 
   Theorem pow_mul_l : ∀ a b c, (a*b)^c = a^c * b^c.
   Proof.
     induction c using Induction.
-    - now rewrite ? pow_0_r, M3.
-    - now rewrite ? pow_succ_r, <-? M2, (M2 _ a), (M1 _ _ (b^c)), IHc, ? M2.
+    - now rewrite -> ? pow_0_r, M3.
+    - now rewrite -> ? pow_succ_r, <-? M2, (M2 _ a), (M1 _ _ (b^c)), IHc, ? M2.
   Qed.
 
   Theorem pow_mul_r : ∀ a b c, a^(b*c) = (a^b)^c.
   Proof.
     induction c using Induction.
-    - now rewrite naturals.mul_0_r, ? pow_0_r.
-    - now rewrite mul_succ_r, pow_succ_r, pow_add_r, IHc.
+    - now rewrite -> naturals.mul_0_r, ? pow_0_r.
+    - now rewrite -> mul_succ_r, pow_succ_r, pow_add_r, IHc.
   Qed.
 
   Theorem prod_mul : ∀ f a b c,
@@ -544,8 +544,8 @@ Section Ring_theorems.
     intros f a b c [d H].
     subst.
     induction d using Induction.
-    - now rewrite add_0_r, sub_diag, pow_1_r, ? prod_0.
-    - rewrite ? (add_comm a), sub_abba, ? pow_succ_r, ? (add_comm _ a),
+    - now rewrite -> add_0_r, sub_diag, pow_1_r, ? prod_0.
+    - rewrite -> ? (add_comm a), sub_abba, ? pow_succ_r, ? (add_comm _ a),
       add_succ_r, ? prod_succ, (add_comm a), <-IHd in *;
         try (exists (d+1)%N; rewrite <-? add_1_r); ring.
   Qed.
@@ -556,10 +556,10 @@ Section Ring_theorems.
     destruct (classic (n = 0%N)) as [H1 | H1];
       try apply succ_0 in H1 as [m H1]; subst.
     - contradiction (lt_irrefl 0).
-    - rewrite pow_succ_r in H0.
+    - rewrite -> pow_succ_r in H0.
       destruct H0 as [x H0].
       exists (x * a^m).
-      now rewrite H0, M2.
+      now rewrite -> H0, M2.
   Qed.
 
   Definition INR (n : N) := sum (λ n, 1) 1 n.
@@ -568,13 +568,13 @@ Section Ring_theorems.
   Theorem INR_zero : 0 = 0%N.
   Proof.
     unfold INR.
-    rewrite sum_neg; eauto using naturals.succ_lt.
+    rewrite -> sum_neg; eauto using naturals.succ_lt.
   Qed.
 
   Theorem INR_one : 1 = 1%N.
   Proof.
     unfold INR.
-    now rewrite sum_0.
+    now rewrite -> sum_0.
   Qed.
 
   Theorem INR_add : ∀ a b : N, a + b = (a + b)%N.
@@ -584,7 +584,7 @@ Section Ring_theorems.
     induction b using Induction.
     { fold (INR 0).
       now rewrite <-INR_zero, add_0_r, A1, A3. }
-    rewrite add_succ_r, ? sum_succ, <-IHb; try ring;
+    rewrite -> add_succ_r, ? sum_succ, <-IHb; try ring;
       [ exists (a+b)%N | exists b ]; now rewrite <-add_1_r, naturals.add_comm.
   Qed.
 
@@ -593,10 +593,10 @@ Section Ring_theorems.
     intros a b.
     unfold INR.
     induction b using Induction.
-    { rewrite naturals.mul_0_r.
+    { rewrite -> naturals.mul_0_r.
       fold (INR 0).
       now rewrite <-? INR_zero, mul_0_r. }
-    rewrite mul_succ_r, sum_succ, D1_l, IHb.
+    rewrite -> mul_succ_r, sum_succ, D1_l, IHb.
     - fold (INR (a*b)) (INR a) (INR (a*b+a)).
       ring_simplify.
       apply INR_add.
@@ -805,7 +805,7 @@ Section Ring_theorems.
     Proof.
       apply Nonempty_classification.
       exists (Rset Ring).
-      rewrite Specify_classification, Powerset_classification.
+      rewrite -> Specify_classification, Powerset_classification.
       repeat split; eauto using Set_is_subset, elts_in_set.
     Qed.
 
@@ -813,7 +813,8 @@ Section Ring_theorems.
     Proof.
       unfold subset_generated_by.
       intros x H.
-      rewrite Intersection_classification in H; auto using generated_nonempty.
+      rewrite -> Intersection_classification in H;
+        auto using generated_nonempty.
       pose proof generated_nonempty as H0.
       apply Nonempty_classification in H0 as [s H0].
       apply H in H0 as H1.
@@ -827,26 +828,30 @@ Section Ring_theorems.
       unfold subset_generated_by.
       repeat split.
       - intros a b H H0.
-        rewrite Intersection_classification in *; auto using generated_nonempty.
+        rewrite -> Intersection_classification in *;
+          auto using generated_nonempty.
         intros s H1.
         apply H in H1 as H2.
         apply H0 in H1 as H3.
         apply Specify_classification in H1 as [H1 [H4 [H5 [H6 [H7 H8]]]]].
         auto.
       - intros a b H H0.
-        rewrite Intersection_classification in *; auto using generated_nonempty.
+        rewrite -> Intersection_classification in *;
+          auto using generated_nonempty.
         intros s H1.
         apply H in H1 as H2.
         apply H0 in H1 as H3.
         apply Specify_classification in H1 as [H1 [H4 [H5 [H6 [H7 H8]]]]].
         auto.
       - intros a H.
-        rewrite Intersection_classification in *; auto using generated_nonempty.
+        rewrite -> Intersection_classification in *;
+          auto using generated_nonempty.
         intros s H1.
         apply H in H1 as H2.
         apply Specify_classification in H1 as [H1 [H3 [H4 [H5 [H6 H7]]]]].
         auto.
-      - rewrite Intersection_classification in *; auto using generated_nonempty.
+      - rewrite -> Intersection_classification in *;
+          auto using generated_nonempty.
         intros s H.
         now apply Specify_classification in H as [H [H0 [H1 [H2 [H3 H4]]]]].
     Qed.
@@ -866,7 +871,8 @@ Section Ring_theorems.
         intros s H1.
         apply Specify_classification in H1 as [H1 [H2 H3]].
         auto.
-      - rewrite Intersection_classification in *; auto using generated_nonempty.
+      - rewrite -> Intersection_classification in *;
+          auto using generated_nonempty.
         assert (S ∈ {s in P (Rset Ring) | S ⊂ s ∧ is_subring s}) as H1; auto.
         apply Specify_classification.
         split; auto using Set_is_subset.
@@ -879,7 +885,7 @@ Section Ring_theorems.
     ∀ S T, S = T → subring_of_arbitrary_set S = subring_of_arbitrary_set T.
   Proof.
     intros S T H.
-    now rewrite H.
+    now rewrite -> H.
   Qed.
 
   Section Subrings_match.
@@ -929,17 +935,17 @@ Section Ring_theorems.
   Proof.
     intros m n a H.
     induction n using Induction.
-    { rewrite sum_0.
+    { rewrite -> sum_0.
       destruct excluded_middle_informative; auto.
       assert (m ≠ 0%N) as H0 by auto.
       apply succ_0 in H0 as [k H0].
       subst.
-      rewrite le_not_gt in H.
+      rewrite -> le_not_gt in H.
       contradict H.
       now apply lt_succ. }
     destruct (classic (m = S n)) as [H0 | H0].
     - subst.
-      rewrite sum_succ, <-(A3 _ a) at 1; auto using zero_le.
+      rewrite -> sum_succ, <-(A3 _ a) at 1; auto using zero_le.
       f_equal.
       + rewrite <-(sum_of_0 n).
         apply iterate_extensionality.
@@ -951,14 +957,14 @@ Section Ring_theorems.
         contradict H1.
         auto using succ_lt.
       + destruct excluded_middle_informative; tauto.
-    - rewrite sum_succ, IHn; auto using zero_le.
+    - rewrite -> sum_succ, IHn; auto using zero_le.
       + destruct excluded_middle_informative; try congruence; ring.
       + destruct H as [c H].
         rewrite <-H in H0.
         assert (c ≠ 0%N) as H1 by (contradict H0; ring [H0]).
         apply succ_0 in H1 as [d H1].
         exists d.
-        rewrite H1, add_succ_r in H.
+        rewrite -> H1, add_succ_r in H.
         now apply PA5.
   Qed.
 
@@ -967,8 +973,8 @@ Section Ring_theorems.
   Proof.
     intros k x f.
     induction k using Induction.
-    - now rewrite sum_N_0, prod_0.
-    - rewrite prod_succ, sum_N_succ, IHk, pow_add_r; auto using zero_le.
+    - now rewrite -> sum_N_0, prod_0.
+    - rewrite -> prod_succ, sum_N_succ, IHk, pow_add_r; auto using zero_le.
   Qed.
 
   Theorem prod_sum :
@@ -977,7 +983,7 @@ Section Ring_theorems.
     intros a b x f.
     destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
     - unfold prod, sum_N.
-      rewrite ? iterate_shift.
+      rewrite -> ? iterate_shift.
       now apply prod_sum_0.
     - now rewrite <-lt_not_ge, prod_neg, sum_N_neg, pow_0_r in *.
   Qed.
@@ -986,14 +992,14 @@ Section Ring_theorems.
   Proof.
     induction n using Induction.
     - apply or_introl, pow_0_r.
-    - destruct IHn as [H | H]; [ right | left ]; rewrite pow_succ_r, H; ring.
+    - destruct IHn as [H | H]; [ right | left ]; rewrite -> pow_succ_r, H; ring.
   Qed.
 
   Theorem pow_sign_l : ∀ a n, (-a)^n = a^n ∨ (-a)^n = -a^n.
   Proof.
     intros a n.
     rewrite <-mul_neg_1_l, ? pow_mul_l.
-    destruct (pow_neg_1_l n) as [H | H]; rewrite H, ? M3, ? mul_neg_1_l; auto.
+    destruct (pow_neg_1_l n) as [H | H]; rewrite H ? M3 ? mul_neg_1_l; auto.
   Qed.
 
 End Ring_theorems.

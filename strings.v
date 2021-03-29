@@ -96,7 +96,7 @@ Definition functionify : σ → function.
 Proof.
   intros z.
   pose proof (elts_in_set z) as H; simpl in H.
-  rewrite STR_classification in H.
+  rewrite -> STR_classification in H.
   destruct (constructive_indefinite_description H) as [n H0].
   exact (mkFunc H0).
 Defined.
@@ -162,7 +162,7 @@ Theorem string_domain : ∀ (x : σ) z, z ∈ domain x → z ∈ ω.
 Proof.
   intros x z H.
   eapply elements_of_naturals_are_naturals; eauto.
-  rewrite length_is_domain.
+  rewrite -> length_is_domain.
   eauto using elts_in_set.
 Qed.
 
@@ -236,7 +236,7 @@ End concat_elements_construction.
 Definition concat : σ → σ → σ.
 Proof.
   intros [a A] [b B].
-  rewrite STR_classification in *.
+  rewrite -> STR_classification in *.
   destruct (constructive_indefinite_description A) as [n H].
   destruct (constructive_indefinite_description B) as [m H0].
   set (f := sets.functionify (concat_elements n m a b H H0)).
@@ -245,7 +245,7 @@ Proof.
     exists (n+m)%N.
     pose proof (func_hyp f) as H1.
     unfold f in H1 at 2 3.
-    now rewrite sets.functionify_domain, sets.functionify_range in H1. }
+    now rewrite -> sets.functionify_domain, sets.functionify_range in H1. }
   exact (exist H1).
 Defined.
 
@@ -262,7 +262,7 @@ Proof.
   eapply set_proj_injective, domain_uniqueness; eauto.
   pose proof (func_hyp (sets.functionify
                           (concat_elements x0 x1 a b i0 i1))) as H.
-  now rewrite sets.functionify_domain, sets.functionify_range in H.
+  now rewrite -> sets.functionify_domain, sets.functionify_range in H.
 Qed.
 
 Definition empty_string : σ.
@@ -325,7 +325,7 @@ Coercion realization : reg_exp >-> set.
 Theorem realization_in_powerset : ∀ A, realization A ∈ P STR.
 Proof.
   intros A.
-  rewrite Powerset_classification.
+  rewrite -> Powerset_classification.
   intros z H.
   now apply Specify_classification in H as [H H0].
 Qed.
@@ -358,7 +358,7 @@ Proof.
   intros x A B.
   unfold concat_set.
   simpl.
-  rewrite Specify_classification.
+  rewrite -> Specify_classification.
   repeat split; intros; intuition.
   destruct H as [a [b [H [H0 H1]]]].
   subst.
@@ -429,9 +429,9 @@ Qed.
 
 Theorem empty_subset_construction : [ε] ∈ P STR.
 Proof.
-  rewrite Powerset_classification.
+  rewrite -> Powerset_classification.
   intros z H.
-  rewrite singleton_realization, Singleton_classification in H.
+  rewrite -> singleton_realization, Singleton_classification in H.
   subst.
   eauto using elts_in_set.
 Qed.
@@ -464,7 +464,7 @@ Theorem concat_pow_1_r : ∀ A, A ** 1 = A.
 Proof.
   intros A.
   unfold concat_pow.
-  now rewrite iterate_0.
+  now rewrite -> iterate_0.
 Qed.
 
 Theorem pow_0_r : ∀ A, A^0 = [ε].
@@ -481,7 +481,7 @@ Theorem pow_1_r : ∀ A, A^1 = A.
 Proof.
   intros A.
   unfold pow.
-  now rewrite iterate_0.
+  now rewrite -> iterate_0.
 Qed.
 
 Theorem append_ε_l : ∀ b, (ε ++ b)%set = b.
@@ -502,29 +502,27 @@ Proof.
     intros a H.
     contradiction (Empty_set_classification a). }
   subst; rename x0 into x.
-  apply func_ext; rewrite ? sets.functionify_domain, ? sets.functionify_range;
-    simpl; rewrite ? add_0_l in *; auto.
+  apply func_ext;
+    rewrite -> ? sets.functionify_domain, ? sets.functionify_range;
+    simpl; rewrite -> ? add_0_l in *; auto.
   intros y H.
   replace y with ((exist H : (elts (0+x)%N)) : set) by auto.
   unfold sets.functionify, concat_elements.
   destruct constructive_indefinite_description.
   destruct a as [H0 [H1 H2]].
-  rewrite H2; clear H2.
-  simpl.
+  rewrite H2 /=; clear H2.
   destruct excluded_middle_informative; simpl.
   - apply naturals.lt_not_ge in l.
     contradict l.
     auto using zero_le.
-  - unfold f.
-    f_equal.
-    now rewrite sub_0_r.
+  - now rewrite /f sub_0_r.
 Qed.
 
 Theorem MStarApp_full : ∀ u v A, u =~ A → v =~ A ⃰ → (u ++ v)%set =~ A ⃰.
 Proof.
   intros u v A H H0.
   destruct (classic (u = ε)); auto using MStarApp.
-  now rewrite H1, append_ε_l.
+  now rewrite -> H1, append_ε_l.
 Qed.
 
 Theorem concat_ε_l : ∀ A, [ε] ++ A = A.
@@ -533,27 +531,27 @@ Proof.
   apply set_proj_injective, Extensionality.
   simpl; split; intros H; apply Powerset_classification in HA.
   - apply Specify_classification in H as [H [a [b [H0 [H1 H2]]]]].
-    rewrite singleton_realization, Singleton_classification in H0.
+    rewrite -> singleton_realization, Singleton_classification in H0.
     apply set_proj_injective in H0.
     subst.
-    now rewrite append_ε_l.
+    now rewrite -> append_ε_l.
   - apply Specify_classification.
     split; auto.
     assert (z ∈ STR) as H0 by auto.
     set (ζ := exist H0 : σ).
     replace z with (ζ : set) by auto.
     exists ε, ζ.
-    rewrite append_ε_l.
+    rewrite -> append_ε_l.
     repeat split; auto.
-    now rewrite singleton_realization, Singleton_classification.
+    now rewrite -> singleton_realization, Singleton_classification.
 Qed.
 
 Theorem concat_pow_succ_r : (∀ n A, A ** (S n) = concat_set (A ** n) A)%set.
 Proof.
   induction n using Induction; intros A.
-  - now rewrite concat_pow_0_r, concat_pow_1_r, concat_ε_l.
+  - now rewrite -> concat_pow_0_r, concat_pow_1_r, concat_ε_l.
   - unfold concat_pow.
-    rewrite iterate_succ; auto.
+    rewrite -> iterate_succ; auto.
     exists n.
     rewrite <-add_1_r.
     ring.
@@ -562,9 +560,9 @@ Qed.
 Theorem pow_succ_r : ∀ n A, (A^(S n) : Σ) = (A^n || A).
 Proof.
   induction n using Induction; intros A.
-  - now rewrite pow_0_r, pow_1_r, <-concat_reg_exp, concat_ε_l.
+  - now rewrite -> pow_0_r, pow_1_r, <-concat_reg_exp, concat_ε_l.
   - unfold pow.
-    rewrite iterate_succ; auto.
+    rewrite -> iterate_succ; auto.
     exists n.
     rewrite <-add_1_r.
     ring.
@@ -573,8 +571,8 @@ Qed.
 Theorem pow_concat_pow : ∀ n A, (A^n : Σ) = A ** n.
 Proof.
   induction n using Induction; intros A.
-  - now rewrite pow_0_r, concat_pow_0_r.
-  - now rewrite pow_succ_r, concat_pow_succ_r, <-concat_reg_exp, IHn.
+  - now rewrite -> pow_0_r, concat_pow_0_r.
+  - now rewrite -> pow_succ_r, concat_pow_succ_r, <-concat_reg_exp, IHn.
 Qed.
 
 Theorem subsetifying_subset : ∀ A, subsetify (subset_of A) = A.
@@ -619,7 +617,7 @@ Proof.
   unfold concat_product, sets.functionify.
   destruct constructive_indefinite_description.
   destruct a0 as [H2 [H3 H4]].
-  rewrite H4.
+  rewrite -> H4.
   unfold concat_function, sets.functionify.
   destruct constructive_indefinite_description as [a'].
   destruct constructive_indefinite_description as [b'].
@@ -661,10 +659,10 @@ Inductive unambiguous : reg_exp → Prop :=
 Theorem concat_surjective : ∀ A B, surjective (concat_product A B).
 Proof.
   intros A B.
-  rewrite Surjective_classification.
+  rewrite -> Surjective_classification.
   intros y H.
   unfold concat_product in H |-* at 1.
-  rewrite @sets.functionify_range, @sets.functionify_domain in *.
+  rewrite -> @sets.functionify_range, @sets.functionify_domain in *.
   apply Specify_classification in H as [H [y' [H0 H1]]].
   inversion H1.
   subst.
@@ -724,7 +722,7 @@ Theorem ambiguous_empty_star : ¬ unambiguous ([ε] ⃰).
 Proof.
   intros H.
   inversion H.
-  rewrite Injective_classification in H3.
+  rewrite -> Injective_classification in H3.
   assert (0 ≠ 1)%N as H4 by apply PA4.
   pose proof (H2 _ _ H4) as H5.
   contradict H5.
@@ -732,8 +730,8 @@ Proof.
   exists ε.
   apply Pairwise_intersection_classification.
   split.
-  - now rewrite pow_0_r, singleton_realization, Singleton_classification.
-  - now rewrite pow_1_r, singleton_realization, Singleton_classification.
+  - now rewrite -> pow_0_r, singleton_realization, Singleton_classification.
+  - now rewrite -> pow_1_r, singleton_realization, Singleton_classification.
 Qed.
 
 Theorem zero_ne_1 : 0 ≠ 1.
@@ -745,10 +743,10 @@ Proof.
   assert ((∅, ∅) = (∅, succ ∅)) as H2.
   { rewrite <-Singleton_classification.
     apply H0.
-    now rewrite Singleton_classification. }
+    now rewrite -> Singleton_classification. }
   apply Ordered_pair_iff in H2 as [H2 H3].
   contradiction (Empty_set_classification ∅).
-  rewrite H3 at 2.
+  rewrite -> H3 at 2.
   apply Pairwise_union_classification.
   right.
   now apply Singleton_classification.
@@ -771,28 +769,28 @@ Proof.
   { eapply set_proj_injective, domain_uniqueness; eauto.
     split; intros z H0.
     - apply graph_elements_are_pairs in H0.
-      now rewrite sets.functionify_domain, sets.functionify_range in H0.
+      now rewrite -> sets.functionify_domain, sets.functionify_range in H0.
     - destruct (func_hyp (sets.functionify (concat_elements m n a b i1 i2)))
         as [H1 H2].
-      rewrite sets.functionify_domain, sets.functionify_range in H2.
+      rewrite -> sets.functionify_domain, sets.functionify_range in H2.
       now apply H2 in H0. }
   subst.
   set (f := mkFunc i0).
   assert (f = (sets.functionify (concat_elements m n a b i1 i2))) as H0.
   { apply function_record_injective; auto.
-    now rewrite sets.functionify_range. }
-  rewrite H0.
+    now rewrite -> sets.functionify_range. }
+  rewrite -> H0.
   unfold sets.functionify.
   destruct constructive_indefinite_description as [f'], a0 as [H1 [H2 H3]].
   apply set_proj_injective in A0.
   rewrite <-A0 in H.
   assert (x ∈ m+n)%N as H4.
   { assert (m ≤ m+n)%N as H4 by now (exists n).
-    rewrite le_is_subset in H4.
+    rewrite -> le_is_subset in H4.
     now apply H4, lt_is_in. }
   set (ξ := exist H4 : elts (m+n)%N).
   replace (f' x) with (f' ξ) by auto.
-  rewrite H3.
+  rewrite -> H3.
   unfold concat_elements.
   destruct excluded_middle_informative; auto.
   contradict n0.
@@ -802,7 +800,7 @@ Proof.
   simpl.
   eapply naturals.le_lt_trans; eauto.
   exists 0%N.
-  rewrite add_0_r.
+  rewrite -> add_0_r.
   now apply set_proj_injective.
 Qed.
 
@@ -834,23 +832,23 @@ Proof.
   { eapply set_proj_injective, domain_uniqueness; eauto.
     split; intros z H1.
     - apply graph_elements_are_pairs in H1.
-      now rewrite sets.functionify_domain, sets.functionify_range in H1.
+      now rewrite -> sets.functionify_domain, sets.functionify_range in H1.
     - pose proof func_hyp (sets.functionify (concat_elements m n a b i i0))
            as [H2 H3].
-      rewrite sets.functionify_domain, sets.functionify_range in H3.
+      rewrite -> sets.functionify_domain, sets.functionify_range in H3.
       now apply H3 in H1. }
   subst a'.
   set (f := mkFunc i1).
   assert (f = (sets.functionify (concat_elements m n a b i i0))) as H1.
   { apply function_record_injective; auto.
-    now rewrite sets.functionify_range. }
-  rewrite H1.
+    now rewrite -> sets.functionify_range. }
+  rewrite -> H1.
   unfold sets.functionify.
   destruct constructive_indefinite_description as [f'], a0 as [H2 [H3 H4]].
   assert (x ∈ m+n)%N as H5 by now apply lt_is_in.
   set (ξ := exist H5 : elts (m+n)%N).
   replace (f' x) with (f' ξ) by auto.
-  rewrite H4.
+  rewrite -> H4.
   unfold concat_elements.
   destruct excluded_middle_informative; simpl.
   - apply naturals.le_not_gt in H.
@@ -859,7 +857,7 @@ Proof.
     simpl in l.
     eapply naturals.le_lt_trans; eauto.
     exists 0%N.
-    rewrite add_0_r.
+    rewrite -> add_0_r.
     now apply set_proj_injective.
   - f_equal.
     rewrite <-A0.
@@ -872,47 +870,47 @@ Qed.
 Theorem app_assoc : ∀ a b c : σ, (a ++ (b ++ c)%set = (a ++ b)%set ++ c)%set.
 Proof.
   intros a b c.
-  apply functionify_injective, func_ext; try now rewrite ? string_range.
-  - rewrite ? length_is_domain, ? concat_length.
+  apply functionify_injective, func_ext; try now rewrite -> ? string_range.
+  - rewrite -> ? length_is_domain, ? concat_length.
     f_equal.
     ring.
   - intros x H.
-    rewrite ? length_is_domain, ? concat_length in *.
+    rewrite -> ? length_is_domain, ? concat_length in *.
     assert (x ∈ ω) as H0 by
           eauto using elements_of_naturals_are_naturals, elts_in_set.
     set (ξ := exist H0 : N).
     replace x with (ξ : set) in * by auto.
     rewrite <-lt_is_in in H.
     destruct (classic (ξ < length a)%N) as [H1 | H1].
-    { rewrite ? functionify_concat_l; auto.
-      rewrite concat_length.
+    { rewrite -> ? functionify_concat_l; auto.
+      rewrite -> concat_length.
       eapply naturals.lt_le_trans; eauto.
       now exists (length b). }
     apply naturals.le_not_gt in H1.
     destruct (classic (ξ < (length a + length b)))%N as [H2 | H2].
-    { rewrite functionify_concat_r, functionify_concat_l,
+    { rewrite -> functionify_concat_r, functionify_concat_l,
       functionify_concat_l, functionify_concat_r; auto.
-      - now rewrite concat_length.
+      - now rewrite -> concat_length.
       - apply sub_abab in H1.
         now rewrite <-H1, ? (naturals.add_comm (length a)),
         <-naturals.O1_iff in H2.
       - split; auto.
-        rewrite concat_length, naturals.add_assoc.
+        rewrite -> concat_length, naturals.add_assoc.
         eapply naturals.lt_le_trans; eauto.
         now exists (length c). }
     apply naturals.le_not_gt in H2.
-    rewrite ? functionify_concat_r, ? concat_length; auto.
+    rewrite -> ? functionify_concat_r, ? concat_length; auto.
     + do 2 f_equal.
       symmetry.
       repeat apply sub_spec.
-      now rewrite naturals.add_assoc, sub_abab.
-    + now rewrite ? concat_length, <-naturals.add_assoc.
+      now rewrite -> naturals.add_assoc, sub_abab.
+    + now rewrite -> ? concat_length, <-naturals.add_assoc.
     + split; apply sub_abab in H1.
       * now rewrite <-H1, ? (naturals.add_comm (length a)),
         <-naturals.O1_le_iff in H2.
       * now rewrite <-H1, ? (naturals.add_comm (length a)),
         <-naturals.O1_iff in H.
-    + now rewrite concat_length.
+    + now rewrite -> concat_length.
 Qed.
 
 Theorem concat_assoc :
@@ -920,54 +918,54 @@ Theorem concat_assoc :
 Proof.
   intros A B C.
   apply set_proj_injective, Extensionality.
-  split; intros H; rewrite concat_set_classification in *;
+  split; intros H; rewrite -> concat_set_classification in *;
     destruct H as [x [y [H [H0 H1]]]]; subst;
-      rewrite concat_set_classification in *.
+      rewrite -> concat_set_classification in *.
   - destruct H0 as [z [w [H0 [H1 H2]]]].
     apply set_proj_injective in H2.
     subst.
     exists (x ++ z)%set, w.
     repeat split; auto.
-    + rewrite concat_set_classification; eauto.
-    + now rewrite app_assoc.
+    + rewrite -> concat_set_classification; eauto.
+    + now rewrite -> app_assoc.
   - destruct H as [z [w [H [H1 H2]]]].
     apply set_proj_injective in H2.
     subst.
     exists z, (w ++ y)%set.
     repeat split; auto.
-    + rewrite concat_set_classification; eauto.
-    + now rewrite app_assoc.
+    + rewrite -> concat_set_classification; eauto.
+    + now rewrite -> app_assoc.
 Qed.
 
 Theorem append_ε_r : ∀ b, (b ++ ε)%set = b.
 Proof.
   intros b.
   apply eq_sym, functionify_injective, func_ext.
-  - rewrite ? length_is_domain, concat_length, length_empty.
+  - rewrite -> ? length_is_domain, concat_length, length_empty.
     f_equal.
     ring.
-  - now rewrite ? string_range.
+  - now rewrite -> ? string_range.
   - intros x H.
     assert (x ∈ ω) as H0.
-    { rewrite length_is_domain in H.
+    { rewrite -> length_is_domain in H.
       eauto using elements_of_naturals_are_naturals, elts_in_set. }
     set (ξ := exist H0 : N).
     replace x with (ξ : set) in * by auto.
-    rewrite functionify_concat_l; auto.
-    now rewrite lt_is_in, <-length_is_domain.
+    rewrite -> functionify_concat_l; auto.
+    now rewrite -> lt_is_in, <-length_is_domain.
 Qed.
 
 Theorem concat_ε_r : ∀ A, A ++ [ε] = A.
 Proof.
   intros A.
   apply set_proj_injective, Extensionality.
-  split; intros H; rewrite concat_set_classification in *.
+  split; intros H; rewrite -> concat_set_classification in *.
   - destruct H as [a [b [H [H0 H1]]]].
-    rewrite subsetifying_subset, singleton_realization,
+    rewrite -> subsetifying_subset, singleton_realization,
     Singleton_classification in *.
     apply set_proj_injective in H0.
     subst.
-    now rewrite append_ε_r.
+    now rewrite -> append_ε_r.
   - assert (z ∈ STR) as H0.
     { pose proof (elts_in_set A) as H0.
       apply Powerset_classification in H0.
@@ -975,9 +973,9 @@ Proof.
     set (ζ := exist H0 : σ).
     replace z with (ζ : set) by auto.
     exists ζ, ε.
-    rewrite append_ε_r.
+    rewrite -> append_ε_r.
     repeat split; auto.
-    now rewrite subsetifying_subset, singleton_realization,
+    now rewrite -> subsetifying_subset, singleton_realization,
     Singleton_classification in *.
 Qed.
 
@@ -985,16 +983,16 @@ Lemma concat_sym : ∀ A n, A^n ++ A = A ++ A^n.
 Proof.
   intros A n.
   induction n using Induction.
-  - now rewrite pow_0_r, concat_ε_l, concat_ε_r.
-  - now rewrite ? pow_succ_r, <-? concat_reg_exp, IHn, <-concat_assoc, IHn.
+  - now rewrite -> pow_0_r, concat_ε_l, concat_ε_r.
+  - now rewrite -> ? pow_succ_r, <-? concat_reg_exp, IHn, <-concat_assoc, IHn.
 Qed.
 
 Theorem pow_add_r : ∀ n m A, (A^(m+n)%N : Σ) = A^m || A^n.
 Proof.
   intros n m A.
   induction m using Induction.
-  - now rewrite pow_0_r, add_0_l, <-concat_reg_exp, concat_ε_l.
-  - now rewrite naturals.add_comm, add_succ_r, naturals.add_comm,
+  - now rewrite -> pow_0_r, add_0_l, <-concat_reg_exp, concat_ε_l.
+  - now rewrite -> naturals.add_comm, add_succ_r, naturals.add_comm,
     <-concat_reg_exp, ? pow_succ_r, <-? concat_reg_exp, IHm,
     <-concat_reg_exp, <-? concat_assoc, concat_sym.
 Qed.
@@ -1003,25 +1001,25 @@ Theorem length_of_n_string :
   ∀ (n : N) (x : σ), x ∈ (([0] ⌣ [1])^n)%str ↔ length x = n.
 Proof.
   induction n using Induction; split; intros H.
-  - rewrite pow_0_r, singleton_realization, Singleton_classification in *.
+  - rewrite -> pow_0_r, singleton_realization, Singleton_classification in *.
     apply set_proj_injective in H.
     subst.
     apply length_empty.
   - pose proof length_is_domain x.
-    rewrite pow_0_r, singleton_realization, Singleton_classification in *.
-    rewrite H in H0.
+    rewrite -> pow_0_r, singleton_realization, Singleton_classification in *.
+    rewrite -> H in H0.
     f_equal.
-    apply functionify_injective, func_ext; try now rewrite ? string_range.
-    + now rewrite ? length_is_domain, length_empty, H.
+    apply functionify_injective, func_ext; try now rewrite -> ? string_range.
+    + now rewrite -> ? length_is_domain, length_empty, H.
     + intros z H1.
-      rewrite H0 in H1.
+      rewrite -> H0 in H1.
       contradiction (Empty_set_classification z).
   - rewrite <-subsetifying_subset, pow_succ_r, <-concat_reg_exp in H.
     apply Specify_classification in H as [H [a [b [H0 [H1 H2]]]]].
     apply set_proj_injective in H2.
     subst.
     replace n with (length a) by now apply IHn.
-    rewrite concat_length, <-add_1_r; auto.
+    rewrite -> concat_length, <-add_1_r; auto.
     f_equal.
     apply Specify_classification in H1 as [H1 [y [H2 H3]]].
     apply set_proj_injective in H2.
@@ -1031,14 +1029,14 @@ Proof.
     assert (x n ∈ {0,1}%N) as X.
     { erewrite <-string_range.
       apply function_maps_domain_to_range.
-      rewrite length_is_domain, H, <-S_is_succ.
+      rewrite -> length_is_domain, H, <-S_is_succ.
       apply Pairwise_union_classification.
-      rewrite Singleton_classification; auto. }
+      rewrite -> Singleton_classification; auto. }
     destruct (function_construction n {0,1}%N (λ i, x i)) as [a' [H0 [H1 H2]]].
     { intros a H0.
       erewrite <-string_range.
       apply function_maps_domain_to_range.
-      rewrite length_is_domain, H, <-S_is_succ.
+      rewrite -> length_is_domain, H, <-S_is_succ.
       apply Pairwise_union_classification; tauto. }
     assert (is_function {(0,x n),(0,x n)} 1 {0,1})%N as H3.
     { split.
@@ -1053,21 +1051,21 @@ Proof.
         unfold naturals.one in H3.
         rewrite <-S_is_succ in H3.
         unfold succ in H3.
-        rewrite Union_comm, Union_empty, Singleton_classification in H3.
+        rewrite -> Union_comm, Union_empty, Singleton_classification in H3.
         subst.
         exists (x n).
         repeat split; auto.
-        + now rewrite Singleton_classification.
+        + now rewrite -> Singleton_classification.
         + intros x' [H3 H4].
           apply Singleton_classification, Ordered_pair_iff in H4.
           intuition. }
     assert (graph a' ∈ STR) as H4.
-    { rewrite STR_classification.
+    { rewrite -> STR_classification.
       exists n.
       rewrite <-H0, <-H1.
       apply func_hyp. }
     assert ({(0, x n), (0, x n)}%N ∈ STR).
-    { rewrite STR_classification.
+    { rewrite -> STR_classification.
       now exists 1%N. }
     exists (exist H4 : σ), (exist H5 : σ).
     assert (length (exist H4) = n) as L1.
@@ -1091,33 +1089,33 @@ Proof.
       unfold functionify.
       destruct constructive_indefinite_description.
       apply function_record_injective; simpl; auto; congruence. }
-    repeat split; try now rewrite IHn, L1.
-    + apply Pairing_classification in X as [X | X]; simpl; rewrite X;
+    repeat split; try now rewrite -> IHn, L1.
+    + apply Pairing_classification in X as [X | X]; simpl; rewrite -> X;
         apply Specify_classification.
       * replace ({(∅, 0%N),(∅, 0%N)}) with (0 : set);
           eauto using elts_in_set, MUnionL, MUnionR, MChar.
       * replace ({(∅, 1%N),(∅, 1%N)}) with (1 : set);
           eauto using elts_in_set, MUnionL, MUnionR, MChar.
     + f_equal.
-      apply functionify_injective, func_ext; try now rewrite ? string_range.
-      { rewrite ? length_is_domain, concat_length, H, <-add_1_r.
+      apply functionify_injective, func_ext; try now rewrite -> ? string_range.
+      { rewrite -> ? length_is_domain, concat_length, H, <-add_1_r.
         do 2 f_equal; congruence. }
       intros z H6.
-      rewrite length_is_domain, H, <-S_is_succ in H6.
+      rewrite -> length_is_domain, H, <-S_is_succ in H6.
       apply Pairwise_union_classification in H6 as [H6 | H6].
       * assert (z ∈ ω) as H8
             by eauto using elements_of_naturals_are_naturals, elts_in_set.
         replace z with ((exist H8 : N) : set) by auto.
-        rewrite functionify_concat_l; try now rewrite L1, lt_is_in.
+        rewrite -> functionify_concat_l; try now rewrite -> L1, lt_is_in.
         rewrite <-H2; auto; simpl.
         f_equal.
         unfold functionify.
         destruct constructive_indefinite_description.
         simpl.
         apply function_record_injective; simpl; auto; congruence.
-      * rewrite Singleton_classification in H6.
-        rewrite H6, functionify_concat_r, L1, sub_diag.
-        2: { rewrite L1, L2, add_1_r.
+      * rewrite -> Singleton_classification in H6.
+        rewrite -> H6, functionify_concat_r, L1, sub_diag.
+        2: { rewrite -> L1, L2, add_1_r.
              auto using naturals.succ_lt, naturals.le_refl. }
         symmetry.
         rewrite <-function_maps_domain_to_graph.
@@ -1125,9 +1123,9 @@ Proof.
            destruct constructive_indefinite_description.
            simpl.
            now apply Singleton_classification.
-        -- rewrite length_is_domain, L2, <-lt_is_in.
+        -- rewrite -> length_is_domain, L2, <-lt_is_in.
            apply naturals.succ_lt.
-        -- now rewrite string_range.
+        -- now rewrite -> string_range.
 Qed.
 
 Theorem unambiguous_all_strings : unambiguous (([0] ⌣ [1]) ⃰).
@@ -1137,7 +1135,7 @@ Proof.
     apply Extensionality.
     split; intros H.
     + apply Pairwise_intersection_classification in H as [H H0].
-      rewrite singleton_realization, Singleton_classification in *.
+      rewrite -> singleton_realization, Singleton_classification in *.
       contradiction zero_ne_1.
       apply set_proj_injective.
       unfold setify in *.
@@ -1154,11 +1152,11 @@ Proof.
       apply Powerset_classification in H1; auto. }
     set (ξ := (exist H1 : σ)).
     replace x with (ξ : set) in * by auto.
-    rewrite length_of_n_string in *; congruence.
+    rewrite -> length_of_n_string in *; congruence.
   - apply Injective_classification.
     intros x y H H0 H1.
     unfold concat_product in H, H0.
-    rewrite @sets.functionify_domain in *.
+    rewrite -> @sets.functionify_domain in *.
     set (ξ := exist H : elts (([0] ⌣ [1]) × ([0] ⌣ [1]) ⃰)).
     set (γ := exist H0 : elts (([0] ⌣ [1]) × ([0] ⌣ [1]) ⃰)).
     pose proof H as H2.
@@ -1179,31 +1177,31 @@ Proof.
     replace x2 with (ζ2 : set) in * by auto.
     replace y1 with (γ1 : set) in * by auto.
     replace y2 with (γ2 : set) in * by auto.
-    erewrite (concat_product_action _ _ ξ ζ1 ζ2),
+    erewrite -> (concat_product_action _ _ ξ ζ1 ζ2),
     (concat_product_action _ _ γ γ1 γ2) in H1; eauto.
     apply set_proj_injective in H1.
-    rewrite H6, H9.
+    rewrite -> H6, H9.
     assert (length ζ1 = length γ1) as H2.
     { pose proof (length_of_n_string 1 ζ1) as [L1 L2].
       pose proof (length_of_n_string 1 γ1) as [L3 L4].
-      rewrite L1, L3; auto; now rewrite pow_1_r. }
+      rewrite -> L1, L3; auto; now rewrite -> pow_1_r. }
     do 2 f_equal.
     + apply functionify_injective, func_ext;
-      rewrite ? length_is_domain, ? string_range; try congruence.
+      rewrite -> ? length_is_domain, ? string_range; try congruence.
       intros z H3.
       assert (z ∈ ω) as H14 by
             eauto using elements_of_naturals_are_naturals, elts_in_set.
       set (ζ := exist H14 : N).
       replace z with (ζ : set) by auto.
       rewrite <-(functionify_concat_l ζ1 ζ2), <-(functionify_concat_l γ1 γ2);
-        try congruence; rewrite lt_is_in; auto.
-      now rewrite H2 in H3.
+        try congruence; rewrite -> lt_is_in; auto.
+      now rewrite -> H2 in H3.
     + assert (length ζ2 = length γ2) as H3.
       { eapply naturals.cancellation_add.
         now rewrite <-concat_length, H1, concat_length, H2. }
       apply functionify_injective, func_ext; auto.
-      * rewrite ? length_is_domain; congruence.
-      * now rewrite ? string_range.
+      * rewrite -> ? length_is_domain; congruence.
+      * now rewrite -> ? string_range.
       * intros z H14.
         assert (z ∈ ω) as H15 by eauto using string_domain.
         set (ζ := exist H15 : N).
@@ -1214,9 +1212,9 @@ Proof.
         { split.
           - exists ζ.
             ring.
-          - rewrite (naturals.add_comm _ (length γ2)).
+          - rewrite -> (naturals.add_comm _ (length γ2)).
             apply naturals.O1, lt_is_in.
-            rewrite length_is_domain, H3 in H14.
+            rewrite -> length_is_domain, H3 in H14.
             apply H14. }
         rewrite <-? functionify_concat_r; congruence.
 Qed.
@@ -1225,10 +1223,10 @@ Theorem length_0_empty : ∀ u, length u = 0%N → u = ε.
 Proof.
   intros u H.
   apply eq_sym, functionify_injective, func_ext.
-  - now rewrite ? length_is_domain, length_empty, H.
-  - now rewrite ? string_range.
+  - now rewrite -> ? length_is_domain, length_empty, H.
+  - now rewrite -> ? string_range.
   - intros x H0.
-    rewrite length_is_domain, length_empty in H0.
+    rewrite -> length_is_domain, length_empty in H0.
     contradiction (Empty_set_classification x).
 Qed.
 
@@ -1250,22 +1248,22 @@ Proof.
       split.
       * apply replacement_classification.
         eauto.
-      * now rewrite pow_0_r, singleton_realization, Singleton_classification.
+      * now rewrite -> pow_0_r, singleton_realization, Singleton_classification.
     + eapply H in H6; eauto.
       * apply Union_classification in H6 as [X [H6 H7]].
         apply replacement_classification in H6 as [n H6]; subst.
         apply Union_classification.
         exists (A^(n+1)%N).
-        rewrite replacement_classification.
+        rewrite -> replacement_classification.
         split; eauto.
-        rewrite add_1_r, <-subsetifying_subset, pow_succ_r,
+        rewrite -> add_1_r, <-subsetifying_subset, pow_succ_r,
         <-concat_reg_exp, concat_sym.
         apply concat_set_classification.
         exists u, v.
         repeat split; auto.
         apply Specify_classification.
         eauto using elts_in_set.
-      * rewrite concat_length, naturals.lt_def.
+      * rewrite -> concat_length, naturals.lt_def.
         exists (length u).
         split; try ring.
         intros H0.
@@ -1278,7 +1276,7 @@ Proof.
     revert z H0.
     induction n using Induction.
     { intros z H0.
-      rewrite pow_0_r, singleton_realization, Singleton_classification in H0.
+      rewrite -> pow_0_r, singleton_realization, Singleton_classification in H0.
       subst.
       apply Specify_classification.
       split; eauto using elts_in_set.
@@ -1331,7 +1329,7 @@ Proof.
     <-concat_reg_exp, concat_sym, concat_set_classification in *.
     destruct Heqn as [a [b [H2 [H3 H4]]]].
     apply set_proj_injective in H4; subst.
-    rewrite subsetifying_subset, length_of_n_string in H3.
+    rewrite -> subsetifying_subset, length_of_n_string in H3.
     apply IHn in H3.
     apply Specify_classification in H2 as [H2 [y [H4 H5]]].
     apply set_proj_injective in H4; subst.
@@ -1352,7 +1350,7 @@ Proof.
     <-concat_reg_exp, concat_set_classification in *.
     destruct Heqn as [a [b [H2 [H3 H4]]]].
     apply set_proj_injective in H4; subst.
-    rewrite subsetifying_subset, length_of_n_string in H2.
+    rewrite -> subsetifying_subset, length_of_n_string in H2.
     apply IHn in H2.
     apply Specify_classification in H3 as [H3 [y [H4 H5]]].
     apply set_proj_injective in H4; subst.
@@ -1380,7 +1378,7 @@ Proof.
       split; eauto using MUnionR.
   - apply Specify_classification in H as [H [ζ [H0 H1]]].
     subst.
-    rewrite Pairwise_union_classification.
+    rewrite -> Pairwise_union_classification.
     inversion H1; subst.
     + left.
       apply Specify_classification; eauto.
@@ -1419,7 +1417,7 @@ Proof.
   exists B.
   split; auto.
   exists (B ⃰).
-  now rewrite elements_of_Astar.
+  now rewrite -> elements_of_Astar.
 Qed.
 
 Theorem union_smile : ∀ A B, (A ⌣ B : set) = A ∪ B.
@@ -1465,7 +1463,7 @@ Proof.
     replace {0,1}%N with (2%N : set); auto using naturals_are_finite.
     apply Extensionality.
     split; intros H0.
-    + rewrite Pairing_classification.
+    + rewrite -> Pairing_classification.
       rewrite <-? S_is_succ in H0.
       unfold naturals.one in H0.
       rewrite <-? S_is_succ in H0.
@@ -1481,11 +1479,11 @@ Proof.
     + rewrite <-? S_is_succ.
       apply Pairwise_union_classification.
       unfold naturals.one.
-      rewrite Singleton_classification, <-S_is_succ.
+      rewrite -> Singleton_classification, <-S_is_succ.
       apply Pairing_classification in H0 as [H0 | H0].
       * left.
         apply Pairwise_union_classification.
-        rewrite Singleton_classification.
+        rewrite -> Singleton_classification.
         intuition.
       * now right.
   - intros x H0.
@@ -1493,13 +1491,13 @@ Proof.
     subst.
     apply Specify_classification.
     pose proof (func_hyp ξ).
-    rewrite length_is_domain in H0.
+    rewrite -> length_is_domain in H0.
     unfold functionify in H0.
     destruct constructive_indefinite_description.
     simpl in *.
     split; auto.
     destruct H0.
-    now rewrite Powerset_classification.
+    now rewrite -> Powerset_classification.
 Qed.
 
 Theorem product_lemma : ∀ A B,
@@ -1509,14 +1507,14 @@ Proof.
   apply power_series_extensionality.
   extensionality n.
   unfold gen_series.
-  rewrite power_series.coefficient_mul, ? coefficient_seriesify.
+  rewrite -> power_series.coefficient_mul, ? coefficient_seriesify.
   simpl.
   assert (∀ f g : N → N, (λ k : N, (f k : Z) * (g k : Z)) =
                          (λ k : N, (f k * g k)%N))%Z as H1.
   { intros f g.
     extensionality k.
     apply INZ_mul. }
-  rewrite H1.
+  rewrite -> H1.
   replace (# {x in A || B | ∃ ξ : σ, x = ξ ∧ length ξ = n} : Z) with
       (sum ℤ (λ k, (# {x in (A || B) | ∃ a b : σ,
                          x = (a ++ b)%set ∧ a ∈ A ∧ b ∈ B ∧ length a = k
@@ -1550,15 +1548,15 @@ Proof.
       replace (a, b) with ((exist H3 : elts (A × B)) : set);
       eauto using concat_product_action.
       split.
-      2: { rewrite left_inverse; auto.
+      2: { rewrite -> left_inverse; auto.
            unfold f.
-           now rewrite sets.functionify_domain. }
+           now rewrite -> sets.functionify_domain. }
       apply Specify_classification.
       split.
       * unfold f.
         erewrite <-@sets.functionify_range.
         apply function_maps_domain_to_range.
-        now rewrite sets.functionify_domain.
+        now rewrite -> sets.functionify_domain.
       * apply Specify_classification in H8 as [H8 [a' [H10 H11]]].
         apply Specify_classification in H9 as [H9 [b' [H12 H13]]].
         subst.
@@ -1567,9 +1565,9 @@ Proof.
         repeat split; eauto using concat_product_action.
     + intros b H8.
       split.
-      2: { rewrite right_inverse; auto.
+      2: { rewrite -> right_inverse; auto.
            unfold f.
-           rewrite inverse_domain, sets.functionify_range; auto.
+           rewrite -> inverse_domain, sets.functionify_range; auto.
            apply Specify_classification in H8; tauto. }
       apply Specify_classification in H8 as
           [H8 [a' [b' [H9 [H10 [H11 [H12 H13]]]]]]].
@@ -1579,9 +1577,9 @@ Proof.
       exists a, b.
       repeat split; try apply Specify_classification; eauto.
       replace (a, b) with ((inverse f) (f (a, b))).
-      2: { rewrite left_inverse; auto.
+      2: { rewrite -> left_inverse; auto.
            unfold f.
-           rewrite sets.functionify_domain.
+           rewrite -> sets.functionify_domain.
            apply Product_classification; eauto. }
       f_equal.
       unfold f.
@@ -1589,7 +1587,7 @@ Proof.
       assert ((a, b) ∈ A × B) as H3 by (apply Product_classification; eauto).
       replace (a, b) with ((exist H3 : elts (A × B)) : set);
         eauto using concat_product_action.
-  - erewrite sum_card; eauto.
+  - erewrite -> sum_card; eauto.
     { eapply finite_length_subsets.
       intros x H0.
       apply Specify_classification in H0 as [H0 H2]; eauto. }
@@ -1599,7 +1597,7 @@ Proof.
       split; auto; subst.
       exists (a ++ b)%set.
       split; auto.
-      rewrite concat_length, H7.
+      rewrite -> concat_length, H7.
       destruct H0 as [H0 H3].
       now apply sub_abab in H3.
     + intros x.
@@ -1617,7 +1615,7 @@ Proof.
         { apply Specify_classification; eauto using elts_in_set. }
         exists (length a).
         repeat split; auto using zero_le.
-        -- rewrite concat_length.
+        -- rewrite -> concat_length.
            now (exists (length b)).
         -- apply Specify_classification.
            split; try (apply Specify_classification; eauto).
@@ -1625,7 +1623,7 @@ Proof.
            repeat split; auto; try apply Specify_classification;
              eauto using elts_in_set.
            apply sub_spec.
-           now rewrite concat_length.
+           now rewrite -> concat_length.
         -- intros z [H2 H4].
            apply Specify_classification in H4 as
                [H4 [a' [b' [H5 [H8 [H9 [H10 H11]]]]]]].
@@ -1638,8 +1636,8 @@ Proof.
            erewrite <-? concat_product_action in H5;
              replace (a', b') with ((exist INAB' : elts (A × B)) : set);
              replace (a, b) with ((exist INAB : elts (A × B)) : set); eauto.
-           rewrite Injective_classification in H16.
-           apply H16 in H5; try now rewrite sets.functionify_domain.
+           rewrite -> Injective_classification in H16.
+           apply H16 in H5; try now rewrite -> sets.functionify_domain.
            inversion H5.
            apply Ordered_pair_iff in H18 as [H18 H19].
            apply set_proj_injective in H18.
@@ -1650,7 +1648,7 @@ Proof.
         apply Specify_classification.
         split; auto.
         exists (a ++ b)%set.
-        rewrite concat_length, H7, H8.
+        rewrite -> concat_length, H7, H8.
         now apply sub_abab in H2.
 Qed.
 
@@ -1661,9 +1659,9 @@ Proof.
   apply power_series_extensionality.
   extensionality n.
   unfold gen_series.
-  rewrite power_series.coefficient_add, ? coefficient_seriesify.
+  rewrite -> power_series.coefficient_add, ? coefficient_seriesify.
   simpl.
-  rewrite INZ_add.
+  rewrite -> INZ_add.
   f_equal.
   rewrite <-finite_union_cardinality; try eapply finite_length_subsets.
   2: { intros x H0.
@@ -1675,15 +1673,15 @@ Proof.
     split; intros H0.
     + apply Specify_classification in H0 as [H0 [ζ [H1 H2]]].
       subst.
-      rewrite union_smile in H0.
-      rewrite Pairwise_union_classification in *.
+      rewrite -> union_smile in H0.
+      rewrite -> Pairwise_union_classification in *.
       destruct H0 as [H0 | H0].
       * left.
         apply Specify_classification; eauto.
       * right.
         apply Specify_classification; eauto.
     + apply Specify_classification.
-      rewrite union_smile, Pairwise_union_classification in *.
+      rewrite -> union_smile, Pairwise_union_classification in *.
       destruct H0 as [H0 | H0]; apply Specify_classification in H0
         as [H0 [ζ [H1 H2]]]; subst; split; eauto.
   - apply NNPP.
@@ -1695,6 +1693,6 @@ Proof.
     apply Nonempty_classification.
     exists z.
     apply Pairwise_intersection_classification.
-    rewrite Specify_classification in *.
+    rewrite -> Specify_classification in *.
     tauto.
 Qed.

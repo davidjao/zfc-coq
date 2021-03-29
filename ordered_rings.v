@@ -79,7 +79,7 @@ Section Ordered_ring_theorems.
   Theorem add_le_l : ∀ a b c, b ≤ c → a + b ≤ a + c.
   Proof.
     intros a b c H.
-    rewrite ? (A1 _ a) in *.
+    rewrite -> ? (A1 _ a) in *.
     now apply add_le_r.
   Qed.
 
@@ -88,7 +88,7 @@ Section Ordered_ring_theorems.
     intros a b H H0.
     apply (O1 0) in H.
     apply (O1 a) in H0.
-    rewrite A3, A1 in H.
+    rewrite -> A3, A1 in H.
     eauto using lt_trans.
   Qed.
 
@@ -98,7 +98,7 @@ Section Ordered_ring_theorems.
     - apply (O1_r (-a)) in H.
       now rewrite A4 in H.
     - apply (O1_r a) in H.
-      now rewrite A3, <-A2, A4_l, A3_r in H.
+      now rewrite -> A3, <-A2, A4_l, A3_r in H.
   Qed.
 
   Theorem le_shift : ∀ a b, a ≤ b ↔ 0 ≤ b + -a.
@@ -107,13 +107,13 @@ Section Ordered_ring_theorems.
     - apply (add_le_r (-a)) in H.
       now rewrite A4 in H.
     - apply (add_le_r a) in H.
-      now rewrite A3, <-A2, A4_l, A3_r in H.
+      now rewrite -> A3, <-A2, A4_l, A3_r in H.
   Qed.
 
   Theorem O3 : ∀ a b c, 0 < a → b < c → a * b < a * c.
   Proof.
     intros a b c H H0.
-    rewrite lt_shift in *.
+    rewrite -> lt_shift in *.
     replace (a*c+-(a*b)) with ((a+-0)*(c+-b)) by ring.
     auto using O2.
   Qed.
@@ -131,10 +131,10 @@ Section Ordered_ring_theorems.
   Theorem neg_lt_0 : ∀ a, 0 < a ↔ -a < 0.
   Proof.
     split; intros H.
-    - rewrite lt_shift in *.
+    - rewrite -> lt_shift in *.
       replace (a+-0) with a in * by ring.
       now replace (0+--a) with a by ring.
-    - rewrite lt_shift in H.
+    - rewrite -> lt_shift in H.
       now replace (0+--a) with a in * by ring.
   Qed.
 
@@ -148,10 +148,10 @@ Section Ordered_ring_theorems.
   Theorem neg_le_0 : ∀ a, 0 ≤ a ↔ -a ≤ 0.
   Proof.
     split; intros H.
-    - rewrite le_shift in *.
+    - rewrite -> le_shift in *.
       replace (a+-0) with a in * by ring.
       now replace (0+--a) with a by ring.
-    - rewrite le_shift in H.
+    - rewrite -> le_shift in H.
       now replace (0+--a) with a in * by ring.
   Qed.
 
@@ -167,7 +167,7 @@ Section Ordered_ring_theorems.
   Theorem mul_pos_neg : ∀ a b, 0 < a → b < 0 → a * b < 0.
   Proof.
     intros a b H H0.
-    rewrite lt_neg_0 in *.
+    rewrite -> lt_neg_0 in *.
     eapply O2 in H; eauto.
     replace (-(a*b)) with (-b*a) in * by ring; auto.
   Qed.
@@ -182,7 +182,7 @@ Section Ordered_ring_theorems.
   Theorem mul_neg_neg : ∀ a b, a < 0 → b < 0 → 0 < a * b.
   Proof.
     intros a b H H0.
-    rewrite lt_neg_0 in *.
+    rewrite -> lt_neg_0 in *.
     replace (a*b) with (-a*-b) by ring; eauto using mul_pos_pos.
   Qed.
 
@@ -190,7 +190,7 @@ Section Ordered_ring_theorems.
   Proof.
     intros a b H.
     destruct (T (a*b) 0), (T a 0), (T b 0); intuition; subst;
-      rewrite ? mul_0_r, ? mul_0_l in *; auto; exfalso;
+      rewrite -> ? mul_0_r, ? mul_0_l in *; auto; exfalso;
         eauto using mul_neg_pos, mul_pos_neg.
   Qed.
 
@@ -198,7 +198,7 @@ Section Ordered_ring_theorems.
   Proof.
     intros a b H.
     destruct (T (a*b) 0), (T a 0), (T b 0); intuition; subst;
-      rewrite ? mul_0_r, ? mul_0_l in *; exfalso;
+      rewrite -> ? mul_0_r, ? mul_0_l in *; exfalso;
         eauto using mul_neg_neg, mul_pos_pos.
   Qed.
 
@@ -218,7 +218,7 @@ Section Ordered_ring_theorems.
       try tauto.
     - now contradiction (nontriviality OR).
     - apply (O1_r (-1)) in H1.
-      rewrite A4, A3, <-(M3 _ 1), <-(rings.mul_neg_neg _ 1 1) in *.
+      rewrite -> A4, A3, <-(M3 _ 1), <-(rings.mul_neg_neg _ 1 1) in *.
       apply mul_pos_pos; refine (@eq_rect _ _ _ _ _ _); eauto; ring.
   Qed.
 
@@ -282,7 +282,7 @@ Section Ordered_ring_theorems.
   Lemma pos_div_r : ∀ a b, 0 < a → 0 < b * a → 0 < b.
   Proof.
     intros a b H H0.
-    rewrite M1 in *.
+    rewrite -> M1 in *.
     eauto using pos_div_l.
   Qed.
 
@@ -396,7 +396,7 @@ Section Ordered_ring_theorems.
       rewrite A3 in H.
       now right.
     - assert (a < a + b) as H1 by eauto using lt_trans.
-      rewrite lt_shift in H1.
+      rewrite -> lt_shift in H1.
       right.
       now ring_simplify in H1.
   Qed.
@@ -429,7 +429,7 @@ Section Ordered_ring_theorems.
     - contradiction (naturals.lt_irrefl 0).
     - rewrite pow_succ_r.
       destruct (classic (n = 0%N)).
-      + now rewrite H1, pow_0_r, M3.
+      + now rewrite -> H1, pow_0_r, M3.
       + apply succ_0 in H1 as [m H1].
         subst.
         apply (lt_cross_mul 1 (a ^ S m) 1 a) in H;
@@ -527,7 +527,7 @@ Section Ordered_ring_theorems.
     destruct (T 1 r) as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]];
       try tauto.
     - subst.
-      rewrite M3 in *.
+      rewrite -> M3 in *.
       contradiction (lt_irrefl 1).
     - contradiction (lt_antisym 1 (r*r)); auto; simpl.
       rewrite <-(M3 _ 1).
@@ -591,7 +591,7 @@ Section Ordered_ring_theorems.
 
   Theorem add_nonneg_nonneg : ∀ a b, 0 ≤ a → 0 ≤ b → 0 ≤ a + b.
   Proof.
-    intros a b [H | H] [H0 | H0]; subst; rewrite ? (A1 _ _ 0), ? A3;
+    intros a b [H | H] [H0 | H0]; subst; rewrite -> ? (A1 _ _ 0), ? A3;
       unfold le; intuition.
     auto using O0.
   Qed.
@@ -607,13 +607,13 @@ Section Ordered_ring_theorems.
   Proof.
     intros H.
     contradiction zero_ne_2.
-    now rewrite H, A1, A4 at 1.
+    now rewrite -> H, A1, A4 at 1.
   Qed.
 
   Theorem pos_mul_nonneg : ∀ a b, 0 < a → 0 ≤ a * b → 0 ≤ b.
   Proof.
     intros a b H H0.
-    rewrite le_not_gt in *.
+    rewrite -> le_not_gt in *.
     contradict H0.
     now apply mul_pos_neg.
   Qed.

@@ -60,7 +60,7 @@ Section Field_theorems.
     intros a b H.
     destruct (classic (a = 0)) as [H0 | H0]; try tauto.
     apply (f_equal (rings.mul _ (a^-1))) in H.
-    rewrite rings.M2, M4, rings.M3, rings.mul_0_r in H; auto.
+    rewrite -> rings.M2, M4, rings.M3, rings.mul_0_r in H; auto.
   Qed.
 
   Definition integral_domain_from_field :=
@@ -159,7 +159,7 @@ Section Field_theorems.
   Proof.
     intros a b H.
     apply unit_nonzero in H as H0.
-    rewrite (pow_neg (ring Field)); auto.
+    rewrite -> (pow_neg (ring Field)); auto.
     unfold pow, ring_from_field; simpl.
     f_equal.
     now apply inv_ring_to_field.
@@ -168,7 +168,7 @@ Section Field_theorems.
   Theorem inv_pow : ∀ a, a ≠ 0 → a^(-1) = a^-1.
   Proof.
     intros a H.
-    now rewrite pow_neg, pow_1_r.
+    now rewrite -> pow_neg, pow_1_r.
   Qed.
 
   Theorem pow_add_r : ∀ a b c, a ≠ 0 → a^(b+c) = a^b * a^c.
@@ -193,7 +193,7 @@ Section Field_theorems.
   Proof.
     intros a b H.
     apply unit_nonzero in H as H0.
-    rewrite (neg_pow (ring Field)); auto.
+    rewrite -> (neg_pow (ring Field)); auto.
     now apply inv_ring_to_field, pow_ne_0.
   Qed.
 
@@ -206,7 +206,7 @@ Section Field_theorems.
   Theorem pow_div_distr : ∀ a b c, a ≠ 0 → b ≠ 0 → (a*b^-1)^c = a^c * (b^c)^-1.
   Proof.
     intros a b c H H0.
-    rewrite pow_mul_l, <-neg_pow, pow_neg; auto using inv_ne_0.
+    rewrite -> pow_mul_l, <-neg_pow, pow_neg; auto using inv_ne_0.
   Qed.
 
   Lemma pow_add_r_opp : ∀ a b, a ≠ 0 → a^b * a^(-b) = 1.

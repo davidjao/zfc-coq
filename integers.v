@@ -12,26 +12,26 @@ Proof.
     apply Specify_classification.
     assert ((a, a) ∈ (ω × ω) × (ω × ω)) as H0.
     { apply Product_classification; eauto. }
-    now rewrite (reify H), (reify H0), despecify,
+    now rewrite -> (reify H), (reify H0), despecify,
     ? π2_action, ? π1_action, add_comm in *.
   - intros x y H H0 H1.
     apply Specify_classification in H1 as [H1 H2].
     assert ((y, x) ∈ (ω × ω) × (ω × ω)) as H3.
     { apply Product_classification; eauto. }
     apply Specify_classification.
-    now rewrite (reify H), (reify H0), (reify H1), (reify H3),
+    now rewrite -> (reify H), (reify H0), (reify H1), (reify H3),
     despecify, ? π1_action, ? π2_action, add_comm, <-H2 in *.
   - intros x y z H H0 H1 H2 H3.
     apply Specify_classification in H2 as [H2 H4], H3 as [H3 H5].
     apply Specify_classification.
     assert ((x, z) ∈ (ω × ω) × (ω × ω)) as H6.
     { apply Product_classification; eauto. }
-    rewrite (reify H), (reify H0), (reify H1), (reify H2), (reify H3),
+    rewrite -> (reify H), (reify H0), (reify H1), (reify H2), (reify H3),
     (reify H6), despecify, ? π1_action, ? π2_action in *.
     split; auto.
     apply (naturals.cancellation_add (π2 (exist H0))).
     ring_simplify [H4 H5].
-    rewrite <-H5; ring_simplify [H4]; now rewrite H4.
+    rewrite <-H5; ring_simplify [H4]; now rewrite -> H4.
 Qed.
 
 Definition 𝐙 := (ω × ω) / integer_relation.
@@ -77,15 +77,15 @@ Proof.
   - apply quotient_equiv in H1; auto using integer_equivalence.
     simpl in *.
     apply Specify_classification in H1 as [H1 H2].
-    rewrite (reify A), (reify B), (reify C), (reify D), (reify H), (reify H0),
-    (reify H1), despecify in *.
-    now repeat rewrite ? π1_action, ? π2_action in H2.
+    rewrite -> (reify A), (reify B), (reify C), (reify D), (reify H),
+    (reify H0), (reify H1), despecify in *.
+    now repeat rewrite -> ? π1_action, ? π2_action in H2.
   - apply quotient_equiv; auto using integer_equivalence.
     simpl.
     assert (((a, b), (c, d)) ∈ (ω × ω) × (ω × ω)) as H2.
     { apply Product_classification; eauto. }
     apply Specify_classification.
-    now rewrite (reify A), (reify B), (reify C), (reify D), (reify H),
+    now rewrite -> (reify A), (reify B), (reify C), (reify D), (reify H),
     (reify H0), (reify H2), despecify,
     ? π2_action, ? π1_action, ? π2_action in *.
 Qed.
@@ -139,7 +139,7 @@ Proof.
   intros a b.
   unfold add, INZ.
   repeat destruct constructive_indefinite_description.
-  rewrite Zequiv in *.
+  rewrite -> Zequiv in *.
   ring [e0 e2].
 Qed.
 
@@ -148,7 +148,7 @@ Proof.
   intros a b.
   unfold mul, INZ.
   repeat destruct constructive_indefinite_description.
-  rewrite Zequiv in *.
+  rewrite -> Zequiv in *.
   ring [e0 e2].
 Qed.
 
@@ -165,9 +165,9 @@ Proof.
   intros a b c d.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  rewrite Zequiv in *.
+  rewrite -> Zequiv in *.
   ring_simplify [e0 e2].
-  rewrite e2, <-add_assoc, e0.
+  rewrite -> e2, <-add_assoc, e0.
   ring.
 Qed.
 
@@ -176,7 +176,7 @@ Proof.
   intros a b.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  rewrite Zequiv.
+  rewrite -> Zequiv.
   ring.
 Qed.
 
@@ -185,10 +185,10 @@ Proof.
   intros a b c.
   unfold add.
   repeat destruct constructive_indefinite_description.
-  rewrite Zequiv in *.
+  rewrite -> Zequiv in *.
   apply (naturals.cancellation_add x2).
   ring_simplify [e6]; ring_simplify in e6; rewrite <-e6;
-    ring_simplify [e8]; ring_simplify in e8; rewrite e8; ring.
+    ring_simplify [e8]; ring_simplify in e8; rewrite -> e8; ring.
 Qed.
 
 Theorem A3 : ∀ a, 0 + a = a.
@@ -198,7 +198,7 @@ Proof.
   repeat destruct constructive_indefinite_description.
   unfold zero, INZ in *.
   subst.
-  rewrite Zequiv in *.
+  rewrite -> Zequiv in *.
   ring [e0].
 Qed.
 
@@ -207,7 +207,7 @@ Proof.
   intros a b.
   unfold neg.
   repeat destruct constructive_indefinite_description.
-  now rewrite Zequiv in *.
+  now rewrite -> Zequiv in *.
 Qed.
 
 Theorem A4 : ∀ a, a + -a = 0.
@@ -216,7 +216,7 @@ Proof.
   unfold add, neg.
   repeat destruct constructive_indefinite_description.
   unfold zero, INZ.
-  rewrite Zequiv in *.
+  rewrite -> Zequiv in *.
   now ring_simplify [e2].
 Qed.
 
@@ -225,7 +225,7 @@ Proof.
   intros a b.
   unfold mul.
   repeat destruct constructive_indefinite_description.
-  rewrite Zequiv.
+  rewrite -> Zequiv.
   ring.
 Qed.
 
@@ -235,9 +235,9 @@ Proof.
   intros a b c d.
   unfold mul.
   repeat destruct constructive_indefinite_description.
-  rewrite Zequiv in *.
+  rewrite -> Zequiv in *.
   apply (naturals.cancellation_add (b*x1)).
-  rewrite ? add_assoc, <-mul_distr_r, (add_comm _ (b*d)), ? add_assoc,
+  rewrite -> ? add_assoc, <-mul_distr_r, (add_comm _ (b*d)), ? add_assoc,
   <-mul_distr_l, (add_comm b), (add_comm d), e0, e2, (add_comm x0),
   <-? add_assoc, (add_comm (x*x2)), ? add_assoc, (add_comm _ (a*d)),
   (add_comm _ (x*x2)), mul_distr_l, mul_distr_r, ? add_assoc, <-mul_distr_l,
@@ -261,7 +261,7 @@ Proof.
   repeat destruct constructive_indefinite_description.
   unfold one, INZ in *.
   destruct e2.
-  rewrite Zequiv in *.
+  rewrite -> Zequiv in *.
   ring [e0].
 Qed.
 
@@ -304,7 +304,7 @@ Proof.
   repeat destruct constructive_indefinite_description.
   subst.
   unfold not.
-  rewrite Zequiv, ? (add_comm x1), ? (add_comm x2).
+  rewrite -> Zequiv, ? (add_comm x1), ? (add_comm x2).
   eauto using naturals.trichotomy.
 Qed.
 
@@ -312,11 +312,11 @@ Theorem lt_def : ∀ a b, a < b ↔ ∃ c : N, 0 ≠ c ∧ b = a + c.
 Proof.
   intros a b.
   split; intros H; unfold lt, zero, INZ in *;
-    repeat destruct constructive_indefinite_description; rewrite lt_def in *;
+    repeat destruct constructive_indefinite_description; rewrite -> lt_def in *;
       destruct H as [z [H H0]]; exists z; split; subst;
-        try rewrite add_wf, Zequiv in *.
+        try rewrite -> add_wf, Zequiv in *.
   - contradict H.
-    rewrite Zequiv in *.
+    rewrite -> Zequiv in *.
     now ring_simplify in H.
   - now ring_simplify [H0].
   - contradict H.
@@ -327,7 +327,7 @@ Qed.
 Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
 Proof.
   intros a b c H H0.
-  rewrite lt_def in *.
+  rewrite -> lt_def in *.
   destruct H as [x [H H1]], H0 as [y [H0 H2]].
   exists (x+y)%N.
   split.
@@ -342,7 +342,7 @@ Qed.
 Theorem O1 : ∀ a b c, b < c → a + b < a + c.
 Proof.
   intros a b c H.
-  rewrite lt_def in *.
+  rewrite -> lt_def in *.
   destruct H as [x [H H0]].
   exists x.
   split; auto.
@@ -352,7 +352,7 @@ Qed.
 Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
 Proof.
   intros a b H H0.
-  rewrite lt_def in *.
+  rewrite -> lt_def in *.
   destruct H as [x [H H1]], H0 as [y [H0 H2]].
   exists (x*y)%N.
   split.
@@ -369,7 +369,7 @@ Qed.
 
 Theorem zero_lt_1 : 0 < 1.
 Proof.
-  rewrite lt_def.
+  rewrite -> lt_def.
   exists 1%N.
   split.
   - intros H.
@@ -400,11 +400,11 @@ Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level)
 
 Theorem le_def : ∀ a b, a ≤ b ↔ ∃ c : N, b = a + c.
 Proof.
-  split; intros H; unfold le, ordered_rings.le in *; rewrite lt_def in *.
+  split; intros H; unfold le, ordered_rings.le in *; rewrite -> lt_def in *.
   - destruct H as [[c [H H0]] | H]; eauto.
     subst.
     exists 0%N.
-    now rewrite A1, A3.
+    now rewrite -> A1, A3.
   - destruct H as [c H].
     destruct (classic (0 = c)).
     + subst.
@@ -415,11 +415,11 @@ Qed.
 Theorem INZ_lt : ∀ a b : N, a < b ↔ (a < b)%N.
 Proof.
   intros a b.
-  split; intros H; rewrite lt_def, naturals.lt_def in *;
+  split; intros H; rewrite -> lt_def, naturals.lt_def in *;
     destruct H as [c [H H0]]; exists c; split.
   - contradict H.
     now subst.
-  - now rewrite INZ_add, INZ_eq in H0.
+  - now rewrite -> INZ_add, INZ_eq in H0.
   - contradict H.
     now apply INZ_eq in H.
   - subst.
@@ -432,22 +432,22 @@ Proof.
   split; intros H.
   - apply le_def in H as [c H].
     exists c.
-    rewrite INZ_add in H.
+    rewrite -> INZ_add in H.
     now apply INZ_eq in H.
   - destruct H as [c H].
     apply le_def.
     exists c.
-    rewrite INZ_add.
+    rewrite -> INZ_add.
     now subst.
 Qed.
 
 Theorem lt_0_1 : ∀ a, 0 < a → ¬ a < 1.
 Proof.
   intros a H H0.
-  rewrite lt_def in *.
+  rewrite -> lt_def in *.
   destruct H as [x [H H1]], H0 as [y [H0 H2]].
   contradiction (naturals.lt_0_1 x).
-  split; rewrite naturals.lt_def.
+  split; rewrite -> naturals.lt_def.
   - exists x.
     split; try ring; subst.
     contradict H.
@@ -465,10 +465,10 @@ Theorem lt_n_Sn : ∀ x n, x < S n → x < n ∨ x = n.
 Proof.
   intros x n H.
   destruct (T x n); intuition; try tauto.
-  rewrite lt_def in *.
+  rewrite -> lt_def in *.
   destruct H as [a [H H2]], H3 as [b [H3 H4]].
   subst.
-  rewrite ? INZ_add, INZ_eq, <-add_1_r, <-add_assoc in H2.
+  rewrite -> ? INZ_add, INZ_eq, <-add_1_r, <-add_assoc in H2.
   apply naturals.cancellation_add, eq_sym, cancellation_1_add in H2
     as [H2 | H2]; subst; [ contradiction H3 | contradiction H ]; auto.
 Qed.
@@ -481,7 +481,7 @@ Proof.
     try now (apply H; intros y [H3 H4]; contradict H2; eauto using lt_trans).
   apply lt_def in H2 as [c [H2 H3]].
   subst.
-  rewrite A3 in *.
+  rewrite -> A3 in *.
   apply (Induction (λ x : N, P x ∧ ∀ y : N, 0 < y ∧ y < x → P y))%N.
   - split; [ apply H |]; intros y [H3 H4]; contradiction (naturals.lt_irrefl 0);
       [ eapply INZ_lt, lt_trans | eapply naturals.lt_trans ]; eauto.
@@ -494,12 +494,12 @@ Proof.
       intros z [H8 H9].
       pose proof H8 as H10.
       apply lt_def in H10 as [d [H10 H11]].
-      rewrite H11, A3 in *.
+      rewrite -> H11, A3 in *.
       apply H4.
       split; apply INZ_lt; eauto using lt_trans.
     + intros y [H5 H6].
       apply INZ_lt, lt_n_Sn in H6 as [H6 | H6]; try congruence.
-      rewrite INZ_lt in H6.
+      rewrite -> INZ_lt in H6.
       auto.
 Qed.
 
@@ -532,7 +532,7 @@ Proof.
   apply le_not_gt; simpl; intros H1; subst.
   assert (0 < a) by eauto using lt_trans.
   eapply (pos_div_r ℤ_order), lt_0_le_1, mul_le_r in H;
-    try rewrite M3, le_not_gt in H; eauto.
+    try rewrite -> M3, le_not_gt in H; eauto.
 Qed.
 
 Definition assoc := @assoc ℤ : Z → Z → Prop.
@@ -572,7 +572,7 @@ Add Parametric Relation : Z pm
 Add Morphism mul with signature pm ==> pm ==> pm as pm_mul.
 Proof.
   intros x y [H | H] x0 y0 [H0 | H0]; subst; unfold pm;
-    rewrite ? (mul_neg_l ℤ), ? (mul_neg_r ℤ), ? (neg_neg ℤ); intuition.
+    rewrite -> ? (mul_neg_l ℤ), ? (mul_neg_r ℤ), ? (neg_neg ℤ); intuition.
 Qed.
 
 Theorem neg_pm : ∀ x, x = ± - x.
@@ -591,7 +591,7 @@ Theorem assoc_N : ∀ a b : N, a ~ b → a = b.
 Proof.
   intros a b [H H0]; apply INZ_eq; fold divide in *.
   destruct (N_ge_0 a), (N_ge_0 b); simpl in *; try rewrite <-H1 in *;
-    try rewrite <-H2 in *; try rewrite (div_0_l ℤ) in *; auto;
+    try rewrite <-H2 in *; try rewrite -> (div_0_l ℤ) in *; auto;
       apply (le_antisymm ℤ_order); now apply div_le.
 Qed.
 
@@ -601,28 +601,28 @@ Proof.
     destruct (classic (b = 0)); simpl in *; subst.
   - exists 1.
     split; auto using (one_unit ℤ) with Z.
-    rewrite H0, H1.
+    rewrite -> H0, H1.
     ring.
   - exists c.
     split; try ring.
     exists d; simpl.
     apply (cancellation_mul_r ℤ_ID a); simpl.
     + contradict H1; subst; ring.
-    + now rewrite M3, <-M2.
+    + now rewrite -> M3, <-M2.
 Qed.
 
 Theorem assoc_pm : ∀ a b, a ~ b → a = ± b.
 Proof.
   assert (∀ a b, 0 < a → 0 < b → a ~ b → a = b) as assoc_pos.
   { intros a b H H0 H1.
-    rewrite lt_def in H, H0.
+    rewrite -> lt_def in H, H0.
     destruct H as [c [H H2]], H0 as [d [H0 H3]].
     subst.
-    rewrite ? A3 in *.
+    rewrite -> ? A3 in *.
     now apply INZ_eq, assoc_N. }
   intros a b H.
-  destruct (T a 0), (T b 0); intuition; rewrite (lt_neg_0 ℤ_order) in *;
-    subst; try (now (destruct H; rewrite (div_0_l ℤ) in * )); simpl in *;
+  destruct (T a 0), (T b 0); intuition; rewrite -> (lt_neg_0 ℤ_order) in *;
+    subst; try (now (destruct H; rewrite -> (div_0_l ℤ) in * )); simpl in *;
       [ assert (-a = -b → a = b) by (intro M; ring [M]); left |
         assert (-a = b → a = -b) by (intro M; ring [M]); right | right ];
       eauto 8 using (assoc_sign ℤ), (assoc_sym ℤ) with Z.
@@ -640,14 +640,14 @@ Proof.
   wlog: a H / 0 < a.
   - intros x.
     destruct (T a 0) as [[H0 [H1 H2]] | [[H0 [H1 H2]] | [H0 [H1 H2]]]]; auto.
-    + rewrite (lt_neg_0 ℤ_order) in H0; simpl in *.
+    + rewrite -> (lt_neg_0 ℤ_order) in H0; simpl in *.
       destruct (x _ H H0) as [q [r [H3 [[H4 | H4] H5]]]]; auto; simpl in *;
         apply (f_equal (mul (-1))) in H3; ring_simplify in H3; subst.
       * exists (-q-1), (b+-r).
         repeat split; try ring.
         -- rewrite <-(A4 r), ? (A1 _ (-r)).
            now apply or_introl, O1.
-        -- rewrite A1, <-(A3_r ℤ b), A1, <-A2, A3.
+        -- rewrite -> A1, <-(A3_r ℤ b), A1, <-A2, A3.
            now apply O1, (neg_lt_0 ℤ_order).
       * exists (-q), 0.
         repeat split; auto using (le_refl ℤ_order : ∀ a : Z, a ≤ a); ring.
@@ -657,11 +657,11 @@ Proof.
     induction a as [a IHa] using strong_induction.
     destruct (T a b); unfold le, ordered_rings.le; intuition;
       [ exists 0, a | exists 1, 0 | ]; repeat split; auto; subst; try ring.
-    rewrite (lt_shift ℤ_order) in H4; simpl in *.
+    rewrite -> (lt_shift ℤ_order) in H4; simpl in *.
     apply IHa in H4 as [q [r [H5 H6]]]; repeat split; auto.
     + exists (q+1), r.
       split; auto.
-      rewrite M1, D1, (M1 _ b), <-A2, (A1 _ r), A2, H5; ring.
+      rewrite -> M1, D1, (M1 _ b), <-A2, (A1 _ r), A2, H5; ring.
     + rewrite <-(A3_r ℤ a) at 2.
       now apply O1, (neg_lt_0 ℤ_order).
 Qed.
@@ -693,7 +693,7 @@ Proof.
       auto using (div_mul_r ℤ) with Z.
     exists (y+-(q*x)), x.
     ring_simplify.
-    now rewrite A1, M1.
+    now rewrite -> A1, M1.
   - exists 1, 0.
     ring_simplify.
     apply (ordered_rings.le_antisymm ℤ_order), div_le; try apply div_le;
@@ -741,7 +741,7 @@ Proof.
     auto.
   - repeat split; try rewrite <-(div_sign_r ℤ) in H0; auto.
     intros x H2 H3.
-    rewrite (div_sign_r ℤ) in H3.
+    rewrite -> (div_sign_r ℤ) in H3.
     auto.
 Qed.
 
@@ -749,8 +749,8 @@ Lemma neg_gcd : ∀ a b d, gcd(a, b) = d ↔ gcd(a, b) = -d.
 Proof.
   intros a b d.
   split; intros [H [H0 H1]]; repeat split; try (now rewrite <-(div_sign_l ℤ));
-    try (now rewrite (div_sign_l ℤ)); intros x H2 H3;
-      [ rewrite <-(div_sign_r ℤ) | rewrite (div_sign_r ℤ) ]; fold divide; auto.
+    try (now rewrite -> (div_sign_l ℤ)); intros x H2 H3;
+      [ rewrite <-(div_sign_r ℤ) | rewrite -> (div_sign_r ℤ) ]; now apply H1.
 Qed.
 
 
@@ -761,17 +761,17 @@ Proof.
   destruct (T a 0), (T b 0); intuition; subst;
     try apply gcd_0_l in H; try apply gcd_0_r in H;
       try (now (destruct H as [[x H]]; exists x, 0;
-                simpl in *; fold Z in x; rewrite H; ring));
+                simpl in *; fold Z in x; rewrite -> H; ring));
       try (now (destruct H as [[x H]]; exists 0, x;
-                simpl in *; fold Z in x; rewrite H; ring));
-      destruct H; intuition; rewrite (lt_neg_0 ℤ_order) in *; simpl in *;
+                simpl in *; fold Z in x; rewrite -> H; ring));
+      destruct H; intuition; rewrite -> (lt_neg_0 ℤ_order) in *; simpl in *;
         [ set (c := -a) | set (c := -a) | set (c := a) | set (c := a) ];
         [ set (d := -b) | set (d := b) | set (d := -b) | set (d := b) ];
         destruct (Euclidean_algorithm_N c d) as [x [y Z]]; try split;
           auto using (div_1_l ℤ), (div_sign_neg_r ℤ) with Z;
           unfold c, d in *;
           [ exists (-x), (-y) | exists (-x), y | exists x, (-y) | exists x, y ];
-          rewrite Z; ring.
+          rewrite -> Z; ring.
 Qed.
 
 Theorem FTA : ∀ a b c, gcd(a, b) = 1 → a｜b * c → a｜c.
@@ -805,7 +805,7 @@ Proof.
   induction t1 as [| a t1 IHt1]; auto.
   intros t2 p.
   simpl.
-  rewrite IHt1.
+  rewrite -> IHt1.
   ring.
 Qed.
 
@@ -823,13 +823,13 @@ Proof.
     destruct (trichotomy ℤ_order d 0) as [H2 | [H2 | H2]]; subst; auto.
     + apply (lt_neg_0 ℤ_order), x in H2 as [H2 | H2]; simpl in *.
       * now apply or_introl, unit_sign.
-      * rewrite (assoc_sym_iff ℤ), <-(neg_neg ℤ d).
+      * rewrite -> (assoc_sym_iff ℤ), <-(neg_neg ℤ d).
         now apply or_intror, assoc_sign, assoc_sym.
       * now apply div_sign_l_neg.
     + apply (lt_not_ge ℤ_order) in H.
       apply div_0_l in H1.
       contradiction H.
-      rewrite H1.
+      rewrite -> H1.
       apply or_introl, zero_lt_1.
   - intros H2.
     pose proof H1 as H3.
@@ -905,9 +905,9 @@ Theorem Euclid_power : ∀ k a p, prime p → p｜a^k → p｜a.
 Proof.
   intros k a p H H0.
   induction k using Induction.
-  - rewrite pow_0_r in H0.
+  - rewrite -> pow_0_r in H0.
     now destruct H.
-  - rewrite pow_succ_r in H0.
+  - rewrite -> pow_succ_r in H0.
     apply Euclid's_lemma in H0; intuition.
 Qed.
 
@@ -935,7 +935,7 @@ Proof.
   destruct (H0 a) as [H1 [H2 H3]]; try now intuition.
   contradict H2.
   exists (∏ L).
-  now rewrite M1.
+  now rewrite -> M1.
 Qed.
 
 Theorem unique_prime_factorization :
@@ -946,7 +946,7 @@ Proof.
   intros L1 L2 [H1 H2] [H3 H4].
   induction L1 as [ | q L1 IHL1]; simpl in *.
   - subst.
-    now rewrite (one_has_unique_factorization _ (conj H3 H4)).
+    now rewrite -> (one_has_unique_factorization _ (conj H3 H4)).
   - destruct (H2 q) as [H5 H6]; try apply in_eq.
     assert (q｜x) as H7 by
           (subst; eauto using (div_mul_r ℤ), (div_refl ℤ) with Z).
@@ -954,14 +954,14 @@ Proof.
     apply in_split in H8 as [l1 [l2 H8]].
     subst.
     apply prime_factors_in_interval in H7 as [k [H8 H9]]; auto.
-    rewrite (M1 k), <-H8, prod_lemma in *.
+    rewrite -> (M1 k), <-H8, prod_lemma in *.
     apply (cancellation_mul_l ℤ_ID) in H3;
       apply (cancellation_mul_l ℤ_ID) in H8;
       try now (intro; subst; contradiction (lt_irrefl ℤ_order 0)).
     apply Permutation_cons_app, (H0 k); intuition; split; auto.
     intros p H9.
     apply H4.
-    rewrite in_app_iff in *.
+    rewrite -> in_app_iff in *.
     intuition.
 Qed.
 
@@ -1000,10 +1000,10 @@ Proof.
       * destruct (H3 r); auto.
         -- split; auto.
            exists (1-x*q), (-y*q).
-           rewrite H4, H2.
+           rewrite -> H4, H2.
            ring.
         -- contradiction (lt_antisym ℤ_order d r).
-        -- rewrite H7 in *.
+        -- rewrite -> H7 in *.
            contradiction (lt_irrefl ℤ_order r).
       * rewrite <-H5 in *.
         exists q; simpl.
@@ -1015,10 +1015,10 @@ Proof.
       * destruct (H3 r); auto.
         -- split; auto.
            exists (-x*q), (1-y*q).
-           rewrite H4, H2.
+           rewrite -> H4, H2.
            ring.
         -- contradiction (lt_antisym ℤ_order d r).
-        -- rewrite H7 in *.
+        -- rewrite -> H7 in *.
            contradiction (lt_irrefl ℤ_order r).
       * rewrite <-H5 in *.
         exists q; simpl.
@@ -1032,7 +1032,7 @@ Qed.
 Theorem common_factor : ∀ a b, b ≠ 0 → ∃ d, 0 < d ∧ gcd(a,b) = d.
 Proof.
   intros a b H.
-  destruct (T a 0), (T b 0); intuition; rewrite (lt_neg_0 ℤ_order) in *.
+  destruct (T a 0), (T b 0); intuition; rewrite -> (lt_neg_0 ℤ_order) in *.
   - destruct (common_factor_N (-a) (-b)) as [d [D1 D2]]; auto.
     exists d.
     split; auto.
@@ -1062,13 +1062,13 @@ Proof.
   split.
   - intros H.
     apply div_le in H as [H | H]; auto using zero_lt_1; simpl in *.
-    + rewrite lt_def in H.
+    + rewrite -> lt_def in H.
       destruct H as [c [H H0]].
-      unfold one, INZ in H0.
-      rewrite A1, A2, ? add_wf, Zequiv, ? add_0_r, ? add_0_l, ? add_1_r in H0.
+      rewrite /one /INZ A1 A2 ? add_wf in H0.
+      rewrite -> Zequiv, ? add_0_r, ? add_0_l, ? add_1_r in H0.
       now apply PA5, PA4 in H0.
     + unfold one, INZ in H.
-      rewrite ? add_wf, Zequiv, ? add_0_r, add_0_l, add_1_r in H.
+      rewrite -> ? add_wf, Zequiv, ? add_0_r, add_0_l, add_1_r in H.
       now apply PA5, eq_sym, PA4 in H.
   - assert (∀ d : Z, 0 < d → d｜2 → unit d ∨ d ~ 2) as H.
     { intros d H H0.
@@ -1098,7 +1098,7 @@ Proof.
     + subst.
       apply div_0_l, eq_sym in H0; simpl in *.
       unfold zero, one in *.
-      rewrite INZ_add, add_1_r in H0.
+      rewrite -> INZ_add, add_1_r in H0.
       now apply INZ_eq, PA4 in H0.
 Qed.
 
@@ -1142,10 +1142,10 @@ Proof.
   intros a b H.
   unfold sub.
   replace (a : Z) with ((a-b)%N + b); try ring.
-  rewrite INZ_add.
+  rewrite -> INZ_add.
   f_equal.
   apply INZ_le in H.
-  now rewrite add_comm, sub_abab.
+  now rewrite -> add_comm, sub_abab.
 Qed.
 
 Section IZR.
@@ -1163,7 +1163,7 @@ Section IZR.
       exact (INR _ c).
     - apply lt_not_ge, lt_shift in n.
       simpl in n.
-      rewrite A3 in n.
+      rewrite -> A3 in n.
       apply lt_def in n.
       destruct (constructive_indefinite_description n) as [c H].
       exact (rings.neg _ (INR _ c)).
@@ -1188,10 +1188,10 @@ Section IZR.
   Proof.
     unfold IZR.
     destruct excluded_middle_informative, constructive_indefinite_description.
-    - rewrite A3 in e.
+    - rewrite -> A3 in e.
       apply INZ_eq in e.
       subst.
-      now rewrite INR_zero.
+      now rewrite -> INR_zero.
     - contradict n.
       apply le_refl.
   Qed.
@@ -1200,10 +1200,10 @@ Section IZR.
   Proof.
     unfold IZR.
     destruct excluded_middle_informative, constructive_indefinite_description.
-    - rewrite A3 in e.
+    - rewrite -> A3 in e.
       apply INZ_eq in e.
       subst.
-      now rewrite INR_one.
+      now rewrite -> INR_one.
     - contradict n.
       apply or_introl, zero_lt_1.
   Qed.
@@ -1213,31 +1213,31 @@ Section IZR.
     intros a b.
     unfold IZR.
     repeat destruct excluded_middle_informative;
-      repeat destruct constructive_indefinite_description; rewrite A3 in *;
+      repeat destruct constructive_indefinite_description; rewrite -> A3 in *;
         repeat destruct a0; repeat destruct a1; repeat destruct a2.
     - subst.
-      rewrite INR_add, INZ_add in *.
+      rewrite -> INR_add, INZ_add in *.
       now apply f_equal, INZ_eq.
     - contradict n.
       rewrite <-(A3 0).
       now apply le_cross_add.
     - replace (INR _ x) with (rings.add Ring (INR _ x0) (INR _ x1)); try ring.
-      rewrite ? INR_add.
+      rewrite -> ? INR_add.
       f_equal.
       rewrite <-INZ_eq, <-INZ_add, <-e0, <-e, <-H0 in *.
       ring.
     - replace (INR _ x0) with (rings.add Ring (INR _ x) (INR _ x1)); try ring.
-      rewrite ? INR_add.
+      rewrite -> ? INR_add.
       f_equal.
       rewrite <-INZ_eq, <-INZ_add, <-e, <-H0, <-H2.
       ring.
     - replace (INR _ x0) with (rings.add Ring (INR _ x) (INR _ x1)); try ring.
-      rewrite ? INR_add.
+      rewrite -> ? INR_add.
       f_equal.
       rewrite <-INZ_eq, <-INZ_add, <-H0, <-e, <-e0.
       ring.
     - replace (INR _ x) with (rings.add Ring (INR _ x0) (INR _ x1)); try ring.
-      rewrite ? INR_add.
+      rewrite -> ? INR_add.
       f_equal.
       rewrite <-INZ_eq, <-INZ_add, <-H0, <-e, <-H2.
       ring.
@@ -1247,7 +1247,7 @@ Section IZR.
       rewrite <-(A3 0).
       now apply (lt_cross_add ℤ_order).
     - replace (INR _ x1) with (rings.add Ring (INR _ x) (INR _ x0)); try ring.
-      rewrite ? INR_add.
+      rewrite -> ? INR_add.
       f_equal.
       rewrite <-INZ_eq, <-INZ_add, <-H0, <-H2, <-H4.
       ring.
@@ -1258,10 +1258,10 @@ Section IZR.
     intros a b.
     unfold IZR.
     repeat destruct excluded_middle_informative;
-      repeat destruct constructive_indefinite_description; rewrite A3 in *;
+      repeat destruct constructive_indefinite_description; rewrite -> A3 in *;
         repeat destruct a0; repeat destruct a1; repeat destruct a2.
     - subst.
-      rewrite INR_mul, INZ_mul in *.
+      rewrite -> INR_mul, INZ_mul in *.
       now apply f_equal, INZ_eq.
     - contradict n.
       now apply mul_nonneg_nonneg.
@@ -1271,8 +1271,8 @@ Section IZR.
       + contradict l0.
         now apply (mul_pos_neg ℤ_order).
       + subst.
-        rewrite (rings.mul_0_l ℤ) in e0; simpl in *.
-        rewrite ? IZR_INZ, <-e, <-e0, <-IZR_zero.
+        rewrite -> (rings.mul_0_l ℤ) in e0; simpl in *.
+        rewrite -> ? IZR_INZ, <-e, <-e0, <-IZR_zero.
         ring.
     - rewrite <-mul_neg_1_l, rings.M1, <-rings.M2, mul_neg_1_l, INR_mul.
       apply f_equal, f_equal, INZ_eq.
@@ -1284,20 +1284,20 @@ Section IZR.
       + contradict l0.
         now apply (mul_neg_pos ℤ_order).
       + subst.
-        rewrite (rings.mul_0_r ℤ) in e0; simpl in *.
-        rewrite ? IZR_INZ, <-e, <-e0, <-IZR_zero.
+        rewrite -> (rings.mul_0_r ℤ) in e0; simpl in *.
+        rewrite -> ? IZR_INZ, <-e, <-e0, <-IZR_zero.
         ring.
     - rewrite <-mul_neg_1_l, <-rings.M2, mul_neg_1_l, INR_mul.
       apply f_equal, f_equal, INZ_eq.
       rewrite <-INZ_mul, <-e, <-H0, <-H2.
       ring.
-    - rewrite rings.mul_neg_neg, INR_mul.
+    - rewrite -> rings.mul_neg_neg, INR_mul.
       apply f_equal, INZ_eq.
       rewrite <-INZ_mul, <-H0, <-H2, <-e.
       ring.
     - contradict n1.
       left; simpl.
-      apply (ordered_rings.mul_neg_neg ℤ_order); now rewrite lt_not_ge.
+      apply (ordered_rings.mul_neg_neg ℤ_order); now rewrite -> lt_not_ge.
   Qed.
 
   Theorem IZR_neg : ∀ a : Z, rings.neg _ a = -a.
@@ -1313,18 +1313,18 @@ Section IZR.
       + apply (lt_not_ge ℤ_order) in l.
         contradict l.
         right.
-        now rewrite l0, A3, A1, A4 at 1.
+        now rewrite -> l0, A3, A1, A4 at 1.
       + contradiction (lt_irrefl ℤ_order 0).
         now replace 0 with (-0) at 2 by ring.
-      + rewrite A3 in *.
+      + rewrite -> A3 in *.
         replace (-0) with 0 in * by ring.
-        rewrite ? IZR_INZ, <-e, <-e0, <-IZR_zero.
+        rewrite -> ? IZR_INZ, <-e, <-e0, <-IZR_zero.
         ring.
     - destruct a0 as [H H0].
       replace (--a) with a in * by ring.
-      now rewrite A3, ? IZR_INZ, <-e, <-H0 in *.
+      now rewrite -> A3, ? IZR_INZ, <-e, <-H0 in *.
     - destruct a0 as [H H0].
-      rewrite A3, ? IZR_INZ, <-e, <-H0 in *.
+      rewrite -> A3, ? IZR_INZ, <-e, <-H0 in *.
       ring.
     - contradict n0.
       left; simpl.
@@ -1337,8 +1337,8 @@ Theorem INZ_pow : ∀ a b : N, ((a : Z)^b) = ((a^b)%N : Z).
 Proof.
   intros a b.
   induction b using Induction.
-  - now rewrite pow_0_r, naturals.pow_0_r.
-  - now rewrite pow_succ_r, naturals.pow_succ_r, IHb, INZ_mul.
+  - now rewrite -> pow_0_r, naturals.pow_0_r.
+  - now rewrite -> pow_succ_r, naturals.pow_succ_r, IHb, INZ_mul.
 Qed.
 
 Theorem INZ_sum_0 : ∀ m (f : N → N),
@@ -1346,8 +1346,8 @@ Theorem INZ_sum_0 : ∀ m (f : N → N),
 Proof.
   intros m f.
   induction m using Induction.
-  - now rewrite sum_0, sum_N_0.
-  - rewrite sum_succ, sum_N_succ, IHm, INZ_add; auto using zero_le.
+  - now rewrite -> sum_0, sum_N_0.
+  - rewrite -> sum_succ, sum_N_succ, IHm, INZ_add; auto using zero_le.
 Qed.
 
 Theorem INZ_sum : ∀ a b (f : N → N),
@@ -1356,7 +1356,7 @@ Proof.
   intros a b f.
   destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
   - unfold sum, sum_N.
-    rewrite ? iterate_shift.
+    rewrite -> ? iterate_shift.
     apply INZ_sum_0.
   - now rewrite <-naturals.lt_not_ge, sum_neg, sum_N_neg in *.
 Qed.
@@ -1366,8 +1366,8 @@ Theorem INZ_prod_0 : ∀ m (f : N → N),
 Proof.
   intros m f.
   induction m using Induction.
-  - now rewrite prod_0, prod_N_0.
-  - rewrite prod_succ, prod_N_succ, IHm, INZ_mul; auto using zero_le.
+  - now rewrite -> prod_0, prod_N_0.
+  - rewrite -> prod_succ, prod_N_succ, IHm, INZ_mul; auto using zero_le.
 Qed.
 
 Theorem INZ_prod : ∀ a b (f : N → N),
@@ -1376,7 +1376,7 @@ Proof.
   intros a b f.
   destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
   - unfold prod, prod_N.
-    rewrite ? iterate_shift.
+    rewrite -> ? iterate_shift.
     apply INZ_prod_0.
   - now rewrite <-naturals.lt_not_ge, prod_neg, prod_N_neg in *.
 Qed.
@@ -1404,7 +1404,7 @@ Proof.
       contradiction (lt_0_1 (r+(-1%Z))%Z).
       * now rewrite <-(ordered_rings.lt_shift ℤ_order).
       * rewrite <-(integers.A3 1) at 2.
-        rewrite (integers.A1 0), <-(integers.A4 1), integers.A2,
+        rewrite -> (integers.A1 0), <-(integers.A4 1), integers.A2,
         ? (integers.A1 _ (-1)).
         now apply (ordered_rings.O1 ℤ_order).
   - destruct H as [k H].
@@ -1413,7 +1413,7 @@ Proof.
     destruct two_is_prime as [H0 H1].
     contradict H0.
     exists (x+-k); simpl.
-    rewrite integers.D1, <-H.
+    rewrite -> integers.D1, <-H.
     now ring_simplify.
 Qed.
 
@@ -1456,13 +1456,13 @@ Proof.
   unfold div.
   destruct excluded_middle_informative; try tauto.
   destruct constructive_indefinite_description.
-  now rewrite M1.
+  now rewrite -> M1.
 Qed.
 
 Theorem div_inv_r : ∀ a b, b｜a → (a/b) * b = a.
 Proof.
   intros a b H.
-  now rewrite M1, div_inv_l.
+  now rewrite -> M1, div_inv_l.
 Qed.
 
 Theorem div_spec : ∀ a b k, b｜a → b ≠ 0 → a/b = k ↔ a = k * b.
@@ -1480,7 +1480,7 @@ Proof.
   apply eq_sym, div_spec; auto.
   - destruct H as [k H].
     exists (k*a).
-    rewrite H.
+    rewrite -> H.
     simpl; now ring_simplify.
   - now rewrite <-M2, div_inv_r.
 Qed.
@@ -1491,7 +1491,7 @@ Proof.
   unfold div.
   destruct excluded_middle_informative; try apply (le_refl ℤ_order).
   destruct constructive_indefinite_description; subst; simpl in *.
-  rewrite M1 in H.
+  rewrite -> M1 in H.
   eapply pos_mul_nonneg; eauto.
 Qed.
 
@@ -1512,7 +1512,7 @@ Proof.
     now apply eq_sym, div_inv_l.
   - contradict H0.
     rewrite <-(div_inv_l a b); auto.
-    now rewrite H0, (mul_0_r ℤ).
+    now rewrite -> H0, (mul_0_r ℤ).
 Qed.
 
 Theorem gcd_exists : ∀ a b, ∃ d, gcd(a, b) = d.
@@ -1525,10 +1525,10 @@ Proof.
       try (now (exists a; repeat split; auto using div_0_r with Z));
       try (now (exists b; repeat split; auto using div_0_r with Z));
       try (now (exists 0; repeat split; auto using div_0_r with Z));
-      rewrite (lt_neg_0 ℤ_order) in *; destruct (x _ _ (conj H H0)) as [d H1];
-        exists d.
-    + now rewrite gcd_neg.
-    + now apply is_gcd_sym; rewrite gcd_neg; apply is_gcd_sym.
+      rewrite -> (lt_neg_0 ℤ_order) in *;
+      destruct (x _ _ (conj H H0)) as [d H1]; exists d.
+    + now rewrite -> gcd_neg.
+    + now apply is_gcd_sym; rewrite -> gcd_neg; apply is_gcd_sym.
     + now rewrite gcd_neg; apply is_gcd_sym; rewrite gcd_neg; apply is_gcd_sym.
   - revert b.
     induction a using strong_induction.
@@ -1646,7 +1646,7 @@ Qed.
 Theorem gcd_r_0 : ∀ a, gcd a 0 = ± a.
 Proof.
   intros a.
-  rewrite gcd_sym.
+  rewrite -> gcd_sym.
   apply gcd_l_0.
 Qed.
 
@@ -1660,7 +1660,7 @@ Qed.
 Theorem gcd_r_1 : ∀ a, gcd a 1 = 1.
 Proof.
   intros a.
-  now rewrite gcd_sym, gcd_l_1.
+  now rewrite -> gcd_sym, gcd_l_1.
 Qed.
 
 Theorem gcd_pos : ∀ a b, a ≠ 0 → gcd a b ≠ 0.
@@ -1668,7 +1668,7 @@ Proof.
   intros a b H.
   contradict H.
   pose proof gcd_l_div a b.
-  rewrite H in H0.
+  rewrite -> H in H0.
   now apply div_0_l in H0.
 Qed.
 
@@ -1686,7 +1686,7 @@ Proof.
   exists z.
   apply (cancellation_mul_r ℤ_ID (gcd a b)); simpl in *.
   - now apply gcd_pos.
-  - now rewrite M3, <-M2.
+  - now rewrite -> M3, <-M2.
 Qed.
 
 Theorem Euclidean_gcd : ∀ a b, ∃ x y, a * x + b * y = gcd a b.
@@ -1694,17 +1694,17 @@ Proof.
   intros a b.
   destruct (classic (a = 0)) as [H | H], (classic (b = 0)) as [H0 | H0]; subst.
   - exists 0, 0.
-    rewrite (mul_0_l ℤ), A3.
+    rewrite -> (mul_0_l ℤ), A3.
     destruct (gcd_l_0 0) as [H | H]; replace (-0) with 0 in * by ring; auto.
-  - destruct (gcd_l_0 b) as [H | H]; rewrite H.
+  - destruct (gcd_l_0 b) as [H | H]; rewrite -> H.
     + exists 0, 1; ring.
     + exists 0, (-1); ring.
-  - destruct (gcd_r_0 a) as [H0 | H0]; rewrite H0.
+  - destruct (gcd_r_0 a) as [H0 | H0]; rewrite -> H0.
     + exists 1, 0; ring.
     + exists (-1), 0; ring.
   - eapply gcd_rel_prime in H; eauto.
     apply Euclidean_algorithm in H as [x [y H]].
-    rewrite gcd_sym in H.
+    rewrite -> gcd_sym in H.
     exists y, x.
     rewrite <-(M3 (gcd a b)), H, D1, ? (M1 _ (gcd a b)), ? M2, ? div_inv_l;
       auto using gcd_l_div, gcd_r_div; ring.
@@ -1756,14 +1756,14 @@ Theorem gcd_l_mul :
 Proof.
   intros a b c H.
   apply is_gcd_sym.
-  rewrite ? (gcd_sym _ c).
+  rewrite -> ? (gcd_sym _ c).
   now apply gcd_r_mul.
 Qed.
 
 Theorem gcd_mul_l : ∀ a b c, gcd(a, b) = 1 → gcd (a*b) c = gcd a c * gcd b c.
 Proof.
   intros a b c H.
-  now rewrite gcd_sym, gcd_mul_r, ? (gcd_sym c).
+  now rewrite -> gcd_sym, gcd_mul_r, ? (gcd_sym c).
 Qed.
 
 Theorem gcd_pow_l : ∀ a b k, gcd(a, b) = 1 → gcd (a^k) b = 1.
@@ -1780,7 +1780,7 @@ Qed.
 Theorem gcd_pow_r : ∀ a b k, gcd(a, b) = 1 → gcd a (b^k) = 1.
 Proof.
   intros a b k H.
-  rewrite gcd_sym.
+  rewrite -> gcd_sym.
   now apply gcd_pow_l, is_gcd_sym.
 Qed.
 
@@ -1842,7 +1842,7 @@ Proof.
     auto.
   - repeat split; try rewrite <-(div_sign_l ℤ) in H0; auto.
     intros x H2 H3.
-    rewrite (div_sign_l ℤ) in H3.
+    rewrite -> (div_sign_l ℤ) in H3.
     auto.
 Qed.
 
@@ -1850,8 +1850,8 @@ Lemma neg_lcm : ∀ a b m, lcm(a, b) = m ↔ lcm(a, b) = -m.
 Proof.
   intros a b d.
   split; intros [H [H0 H1]]; repeat split; try (now rewrite <-(div_sign_r ℤ));
-    try (now rewrite (div_sign_r ℤ)); intros x H2 H3;
-      [ rewrite <-(div_sign_l ℤ) | rewrite (div_sign_l ℤ) ]; fold divide; auto.
+    try (now rewrite -> (div_sign_r ℤ)); intros x H2 H3;
+      [ rewrite <-(div_sign_l ℤ) | rewrite -> (div_sign_l ℤ) ]; now apply H1.
 Qed.
 
 Theorem lcm_gcd_ident : ∀ a b, a ≠ 0 → b ≠ 0 → lcm(a, b) = (a*b) / gcd a b.
@@ -1860,22 +1860,22 @@ Proof.
   assert (gcd a b ≠ 0) as H1.
   { contradict H.
     pose proof gcd_l_div a b.
-    rewrite H in H1.
+    rewrite -> H in H1.
     now apply div_0_l in H1. }
   unfold div.
   destruct excluded_middle_informative as [y | n].
   2: { contradict n.
        apply div_mul_r, gcd_l_div. }
   destruct constructive_indefinite_description as [k]; simpl in *.
-  repeat split; rewrite (M1 k) in e.
+  repeat split; rewrite -> (M1 k) in e.
   - exists (b / gcd a b); simpl.
-    rewrite M1, mul_div; auto using gcd_r_div.
+    rewrite -> M1, mul_div; auto using gcd_r_div.
     apply eq_sym, div_spec; auto.
-    now rewrite e, M1.
+    now rewrite -> e, M1.
   - exists (a / gcd a b); simpl.
-    rewrite M1, mul_div; auto using gcd_l_div.
-    apply eq_sym, div_spec; try rewrite M1; auto.
-    now rewrite e, M1.
+    rewrite -> M1, mul_div; auto using gcd_l_div.
+    apply eq_sym, div_spec; try rewrite -> M1; auto.
+    now rewrite -> e, M1.
   - intros x H2 H3.
     set (d := gcd a b) in *.
     assert (d｜x) as H4.
@@ -2008,7 +2008,7 @@ Proof.
   intros H1.
   eapply (ne0_cancellation ℤ_ID) in H; eauto.
   contradict H.
-  rewrite M1; apply (div_0_l ℤ); simpl.
+  rewrite -> M1; apply (div_0_l ℤ); simpl.
   rewrite <-H1.
   apply lcm_spec; auto using div_mul_l, div_mul_r, div_refl with Z.
 Qed.
@@ -2016,10 +2016,10 @@ Qed.
 Theorem gcd_lcm_ident : ∀ a b, 0 ≤ a → 0 ≤ b → a * b = gcd a b * lcm a b.
 Proof.
   intros a b [H | H] [H0 | H0]; subst;
-    rewrite ? lcm_l_0, ? lcm_r_0, ? (mul_0_r ℤ), ? (mul_0_l ℤ); auto.
+    rewrite -> ? lcm_l_0, ? lcm_r_0, ? (mul_0_r ℤ), ? (mul_0_l ℤ); auto.
   pose proof is_lcm_lcm a b as H1.
   pose proof lcm_gcd_ident a b as H2.
-  rewrite (M1 (gcd a b)).
+  rewrite -> (M1 (gcd a b)).
   apply div_spec.
   - apply div_mul_r, gcd_l_div.
   - now apply gcd_pos, (pos_ne_0 ℤ_order).
@@ -2063,18 +2063,18 @@ Proof.
   eapply x in H1 as [k [[H1 H2] H3]]; eauto using prime_neg.
   exists k.
   repeat split.
-    - destruct (pow_sign_l ℤ p k) as [H4 | H4]; simpl in *; rewrite H4 in *;
+    - destruct (pow_sign_l ℤ p k) as [H4 | H4]; simpl in *; rewrite -> H4 in *;
         auto; now apply div_sign_l.
     - contradict H2.
       destruct (pow_sign_l ℤ p (k+1)) as [H4 | H4]; simpl in *;
-        rewrite H4 in *; auto; now apply div_sign_l in H2.
+        rewrite -> H4 in *; auto; now apply div_sign_l in H2.
     - intros x' [H4 H5].
       apply H3, conj.
       + destruct (pow_sign_l ℤ p x') as [H6 | H6]; simpl in *;
-          rewrite H6 in *; auto; now apply div_sign_l in H4.
+          rewrite -> H6 in *; auto; now apply div_sign_l in H4.
       + contradict H5.
         destruct (pow_sign_l ℤ p (x'+1)) as [H6 | H6]; simpl in *;
-          rewrite H6 in *; auto; now apply div_sign_l. }
+          rewrite -> H6 in *; auto; now apply div_sign_l. }
   wlog: m / 0 < m.
   { intros x H H0 H1.
     destruct (T 0 m) as [[H2 _] | [[_ [H2 _]] | [_ [_ H2]]]]; subst;
@@ -2087,7 +2087,7 @@ Proof.
     - contradict H3.
       now apply div_sign_r in H3.
     - intros x' [H5 H6].
-      rewrite (div_sign_r ℤ) in H5, H6.
+      rewrite -> (div_sign_r ℤ) in H5, H6.
       now apply H4.
     - contradict H1; ring [H1]. }
   move: p m.
@@ -2101,38 +2101,38 @@ Proof.
     assert (p^(k+1)｜m) as H8.
     { destruct H5 as [d H5]; simpl in *.
       exists d.
-      rewrite add_1_r, pow_succ_r, M2, <-H5, div_inv_r; auto. }
+      rewrite -> add_1_r, pow_succ_r, M2, <-H5, div_inv_r; auto. }
     assert (¬ p ^ (k + 1 + 1)｜m) as H9.
     { contradict H6.
       destruct H6 as [d H6].
       exists d.
-      rewrite H6, add_1_r, pow_succ_r, <-? mul_div, div_inv_refl, (M1 _ 1), M3;
-        auto using (pos_ne_0 ℤ_order p H1 : p ≠ 0), div_refl with Z. }
+      rewrite -> H6, add_1_r, pow_succ_r, <-? mul_div, div_inv_refl, (M1 _ 1),
+      M3; auto using (pos_ne_0 ℤ_order p H1 : p ≠ 0), div_refl with Z. }
     repeat split; auto.
     intros x' [H10 H11].
     apply naturals.le_antisymm; apply naturals.le_not_gt.
     + contradict H11; clear H10.
       eapply div_trans; eauto.
-      rewrite add_1_r, <-le_lt_succ in H11.
+      rewrite -> add_1_r, <-le_lt_succ in H11.
       destruct H11 as [z H11]; subst.
       exists (p^z).
-      rewrite ? pow_add_r; simpl; now ring_simplify.
+      rewrite -> ? pow_add_r; simpl; now ring_simplify.
     + contradict H9.
       eapply div_trans; eauto.
-      rewrite S_lt, <-le_lt_succ, <-add_1_r in H9.
+      rewrite -> S_lt, <-le_lt_succ, <-add_1_r in H9.
       destruct H9 as [z H9]; subst.
       exists (p^z).
-      rewrite ? pow_add_r; simpl; now ring_simplify.
+      rewrite -> ? pow_add_r; simpl; now ring_simplify.
   - exists 0%N.
-    repeat split; rewrite ? pow_0_r, ? add_0_l, ? pow_1_r;
+    repeat split; rewrite -> ? pow_0_r, ? add_0_l, ? pow_1_r;
       auto using div_1_l with Z.
     intros x' [H5 H6].
     apply naturals.le_antisymm; auto using zero_le.
-    rewrite naturals.le_not_gt.
+    rewrite -> naturals.le_not_gt.
     contradict H4.
     eapply div_trans; eauto.
     apply nonzero_lt, succ_0 in H4 as [z H4]; subst.
-    rewrite pow_succ_r.
+    rewrite -> pow_succ_r.
     apply div_mul_l, div_refl.
 Qed.
 
@@ -2171,7 +2171,7 @@ Section Valuations.
       try (apply (integral_domains.cancellation ℤ_ID) in e; tauto).
     repeat destruct constructive_definite_description; intuition.
     apply naturals.le_antisymm; apply naturals.le_not_gt; intros H7;
-      rewrite S_lt, <-le_lt_succ, <-add_1_r in H7;
+      rewrite -> S_lt, <-le_lt_succ, <-add_1_r in H7;
       destruct H7 as [z H7].
     - absurd (p^(x0+x1+1)｜a*b).
       + intros [k H8].
@@ -2182,13 +2182,13 @@ Section Valuations.
         assert (p｜(a / p ^ x0) * (b / p ^ x1)) as H9 by now (exists k).
         apply Euclid's_lemma in H9 as [[d H9] | [d H9]]; auto; simpl in *;
           [ contradict H4 | contradict H6 ]; exists d;
-            rewrite add_1_r, pow_succ_r, (M1 _ p), M2, <-H9, div_inv_r; auto.
+            rewrite -> add_1_r, pow_succ_r, (M1 _ p), M2, <-H9, div_inv_r; auto.
       + eapply div_trans; eauto.
         exists (p^z).
         rewrite <-H7, ? pow_add_r; simpl; now ring_simplify.
     - contradict H2.
       exists (p^z * (a/(p^x0)) * (b/(p^x1))).
-      rewrite (M1 _ (p^(x+1))), ? M2, <-(pow_add_r ℤ), H7, pow_add_r, <-? M2,
+      rewrite -> (M1 _ (p^(x+1))), ? M2, <-(pow_add_r ℤ), H7, pow_add_r, <-? M2,
       (M2 (p^x1)), (M1 (p^x1)), ? M2, div_inv_l, <-M2, div_inv_l; auto.
   Qed.
 
@@ -2199,14 +2199,14 @@ Section Valuations.
         destruct constructive_definite_description; intuition.
     - apply naturals.le_not_gt.
       contradict H2.
-      rewrite S_lt, <-le_lt_succ, <-add_1_r in H2.
+      rewrite -> S_lt, <-le_lt_succ, <-add_1_r in H2.
       destruct H2 as [z H2].
       clear H1; eapply div_trans; eauto.
       exists (p^z).
       rewrite <-H2, ? pow_add_r; simpl; now ring_simplify.
     - destruct H0 as [z H0].
       exists (p^z * (m/p^x0)).
-      rewrite M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
+      rewrite -> M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
   Qed.
 
   Theorem val_upper_bound : ∀ x m, m ≠ 0 → ¬ p^x｜m ↔ (v p m < x)%N.
@@ -2218,12 +2218,12 @@ Section Valuations.
       contradict H0.
       destruct H0 as [z H0].
       exists (p^z * (m/p^x0)).
-      rewrite M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
+      rewrite -> M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
     - contradict H3.
-      rewrite S_lt, <-le_lt_succ, <-add_1_r in H0.
+      rewrite -> S_lt, <-le_lt_succ, <-add_1_r in H0.
       destruct H0 as [z H0].
       exists (p^z * (m/p^x)).
-      rewrite M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
+      rewrite -> M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
   Qed.
 
   Theorem val_div : ∀ m, p^(v p m)｜m.
@@ -2237,7 +2237,7 @@ Section Valuations.
   Proof.
     intros a b H [k H0]; simpl in *; subst.
     apply (cancellation_ne0 ℤ) in H as [H H0]; simpl.
-    rewrite val_mul, add_comm; auto.
+    rewrite -> val_mul, add_comm; auto.
     now (exists (v p k)).
   Qed.
 
@@ -2248,7 +2248,7 @@ Section Valuations.
     destruct excluded_middle_informative; try tauto.
     destruct constructive_indefinite_description; simpl in *; subst.
     apply (cancellation_ne0 ℤ) in H as [H H1]; simpl.
-    rewrite val_mul, sub_abba; auto.
+    rewrite -> val_mul, sub_abba; auto.
   Qed.
 
   Theorem val_p : v p p = 1%N.
@@ -2267,7 +2267,7 @@ Section Valuations.
     - apply val_lower_bound.
       + intros H; subst.
         contradiction zero_not_prime.
-      + rewrite pow_1_r.
+      + rewrite -> pow_1_r.
         apply div_refl.
   Qed.
 
@@ -2276,7 +2276,7 @@ Section Valuations.
     apply naturals.le_antisymm; auto using zero_le.
     apply le_lt_succ.
     apply val_upper_bound; try apply zero_ne_1.
-    rewrite pow_1_r.
+    rewrite -> pow_1_r.
     now destruct prime_p.
   Qed.
 
@@ -2292,12 +2292,12 @@ Section Valuations.
     destruct (classic (a = 0)) as [H | H]; subst.
     - intros k.
       destruct (classic (k = 0%N)) as [H | H]; subst.
-      + now rewrite pow_0_r, val_0, naturals.mul_0_l, <-val_1.
-      + now rewrite pow_0_l, val_0, naturals.mul_0_r, <-val_0.
+      + now rewrite -> pow_0_r, val_0, naturals.mul_0_l, <-val_1.
+      + now rewrite -> pow_0_l, val_0, naturals.mul_0_r, <-val_0.
     - induction k using Induction.
-      + now rewrite pow_0_r, naturals.mul_0_l, <-val_1.
-      + rewrite pow_succ_r, val_mul; auto.
-        * now rewrite IHk, <-add_1_r, mul_distr_r, mul_1_l.
+      + now rewrite -> pow_0_r, naturals.mul_0_l, <-val_1.
+      + rewrite -> pow_succ_r, val_mul; auto.
+        * now rewrite -> IHk, <-add_1_r, mul_distr_r, mul_1_l.
         * now apply (pow_ne_0 ℤ_ID).
   Qed.
 
@@ -2308,12 +2308,12 @@ Section Valuations.
     apply val_upper_bound.
     - contradict H.
       apply div_spec in H; auto using val_div.
-      + now rewrite (mul_0_l ℤ) in *.
+      + now rewrite -> (mul_0_l ℤ) in *.
       + apply (pow_ne_0 ℤ_ID).
         intros H1.
         subst.
         contradiction zero_not_prime.
-    - rewrite val_inv, val_pow, val_p, mul_1_r, sub_diag; auto using val_div.
+    - rewrite -> val_inv, val_pow, val_p, mul_1_r, sub_diag; auto using val_div.
       apply naturals.lt_succ.
   Qed.
 
@@ -2329,7 +2329,7 @@ Section Valuations.
     intros m x H H0 H1.
     apply (mul_le_l_iff ℤ_order (p^x)); simpl; fold le.
     - now apply (pow_pos ℤ_order).
-    - rewrite div_inv_l, <-(M3 m) at 1; auto.
+    - rewrite -> div_inv_l, <-(M3 m) at 1; auto.
       apply mul_le_r; auto; fold le.
       now apply lt_0_le_1, (pow_pos ℤ_order).
   Qed.
@@ -2346,7 +2346,7 @@ Section Valuations.
     pose proof H as H2.
     eapply val_quot_le_bound in H2 as [H2 | H2]; eauto.
     apply (f_equal (mul (p^v p m))) in H2.
-    rewrite div_inv_l, <-(M3 m) in H2 at 1; auto using val_div.
+    rewrite -> div_inv_l, <-(M3 m) in H2 at 1; auto using val_div.
     apply (cancellation_mul_r ℤ_ID) in H2; try now apply pos_ne_0.
     rewrite <-(rings.pow_1_r ℤ p) in H1.
     apply val_lower_bound in H1; auto using (pos_ne_0 ℤ_order).
@@ -2354,7 +2354,7 @@ Section Valuations.
     contradict H3.
     rewrite <-H1 in H2.
     exists (p^c).
-    now rewrite pow_add_r, pow_1_r, M1 in H2.
+    now rewrite -> pow_add_r, pow_1_r, M1 in H2.
   Qed.
 
   Theorem val_gcd : ∀ x m, m ≠ 0 → gcd (p^x) (m / p^v p m) = 1.
@@ -2384,7 +2384,7 @@ Section Valuations.
   Proof.
     intros m H H0.
     rewrite <-(div_inv_l m (p^v p m)) at 2; auto using val_div.
-    rewrite gcd_mul_r, val_gcd, gcd_refl, M1, M3; auto using val_is_gcd.
+    rewrite -> gcd_mul_r, val_gcd, gcd_refl, M1, M3; auto using val_is_gcd.
     now apply or_introl, pow_pos.
   Qed.
 
@@ -2402,12 +2402,12 @@ Section Valuations.
     rewrite <-(div_inv_r n (p^v p n)), gcd_mul_r at 1; auto using val_div.
     2: { erewrite <-val_gcd, gcd_sym; eauto using is_gcd_gcd.
          auto using (pos_ne_0 ℤ_order). }
-    rewrite ? M2, M1, ? M2, (M1 (lcm (m / p ^ v p m) (n / p ^ v p n))),
+    rewrite -> ? M2, M1, ? M2, (M1 (lcm (m / p ^ v p m) (n / p ^ v p n))),
     <-gcd_lcm_ident, (M1 (m / p^v p m)), M1, ? M2, div_inv_l, (M1 _ n), <-? M2;
       try (apply div_nonneg; unfold le, ordered_rings.le; intuition;
            now apply (pow_pos ℤ_order)); auto using val_div.
     f_equal.
-    rewrite gcd_sym, val_gcd, M3; auto using (pos_ne_0 ℤ_order).
+    rewrite -> gcd_sym, val_gcd, M3; auto using (pos_ne_0 ℤ_order).
     rewrite <-(div_inv_r m (p^v p m)) at 4; auto using val_div.
     apply f_equal, div_l_gcd; try now apply or_introl, (pow_pos ℤ_order).
     apply val_lower_bound; auto; now apply (pos_ne_0 ℤ_order).
@@ -2418,7 +2418,7 @@ Section Valuations.
       (v p n ≤ v p m)%N → p^v p m * lcm (m / p^v p m) (n / p^v p n) = lcm m n.
   Proof.
     intros m n H H0 H1 H2.
-    rewrite lcm_sym, val_lcm_l; auto using lcm_sym.
+    rewrite -> lcm_sym, val_lcm_l; auto using lcm_sym.
   Qed.
 
   Theorem val_lcm_l_gcd : ∀ m n,
@@ -2436,10 +2436,10 @@ Section Valuations.
     { eapply div_trans; fold divide; eauto using lcm_prod. }
     apply Euclid's_lemma in H8 as [H8 | H8]; auto.
     - destruct (val_is_gcd 1 m) as [_ [_ H9]]; try now apply (pos_ne_0 ℤ_order).
-      rewrite pow_1_r in H9.
+      rewrite -> pow_1_r in H9.
       eauto using div_trans with Z.
     - destruct (val_is_gcd 1 n) as [_ [_ H9]]; try now apply (pos_ne_0 ℤ_order).
-      rewrite pow_1_r in H9.
+      rewrite -> pow_1_r in H9.
       eauto using div_trans with Z.
   Qed.
 
@@ -2448,7 +2448,7 @@ Section Valuations.
       (v p n ≤ v p m)%N → gcd (p^v p m) (lcm (m / p^v p m) (n / p^v p n)) = 1.
   Proof.
     intros m n H H0 H1 H2.
-    rewrite lcm_sym.
+    rewrite -> lcm_sym.
     auto using val_lcm_l_gcd.
   Qed.
 
@@ -2473,9 +2473,9 @@ End Valuations.
 Theorem inv_div_l : ∀ a b c, b｜a → b ≠ 0 → a/b｜c ↔ a｜b*c.
 Proof.
   split; intros [k H1]; exists k.
-  - rewrite H1, M1, <-M2, div_inv_r; auto.
+  - rewrite -> H1, M1, <-M2, div_inv_r; auto.
   - apply (cancellation_mul_l ℤ_ID b); auto; simpl.
-    rewrite H1, (M1 b), <-M2, div_inv_r; auto.
+    rewrite -> H1, (M1 b), <-M2, div_inv_r; auto.
 Qed.
 
 Definition abs (a : Z) := If 0 ≤ a then a else (-a).
@@ -2521,9 +2521,9 @@ Proof.
   intros a b.
   unfold abs.
   repeat destruct excluded_middle_informative; auto.
-  - now rewrite gcd_sign.
-  - now rewrite gcd_sym, gcd_sign, gcd_sym.
-  - now rewrite gcd_sign, gcd_sym, gcd_sign, gcd_sym.
+  - now rewrite -> gcd_sign.
+  - now rewrite -> gcd_sym, gcd_sign, gcd_sym.
+  - now rewrite -> gcd_sign, gcd_sym, gcd_sign, gcd_sym.
 Qed.
 
 Theorem lcm_abs : ∀ a b, lcm a b = lcm (|a|) (|b|).
@@ -2531,9 +2531,9 @@ Proof.
   intros a b.
   unfold abs.
   repeat destruct excluded_middle_informative; auto.
-  - now rewrite lcm_sign.
-  - now rewrite lcm_sym, lcm_sign, lcm_sym.
-  - now rewrite lcm_sign, lcm_sym, lcm_sign, lcm_sym.
+  - now rewrite -> lcm_sign.
+  - now rewrite -> lcm_sym, lcm_sign, lcm_sym.
+  - now rewrite -> lcm_sign, lcm_sym, lcm_sign, lcm_sym.
 Qed.
 
 Theorem lcm_0 : ∀ a b, lcm a b = 0 → a = 0 ∨ b = 0.
@@ -2541,14 +2541,14 @@ Proof.
   intros a b H.
   rewrite <-(abs_zero a), <-(abs_zero b), lcm_abs in *.
   apply (cancellation ℤ_ID); simpl.
-  rewrite gcd_lcm_ident, H, (mul_0_r ℤ); auto using abs_pos.
+  rewrite -> gcd_lcm_ident, H, (mul_0_r ℤ); auto using abs_pos.
 Qed.
 
 Theorem lcm_bound : ∀ a b, 0 < a → b ≤ lcm a b.
 Proof.
   intros a b H.
   destruct (classic (b = 0)); subst.
-  - rewrite lcm_r_0.
+  - rewrite -> lcm_r_0.
     apply le_refl.
   - apply div_le.
     + destruct (lcm_nonneg a b) as [H1 | H1]; auto.
