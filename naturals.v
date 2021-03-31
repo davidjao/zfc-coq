@@ -27,19 +27,19 @@ Defined.
 Theorem PA1_ω : ∅ ∈ ω.
 Proof.
   unfold empty_set, ω, intersection, union, specify.
-  repeat destruct constructive_indefinite_description.
+  repeat (destruct constructive_indefinite_description => /=).
   destruct a as [H H0].
   replace x with ∅.
-  - apply i.
+  - apply i2.
     split.
-    + apply i2.
+    + apply i1.
       split.
-      * eapply i0.
-        split; try exact H; apply i1; eauto using Set_in_powerset.
+      * eapply i.
+        split; try exact H; apply i0; eauto using Set_in_powerset.
       * exists x0.
-        split; auto; apply i1; eauto using Set_in_powerset.
+        split; auto; apply i0; eauto using Set_in_powerset.
     + intros z H1.
-      now apply i1 in H1.
+      now apply i0 in H1.
   - apply Extensionality; split; intros H1.
     + now apply Empty_set_classification in H1.
     + now apply n in H1.
@@ -48,20 +48,20 @@ Qed.
 Theorem PA2_ω : Inductive ω.
 Proof.
   unfold ω, intersection, union, specify.
-  repeat destruct constructive_indefinite_description.
+  repeat (destruct constructive_indefinite_description => /=).
   intros y H.
-  apply i in H as [H H0].
-  apply i.
+  apply i2 in H as [H H0].
+  apply i2.
   split.
-  - apply i2 in H as [H1 [z [H2 H3]]].
+  - apply i1 in H as [H1 [z [H2 H3]]].
     pose proof H3 as H4.
-    apply i1 in H4 as [H4 [H5 H6]].
-    apply i2.
+    apply i0 in H4 as [H4 [H5 H6]].
+    apply i1.
     split; eauto.
   - intros z H1.
     pose proof H1 as H2.
     apply H0 in H1.
-    apply i1 in H2 as [H2 [H3 H4]].
+    apply i0 in H2 as [H2 [H3 H4]].
     eauto.
 Qed.
 

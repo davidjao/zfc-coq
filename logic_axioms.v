@@ -7,12 +7,11 @@ Require Export Utf8 IndefiniteDescription FunctionalExtensionality
 
 Lemma classic : ∀ P, P ∨ ¬ P.
 Proof.
-  intros P.
+  move=> P.
   assert (∃ b, b = true ∨ P) as H1; assert (∃ b, b = false ∨ P) as H2; eauto.
-  destruct (proj2_sig (constructive_indefinite_description _ H1)),
-  (proj2_sig (constructive_indefinite_description _ H2)); auto.
-  right.
-  intros HP.
+  elim (proj2_sig (constructive_indefinite_description _ H1));
+    elim (proj2_sig (constructive_indefinite_description _ H2)); auto.
+  right => HP.
   assert ((λ b, b = true ∨ P) = (λ b, b = false ∨ P)) as EB.
   { extensionality x.
     firstorder using propositional_extensionality. }

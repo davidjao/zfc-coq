@@ -1642,7 +1642,8 @@ Proof.
   intros a b c H H0.
   destruct (T 0 c) as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]].
   - destruct (T 0 (a+b)) as [[H4 [H5 H6]] | [[H4 [H5 H6]] | [H4 [H5 H6]]]].
-    + rewrite -> R_mul_pos_pos, R_mul_pos_pos, R_mul_neg_pos, lt_neg_0 in *; auto.
+    + rewrite -> R_mul_pos_pos, R_mul_pos_pos, R_mul_neg_pos, lt_neg_0 in *;
+        auto.
       replace a with (a+b+-b) at 2.
       rewrite -> (D1_pos (a+b)), <-A2, A4, A3; auto.
       now rewrite <-A2, A4, A3.
