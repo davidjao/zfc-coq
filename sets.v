@@ -72,15 +72,12 @@ Qed.
 
 Theorem Nonempty_classification : ∀ y, y ≠ ∅ ↔ ∃ x, x ∈ y.
 Proof.
-  split => H.
-  - apply NNPP.
-    move: H => /[swap] => H /= => H0.
-    apply /H0 /Extensionality => z.
-    split => H1.
-    + contradict H.
-      eauto.
-    + move: H1 => /Empty_set_classification //.
-  - move: H => /[swap] => -> [x] /Empty_set_classification //.
+  split => [H | [x] /[swap] -> /Empty_set_classification] //.
+  apply NNPP => H0.
+  apply /H /Extensionality => z.
+  split => [H1 | /Empty_set_classification] //.
+  contradict H0.
+  eauto.
 Qed.
 
 (* The axiom of specification is a theorem in ZFC under classical logic. *)
@@ -90,16 +87,14 @@ Proof.
   elim (classic (∃ x, x ∈ z ∧ p x)) => [[e [H H0]] | H].
   - elim (Replacement z (λ x y, p x ∧ x = y ∨ ¬ p x ∧ e = y)) => x H1.
     + exists x => x0.
-      split.
-      * move /H1 => [w [H2 [[H3 <-] | [H3 <-]]]] //.
-      * rewrite H1.
-        intuition eauto.
+      split => [ /H1 [w [H2 [ [H3 <-] | [H3 <-] ]]] | ] //.
+      rewrite H1.
+      intuition eauto.
     + elim (classic (p x)); [ exists x | exists e ]; split; intuition tauto.
   - exists ∅ => x.
-    split => [ | H0].
-    + by move /Empty_set_classification.
-    + contradict H.
-      eauto.
+    split => [/Empty_set_classification | H0] //.
+    contradict H.
+    eauto.
 Qed.
 
 Definition specify : set → (set → Prop) → set.
@@ -344,39 +339,35 @@ Infix "⊊" := proper_subset (at level 70) : set_scope.
 Lemma not_proper_subset_inhab : ∀ x y, ¬ x ⊊ y → x ≠ y → ∃ z, z ∈ x ∧ z ∉ y.
 Proof.
   move=> x y H H0.
-  apply NNPP.
-  move: H => /[swap] => H H1.
-  apply H1, conj; auto => z H2.
-  apply NNPP.
+  apply NNPP => H1.
+  apply H, conj; auto => z H2.
+  apply NNPP => H3.
   eauto.
 Qed.
 
 Theorem subset_subsetneq_trans : ∀ A B C, A ⊂ B → B ⊊ C → A ⊊ C.
 Proof.
   move=> A B C H [H0 H1].
-  split.
-  - move=> a /H /H0 //.
-  - move: H => /[swap] -> H.
-      by apply /H1 /Subset_equality_iff.
+  split => [a /H /H0 | ] //.
+  move: H => /[swap] -> H.
+    by apply /H1 /Subset_equality_iff.
 Qed.
 
 Theorem subsetneq_subset_trans : ∀ A B C, A ⊊ B → B ⊂ C → A ⊊ C.
 Proof.
   move=> A B C [H H0] H1.
-  split.
-  - move=> a /H /H1 //.
-  - move: H1 => /[swap] <- H1.
-      by apply /H0 /Subset_equality_iff.
+  split => [a /H /H1 | ] //.
+  move: H1 => /[swap] <- H1.
+    by apply /H0 /Subset_equality_iff.
 Qed.
 
 Lemma proper_subset_inhab : ∀ x y, x ⊊ y → ∃ z, z ∈ y ∧ z ∉ x.
 Proof.
   move=> x y [H H0].
-  apply NNPP.
-  move: H0 => /[swap] => H0 H1.
-  apply /H1 /Subset_equality_iff.
+  apply NNPP => H1.
+  apply /H0 /Subset_equality_iff.
   split; auto => z H2.
-  apply NNPP.
+  apply NNPP => H3.
   eauto.
 Qed.
 
@@ -518,7 +509,7 @@ Qed.
 Theorem Intersection_empty : ∀ A, A ∩ ∅ = ∅.
 Proof.
   move=> A.
-  apply Extensionality => z.
+  apply /Extensionality => z.
   rewrite Pairwise_intersection_classification.
   split => [[_] | /Empty_set_classification] //.
 Qed.
@@ -526,21 +517,21 @@ Qed.
 Theorem Intersection_comm : ∀ A B, A ∩ B = B ∩ A.
 Proof.
   move=> A B.
-  apply Extensionality => z.
+  apply /Extensionality => z.
   rewrite ? Pairwise_intersection_classification; tauto.
 Qed.
 
 Theorem Intersection_assoc : ∀ A B C, A ∩ (B ∩ C) = (A ∩ B) ∩ C.
 Proof.
   move=> A B C.
-  apply Extensionality => z.
+  apply /Extensionality => z.
   rewrite ? Pairwise_intersection_classification; tauto.
 Qed.
 
 Theorem Intersection_idempotent : ∀ A, A ∩ A = A.
 Proof.
   move=> A.
-  apply Extensionality => z.
+  apply /Extensionality => z.
   rewrite Pairwise_intersection_classification; tauto.
 Qed.
 
@@ -558,7 +549,7 @@ Qed.
 Theorem Intersection_union : ∀ A B C, A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C).
 Proof.
   move=> A B C.
-  apply Extensionality => z.
+  apply /Extensionality => z.
   repeat rewrite ? Pairwise_intersection_classification
          ? Pairwise_union_classification; tauto.
 Qed.
@@ -566,26 +557,17 @@ Qed.
 Theorem Union_intersection : ∀ A B C, A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C).
 Proof.
   intros A B C.
-  apply Extensionality => z.
+  apply /Extensionality => z.
   repeat rewrite ? Pairwise_intersection_classification
          ? Pairwise_union_classification; tauto.
 Qed.
 
 Theorem Halmos_4_1 : ∀ A B C, (A ∩ B) ∪ C = A ∩ (B ∪ C) ↔ C ⊂ A.
 Proof.
-  intros A B C.
-  split; intros H.
-  - apply Subset_equality_iff in H as [H H0].
-    intros x H1.
-    pose proof (H x).
-    repeat rewrite -> Pairwise_intersection_classification,
-    Pairwise_union_classification in *.
-    tauto.
-  - apply Extensionality.
-    intros z; split; intros H0;
-      repeat rewrite -> Pairwise_union_classification,
-      Pairwise_intersection_classification,
-      Pairwise_union_classification in *; pose proof (H z); tauto.
+  split => [/Subset_equality_iff /[swap] x [/(_ x)H H0] | H];
+             [ | apply /Extensionality => z; move: H => /(_ z) ];
+             repeat rewrite -> ? Pairwise_intersection_classification,
+             ? Pairwise_union_classification in *; tauto.
 Qed.
 
 Definition complement A B := {x in A | x ∉ B}.
@@ -594,40 +576,34 @@ Infix "\" := complement (at level 45) : set_scope.
 
 Theorem Complement_classification : ∀ A B x, x ∈ A \ B ↔ x ∈ A ∧ x ∉ B.
 Proof.
-  intros A B x.
-  unfold complement, specify.
-  now repeat destruct constructive_indefinite_description.
+  move=> A B x.
+  rewrite /complement /specify.
+    by repeat elim constructive_indefinite_description => /=.
 Qed.
 
 Theorem Complement_subset : ∀ A B, A ⊂ B ↔ A \ B = ∅.
 Proof.
-  intros A B.
-  split; intros H.
-  - apply Extensionality; split; intros;
-      rewrite -> Complement_classification in *;
-      firstorder using Empty_set_classification.
-  - apply Subset_equality_iff in H as [H H0].
-    intros x H1.
-    apply NNPP.
-    intros H2.
-    eapply Empty_set_classification, H, Complement_classification; eauto.
+  split => [H | /[swap] x /[swap] H].
+  - apply /Extensionality => z; rewrite Complement_classification;
+                              firstorder using Empty_set_classification.
+  - move: Empty_set_classification =>
+    /(_ x) /[swap] <- /Complement_classification H0; apply NNPP; tauto.
 Qed.
 
 Theorem Complement_intersection : ∀ A B, A \ (A \ B) = A ∩ B.
 Proof.
-  intros A B.
-  apply Extensionality.
-  split; intros H; rewrite -> Pairwise_intersection_classification in *;
-    repeat rewrite -> Complement_classification in *;
-    pose proof (classic (z ∈ B)); tauto.
+  move=> A B.
+  apply /Extensionality => z.
+  rewrite Pairwise_intersection_classification ? Complement_classification.
+  split => H; move: classic => /(_ (z ∈ B)); tauto.
 Qed.
 
 Theorem Intersection_complement : ∀ A B C, A ∩ (B \ C) = (A ∩ B) \ (A ∩ C).
 Proof.
-  intros A B C.
-  apply Extensionality.
-  split; intros H; repeat rewrite -> Complement_classification,
-                   Pairwise_intersection_classification in *; tauto.
+  move=> A B C.
+  apply /Extensionality => z.
+  repeat rewrite ? Pairwise_intersection_classification
+         ? Complement_classification; tauto.
 Qed.
 
 Definition ordered_pair x y := {{x,x},{x,y}}.
@@ -636,39 +612,31 @@ Notation " ( x , y ) " := (ordered_pair x y) : set_scope.
 
 Lemma Ordered_pair_iff_left : ∀ a b c d, (a,b) = (c,d) → a = c.
 Proof.
-  intros a b c d H.
-  unfold ordered_pair in *.
-  assert ({a,a} ∈ {{c,c}, {c,d}}) as H0
-      by (rewrite <-H; apply Pairing_classification; auto).
-  apply Pairing_classification in H0 as [H0 | H0]; symmetry;
-    apply Singleton_classification; rewrite H0;
-      apply Pairing_classification; auto.
+  move=> a b c d.
+  rewrite /ordered_pair => H.
+  have: {a,a} ∈ {{c,c}, {c,d}}.
+  { move: H <-; apply /Pairing_classification /or_introl => //. }
+  move => /Pairing_classification =>
+  [[H0 | H0]]; symmetry; apply /Singleton_classification;
+    rewrite H0; apply /Pairing_classification; auto.
 Qed.
 
 Theorem Ordered_pair_iff : ∀ a b c d, (a, b) = (c, d) ↔ (a = c ∧ b = d).
 Proof.
-  intros a b c d.
-  unfold ordered_pair in *.
-  split; intros H; intuition; try congruence;
-    eauto using Ordered_pair_iff_left.
-  assert ({a,b} ∈ {{c,c}, {c,d}}) as H0
-      by (rewrite <-H; apply Pairing_classification; auto).
-  apply Pairing_classification in H0 as [H0 | H0].
-  - replace d with c.
-    + apply Singleton_classification.
-      rewrite <-H0; apply Pairing_classification; auto.
-    + assert ({c,d} ∈ {{a,a},{a,b}}) as H2
-        by (rewrite H; apply Pairing_classification; auto).
-      apply Pairing_classification in H2 as [H2 | H2];
-        replace c with a in *; symmetry; [ | | | symmetry ];
-          apply Singleton_classification; rewrite <-H0, <-H2 in *;
-            [ | | | rewrite -> H2 in * ]; apply Pairing_classification; auto.
-  - assert (d ∈ {a,b}) as H1
-        by (rewrite H0; apply Pairing_classification; auto).
-    apply Pairing_classification in H1 as [H1 | H1]; subst; auto.
-    apply Ordered_pair_iff_left in H.
-    apply Singleton_classification.
-    subst; rewrite <-H0; apply Pairing_classification; auto.
+  move=> a b c d.
+  rewrite /ordered_pair.
+  split => [/[dup] /Ordered_pair_iff_left -> H | [-> ->]] //.
+  have: {c,b} ∈ {{c,c}, {c,d}}.
+  { move: H <-; apply /Pairing_classification /or_intror => //. }
+  move => /Pairing_classification =>
+  [[/Subset_equality_iff [/(_ b) H0 _] |
+    /Subset_equality_iff [/(_ b) H0 /(_ d) H1]]].
+  - have: {c,d} ∈ {{c,c}, {c,b}}.
+    { move: H ->; apply /Pairing_classification /or_intror => //. }
+    move => /Pairing_classification =>
+    [[/Subset_equality_iff [/(_ d) H1 _] | /Subset_equality_iff [/(_ d) H1 _]]];
+      rewrite -> ? Pairing_classification in *; intuition congruence.
+  - rewrite -> ? Pairing_classification in *; intuition congruence.
 Qed.
 
 Definition product A B :=
