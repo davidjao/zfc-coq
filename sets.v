@@ -145,9 +145,9 @@ Proof.
   elim (Replacement S (λ x y, ∃ s, f s = y ∧ x = s)) => X H.
   - exists X => x.
     rewrite H.
-    split => [[z] [H0 [s [H1 H2]]] | [[s H0]] H1]; eauto using elts_in_set.
+    split => [[_] [_ [s [H0 _]]] | [[s H0]] H1]; eauto using elts_in_set.
   - exists (f (exist H)).
-    split; eauto => x' [s [<- H1]].
+    split; eauto => _ [s [<- H1]].
       by apply /f_equal /set_proj_injective.
 Qed.
 
@@ -202,8 +202,7 @@ Qed.
 
 Theorem Powerset_nonempty : ∀ x, ∅ ≠ P x.
 Proof.
-  move=> x.
-  move: (Empty_set_classification x) => /[swap] -> H.
+  move: Empty_set_classification => /[swap] x /[swap] -> /(_ x) => H.
   apply /H /Set_in_powerset.
 Qed.
 
@@ -227,7 +226,7 @@ Theorem Subset_extensionality :
   ∀ A B, A = B ↔ (∀ X, X ⊂ A ↔ X ⊂ B).
 Proof.
   split => [-> X| H] //.
-  apply Subset_equality_iff.
+  apply /Subset_equality_iff.
   rewrite H -H.
   eauto using Set_is_subset.
 Qed.
@@ -237,7 +236,7 @@ Proof.
   move=> a.
   (elim (classic (a = ∅)); try tauto) => H /Powerset_classification => H0.
   apply or_intror, Subset_equality_iff, conj;
-    auto => z => /Powerset_classification => H1.
+    auto => z /Powerset_classification H1.
   suff -> : z = ∅.
   - move: H H0 => /Nonempty_classification => [[x H]].
     move: (H) => /[swap] /[apply] /Powerset_classification => H0.
@@ -320,6 +319,12 @@ Proof.
   rewrite Specify_classification; intuition; congruence.
 Qed.
 
+Theorem Pairing_nonempty : ∀ x y, {x,y} ≠ ∅.
+Proof.
+  move: Empty_set_classification => /[swap] x /[swap] y /[swap] <- /(_ x) => H.
+  apply /H /Pairing_classification /or_introl /eq_refl.
+Qed.
+
 Theorem Pairing_comm : ∀ x y, {x,y} = {y,x}.
 Proof.
   move=> x y.
@@ -400,7 +405,7 @@ Qed.
 Lemma Pairing_union_singleton : ∀ x y, {x,y} = {x,x} ∪ {y,y}.
 Proof.
   move=> x y.
-  apply Extensionality => z.
+  apply /Extensionality => z.
   rewrite ? Pairwise_union_classification ? Singleton_classification
           ? Pairing_classification //.
 Qed.
@@ -473,117 +478,97 @@ Infix "∩" := pairwise_intersection (at level 60) : set_scope.
 Theorem Intersection_classification : ∀ C,
     C ≠ ∅ → ∀ x, x ∈ ⋂ C ↔ ∀ X, X ∈ C → x ∈ X.
 Proof.
-  intros C H x.
-  apply Nonempty_classification in H as [z H].
-  unfold intersection, union, specify in *.
-  repeat (destruct constructive_indefinite_description => /=).
-  split; intros H0.
-  - intros X H1.
-    apply i1 in H0 as [H0 H2].
-    eauto.
-  - apply i1.
-    split; intuition.
-    apply i0; firstorder.
+  move=> C => /[swap] x /Nonempty_classification => [[z H]].
+  rewrite /intersection /union /specify /=.
+  (repeat (elim constructive_indefinite_description => ? /=)) => H0 H1.
+  (split; rewrite H0 H1) => [[_ H2] X | H2]; intuition eauto.
 Qed.
 
 Theorem Pairwise_intersection_classification :
   ∀ A B x, x ∈ A ∩ B ↔ x ∈ A ∧ x ∈ B.
 Proof.
-  intros A B x.
-  split; intros H; unfold pairwise_intersection in *;
-    rewrite -> Intersection_classification in *;
-    try (apply Nonempty_classification; exists A;
-         apply Pairing_classification; tauto).
-  - split; apply H; apply Pairing_classification; tauto.
-  - intros X H0.
-    apply Pairing_classification in H0 as [H0 | H0]; subst; tauto.
+  rewrite /pairwise_intersection => A B x.
+  rewrite Intersection_classification; auto using Pairing_nonempty.
+  (split => [/[dup] /(_ A) /[swap] /(_ B)| [H H0] z];
+            rewrite ? Pairing_classification) => [| [-> | ->]]; tauto.
 Qed.
 
 Theorem Pairing_intersection_disjoint : ∀ x y, x ≠ y ↔ {x,x} ∩ {y,y} = ∅.
 Proof.
-  intros x y.
-  split; intros H.
-  - apply Extensionality.
-    split; intros H0.
-    + rewrite -> Pairwise_intersection_classification,
-      ? Singleton_classification in *.
-      destruct H0; contradict H; congruence.
-    + exfalso; firstorder using Empty_set_classification.
-  - contradict H.
-    subst.
-    apply Nonempty_classification.
-    exists y.
-    rewrite Pairwise_intersection_classification Singleton_classification//.
+  move=> x y.
+  split => H.
+  - apply /Extensionality => z.
+    split => [/Pairwise_intersection_classification |
+              /Empty_set_classification] //.
+    rewrite ? Singleton_classification; elim => -> //.
+  - move: Empty_set_classification H =>
+    /(_ y) /[swap] <- /[swap] -> /Pairwise_intersection_classification.
+    rewrite Singleton_classification; tauto.
 Qed.
 
 Theorem Empty_intersection : (⋂ ∅ = ∅).
 Proof.
-  unfold intersection, specify.
+  rewrite /intersection /specify.
   repeat (destruct constructive_indefinite_description => /=).
-  apply Extensionality.
-  split; intros H; try apply i in H as [H H0]; rewrite -> Empty_union in *;
-    now apply Empty_set_classification in H.
+  apply /Extensionality => z.
+  rewrite i Empty_union.
+  split => [[/Empty_set_classification] | /Empty_set_classification] //.
 Qed.
 
 Theorem Intersection_empty : ∀ A, A ∩ ∅ = ∅.
 Proof.
-  intros A.
-  apply Extensionality.
-  split; intros H; rewrite -> Pairwise_intersection_classification in *;
-    intuition; now apply Empty_set_classification in H.
+  move=> A.
+  apply Extensionality => z.
+  rewrite Pairwise_intersection_classification.
+  split => [[_] | /Empty_set_classification] //.
 Qed.
 
 Theorem Intersection_comm : ∀ A B, A ∩ B = B ∩ A.
 Proof.
-  intros A B.
-  apply Extensionality.
-  split; intros H; rewrite -> Pairwise_intersection_classification in *; tauto.
+  move=> A B.
+  apply Extensionality => z.
+  rewrite ? Pairwise_intersection_classification; tauto.
 Qed.
 
 Theorem Intersection_assoc : ∀ A B C, A ∩ (B ∩ C) = (A ∩ B) ∩ C.
 Proof.
-  intros A B C.
-  apply Extensionality.
-  split; intros H; repeat rewrite -> Pairwise_intersection_classification in *;
-    tauto.
+  move=> A B C.
+  apply Extensionality => z.
+  rewrite ? Pairwise_intersection_classification; tauto.
 Qed.
 
 Theorem Intersection_idempotent : ∀ A, A ∩ A = A.
 Proof.
-  intros A.
-  apply Extensionality.
-  split; intros H; repeat rewrite -> Pairwise_intersection_classification in *;
-    tauto.
+  move=> A.
+  apply Extensionality => z.
+  rewrite Pairwise_intersection_classification; tauto.
 Qed.
 
 Theorem Intersection_subset : ∀ A B, A ⊂ B ↔ A ∩ B = A.
 Proof.
-  intros A B.
-  rewrite <-Subset_equality_iff.
-  split; intros H; repeat split; intros x H0;
-    try rewrite -> Pairwise_intersection_classification in *; eauto; try tauto.
-  destruct H as [H H1].
-  apply H1 in H0.
-  rewrite -> Pairwise_intersection_classification in H0.
-  tauto.
+  move=> A B.
+  rewrite -Subset_equality_iff.
+  (repeat split) => [z | z | [H H0] z];
+                      rewrite ? Pairwise_intersection_classification;
+                      auto; try tauto.
+  move: Pairwise_intersection_classification =>
+  /[swap] /H0 /[swap] /[apply] [[H1 H2]] //.
 Qed.
 
 Theorem Intersection_union : ∀ A B C, A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C).
 Proof.
-  intros A B C.
-  apply Extensionality.
-  split; intros H;
-    repeat rewrite -> Pairwise_union_classification,
-    Pairwise_intersection_classification in *; tauto.
+  move=> A B C.
+  apply Extensionality => z.
+  repeat rewrite ? Pairwise_intersection_classification
+         ? Pairwise_union_classification; tauto.
 Qed.
 
 Theorem Union_intersection : ∀ A B C, A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C).
 Proof.
   intros A B C.
-  apply Extensionality.
-  split; intros H;
-    repeat rewrite -> Pairwise_intersection_classification,
-    Pairwise_union_classification in *; tauto.
+  apply Extensionality => z.
+  repeat rewrite ? Pairwise_intersection_classification
+         ? Pairwise_union_classification; tauto.
 Qed.
 
 Theorem Halmos_4_1 : ∀ A B C, (A ∩ B) ∪ C = A ∩ (B ∪ C) ↔ C ⊂ A.

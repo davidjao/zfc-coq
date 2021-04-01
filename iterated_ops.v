@@ -151,11 +151,11 @@ Section Iterated_op_theorems.
     move=> m f.
     rewrite ? iterate_succ; auto using zero_le.
     rewrite -M2 (M1 (f (S m))) M2 /swap.
-    do 2 f_equal; repeat destruct excluded_middle_informative; try congruence.
-    apply /iterate_extensionality => k [H0 H1].
-    repeat destruct excluded_middle_informative; subst; auto.
-    - move: H1 => /not_succ_le //.
-    - move: H1 (le_succ m) => /le_trans /[apply] /not_succ_le //.
+    do 2 f_equal; repeat elim excluded_middle_informative; try congruence.
+    apply /iterate_extensionality => k.
+    (repeat elim excluded_middle_informative; auto) => -> => [[_ H] | _ [_ H]].
+    - move: H => /not_succ_le //.
+    - move: H (le_succ m) => /le_trans /[apply] /not_succ_le //.
   Qed.
 
   Lemma iterate_swap_upper_one : ∀ n f i,
@@ -182,11 +182,11 @@ Section Iterated_op_theorems.
       repeat split; auto using zero_le, le_refl; first by now apply le_lt_succ.
     f_equal; rewrite 1 ? M1 /swap.
     - apply iterate_extensionality => k [H3 H4].
-      repeat destruct excluded_middle_informative; subst; try tauto.
+      repeat elim excluded_middle_informative; move=> *; subst; try tauto.
       + move: H4 => /not_succ_le //.
       + move: H4 (le_succ m) => /le_trans /[apply] /not_succ_le //.
-    - f_equal; repeat destruct excluded_middle_informative;
-        subst; try tauto; try now contradiction (neq_succ (S m)).
+    - f_equal; repeat elim excluded_middle_informative;
+        move=> *; subst; try tauto; try now contradiction (neq_succ (S m)).
       move: H1 => /lt_irrefl //.
   Qed.
 
