@@ -152,7 +152,7 @@ Section Iterated_op_theorems.
     rewrite ? iterate_succ; auto using zero_le.
     rewrite -M2 (M1 (f (S m))) M2 /swap.
     do 2 f_equal; repeat destruct excluded_middle_informative; try congruence.
-    apply: iterate_extensionality => k [H0 H1].
+    apply /iterate_extensionality => k [H0 H1].
     repeat destruct excluded_middle_informative; subst; auto.
     - move: H1 => /not_succ_le //.
     - move: H1 (le_succ m) => /le_trans /[apply] /not_succ_le //.
@@ -169,7 +169,7 @@ Section Iterated_op_theorems.
     move: H1 => /le_lt_or_eq.
     elim => [| <-]; try rewrite swap_refl //.
     elim (classic (1 = S n)%N) => [<- |].
-    { move: (PA4 0) => /[swap] /(squeeze_lower _ _ H0) ->.
+    { move /(_ 0):PA4 => /[swap] /(squeeze_lower _ _ H0) ->.
       rewrite /naturals.one /swap ? iterate_succ ? iterate_0;
         auto using zero_le.
       repeat (elim: excluded_middle_informative); intuition congruence. }
@@ -187,7 +187,7 @@ Section Iterated_op_theorems.
       + move: H4 (le_succ m) => /le_trans /[apply] /not_succ_le //.
     - f_equal; repeat destruct excluded_middle_informative;
         subst; try tauto; try now contradiction (neq_succ (S m)).
-      now apply lt_irrefl in H1.
+      move: H1 => /lt_irrefl //.
   Qed.
 
   Theorem iterate_swap_0 : ∀ n f i j,

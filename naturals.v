@@ -34,12 +34,12 @@ Proof.
     split.
     + apply i1.
       split.
-      * eapply i.
-        split; try exact H; apply i0; eauto using Set_in_powerset.
+      * eapply i0.
+        split; try exact H; apply i; eauto using Set_in_powerset.
       * exists x0.
-        split; auto; apply i0; eauto using Set_in_powerset.
+        split; auto; apply i; eauto using Set_in_powerset.
     + intros z H1.
-      now apply i0 in H1.
+      now apply i in H1.
   - apply Extensionality; split; intros H1.
     + now apply Empty_set_classification in H1.
     + now apply n in H1.
@@ -55,13 +55,13 @@ Proof.
   split.
   - apply i1 in H as [H1 [z [H2 H3]]].
     pose proof H3 as H4.
-    apply i0 in H4 as [H4 [H5 H6]].
+    apply i in H4 as [H4 [H5 H6]].
     apply i1.
     split; eauto.
   - intros z H1.
     pose proof H1 as H2.
     apply H0 in H1.
-    apply i0 in H2 as [H2 [H3 H4]].
+    apply i in H2 as [H2 [H3 H4]].
     eauto.
 Qed.
 
@@ -674,7 +674,7 @@ Proof.
           try now (rewrite -> Singleton_classification in *; subst).
         eapply elements_of_naturals_are_subsets; eauto using elts_in_set.
       * destruct IHb as [x H1].
-        { move: H => /[swap] => x /[swap] /[dup] => H => /[swap] /[apply].
+        { move: H => /[swap] x /[swap] /[dup] H /[swap] /[apply].
           rewrite -S_is_succ /succ Pairwise_union_classification.
           rewrite Singleton_classification; elim => ?; subst; tauto. }
         exists (S x).

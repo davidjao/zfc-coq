@@ -36,9 +36,9 @@ Arguments elt_to_set {S}.
 Theorem set_proj_injective :
   ∀ X (n m : elts X), (n : set) = (m : set) → n = m.
 Proof.
-  move=> S [n N] [m M] /= => H.
+  move=> S [n N] [m M] /= H.
   move: H N M -> => N M.
-  apply f_equal, proof_irrelevance.
+  apply /f_equal /proof_irrelevance.
 Qed.
 
 Theorem elts_in_set : ∀ {S} (x : elts S), elt_to_set x ∈ S.
@@ -72,11 +72,11 @@ Qed.
 
 Theorem Nonempty_classification : ∀ y, y ≠ ∅ ↔ ∃ x, x ∈ y.
 Proof.
-  split; move=> H.
+  split => H.
   - apply NNPP.
     move: H => /[swap] => H /= => H0.
-    apply H0, Extensionality => z.
-    split; move => H1.
+    apply /H0 /Extensionality => z.
+    split => H1.
     + contradict H.
       eauto.
     + move: H1 => /Empty_set_classification //.
@@ -96,8 +96,8 @@ Proof.
         intuition eauto.
     + elim (classic (p x)); [ exists x | exists e ]; split; intuition tauto.
   - exists ∅ => x.
-    split; move=> H0.
-    + by move: H0 => /Empty_set_classification.
+    split => [ | H0].
+    + by move /Empty_set_classification.
     + contradict H.
       eauto.
 Qed.
@@ -125,10 +125,9 @@ Defined.
 Theorem despecify :
   ∀ A (p : elts A → Prop) (x : elts A), specify_lift A p x = p x.
 Proof.
-  move=> A p x.
-  rewrite /specify_lift.
+  rewrite /specify_lift => A p x.
   elim excluded_middle_informative => a /=.
-  - by apply f_equal, set_proj_injective.
+  - by apply /f_equal /set_proj_injective.
   - exfalso; eauto using elts_in_set.
 Qed.
 
@@ -143,14 +142,13 @@ Theorem replacement_construction : ∀ S (f : elts S → set),
   ∃ X, ∀ x, x ∈ X ↔ ∃ s, f s = x.
 Proof.
   move=> S f.
-  elim (Replacement S (λ x y, ∃ s, f s = y ∧ x = s)) => [X H | X H].
+  elim (Replacement S (λ x y, ∃ s, f s = y ∧ x = s)) => X H.
   - exists X => x.
     rewrite H.
-    split; [ move => [z] [H0 [s [H1 H2]]] | move => [[s H0]] H1 ];
-      eauto using elts_in_set.
+    split => [[z] [H0 [s [H1 H2]]] | [[s H0]] H1]; eauto using elts_in_set.
   - exists (f (exist H)).
     split; eauto => x' [s [<- H1]].
-      by apply f_equal, set_proj_injective.
+      by apply /f_equal /set_proj_injective.
 Qed.
 
 Definition replacement (S : set) (f : elts S → set) : set.
@@ -187,10 +185,9 @@ Qed.
 
 Theorem Powerset_classification : ∀ X x, x ∈ P X ↔ x ⊂ X.
 Proof.
-  move=> X x.
-  rewrite /P /specify.
-  repeat (destruct constructive_indefinite_description => /=);
-    split; [ | intros H ]; apply i0; split; auto.
+  rewrite /P /specify => X x.
+  repeat (elim constructive_indefinite_description => /= ?).
+  split; rewrite p; firstorder.
 Qed.
 
 Theorem Empty_set_in_powerset : ∀ X, ∅ ∈ P X.
@@ -207,35 +204,32 @@ Theorem Powerset_nonempty : ∀ x, ∅ ≠ P x.
 Proof.
   move=> x.
   move: (Empty_set_classification x) => /[swap] -> H.
-  apply H, Set_in_powerset.
+  apply /H /Set_in_powerset.
 Qed.
 
 Theorem Subset_transitive : ∀ X Y Z, X ⊂ Y → Y ⊂ Z → X ⊂ Z.
 Proof.
-  intros X Y Z H H0 x H1.
-  eauto.
+  move=> X Y Z H H0 x /H /H0 //.
 Qed.
 
 Theorem Subset_equality : ∀ A B, A ⊂ B → B ⊂ A → A = B.
 Proof.
-  intros A B H H0.
-  apply Extensionality; intuition.
+  move=> A B H H0.
+  apply /Extensionality; intuition.
 Qed.
 
 Theorem Subset_equality_iff : ∀ A B, (A ⊂ B ∧ B ⊂ A) ↔ A = B.
 Proof.
-  intros A B.
-  split; intros H; subst; firstorder using Subset_equality, Set_is_subset.
+  split => H; subst; firstorder using Subset_equality, Set_is_subset.
 Qed.
 
 Theorem Subset_extensionality :
   ∀ A B, A = B ↔ (∀ X, X ⊂ A ↔ X ⊂ B).
 Proof.
-  split; intros H.
-  - intros X.
-    split; intros H0; now rewrite -> H in *.
-  - apply Subset_equality_iff.
-    split; apply H; now intros x H0.
+  split => [-> X| H] //.
+  apply Subset_equality_iff.
+  rewrite H -H.
+  eauto using Set_is_subset.
 Qed.
 
 Lemma Subset_of_subsets_of_emptyset : ∀ a, a ∈ P (P ∅) → a = ∅ ∨ a = P ∅.
@@ -246,7 +240,7 @@ Proof.
     auto => z => /Powerset_classification => H1.
   suff -> : z = ∅.
   - move: H H0 => /Nonempty_classification => [[x H]].
-    move: H => /[dup] => H /[swap] => /[apply] /Powerset_classification => H0.
+    move: (H) => /[swap] /[apply] /Powerset_classification => H0.
     suff -> : ∅ = x => //.
     apply Subset_equality_iff, conj; auto using Empty_set_is_subset.
   - apply Subset_equality_iff, conj; auto using Empty_set_is_subset.
@@ -255,21 +249,18 @@ Qed.
 (* The axiom of pairing is a theorem in ZFC under classical logic. *)
 Theorem Pairing : ∀ x y, ∃ z, ((x ∈ z) ∧ (y ∈ z)).
 Proof.
-  intros x y.
-  destruct (Replacement (P (P ∅)) (λ a b, ∅ = a ∧ x = b ∨ P ∅ = a ∧ y = b))
-    as [z H].
-  - intros a H.
-    apply Subset_of_subsets_of_emptyset in H as [H | H];
-      [ exists x | exists y ]; split; auto; intros x' [[H0 H1] | [H0 H1]];
-        auto; contradiction (Powerset_nonempty ∅); congruence.
-  - exists z; split; apply H; [ exists ∅ | exists (P ∅) ];
-      split; eauto using Empty_set_in_powerset, Set_in_powerset.
+  move=> x y.
+  elim (Replacement (P (P ∅)) (λ a b, ∅ = a ∧ x = b ∨ P ∅ = a ∧ y = b)) => z.
+  - exists z; split; apply /H;
+      eauto using Empty_set_in_powerset, Set_in_powerset.
+  - move => /Subset_of_subsets_of_emptyset; elim; [ exists x | exists y ];
+              split; intuition; subst; by contradiction (Powerset_nonempty ∅).
 Qed.
 
 Definition pair : set → set → set.
 Proof.
-  intros x y.
-  destruct (constructive_indefinite_description (Pairing x y)) as [z].
+  move=> x y.
+  elim (constructive_indefinite_description (Pairing x y)) => z H.
   exact ({t in z | t = x ∨ t = y}).
 Defined.
 
@@ -278,8 +269,8 @@ Notation " { x } " := (pair x x) : set_scope.
 
 Definition union : set → set.
 Proof.
-  intros F.
-  destruct (constructive_indefinite_description (Union F)) as [A].
+  move=> F.
+  elim (constructive_indefinite_description (Union F)) => A H.
   exact ({x in A | ∃ y, (x ∈ y ∧ y ∈ F)}).
 Defined.
 
@@ -295,57 +286,51 @@ Definition Inductive X := ∀ y, y ∈ X → succ y ∈ X.
 
 Lemma neq_sym : ∀ A (a b : A), a ≠ b ↔ b ≠ a.
 Proof.
-  split; intros H; now contradict H.
+  split => H; now contradict H.
 Qed.
 
 Theorem Specify_classification : ∀ A P x, x ∈ {x in A | P x} ↔ x ∈ A ∧ P x.
 Proof.
-  intros A p x.
-  unfold specify in *.
-  now repeat destruct constructive_indefinite_description.
+  rewrite /specify => A p x.
+  repeat elim constructive_indefinite_description => //.
 Qed.
 
 Theorem Specify_subset : ∀ A p, {x in A | p x} ⊂ A.
 Proof.
-  intros A p x H.
-  now apply Specify_classification in H.
+  now move=> A p x /Specify_classification.
 Qed.
 
 Theorem Specify_type_classification :
   ∀ A p x, p x ∧ x ∈ A ↔ x ∈ {x of type A | p x}.
 Proof.
-  split; intros H;
-    [ apply Specify_classification | apply Specify_classification in H ];
-  split; intuition; now rewrite -> ? (reify H1), ? (reify H0), ? despecify in *.
+  move=> A p x.
+  rewrite Specify_classification.
+  split; intuition; by rewrite -> ? (reify H1), ? (reify H0), despecify in *.
 Qed.
 
 Theorem Specify_type_subset : ∀ A P, {x of type A | P x} ⊂ A.
 Proof.
-  intros A P x H.
-  now apply Specify_classification in H.
+  now move=> A P x /Specify_classification.
 Qed.
 
 Lemma Pairing_classification : ∀ x y z, z ∈ {x,y} ↔ (z = x ∨ z = y).
 Proof.
-  intros x y z.
-  unfold pair, specify.
-  repeat destruct constructive_indefinite_description.
-  split; intros H.
-  - apply i in H as [H [H0 | H0]]; auto.
-  - destruct H as [H | H]; apply i; intuition; congruence.
+  rewrite /pair => x y z.
+  repeat elim constructive_indefinite_description => ? /=.
+  rewrite Specify_classification; intuition; congruence.
 Qed.
 
 Theorem Pairing_comm : ∀ x y, {x,y} = {y,x}.
 Proof.
-  intros x y.
-  apply Extensionality.
-  split; intros; rewrite -> Pairing_classification in *; tauto.
+  move=> x y.
+  apply /Extensionality => z.
+  rewrite ? Pairing_classification; tauto.
 Qed.
 
 Lemma Singleton_classification : ∀ x y, y ∈ {x,x} ↔ y = x.
 Proof.
-  intros x y.
-  split; intros H; auto; rewrite -> Pairing_classification in *; tauto.
+  move=> x y.
+  rewrite Pairing_classification; tauto.
 Qed.
 
 Definition proper_subset a b := a ⊂ b ∧ a ≠ b.
@@ -353,142 +338,128 @@ Infix "⊊" := proper_subset (at level 70) : set_scope.
 
 Lemma not_proper_subset_inhab : ∀ x y, ¬ x ⊊ y → x ≠ y → ∃ z, z ∈ x ∧ z ∉ y.
 Proof.
-  intros x y H H0.
+  move=> x y H H0.
   apply NNPP.
-  contradict H.
-  split; auto.
-  intros z H1.
+  move: H => /[swap] => H H1.
+  apply H1, conj; auto => z H2.
   apply NNPP.
   eauto.
 Qed.
 
 Theorem subset_subsetneq_trans : ∀ A B C, A ⊂ B → B ⊊ C → A ⊊ C.
 Proof.
-  intros A B C H [H0 H1].
+  move=> A B C H [H0 H1].
   split.
-  - intros a H2.
-    auto.
-  - intros H2.
-    subst.
-    contradict H1.
-    now apply Subset_equality_iff.
+  - move=> a /H /H0 //.
+  - move: H => /[swap] -> H.
+      by apply /H1 /Subset_equality_iff.
 Qed.
 
 Theorem subsetneq_subset_trans : ∀ A B C, A ⊊ B → B ⊂ C → A ⊊ C.
 Proof.
-  intros A B C [H H0] H1.
+  move=> A B C [H H0] H1.
   split.
-  - intros a H2.
-    auto.
-  - intros H2.
-    subst.
-    contradict H0.
-    now apply Subset_equality_iff.
+  - move=> a /H /H1 //.
+  - move: H1 => /[swap] <- H1.
+      by apply /H0 /Subset_equality_iff.
 Qed.
 
 Lemma proper_subset_inhab : ∀ x y, x ⊊ y → ∃ z, z ∈ y ∧ z ∉ x.
 Proof.
-  intros x y [H H0].
+  move=> x y [H H0].
   apply NNPP.
-  contradict H0.
-  apply Subset_equality_iff.
-  split; auto.
-  intros z H1.
+  move: H0 => /[swap] => H0 H1.
+  apply /H1 /Subset_equality_iff.
+  split; auto => z H2.
   apply NNPP.
   eauto.
 Qed.
 
 Theorem Union_classification : ∀ x C, x ∈ ⋃ C ↔ ∃ X, X ∈ C ∧ x ∈ X.
 Proof.
-  intros x C.
-  unfold union, specify in *.
-  repeat destruct constructive_indefinite_description.
-  split; intros H; [ apply i0 in H as [H [y H0]]
-                   | destruct H as [y H]; apply i0 ]; firstorder.
+  rewrite /union /specify => x C.
+  repeat (elim: constructive_indefinite_description => /= ?).
+  split; rewrite p; firstorder.
 Qed.
 
 Theorem Empty_union : ⋃ ∅ = ∅.
 Proof.
-  apply Extensionality.
-  split; intros H; rewrite -> Union_classification in *;
-    repeat destruct H; now apply Empty_set_classification in H.
+  apply Subset_equality_iff, conj; auto using Empty_set_is_subset => x.
+  rewrite Union_classification => [[y [H H0]]].
+  move: H => /Empty_set_classification //.
 Qed.
 
 Lemma Pairwise_union_classification :
   ∀ A B x, x ∈ A ∪ B ↔ x ∈ A ∨ x ∈ B.
 Proof.
-  intros A B x.
-  unfold pairwise_union.
-  split; intros H; rewrite -> Union_classification in *; repeat destruct H;
-    try rewrite -> Pairing_classification in *; try destruct H; subst; auto;
-  [ exists A | exists B ]; split; try rewrite Pairing_classification; tauto.
+  ((split; rewrite /pairwise_union Union_classification) =>
+   [[X] | [H | H]]; last 1 [exists A | exists B];
+   rewrite Pairing_classification) => [[[<- | <-]] | | ]; tauto.
 Qed.
 
 Lemma Pairing_union_singleton : ∀ x y, {x,y} = {x,x} ∪ {y,y}.
 Proof.
-  intros x y.
-  apply Extensionality.
-  split; intros H; [ apply Pairwise_union_classification |
-                     apply Pairwise_union_classification in H ];
-  rewrite -> Pairing_classification, Singleton_classification in *; tauto.
+  move=> x y.
+  apply Extensionality => z.
+  rewrite ? Pairwise_union_classification ? Singleton_classification
+          ? Pairing_classification //.
 Qed.
 
 Theorem Singleton_union : ∀ A, ⋃ {A, A} = A.
 Proof.
-  intros A.
-  apply Extensionality.
-  split; intros H; [ apply Pairwise_union_classification in H |
-                     apply Pairwise_union_classification ]; tauto.
+  move=> A.
+  apply /Extensionality => z.
+  rewrite ? Pairwise_union_classification; tauto.
 Qed.
 
 Theorem Union_comm : ∀ A B, A ∪ B = B ∪ A.
 Proof.
-  intros A B.
-  apply Extensionality.
-  split; intros H; rewrite -> Pairwise_union_classification in *; tauto.
+  move=> A B.
+  apply /Extensionality => z.
+  rewrite ? Pairwise_union_classification; tauto.
 Qed.
 
 Theorem Union_assoc : ∀ A B C, A ∪ (B ∪ C) = (A ∪ B) ∪ C.
 Proof.
-  intros A B C.
-  apply Extensionality.
-  split; intros H; repeat rewrite -> Pairwise_union_classification in *; tauto.
+  move=> A B C.
+  apply /Extensionality => z.
+  rewrite ? Pairwise_union_classification; tauto.
 Qed.
 
 Theorem Union_empty : ∀ A, A ∪ ∅ = A.
 Proof.
-  intros A.
-  apply Extensionality.
-  split; intros H; rewrite -> Pairwise_union_classification in *;
-    intuition; now apply Empty_set_classification in H0.
+  move=> A.
+  apply /Extensionality => z.
+  rewrite Pairwise_union_classification;
+    intuition (contradiction (Empty_set_classification z)).
 Qed.
 
 Theorem Union_idempotent : ∀ A, A ∪ A = A.
 Proof.
-  intros A.
-  apply Extensionality.
-  split; intros H; repeat rewrite -> Pairwise_union_classification in *; tauto.
+  move=> A.
+  apply /Extensionality => z.
+  rewrite Pairwise_union_classification; tauto.
 Qed.
 
 Theorem Union_subset : ∀ A B, A ⊂ B ↔ A ∪ B = B.
 Proof.
-  intros A B.
+  move=> A B.
   rewrite <-Subset_equality_iff.
-  split; intros H; repeat split; intros x H0;
-    try rewrite Pairwise_union_classification in *;
-    firstorder; firstorder using Pairwise_union_classification.
+  (split => [H | [H H0]]; repeat split) =>
+  x; rewrite ? Pairwise_union_classification; try tauto;
+    firstorder using Pairwise_union_classification.
 Qed.
 
 Theorem Union_left : ∀ A B, A ⊂ A ∪ B.
 Proof.
-  intros A B x H.
-  apply Pairwise_union_classification; tauto.
+  move=> A B x.
+  rewrite Pairwise_union_classification; tauto.
 Qed.
 
 Theorem Union_right : ∀ A B, B ⊂ A ∪ B.
 Proof.
-  intros A B x H.
-  apply Pairwise_union_classification; tauto.
+  move=> A B x.
+  rewrite Pairwise_union_classification; tauto.
 Qed.
 
 Definition intersection X := {y in ⋃ X | ∀ x, x ∈ X → y ∈ x}.
