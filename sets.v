@@ -647,66 +647,52 @@ Infix "×" := product (at level 60) : set_scope.
 Theorem Product_classification : ∀ A B x,
     x ∈ A × B ↔ ∃ a b, a ∈ A ∧ b ∈ B ∧ x = (a,b).
 Proof.
-  intros A B x.
-  unfold product.
-  split; intros H.
-  - apply Specify_classification in H as [H [a [b [H0 [H1 H2]]]]].
-    now exists a, b.
-  - destruct H as [a [b [H0 [H1 H2]]]].
-    subst.
-    apply Specify_classification.
-    split; eauto.
-    apply Powerset_classification.
-    intros y H3.
-    apply Powerset_classification.
-    intros z H4.
-    apply Pairwise_union_classification.
-    apply Pairing_classification in H3 as [H3 | H3]; subst;
-      apply Pairing_classification in H4 as [H4 | H4]; subst; tauto.
+  move=> A B x.
+  rewrite /product Specify_classification.
+  split => [[H [a [b [H0 [H1 H2]]]]] | [a [b [H0 [H1 ->]]]]];
+             repeat split; eauto; apply /Powerset_classification =>
+  y /Pairing_classification [->|->]; apply /Powerset_classification =>
+  z /Pairing_classification [->|->]; apply Pairwise_union_classification; tauto.
 Qed.
 
 Definition proj1 : set → set → set → set.
 Proof.
-  intros A B x.
-  destruct (excluded_middle_informative (x ∈ A × B)).
-  - rewrite -> Product_classification in i.
-    destruct (constructive_indefinite_description i) as [a].
-    destruct (constructive_indefinite_description e) as [b].
+  move=> A B x.
+  elim (excluded_middle_informative (x ∈ A × B)) => H.
+  - move: H => /Product_classification /constructive_indefinite_description
+                [a] /constructive_indefinite_description [b] H0.
     exact a.
   - exact ∅.
 Defined.
 
 Definition proj2 : set → set → set → set.
 Proof.
-  intros A B x.
-  destruct (excluded_middle_informative (x ∈ A × B)).
-  - rewrite -> Product_classification in i.
-    destruct (constructive_indefinite_description i) as [a].
-    destruct (constructive_indefinite_description e) as [b].
+  move=> A B x.
+  elim (excluded_middle_informative (x ∈ A × B)) => H.
+  - move: H => /Product_classification /constructive_indefinite_description
+                [a] /constructive_indefinite_description [b] H0.
     exact b.
   - exact ∅.
 Defined.
 
 Theorem proj1_eval : ∀ A B a b, a ∈ A → b ∈ B → proj1 A B (a,b) = a.
 Proof.
-  intros A B a b H H0.
-  unfold proj1.
-  assert ((a,b) ∈ A × B) by (rewrite Product_classification; eauto).
-  repeat destruct excluded_middle_informative; intuition.
-  repeat destruct constructive_indefinite_description.
-  destruct a0 as [H2 [H3 H4]].
-  now apply Ordered_pair_iff in H4 as [H4 H5].
+  move=> A B a b H H0.
+  rewrite /proj1.
+  elim excluded_middle_informative => /= // => H1.
+  - repeat (elim constructive_indefinite_description => >).
+    rewrite Ordered_pair_iff; intuition congruence.
+  - contradict H1; apply Product_classification; eauto.
 Qed.
 
 Theorem proj2_eval : ∀ A B a b, a ∈ A → b ∈ B → proj2 A B (a,b) = b.
 Proof.
-  intros A B a b H H0.
-  unfold proj2.
-  assert ((a,b) ∈ A × B) by (rewrite Product_classification; eauto).
-  repeat destruct excluded_middle_informative; intuition.
-  repeat destruct constructive_indefinite_description.
-  destruct a0 as [H2 [H3 H4]].
-  now apply Ordered_pair_iff in H4 as [H4 H5].
+  move=> A B a b H H0.
+  rewrite /proj2.
+  elim excluded_middle_informative => /= // => H1.
+  - repeat (elim constructive_indefinite_description => >).
+    rewrite Ordered_pair_iff; intuition congruence.
+  - contradict H1; apply Product_classification; eauto.
 Qed.
 
 Section Projections.
@@ -715,24 +701,20 @@ Section Projections.
 
   Definition π1 : elts (A × B) → elts A.
   Proof.
-    intros z.
-    pose proof elts_in_set z.
-    apply Product_classification in H.
-    destruct (constructive_indefinite_description H) as [a H0].
-    destruct (constructive_indefinite_description H0) as [b H1].
-    destruct H1 as [H1 [H2 H3]].
-    exact (exist H1).
+    move=> z.
+    move: (elts_in_set z) => /Product_classification
+    => /constructive_indefinite_description [a] =>
+    /constructive_indefinite_description [b] [H0 [H1 H2]].
+    exact (exist H0).
   Defined.
 
   Definition π2 : elts (A × B) → elts B.
   Proof.
-    intros z.
-    pose proof elts_in_set z.
-    apply Product_classification in H.
-    destruct (constructive_indefinite_description H) as [a H0].
-    destruct (constructive_indefinite_description H0) as [b H1].
-    destruct H1 as [H1 [H2 H3]].
-    exact (exist H2).
+    move=> z.
+    move: (elts_in_set z) => /Product_classification
+    => /constructive_indefinite_description [a] =>
+    /constructive_indefinite_description [b] [H0 [H1 H2]].
+    exact (exist H1).
   Defined.
 
   Theorem π1_action :
@@ -740,13 +722,11 @@ Section Projections.
       (H : (exist Ha : elts A, exist Hb : elts B) ∈ A × B),
       π1 (exist H) = exist Ha.
   Proof.
-    intros a b Ha Hb H.
-    unfold π1.
-    repeat destruct constructive_indefinite_description.
-    repeat destruct a0.
-    simpl in *.
-    apply Ordered_pair_iff in e0.
-    now apply set_proj_injective.
+    rewrite /π1 => a b Ha Hb H.
+    elim constructive_indefinite_description => x [z [p [p0 p1]]].
+    elim constructive_indefinite_description => y [q [q0 q1]].
+    move: p1 q1 q => /Ordered_pair_iff /[swap] /Ordered_pair_iff [<- _] _ q.
+    apply /f_equal /proof_irrelevance.
   Qed.
 
   Theorem π2_action :
@@ -754,55 +734,51 @@ Section Projections.
       (H : (exist Ha : elts A, exist Hb : elts B) ∈ A × B),
       π2 (exist H) = exist Hb.
   Proof.
-    intros a b Ha Hb H.
-    unfold π2.
-    repeat destruct constructive_indefinite_description.
-    repeat destruct a0.
-    simpl in *.
-    apply Ordered_pair_iff in e0.
-    now apply set_proj_injective.
+    rewrite /π2 => a b Ha Hb H.
+    elim constructive_indefinite_description => x [z [p [p0 p1]]].
+    elim constructive_indefinite_description => y [q [q0 q1]].
+    move: p1 q1 q0 => /Ordered_pair_iff /[swap] /Ordered_pair_iff [_ <-] _ q0.
+    apply /f_equal /proof_irrelevance.
   Qed.
 
   Theorem π_image : ∀ z, (π1 z, π2 z) = z.
   Proof.
-    intros z.
-    unfold π1, π2.
-    repeat destruct constructive_indefinite_description.
-    repeat destruct a.
-    rewrite e0.
-    now apply Ordered_pair_iff.
+    rewrite /π1 /π2 => z.
+    elim constructive_indefinite_description => x [p [p0 [p1 p2]]].
+    elim constructive_indefinite_description => y [q [q0 q1]].
+    rewrite q1 Ordered_pair_iff //.
   Qed.
 
 End Projections.
 
 Theorem Product_union_distr_l : ∀ A B X, (A ∪ B) × X = (A × X) ∪ (B × X).
 Proof.
-  intros A B X.
-  apply Extensionality.
-  split; intros H; rewrite -> Pairwise_union_classification in *;
-    repeat rewrite -> Product_classification in *; repeat destruct H;
-      try (rewrite -> Pairwise_union_classification in *;
-           destruct H; [ left | right ]; exists x, x0; tauto);
-      exists x, x0; rewrite -> Pairwise_union_classification in *; tauto.
+  move=> A B X.
+  apply /Extensionality => z.
+  rewrite ? Pairwise_union_classification ? Product_classification.
+  split => [[a [b [/Pairwise_union_classification [H | H] [H0 ->]]]]
+           | [[a [b [H [H0 ->]]]] | [a [b [H [H0 ->]]]]]];
+             [ left | right | | ]; eauto; exists a, b;
+               rewrite Pairwise_union_classification; tauto.
 Qed.
 
 Theorem Product_intersection :
   ∀ A B X Y, (A ∩ B) × (X ∩ Y) = (A × X) ∩ (B × Y).
 Proof.
-  intros A B X Y.
-  apply Extensionality.
-  split; rewrite Product_classification Pairwise_intersection_classification;
-    intros H; rewrite -> ? Product_classification in *; repeat destruct H;
-      repeat destruct H0; intuition; subst; rewrite -> ? Ordered_pair_iff in *;
-        exists x, x0; rewrite -> ? Pairwise_intersection_classification in *;
-          intuition; congruence.
+  move=> A B X Y.
+  apply Extensionality => z.
+  rewrite ? Pairwise_intersection_classification ? Product_classification.
+  split => [[a [b [H [H0 H1]]]] | [[a [b [H [H0 ->]]]] [c [d [H1 [H2 H3]]]]]];
+             [ | exists a, b ]; rewrite -> ? Ordered_pair_iff,
+                                ? Pairwise_intersection_classification
+               in *; intuition (eauto; congruence).
 Qed.
 
 Theorem Product_intersection_distr_l :
   ∀ A B X, (A ∩ B) × X = (A × X) ∩ (B × X).
 Proof.
-  intros A B X.
-  now rewrite <-Product_intersection, Intersection_idempotent.
+  move=> A B X.
+  rewrite -Product_intersection Intersection_idempotent //.
 Qed.
 
 Theorem Product_complement : ∀ A B X, (A \ B) × X = (A × X) \ (B × X).

@@ -15,19 +15,9 @@ Proof.
     apply Specify_classification in H as [H H0].
     apply Product_classification in H as [x [y [H1 [H2 H3]]]].
     subst; simpl.
-    unfold proj2 in H0.
-    repeat destruct excluded_middle_informative;
-      repeat destruct constructive_indefinite_description.
-    + destruct a as [H3 [H4 H5]].
-      apply Ordered_pair_iff in H5 as [H5 H6].
-      subst.
-      exists (exist H1 : Z), (exist H2 : Z), (exist H3 : Z), (exist H4 : Z).
-      simpl.
-      split; auto.
-      rewrite -> integers.M1.
-      replace H1 with H3; replace H2 with H4; auto using proof_irrelevance.
-    + contradiction n.
-      apply Product_classification; eauto.
+    rewrite proj2_eval in H0; auto.
+    exists (exist H1 : Z), (exist H2 : Z), (exist H1 : Z), (exist H2 : Z).
+    rewrite integers.M1 //.
   - intros x y H H0 H1.
     rewrite -> Specify_classification in *.
     destruct H1 as [H1 [a [b [c [d [H2 H3]]]]]].
@@ -74,19 +64,9 @@ Proof.
   - apply Product_classification.
     exists 0, 1.
     unfold IZS; repeat split; auto using elts_in_set.
-  - unfold proj2.
-    destruct excluded_middle_informative.
-    repeat destruct constructive_indefinite_description.
-    + destruct a as [H [H0 H1]].
-      apply Ordered_pair_iff in H1 as [H1 H2].
-      subst.
-      intros H1.
-      contradiction zero_ne_1.
-      now apply set_proj_injective.
-    + contradiction n.
-      apply Product_classification.
-      exists 0, 1.
-      unfold IZS; repeat split; auto using elts_in_set.
+  - rewrite proj2_eval; eauto using elts_in_set => H.
+    contradiction zero_ne_1.
+    now apply set_proj_injective.
 Qed.
 
 Lemma embed_nonzero : ∀ a b : Z, b ≠ 0 → (a, b) ∈ 𝐙0.
@@ -123,15 +103,8 @@ Proof.
   exists (exist H0 : Z), (exist H4 : Z).
   assert (exist H4 ≠ 0) as H5.
   { contradict H3.
-    unfold proj2.
-    destruct excluded_middle_informative;
-      repeat destruct constructive_indefinite_description.
-    - destruct a0 as [H5 [H6 H7]].
-      apply Ordered_pair_iff in H7 as [H7 H8].
-      subst.
-      now rewrite <-H3.
-    - contradict n.
-      apply Product_classification; eauto. }
+    rewrite proj2_eval; auto.
+    now rewrite <-H3. }
   split; auto.
   apply set_proj_injective.
   unfold 𝐐.
@@ -164,14 +137,8 @@ Proof.
       intros e f F E H2.
       apply Specify_classification.
       split; try apply Product_classification; eauto.
-      unfold proj2.
-      destruct excluded_middle_informative;
-        try (contradict n1; apply Product_classification; eauto).
-      repeat destruct constructive_indefinite_description.
-      destruct a0 as [H3 [H4 H5]].
-      apply Ordered_pair_iff in H5 as [H6 H7].
+      rewrite proj2_eval; auto.
       contradict H2.
-      subst.
       now apply set_proj_injective.
     + exists (exist C : Z), (exist D : Z), (exist A : Z), (exist B : Z).
       repeat split; auto.
