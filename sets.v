@@ -499,10 +499,10 @@ Qed.
 
 Theorem Empty_intersection : (⋂ ∅ = ∅).
 Proof.
-  rewrite /intersection /specify.
-  repeat (destruct constructive_indefinite_description => /=).
+  rewrite /intersection /specify /sig_rect.
+  repeat (elim constructive_indefinite_description => /=) => x H.
   apply /Extensionality => z.
-  rewrite i Empty_union.
+  rewrite H Empty_union.
   split => [[/Empty_set_classification] | /Empty_set_classification] //.
 Qed.
 
@@ -783,47 +783,33 @@ Qed.
 
 Theorem Product_complement : ∀ A B X, (A \ B) × X = (A × X) \ (B × X).
 Proof.
-  intros A B X.
-  apply Extensionality.
-  split; intros H;
-    repeat rewrite -> Complement_classification, Product_classification in *.
-  - destruct H as [a [b [H [H0 H1]]]].
-    rewrite -> Complement_classification in *.
-    destruct H as [H H2].
-    split; try now exists a, b.
+  move=> A B X.
+  apply Extensionality => z.
+  repeat rewrite ? Complement_classification ? Product_classification.
+  split => [[a [b [/Complement_classification [H H0] [H1 ->]]]] |
+            [[a [b [H [H0 H1]]]] H2]]; repeat split; eauto.
+  - move: H0 => /[swap] [[x [y [H2 [H3 /Ordered_pair_iff [-> _]]]]]] //.
+  - exists a, b.
+    rewrite Complement_classification.
+    repeat split; eauto.
     contradict H2.
-    rewrite -> Product_classification in *.
-    destruct H2 as [x [y [H2 [H3 H4]]]].
-    subst.
-    rewrite -> Ordered_pair_iff in *.
-    intuition; congruence.
-  - destruct H as [[a [b [H [H0 H1]]]] H2].
-    exists a, b.
-    rewrite -> Complement_classification in *.
-    repeat split; auto.
-    contradict H2.
-    rewrite Product_classification.
-    now exists a, b.
+    eauto.
 Qed.
 
 Theorem Empty_product_left : ∀ S, ∅ × S = ∅.
 Proof.
-  intros.
-  apply Extensionality.
-  split; intros H.
-  - apply Product_classification in H as [a [b [H [H0 H1]]]].
-    contradiction (Empty_set_classification a).
-  - contradiction (Empty_set_classification z).
+  move=> S.
+  apply Extensionality => z.
+  (split; rewrite Product_classification) =>
+  [[a [b [/Empty_set_classification]]] | /Empty_set_classification] //.
 Qed.
 
 Theorem Empty_product_right : ∀ S, S × ∅ = ∅.
 Proof.
-  intros.
-  apply Extensionality.
-  split; intros H.
-  - apply Product_classification in H as [a [b [H [H0 H1]]]].
-    contradiction (Empty_set_classification b).
-  - contradiction (Empty_set_classification z).
+  move=> S.
+  apply Extensionality => z.
+  (split; rewrite Product_classification) =>
+  [[a [b [_ [/Empty_set_classification]]]] | /Empty_set_classification] //.
 Qed.
 
 Definition quotient X R := {{y in X | (x,y) ∈ R} | x in X}.
@@ -833,24 +819,14 @@ Infix "/" := quotient : set_scope.
 Theorem quotient_classification : ∀ X R s,
     s ∈ X/R ↔ s ⊂ X ∧ ∃ x, x ∈ X ∧ (∀ y, y ∈ s ↔ y ∈ X ∧ (x,y) ∈ R).
 Proof.
-  intros X R s.
-  split; intros H; repeat split;
-    unfold quotient in *;
-    repeat destruct constructive_indefinite_description;
-    rewrite -> replacement_classification in *; destruct H as [σ H]; subst.
-  - intros x H.
-    now apply Specify_classification in H.
+  ((split; rewrite /quotient replacement_classification) =>
+   [[σ ->] | [_ [x [H H0]]]]; repeat split) =>
+  [x /Specify_classification [H _] | | ] //.
   - exists σ.
-    split; auto using elts_in_set.
-    split; intros H.
-    + now apply Specify_classification in H.
-    + now apply Specify_classification.
-  - destruct H as [x [H H0]].
-    exists (exist H : elts X).
-    apply Extensionality.
-    split; intros H1.
-    + apply Specify_classification; firstorder.
-    + apply Specify_classification in H1; firstorder.
+    split; auto using elts_in_set => y; rewrite Specify_classification //.
+  - exists (exist H : elts X).
+    apply Extensionality => z.
+    rewrite Specify_classification H0 //.
 Qed.
 
 Definition reflexive X R := ∀ x, x ∈ X → (x,x) ∈ R.
@@ -870,34 +846,25 @@ Definition is_equivalence X R :=
 Theorem Equivalence_classes_are_partitions : ∀ X R,
     is_equivalence X R → is_partition X (X/R).
 Proof.
-  intros X R [H [H0 H1]].
-  repeat split.
-  - apply Extensionality.
-    split; intros H2.
-    + apply Union_classification in H2 as [S [H2 H3]].
-      apply quotient_classification in H2 as [H2 [x [H4 H5]]].
-      now apply H2.
-    + apply Union_classification.
-      exists {y in X | (z,y) ∈ R}.
-      split; try rewrite -> quotient_classification in *; try split;
-        [ intros y H3 | exists z; intuition | ];
-        rewrite -> Specify_classification in *; intuition.
-  - intros c H2.
-    apply quotient_classification in H2 as [H2 [x [H3 H4]]].
-    rewrite Nonempty_classification.
-    exists x.
-    apply H4; auto.
-  - intros c1 c2 H2 H3 H4.
-    apply quotient_classification in H2 as [H2 [x [H5 H6]]].
-    apply quotient_classification in H3 as [H3 [y [H7 H8]]].
-    apply NNPP.
-    contradict H4.
-    apply Nonempty_classification in H4 as [z H4].
-    apply Pairwise_intersection_classification in H4 as [H4 H9].
-    apply Extensionality.
-    split; intros H10; apply H6 in H4 as [H4 H12]; apply H8 in H9 as [H9 H13];
-      [ apply H6 in H10 as [H10 H14] | apply H8 in H10 as [H10 H14] ];
-      [ apply H8 | apply H6 ]; eauto.
+  move=> X R [H [H0 H1]].
+  (repeat split) => [ | c /quotient_classification [H2 [x [H3 H4]]] |
+                      c1 c2 /quotient_classification [H2 [x [H3 H4]]]
+                         /quotient_classification [H5 [y [H6 H7]]] H8 ].
+  - apply /Extensionality => z.
+    rewrite Union_classification.
+    split => [[S [/quotient_classification [H2 [x [H3 H4]]] H5]] | H2]; auto.
+    exists {y in X | (z,y) ∈ R}.
+    rewrite quotient_classification Specify_classification.
+    (repeat split; auto) => [ x /Specify_classification [H3 H4] | ] //.
+    exists z; split; auto => y.
+    rewrite Specify_classification //.
+  - eapply Nonempty_classification, ex_intro, H4; eauto.
+  - apply NNPP.
+    move: H8 => /[swap] /Nonempty_classification =>
+    [[z]] /Pairwise_intersection_classification =>
+    [[/H4 [H9 H10] /H7 [_ H11]] H12].
+    apply /H12 /Extensionality => ζ.
+    rewrite ? H4 ? H7; intuition eauto.
 Qed.
 
 Definition is_function f A B :=
@@ -905,10 +872,9 @@ Definition is_function f A B :=
 
 Theorem unique_set_element : ∀ {X} (x : elts X), exists ! y, y ∈ X ∧ y = x.
 Proof.
-  intros X [x H].
+  move=> X [x H].
   exists x.
-  repeat split; auto.
-  now intros x' [H0 H1].
+  repeat split; auto => x' [H0 H1] //.
 Qed.
 
 Record function : Type :=
@@ -922,18 +888,18 @@ Definition outsider B := {x in B | x ∉ x}.
 
 Theorem outsider_not_in : ∀ B, outsider B ∉ B.
 Proof.
-  intros B H.
-  absurd (outsider B ∈ outsider B); try apply Specify_classification;
-    try split; auto; intros H0; now apply Specify_classification in H0 as H1.
+  move=> B H.
+  absurd (outsider B ∈ outsider B); try apply Specify_classification, conj;
+    auto; move=> /[dup] /Specify_classification => [[_ H0] H1] //.
 Qed.
 
 Definition eval_rel : set → set → set → set → set.
 Proof.
-  intros f A B x.
-  destruct (excluded_middle_informative (x ∈ A)).
-  - destruct (excluded_middle_informative (is_function f A B)).
-    + destruct i0, (constructive_indefinite_description (H0 x i)) as [y].
-      exact y.
+  move=> f A B x.
+  elim (excluded_middle_informative (x ∈ A)) => H.
+  - elim (excluded_middle_informative (is_function f A B)) =>
+    [[H0 /(_ x H) /constructive_indefinite_description [y] H1] | H0].
+    + exact y.
     + exact (outsider B).
   - exact (outsider B).
 Defined.
@@ -946,100 +912,78 @@ Theorem Function_classification : ∀ {f A B a},
     a ∈ A → is_function f A B →
     unique (λ b : set, b ∈ B ∧ (a, b) ∈ f) (eval_rel f A B a).
 Proof.
-  intros f A B a H H0.
-  unfold eval_rel.
-  destruct (excluded_middle_informative (a ∈ A)),
-  (excluded_middle_informative (is_function f A B)); try tauto.
-  destruct i0.
-  repeat destruct constructive_indefinite_description; repeat split; tauto.
+  rewrite /eval_rel => f A B a H /[dup] H0 [H1 H2].
+  elim excluded_middle_informative => [[*] | *] /= //.
+  elim excluded_middle_informative => [* | *] /= //.
+  elim constructive_indefinite_description.
+  repeat split; intuition.
 Qed.
 
 Theorem function_maps_domain_to_range :
   ∀ f x, x ∈ domain f → f x ∈ range f.
 Proof.
-  intros f x H.
-  pose proof func_hyp f as H0.
-  eapply Function_classification in H as [[H H1] H2]; eauto.
+  move: func_hyp =>
+  /[swap] f /(_ f) /[swap] x /Function_classification /[apply] [[[H _]]] //.
 Qed.
 
 Theorem function_construction : ∀ A B p,
     (∀ a, a ∈ A → p a ∈ B) →
     (∃ f, (domain f = A ∧ range f = B ∧ ∀ a, a ∈ A → f a = p a)).
 Proof.
-  intros A B p H.
-  assert (∀ a, a ∈ A → (a, p a) ∈ A × B) as H0.
-  { intros a H0.
-    rewrite Product_classification.
-    exists a, (p a); intuition; congruence. }
-  assert (is_function {z in A × B | proj2 A B z = p (proj1 A B z)} A B) as H1.
-  { split; intros x H1; try now rewrite -> Specify_classification in *.
+  move=> A B p H.
+  have: ∀ a, a ∈ A → (a, p a) ∈ A × B.
+  { move=> a H0.
+    eapply Product_classification, ex_intro; eauto. }
+  have H0: is_function {z in A × B | proj2 A B z = p (proj1 A B z)} A B.
+  { (split => x; try now rewrite ? Specify_classification).
     exists (p x).
-    repeat split; try congruence; try intros x' [H4 H5]; auto;
-      rewrite -> Specify_classification, proj1_eval, proj2_eval in *;
-      intuition. }
-  exists (mkFunc H1).
-  repeat split; auto.
-  intros a H2.
-  destruct (Function_classification H2 H1) as [[H3 H4] H5].
-  destruct (H5 (p a)); split; simpl; intuition.
-  rewrite -> Specify_classification, proj1_eval, proj2_eval; auto.
+    (repeat split; try congruence; eauto) =>
+    [| y [H1]]; rewrite Specify_classification ? proj1_eval ? proj2_eval
+                        ? Product_classification; intuition; exists x; eauto. }
+  exists (mkFunc H0); repeat split; auto =>
+  a /[dup] H1 /Function_classification /(_ H0) [[H2 H3] /(_ (p a)) <-] //.
+  rewrite Specify_classification proj1_eval ? proj2_eval; auto.
 Qed.
 
 Theorem functionify_construction : ∀ {A B} (p : elts A → elts B),
   ∃ f, domain f = A ∧ range f = B ∧ ∀ a : elts A, f a = p a.
 Proof.
-  intros A B p.
-  assert (∀ a : elts A, (a, p a) ∈ A × B) as H.
-  { intros a.
+  move=> A B p.
+  have H: ∀ a : elts A, (a, p a) ∈ A × B.
+  { move=> a.
     rewrite Product_classification.
     eauto using elts_in_set. }
-  assert (is_function {z in A × B | ∃ a : elts A, z = (a, p a)} A B) as H0.
-  { split; intros a H0; try now rewrite -> Specify_classification in *.
+  have H0: is_function {z in A × B | ∃ a : elts A, z = (a, p a)} A B.
+  { (split => a; try rewrite 1 ? Specify_classification => [[H0 H1]] //) => H0.
     exists (p (exist H0)).
-    repeat split; eauto using elts_in_set.
-    - rewrite -> Specify_classification in *.
-      split.
-      + apply Product_classification.
-        eauto using elts_in_set.
-      + now (exists (exist H0 : elts A)).
-    - intros x' H1.
-      destruct H1 as [H1 H2].
-      apply Specify_classification in H2 as [H2 [[a' H3] H4]].
-      simpl in *.
-      apply Ordered_pair_iff in H4 as [H4 H5].
-      subst.
-      repeat apply f_equal.
-      apply proof_irrelevance. }
+    ((repeat split; eauto using elts_in_set) =>
+     [| y]; rewrite Specify_classification ? Product_classification)
+    => [| [H1 [H2 [c /Ordered_pair_iff [H3 H4]]]]].
+    - split; eauto using elts_in_set.
+      now (exists (exist H0 : elts A)).
+    - move: H3 H4 H0 H1 => -> -> H0 H1.
+      apply /f_equal /f_equal /set_proj_injective => //. }
   exists (mkFunc H0).
-  repeat split; auto.
-  intros a.
-  destruct (Function_classification (elts_in_set a) H0)
-    as [[H1 H2] H3], (H3 (p a)); try apply H3; split; auto using elts_in_set.
-  rewrite Specify_classification.
-  split; try now (exists a).
-  rewrite Product_classification.
-  eauto using elts_in_set.
+  repeat split; auto => a.
+  move: (Function_classification (elts_in_set a) H0) =>
+  [[H1 H2] /(_ (p a)) <-] //.
+  rewrite Specify_classification Product_classification;
+    repeat split; eauto using elts_in_set.
 Qed.
 
 Theorem function_maps_domain_to_graph :
   ∀ f x y, x ∈ domain f → y ∈ range f → (x,y) ∈ graph f ↔ f x = y.
 Proof.
-  intros f x y H H0.
-  split; intros H1; unfold eval, eval_rel in *;
-    repeat destruct excluded_middle_informative; intuition;
-      try contradiction (func_hyp f);
-      try destruct i0, constructive_indefinite_description;
-      destruct a as [[H2 H3] H4]; auto; congruence.
+  rewrite /eval /eval_rel => f x y H H0.
+  elim excluded_middle_informative => [[H1 H2] | H1]; try by move: (func_hyp f).
+  elim excluded_middle_informative => H3 /= //.
+  elim constructive_indefinite_description => w [[_ H4] H5].
+  split; move: H4; auto => /[swap] -> //.
 Qed.
 
 Theorem graph_elements_are_pairs : ∀ f z, z ∈ graph f → z ∈ domain f × range f.
 Proof.
-  intros f z H.
-  destruct f.
-  unfold graph in H.
-  simpl.
-  destruct func_hyp0.
-  now apply H0.
+  move=> [_ _] _ [H] _ /H //.
 Qed.
 
 Section Function_evaluation.
@@ -1049,50 +993,43 @@ Section Function_evaluation.
 
   Definition lambdaify : elts (domain f) → elts (range f).
   Proof.
-    intros [x H].
-    assert (f x ∈ range f)
+    move=> [x H].
+    have H0: f x ∈ range f.
       by auto using function_maps_domain_to_range.
-    exact (exist H0).
+      exact (exist H0).
   Defined.
 
   Definition functionify : (elts A → elts B) → function.
   Proof.
-    intros p.
-    destruct (constructive_indefinite_description
-                (functionify_construction p)) as [g].
+    move=> p.
+    move: (constructive_indefinite_description (functionify_construction p))
+    => [g] H.
     exact g.
   Defined.
 
   Theorem functionify_domain : ∀ g, domain (functionify g) = A.
   Proof.
-    intros g.
-    unfold functionify.
-    destruct constructive_indefinite_description.
-    tauto.
+    rewrite /functionify => g.
+    elim constructive_indefinite_description => g' [-> [H H0]] //.
   Qed.
 
   Theorem functionify_range : ∀ g, range (functionify g) = B.
   Proof.
-    intros g.
-    unfold functionify.
-    destruct constructive_indefinite_description.
-    tauto.
+    rewrite /functionify => g.
+    elim constructive_indefinite_description => g' [H [-> H0]] //.
   Qed.
 
   Theorem functionify_graph : ∀ g, graph (functionify g) ⊂ A × B.
   Proof.
-    intros g z H.
-    apply graph_elements_are_pairs in H.
-    now rewrite -> functionify_domain, functionify_range in H.
+    move => g z /graph_elements_are_pairs.
+    rewrite functionify_domain functionify_range //.
   Qed.
 
   Theorem functionify_action :
     ∀ (a : elts A) g, (functionify g) a = g a.
   Proof.
-    intros a g.
-    unfold functionify.
-    destruct constructive_indefinite_description as [g'], a0 as [H0 [H1 H2]].
-    apply H2.
+    rewrite /functionify => a g.
+    elim constructive_indefinite_description => g' [H [H0 ->]] //.
   Qed.
 
 End Function_evaluation.
@@ -1105,23 +1042,13 @@ Definition inclusion A B := {x in A × B | ∃ a, a ∈ A ∧ x = (a,a)}.
 
 Theorem Inclusion_is_function : ∀ A B, A ⊂ B → is_function (inclusion A B) A B.
 Proof.
-  intros A B H.
-  split.
-  - intros x H0.
-    now apply Specify_classification in H0.
-  - intros a H0.
-    exists a.
-    repeat split; try now apply H.
-    + apply Specify_classification.
-      split; try now (exists a).
-      rewrite Product_classification.
-      exists a, a.
-      intuition.
-    + intros x' [H1 H2].
-      apply Specify_classification in H2.
-      destruct H2 as [H2 [z [H3 H4]]].
-      rewrite -> Ordered_pair_iff in H4.
-      intuition; congruence.
+  split => [x /Specify_classification [H0 H1] | a H0] //.
+  exists a.
+  (repeat split; eauto) =>
+  [| x' [H1 /Specify_classification [H2 [z [H3 /Ordered_pair_iff H4]]]]].
+  - rewrite Specify_classification Product_classification.
+    split; eauto 6.
+  - intuition congruence.
 Qed.
 
 Definition injective f := ∀ x y, (lambdaify f) x = (lambdaify f) y → x = y.
@@ -1138,34 +1065,30 @@ Section Choice.
 
   Definition choice_function : set → set.
   Proof.
-    intros x.
-    destruct (excluded_middle_informative (x ∈ X)).
-    - assert (x ≠ ∅) as H0 by congruence.
-      apply Nonempty_classification in H0.
-      destruct (constructive_indefinite_description H0) as [y].
+    move=> x.
+    elim (excluded_middle_informative (x ∈ X)) => H0.
+    - (have: x ≠ ∅ by congruence) =>
+      /Nonempty_classification /constructive_indefinite_description => [[y H1]].
       exact y.
-    - exact X.
+    - exact (outsider X).
   Defined.
 
   Lemma choice_function_classification : ∀ x, x ∈ X → choice_function x ∈ x.
   Proof.
-    intros x H0.
-    unfold choice_function.
-    destruct excluded_middle_informative;
-      try destruct constructive_indefinite_description; intuition.
+    rewrite /choice_function => x H0.
+    elim excluded_middle_informative => {}H0 /= //.
+    rewrite /ssr_have.
+    elim constructive_indefinite_description => //.
   Qed.
 
   Theorem Choice : ∃ f, domain f = X ∧ range f = ⋃ X  ∧ ∀ x, x ∈ X → f x ∈ x.
   Proof.
-    destruct (function_construction X (⋃ X) choice_function)
-      as [f [H0 [H1 H2]]].
-    { intros a H0.
-      rewrite Union_classification.
-      eauto using choice_function_classification. }
+    move: (function_construction X (⋃ X) choice_function) => H0.
+    elim H0 => [f [H1 [H2 H3]] | x H1]; rewrite ? Union_classification;
+                 eauto using choice_function_classification.
     exists f.
-    repeat split; auto.
-    intros x H3.
-    rewrite H2; auto using choice_function_classification.
+    (repeat split; auto) => x H4.
+    rewrite H3; auto using choice_function_classification.
   Qed.
 
 End Choice.
@@ -2089,7 +2012,8 @@ Proof.
   apply H0 in H1 as H4.
   unfold eval in H4 at 2.
   unfold eval_rel in H4.
-  destruct excluded_middle_informative; try tauto.
+  repeat destruct excluded_middle_informative; simpl in H4;
+    try (now contradiction (func_hyp g)); try now contradiction H3.
   contradiction (outsider_not_in (range g)).
   rewrite <-H4, <-H.
   now apply function_maps_domain_to_range.
