@@ -556,7 +556,7 @@ Qed.
 
 Theorem Union_intersection : ∀ A B C, A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C).
 Proof.
-  intros A B C.
+  move=> A B C.
   apply /Extensionality => z.
   repeat rewrite ? Pairwise_intersection_classification
          ? Pairwise_union_classification; tauto.
@@ -1095,18 +1095,28 @@ End Choice.
 
 Theorem function_empty_domain : ∀ f, graph f = ∅ ↔ domain f = ∅.
 Proof.
-  intros f.
-  split; intros H; apply NNPP; contradict H.
-  - rewrite -> Nonempty_classification in *.
-    destruct H as [x H].
-    destruct (func_hyp f) as [H0 H1].
-    apply H1 in H as [y [H2 H3]].
-    exists (x, y); tauto.
-  - apply Nonempty_classification in H as [x H].
-    destruct (func_hyp f) as [H0 H1].
-    apply H0, Product_classification in H as [a [b H]].
-    rewrite Nonempty_classification.
-    exists a; tauto.
+  (split => H; apply NNPP; contradict H; move: (func_hyp f) H => [H H0]
+   => /Nonempty_classification => [[x]]; rewrite Nonempty_classification)
+  => [/H0 [y [[_ H1] _]] | /H /Product_classification [a [b [H1 _]]]]; eauto.
+Qed.
+
+Theorem Injective_classification : ∀ f, injective f ↔ ∀ x y,
+        x ∈ domain f → y ∈ domain f → f x = f y → x = y.
+Proof.
+  split => [H x y H0 H1 H2 | H [x X] [y Y] H0];
+             [ rewrite (reify H0) (reify H1) | inversion H0 ];
+             auto using f_equal, set_proj_injective.
+Qed.
+
+Theorem Surjective_classification : ∀ f, surjective f ↔ ∀ y,
+        y ∈ range f → ∃ x, x ∈ domain f ∧ f x = y.
+Proof.
+  split => [H y H0 | H [y Y]].
+  - elim (H (exist H0 : elts (range f))) => [[x X] H1].
+    inversion H1; eauto.
+  - elim (H _ Y) => [x [H0]].
+    exists (exist H0 : elts (domain f)).
+    now apply set_proj_injective.
 Qed.
 
 Section inverse_functions.
@@ -1119,76 +1129,51 @@ Section inverse_functions.
 
   Definition partial_left_inverse : set → set.
   Proof.
-    intros b.
-    rewrite -> function_empty_domain in H.
-    apply Nonempty_classification in H.
-    destruct (constructive_indefinite_description H) as [x Hx].
-    destruct (excluded_middle_informative (∃ a, a ∈ A ∧ f a = b)) as [e | n].
-    - destruct (constructive_indefinite_description e) as [a e0].
-      exact a.
-    - exact x.
+    move: H => /[swap] b /function_empty_domain /Nonempty_classification
+                /constructive_indefinite_description [x H0].
+    elim (excluded_middle_informative (∃ a, a ∈ A ∧ f a = b)) =>
+    [/constructive_indefinite_description [a H1] | H1]; eauto.
   Defined.
 
   Theorem left_inverse_iff_injective :
     injective f ↔ ∃ g, domain g = range f ∧ range g = domain f ∧
                        ∀ x, x ∈ domain f → g (f x) = x.
   Proof.
-    split; intros H0.
-    - destruct (function_construction B A partial_left_inverse) as [g Hg].
-      { intros a H1.
-        unfold partial_left_inverse.
-        repeat destruct excluded_middle_informative;
-          repeat destruct constructive_indefinite_description; intuition. }
-      exists g; intuition.
-      pose proof H2 as H5.
-      apply function_maps_domain_to_range, H4 in H5.
-      unfold partial_left_inverse in H5.
-      repeat destruct excluded_middle_informative;
-        repeat destruct constructive_indefinite_description.
-      + destruct a as [H6 H7].
-        rewrite H5.
-        assert ((exist H6) = (exist H2)) by now apply H0, set_proj_injective.
-        now inversion H8.
-      + contradiction n.
-        now (exists x).
-    - destruct H0 as [g [H0 [H1 H2]]].
-      intros x1 x2 H3.
-      unfold lambdaify in H3.
-      destruct x1, x2.
-      replace x with x0; try apply set_proj_injective; simpl;
-        inversion H3 as [H4]; now rewrite <-(H2 _ i), <-(H2 _ i0), H4.
+    split => [/Injective_classification H0 | [g [H0 [H1 H2]]]].
+    - elim (function_construction B A partial_left_inverse) =>
+      [g [H1 [H2 H3]] | a H1].
+      + exists g.
+        (repeat split; auto) => x /[dup] H4 /function_maps_domain_to_range /H3.
+        rewrite /partial_left_inverse.
+        elim excluded_middle_informative => [H5 | H5].
+        * (repeat elim constructive_indefinite_description => ? /= //)
+          => [[H6]] /H0 -> //.
+        * contradict H5; eauto.
+      + rewrite /partial_left_inverse; elim excluded_middle_informative =>
+        x; repeat elim constructive_indefinite_description => /= //; tauto.
+    - apply Injective_classification => x y /H2 /[swap] /H2 {2}<- {2}<- -> //.
   Qed.
 
   Theorem right_inverse_iff_surjective_nonempty :
     surjective f ↔ ∃ g, domain g = range f ∧ range g = domain f ∧
                         ∀ y, y ∈ range f → f (g y) = y.
   Proof.
-    split; intros H0.
-    - destruct (function_construction B A partial_left_inverse) as [g Hg].
-      { intros a H1.
-        unfold partial_left_inverse.
-        repeat destruct excluded_middle_informative;
-          repeat destruct constructive_indefinite_description; intuition. }
-      exists g; intuition.
-      pose proof H2 as H5.
-      apply H4 in H5.
-      destruct (H0 (exist H2)) as [[x H6] H7].
-      simpl in *.
-      unfold partial_left_inverse in H5.
-      repeat destruct excluded_middle_informative;
-        repeat destruct constructive_indefinite_description; subst; try tauto.
-      contradiction n.
-      exists x; split; auto.
-      now inversion H7.
-    - destruct H0 as [g [H0 [H1 H2]]].
-      intros [b H3].
-      assert (g b ∈ A).
-      { rewrite <-H1.
-        apply function_maps_domain_to_range.
-        congruence. }
-      exists (exist H4 : elts A).
-      simpl.
-      now apply set_proj_injective, H2.
+    split => [/Surjective_classification H0 | [g [H0 [H1 H2]]]].
+    - elim (function_construction B A partial_left_inverse) =>
+      [g [H1 [H2 H3]] | g].
+      + exists g.
+        repeat split; auto => y /[dup] /H3 /[swap] /H0 [x [H4 H5]].
+        rewrite /partial_left_inverse.
+        elim excluded_middle_informative => [H6 | H6].
+        * (repeat elim constructive_indefinite_description => ? /= //) =>
+          [[H7]] {3}<- _ -> //.
+        * contradict H6; eauto.
+      + rewrite /partial_left_inverse; elim excluded_middle_informative =>
+        H1 H2; repeat elim constructive_indefinite_description => /=; tauto.
+    - apply Surjective_classification => y /[dup] /[swap] /H2 {2}<- H3.
+      eapply ex_intro, conj; last by reflexivity.
+      move: function_maps_domain_to_range H0 H1 H3 =>
+      /(_ g y) /[swap] -> /[swap] -> //.
   Qed.
 
 End inverse_functions.
@@ -1197,59 +1182,19 @@ Theorem right_inverse_iff_surjective :
   ∀ f, surjective f ↔ ∃ g, domain g = range f ∧ range g = domain f ∧
                            ∀ y, y ∈ range f → f (g y) = y.
 Proof.
-  intros f.
-  destruct (classic (graph f ≠ ∅)) as [H | H];
+  move=> f.
+  elim (classic (graph f ≠ ∅)) =>
+  [H | /NNPP /function_empty_domain /[dup] H ->];
     eauto using right_inverse_iff_surjective_nonempty.
-  apply NNPP in H.
-  split; intros H0; apply function_empty_domain in H.
-  - assert (range f = ∅).
-    { apply NNPP.
-      intros H1.
-      apply Nonempty_classification in H1 as [y H1].
-      destruct (H0 (exist H1)) as [[x H2] H3].
-      contradiction (Empty_set_classification x).
-      congruence. }
-    destruct (function_construction (range f) (domain f) (λ x, x)) as [g Hg].
-    { intros a H2.
-      contradiction (Empty_set_classification a).
-      congruence. }
-    exists g; split; intuition.
-    contradiction (Empty_set_classification y).
-    congruence.
-  - destruct H0 as [g [H0 [H1 H2]]].
-    intros [y H3].
-    exfalso.
-    contradiction (Empty_set_classification (g y)).
-    rewrite <-H, <-H1.
-    apply function_maps_domain_to_range.
-    congruence.
-Qed.
-
-Theorem Injective_classification : ∀ f, injective f ↔ ∀ x y,
-        x ∈ domain f → y ∈ domain f → f x = f y → x = y.
-Proof.
-  split; intros H.
-  - intros x y H0 H1 H2.
-    replace x with ((exist H0 : elts (domain f)) : set) by auto.
-    replace y with ((exist H1 : elts (domain f)) : set) by auto.
-    auto using f_equal, set_proj_injective.
-  - intros [x X] [y Y] H0.
-    inversion H0.
-    auto using set_proj_injective.
-Qed.
-
-Theorem Surjective_classification : ∀ f, surjective f ↔ ∀ y,
-        y ∈ range f → ∃ x, x ∈ domain f ∧ f x = y.
-Proof.
-  split; intros H.
-  - intros y H0.
-    destruct (H (exist H0 : elts (range f))) as [[x X] H1].
-    exists x.
-    now inversion H1.
-  - intros [y Y].
-    pose proof (H _ Y) as [x [H0 H1]].
-    exists (exist H0 : elts (domain f)).
-    now apply set_proj_injective.
+  split => [/Surjective_classification H0 | [g [H0 [H1 H2]]] [y H3]].
+  - suff -> : range f = ∅.
+    + elim (function_construction ∅ ∅ id) => [g [H1 [H2 H3]] | x] //.
+      eapply ex_intro, conj, conj; eauto => y /Empty_set_classification //.
+    + apply NNPP => /Nonempty_classification [y /H0 [x [H1 H2]]].
+      move: H H1 -> => /Empty_set_classification //.
+  - contradiction (Empty_set_classification (g y)).
+    move: function_maps_domain_to_range H0 H1 H3 =>
+    /(_ g y) /[swap] -> /[swap] -> //.
 Qed.
 
 Definition image (f : function) := {y in range f | ∃ x, x ∈ domain f ∧ f x = y}.
@@ -1259,157 +1204,122 @@ Definition push_forward (f : function) S :=
 
 Theorem image_subset_range : ∀ f, image f ⊂ range f.
 Proof.
-  intros f x H.
-  now apply Specify_classification in H as [H H0].
+  move=> f x /Specify_classification [H H0] //.
 Qed.
 
 Theorem push_forward_image: ∀ f S, push_forward f S ⊂ image f.
 Proof.
-  intros f S x H.
-  apply Specify_classification in H as [H [z [H0 H1]]].
-  apply Specify_classification.
-  split; auto.
-  exists z.
-  apply Pairwise_intersection_classification in H0 as [H0 H2].
-  split; auto.
+  move=> f S x /Specify_classification
+           [H [z [/Pairwise_intersection_classification [H0 H1] H2]]].
+  eapply Specify_classification, conj, ex_intro; repeat split; eauto.
 Qed.
 
 Theorem push_forward_domain : ∀ f, push_forward f (domain f) = image f.
 Proof.
-  intros f.
-  apply Subset_equality; auto using push_forward_image.
-  intros x H.
-  apply Specify_classification in H.
-  apply Specify_classification.
-  now rewrite Intersection_idempotent.
+  move=> f.
+  apply Subset_equality; auto using push_forward_image => x.
+  rewrite ? Specify_classification Intersection_idempotent //.
 Qed.
 
 Theorem function_maps_domain_to_image :
   ∀ f x, x ∈ domain f → f x ∈ image f.
 Proof.
-  intros f x H.
+  move=> f x H.
   apply Specify_classification.
   eauto using function_maps_domain_to_range.
 Qed.
 
 Theorem surjective_image : ∀ f, surjective f → range f = image f.
 Proof.
-  intros f H.
-  apply Extensionality.
-  split; intros H0.
-  - apply Specify_classification.
-    rewrite -> Surjective_classification in H.
-    split; auto.
-  - now apply Specify_classification in H0.
+  move=> f /Surjective_classification H.
+  apply Extensionality => z.
+  split => [H0 | /Specify_classification [H0 H1]] //.
+  apply Specify_classification, conj; auto.
 Qed.
 
 Definition empty_function : function.
 Proof.
-  assert (∀ a : set, a ∈ ∅ → (λ x : set, x) a ∈ ∅) as H by auto.
-  apply function_construction in H.
-  destruct (constructive_indefinite_description H) as [f i].
+  (have: ∀ a : set, a ∈ ∅ → a ∈ ∅ by auto) =>
+  /function_construction /constructive_indefinite_description => [[f H]].
   exact f.
 Defined.
 
 Definition inverse : function → function.
 Proof.
-  intros f.
-  destruct (excluded_middle_informative (bijective f)).
-  - destruct b as [H H0].
-    apply right_inverse_iff_surjective in H0.
-    destruct (constructive_indefinite_description H0) as [g [H1 [H2 H3]]].
-    exact g.
+  move=> f.
+  elim (excluded_middle_informative (bijective f)) =>
+  [[H /right_inverse_iff_surjective /constructive_indefinite_description
+      [g [H0 [H1 H2]]]] | H].
+  - exact g.
   - exact empty_function.
 Defined.
 
 Theorem left_inverse :
   ∀ f, bijective f → ∀ x, x ∈ domain f → inverse f (f x) = x.
 Proof.
-  intros f H x H0.
-  unfold inverse.
-  destruct excluded_middle_informative; try tauto.
-  destruct b, constructive_indefinite_description as [g].
-  repeat destruct a.
-  rewrite -> Injective_classification in i.
-  apply i; auto.
-  - rewrite <-e0.
-    apply function_maps_domain_to_range.
-    rewrite e.
-    now apply function_maps_domain_to_range.
-  - rewrite e1; auto.
-    now apply function_maps_domain_to_range.
+  rewrite /inverse => f H x H0.
+  elim excluded_middle_informative => /= // =>
+  [[/Injective_classification H1 H2]].
+  elim constructive_indefinite_description => [g [H3 [H4 H5]]].
+  move: function_maps_domain_to_range (H0) (H0) H4 H1 =>
+  /[apply] H1 /[swap] <- H4 H6.
+  apply /H6; auto.
+  move: function_maps_domain_to_range H3 H1 => /(_ g) /[swap] -> /[apply] //.
+Qed.
+
+Theorem inverse_domain : ∀ f, bijective f → domain (inverse f) = range f.
+Proof.
+  rewrite /inverse => f H.
+  elim excluded_middle_informative => /= // => [[H1 H2]].
+  elim constructive_indefinite_description => [g [H3 [H4 H5]]] //.
 Qed.
 
 Theorem right_inverse :
   ∀ f, bijective f → ∀ x, x ∈ domain (inverse f) → f (inverse f x) = x.
 Proof.
-  intros f H x H0.
-  unfold inverse in *.
-  destruct excluded_middle_informative; try tauto.
-  destruct b, constructive_indefinite_description as [g].
-  repeat destruct a.
-  rewrite e1; auto.
-  congruence.
-Qed.
-
-Theorem inverse_domain : ∀ f, bijective f → domain (inverse f) = range f.
-Proof.
-  intros f H.
-  unfold inverse.
-  destruct excluded_middle_informative; try tauto.
-  destruct b, constructive_indefinite_description as [g].
-  now repeat destruct a.
+  rewrite {2}/inverse => f H x H0.
+  elim excluded_middle_informative => /= // => [[H1 H2]].
+  elim constructive_indefinite_description => [g [H3 [H4 H5]]].
+  move: inverse_domain H0 H5 -> => // /[swap] /[apply] //.
 Qed.
 
 Theorem inverse_range : ∀ f, bijective f → range (inverse f) = domain f.
 Proof.
-  intros f H.
-  unfold inverse.
-  destruct excluded_middle_informative; try tauto.
-  destruct b, constructive_indefinite_description as [g].
-  now repeat destruct a.
+  rewrite /inverse => f H.
+  elim excluded_middle_informative => /= // => [[H1 H2]].
+  elim constructive_indefinite_description => [g [H3 [H4 H5]]] //.
 Qed.
 
 Theorem inverse_shift_right :
   ∀ f, bijective f → ∀ x y,
       x ∈ range f → y ∈ domain f → inverse f x = y ↔ x = f y.
 Proof.
-  intros f H x y H0 H1.
-  split; intros H2.
-  - rewrite <-H2, right_inverse; auto.
-    now rewrite inverse_domain.
-  - rewrite -> H2, left_inverse; auto.
+  split => H2.
+  - rewrite -H2 right_inverse ? inverse_domain //.
+  - rewrite H2 left_inverse //.
 Qed.
 
 Theorem inverse_bijective : ∀ f, bijective f → bijective (inverse f).
 Proof.
-  intros f H.
-  pose proof H as [H0 H1].
-  split.
-  - rewrite -> Injective_classification in *.
-    intros x y H2 H3 H4.
-    rewrite <-(right_inverse f); auto.
-    symmetry.
-    rewrite <-(right_inverse f), H4; auto.
-  - rewrite -> Surjective_classification in *.
-    intros y H2.
-    exists (f y).
-    rewrite -> inverse_domain, left_inverse; repeat split; auto;
-      try (now destruct H); try apply function_maps_domain_to_range;
-        now rewrite <-inverse_range.
+  move=> f /[dup] H [H0 H1].
+  (split; rewrite ? Injective_classification ? Surjective_classification) =>
+  [x y H2 H3 H4 | y H2].
+  - move: H H2 => /[dup] H /[swap] /right_inverse /[apply] <-.
+    move: H4 H3 H -> => /right_inverse /[apply] //.
+  - exists (f y).
+    move: inverse_range inverse_domain H2 function_maps_domain_to_range -> =>
+    // /[swap] /[dup] H2 /[swap] -> // /[swap] /[apply] H3.
+    rewrite left_inverse; repeat split; auto.
 Qed.
 
 Definition composition : function → function → function.
 Proof.
-  intros f g.
-  destruct (excluded_middle_informative (domain f = range g)).
-  - assert (∀ x, x ∈ domain g → (λ x, f (g x)) x ∈ range f) as H.
-    { intros x H.
-      apply function_maps_domain_to_range in H.
-      rewrite <-e in H.
-      now apply function_maps_domain_to_range in H. }
-    apply function_construction in H.
-    destruct (constructive_indefinite_description H) as [h i].
+  move=> f g.
+  elim (excluded_middle_informative (domain f = range g)) => [H | H].
+  - have: ∀ x, x ∈ domain g → (λ x, f (g x)) x ∈ range f by
+        move: H => /[swap] x /[swap] /function_maps_domain_to_range /[swap]
+                   <- /function_maps_domain_to_range //.
+    move /function_construction /constructive_indefinite_description => [h H0].
     exact h.
   - exact empty_function.
 Defined.
@@ -1421,41 +1331,32 @@ Theorem Composition_classification :
          domain (f ∘ g) = domain g ∧ range (f ∘ g) = range f ∧
          ∀ x, x ∈ domain g → (f ∘ g) x = f (g x).
 Proof.
-  intros f g H.
-  unfold composition.
-  repeat destruct excluded_middle_informative;
-    repeat destruct constructive_indefinite_description; intuition.
+  rewrite /composition => f g H.
+  elim excluded_middle_informative => // => {}H.
+  rewrite /ssr_have /=.
+  elim constructive_indefinite_description => //.
 Qed.
 
 Theorem composition_injective : ∀ f g,
     domain f = range g → injective f → injective g → injective (f ∘ g).
 Proof.
-  intros f g H H0 H1 [x X] [y Y] H2.
-  destruct (Composition_classification f g) as [H3 [H4 H5]]; try congruence.
-  apply set_proj_injective.
-  simpl in *.
-  inversion H2.
-  rewrite -> Injective_classification in H1, H0.
-  apply H1; try congruence.
-  apply H0; try (rewrite H; apply function_maps_domain_to_range;
-                 now rewrite <-H3).
-  rewrite <-? H5; congruence.
+  move=> f g /[dup] H /Composition_classification [H0 [H1 H2]]
+           /Injective_classification H3 /Injective_classification H4
+           [x X] [y Y] H5.
+  inversion H5.
+  apply /set_proj_injective /H4 =>
+  /=; try apply H3; rewrite ? H -? H2;
+    try apply /function_maps_domain_to_range; congruence.
 Qed.
 
 Theorem composition_surjective : ∀ f g,
     domain f = range g → surjective f → surjective g → surjective (f ∘ g).
 Proof.
-  intros f g H H0 H1 [y Y].
-  destruct (Composition_classification f g) as [H2 [H3 H4]]; try congruence.
-  rewrite -> Surjective_classification in H0, H1.
-  destruct (H0 y) as [z [H5 H6]]; try now rewrite <-H3.
-  rewrite H in H5.
-  destruct (H1 z) as [x [H7 H8]]; auto.
-  rewrite <-H2 in H7.
-  exists (exist H7 : elts (domain (f ∘ g))).
-  apply set_proj_injective.
-  simpl.
-  rewrite H4; congruence.
+  move=> f g /[dup] H /Composition_classification [H0 [H1 H2]]
+           /Surjective_classification H3 /Surjective_classification H4.
+  rewrite Surjective_classification => y H5.
+  move: H1 H H5 -> => /[swap] /H3 [z] /[swap] -> [/H4] [x].
+  move: H0 H2 <- => /[swap] [[H <-]] <-; eauto.
 Qed.
 
 Theorem Graph_classification :

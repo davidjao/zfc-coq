@@ -776,7 +776,7 @@ Proof.
     apply Specify_classification.
     split; rewrite -> ? Empty_product_left; auto using Empty_set_in_powerset.
     exists empty_function.
-    unfold empty_function.
+    unfold empty_function, ssr_have.
     destruct constructive_indefinite_description; repeat split; intuition;
       rewrite ? Injective_classification ? Surjective_classification; intros.
     + apply NNPP.
@@ -1132,7 +1132,8 @@ Section Combinations_orbit_stabilizer.
     destruct excluded_middle_informative.
     2: { contradict n0.
          apply functionify_bijective. }
-    destruct b, constructive_indefinite_description as [f2_inv].
+    destruct b; simpl.
+    destruct constructive_indefinite_description as [f2_inv].
     destruct a as [H1 [H2 H3]].
     destruct f1 as [f1' H4].
     unfold functionify.
@@ -1205,7 +1206,8 @@ Section Combinations_orbit_stabilizer.
     destruct excluded_middle_informative.
     2: { contradict n0.
          apply functionify_bijective. }
-    destruct b, constructive_indefinite_description as [f2_inv].
+    destruct b; simpl.
+    destruct constructive_indefinite_description as [f2_inv].
     destruct a as [H1 [H2 H3]].
     destruct f1 as [f1' H4].
     unfold functionify.
@@ -1727,7 +1729,7 @@ Section Combinations_orbit_stabilizer.
              auto using combinations_right_helper_bijective. }
         subst.
         unfold inverse in H3.
-        destruct excluded_middle_informative.
+        destruct excluded_middle_informative; simpl in *.
         2: { contradict n0.
              auto using combinations_right_helper_bijective. }
         destruct b, constructive_indefinite_description as [crh_inv].
@@ -1757,7 +1759,8 @@ Section Combinations_orbit_stabilizer.
         destruct excluded_middle_informative.
         2: { contradict n0.
              auto using combinations_right_helper_bijective. }
-        destruct b, constructive_indefinite_description as [crh_inv].
+        destruct b; simpl.
+        destruct constructive_indefinite_description as [crh_inv].
         repeat destruct a.
         rewrite -> inverse_range, inverse_domain, @sets.functionify_domain,
         @sets.functionify_range in *;
@@ -1815,8 +1818,8 @@ Section Combinations_orbit_stabilizer.
       destruct a2 as [H10 [H11 [H12 H13]]].
       destruct a4 as [H14 [H15 [H16 H17]]].
       unfold inverse.
-      destruct excluded_middle_informative; try tauto.
-      destruct b.
+      destruct excluded_middle_informative; simpl; try tauto.
+      destruct b; simpl.
       destruct constructive_indefinite_description as [cr_inv].
       repeat destruct a.
       pose proof H9 as Z.
@@ -1842,7 +1845,8 @@ Section Combinations_orbit_stabilizer.
       unfold inverse in Z |-*.
       destruct excluded_middle_informative.
       2: { exfalso; auto using combinations_right_helper_bijective. }
-      destruct b, constructive_indefinite_description as [crh_inv].
+      destruct b; simpl in *.
+      destruct constructive_indefinite_description as [crh_inv].
       repeat destruct a.
       rewrite -> ? inverse_domain, ? inverse_range, @sets.functionify_domain,
       @sets.functionify_range in *;
@@ -1877,7 +1881,8 @@ Section Combinations_orbit_stabilizer.
       unfold inverse.
       destruct excluded_middle_informative.
       2: { exfalso; auto using cii_bijective. }
-      destruct b, constructive_indefinite_description as [cii].
+      destruct b; simpl.
+      destruct constructive_indefinite_description as [cii].
       repeat destruct a.
       rewrite <-(e9 (x1'' (crh_inv (cr_inv z)))) at 2.
       2: { rewrite -> cii_range.
@@ -1917,8 +1922,8 @@ Section Combinations_orbit_stabilizer.
       destruct a2 as [H10 [H11 [H12 H13]]].
       destruct a4 as [H14 [H15 [H16 H17]]].
       unfold inverse.
-      destruct excluded_middle_informative; try tauto.
-      destruct b.
+      destruct excluded_middle_informative; simpl; try tauto.
+      destruct b; simpl.
       destruct constructive_indefinite_description as [cr_inv].
       repeat destruct a.
       pose proof H9 as Z.
@@ -1942,9 +1947,10 @@ Section Combinations_orbit_stabilizer.
       @sets.functionify_range in *;
         auto using combinations_right_helper_bijective.
       unfold inverse in Z |-*.
-      destruct excluded_middle_informative.
+      destruct excluded_middle_informative; simpl in *.
       2: { exfalso; auto using combinations_right_helper_bijective. }
-      destruct b, constructive_indefinite_description as [crh_inv].
+      destruct b; simpl.
+      destruct constructive_indefinite_description as [crh_inv].
       repeat destruct a.
       rewrite -> ? inverse_domain, ? inverse_range, @sets.functionify_domain,
       @sets.functionify_range in *;
@@ -1981,7 +1987,8 @@ Section Combinations_orbit_stabilizer.
       unfold inverse.
       destruct excluded_middle_informative.
       2: { exfalso; auto using cii_bijective. }
-      destruct b, constructive_indefinite_description as [cii].
+      destruct b; simpl.
+      destruct constructive_indefinite_description as [cii].
       repeat destruct a.
       rewrite <-(e9 (x2'' (crh_inv (cr_inv z)))) at 2.
       2: { rewrite -> cii_range.
