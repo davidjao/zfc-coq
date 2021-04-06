@@ -2,87 +2,57 @@ Require Export sets Ring.
 
 Theorem Infinity_ω: ∃ X, ∅ ∈ X ∧ Inductive X.
 Proof.
-  destruct Infinity as [X [[e [H H0]] H1]].
+  move: Infinity => [X [[e [H H0]] H1]].
   exists X.
-  unfold Inductive, succ.
-  split.
-  - replace ∅ with e; auto.
-    apply Extensionality.
-    split; intros H2; firstorder.
-    contradiction (Empty_set_classification z).
-  - intros y H2.
-    apply H1 in H2 as [Y [H2 H3]].
-    replace (y ∪ {y,y}) with Y; auto.
-    apply Extensionality.
-    split; rewrite Pairwise_union_classification Singleton_classification;
-      apply H3.
+  rewrite /Inductive /succ.
+  split => [ | y /H1 [Y [H2 H3]]].
+  - suff -> : ∅ = e => //.
+    apply Subset_equality_iff;
+      intuition eauto using Empty_set_is_subset => x /H //.
+  - suff -> : y ∪ {y,y} = Y => //.
+    apply Extensionality => z.
+    rewrite H3 Pairwise_union_classification Singleton_classification //.
 Qed.
 
 Definition ω : set.
 Proof.
-  destruct (constructive_indefinite_description Infinity_ω) as [X].
+  elim (constructive_indefinite_description Infinity_ω) => [X H].
   exact (⋂ {x in P X | ∅ ∈ x ∧ Inductive x}).
 Defined.
 
 Theorem PA1_ω : ∅ ∈ ω.
 Proof.
-  unfold empty_set, ω, intersection, union, specify.
-  repeat (destruct constructive_indefinite_description => /=).
-  destruct a as [H H0].
-  replace x with ∅.
-  - apply i2.
-    split.
-    + apply i1.
-      split.
-      * eapply i0.
-        split; try exact H; apply i; eauto using Set_in_powerset.
-      * exists x0.
-        split; auto; apply i; eauto using Set_in_powerset.
-    + intros z H1.
-      now apply i in H1.
-  - apply Extensionality; split; intros H1.
-    + now apply Empty_set_classification in H1.
-    + now apply n in H1.
+  rewrite /ω.
+  elim constructive_indefinite_description => X [H H0] /=.
+  rewrite Intersection_classification ? Specify_classification
+          ? Union_classification => [_ /Specify_classification [_ []] | ] //.
+  eapply Nonempty_classification, ex_intro, Specify_classification.
+  eauto using Set_in_powerset.
 Qed.
 
 Theorem PA2_ω : Inductive ω.
 Proof.
-  unfold ω, intersection, union, specify.
-  repeat (destruct constructive_indefinite_description => /=).
-  intros y H.
-  apply i2 in H as [H H0].
-  apply i2.
-  split.
-  - apply i1 in H as [H1 [z [H2 H3]]].
-    pose proof H3 as H4.
-    apply i in H4 as [H4 [H5 H6]].
-    apply i1.
-    split; eauto.
-  - intros z H1.
-    pose proof H1 as H2.
-    apply H0 in H1.
-    apply i in H2 as [H2 [H3 H4]].
-    eauto.
+  rewrite /ω.
+  elim constructive_indefinite_description => /= => x [H H0] y.
+  rewrite ? Intersection_classification;
+    try eapply Nonempty_classification, ex_intro, Specify_classification;
+    eauto using Set_in_powerset.
+  move=> H1 X /[dup] /H1 /[swap] /Specify_classification [H2] [H3] /[apply] //.
 Qed.
 
 Theorem ω_is_minimal : ∀ s, s ⊂ ω → ∅ ∈ s → Inductive s → ω ⊂ s.
 Proof.
-  intros s H H0 H1.
-  unfold ω, specify in *.
-  repeat destruct constructive_indefinite_description.
-  assert (s ∈ x0) as H2.
-  { apply i.
-    split; auto.
-    apply Powerset_classification.
-    intros z H2.
-    assert (x ∈ x0) as H3.
-    { apply i.
-      split; auto; apply Powerset_classification, Set_is_subset. }
-    eapply Intersection_classification;
-      try rewrite Nonempty_classification; eauto. }
-  intros z H4.
-  eapply Intersection_classification; eauto;
-    try rewrite Nonempty_classification; eauto.
+  rewrite /ω => s.
+  elim constructive_indefinite_description => /= =>
+  X [H H0] H1 /[dup] H2 /H1 H3 H4 x /Intersection_classification H5.
+  apply H5, Specify_classification, conj; auto.
+  - eapply Nonempty_classification, ex_intro, Specify_classification;
+      eauto using Set_in_powerset.
+  - apply Powerset_classification => y /H1 /Intersection_classification H6.
+    apply H6.
+    + eapply Nonempty_classification, ex_intro, Specify_classification;
+        eauto using Set_in_powerset.
+    + apply Specify_classification; eauto using Set_in_powerset.
 Qed.
 
 Theorem PA3_ω : ∀ s, s ⊂ ω → ∅ ∈ s → Inductive s → s = ω.
@@ -92,173 +62,132 @@ Qed.
 
 Theorem PA4_ω : ∀ n, n ∈ ω → succ n ≠ ∅.
 Proof.
-  intros n H.
-  apply Nonempty_classification.
-  exists n.
-  now apply Pairwise_union_classification,
-  or_intror, Pairing_classification, or_intror.
+  move=> n H.
+  apply /Nonempty_classification /ex_intro /in_succ.
 Qed.
 
 Theorem Induction_ω : ∀ P : set → Prop,
     (∀ n, n ∉ ω → P n) → P ∅ → (∀ m, m ∈ ω → P m → P (succ m)) → ∀ n, P n.
 Proof.
-  intros P H H0 H1 n.
-  destruct (classic (n ∈ ω)); auto.
-  replace ω with {x in ω | P x} in H2;
-    try (now rewrite -> Specify_classification in H2); clear n H H2.
-  apply PA3_ω; try intros y H; try rewrite -> Specify_classification in *;
-    intuition; auto using PA1_ω, PA2_ω.
+  move=> P H H0 H1 n.
+  elim (classic (n ∈ ω)); auto.
+  suff <- : {x in ω | P x} = ω => [/Specify_classification [] | ] //.
+  apply /PA3_ω =>
+  [y /Specify_classification [] | | y /Specify_classification]
+    //; rewrite Specify_classification; intuition auto using PA1_ω, PA2_ω.
 Qed.
 
 Theorem elements_of_naturals_are_naturals : ∀ n m, n ∈ ω → m ∈ n → m ∈ ω.
 Proof.
-  induction n using Induction_ω; intuition.
-  - exfalso; eapply Empty_set_classification; eauto.
-  - apply Pairwise_union_classification in H1 as [H1 | H1]; auto.
-    apply Singleton_classification in H1; congruence.
+  elim/Induction_ω => [* | _ _ /Empty_set_classification |
+                       ? H H0 ? ? /Pairwise_union_classification
+                         [ /(H0 _ H) | /Singleton_classification ->] ] //.
 Qed.
 
 Lemma pigeonhole_precursor : ∀ n m, n ∈ ω → m ∈ n → ¬ n ⊂ m.
 Proof.
-  induction n using Induction_ω; intuition.
-  - eapply Empty_set_classification; eauto.
-  - apply Pairwise_union_classification in H1 as [H1 | H1].
-    + eauto using Subset_transitive, subset_succ.
-    + apply Singleton_classification in H1.
-      subst.
-      eapply IHn; eauto using Set_is_subset, in_succ.
+  elim /Induction_ω =>
+  [* | _ _ /Empty_set_classification |
+   n H H0 m ? /Pairwise_union_classification
+     [/(H0 _ H) | /Singleton_classification ->]]
+    //; intuition eauto using Subset_transitive,
+  subset_succ, Set_is_subset, in_succ.
 Qed.
 
 Theorem no_quines_ω : ∀ n, n ∈ ω → ¬ n ∈ n.
 Proof.
-  intros n H H0.
-  apply pigeonhole_precursor in H0; auto using Set_is_subset.
+  move=> n /[swap] /pigeonhole_precursor /[apply].
+  eauto using Set_is_subset.
 Qed.
 
 Lemma elements_of_naturals_are_subsets : ∀ n m, n ∈ ω → m ∈ n → m ⊂ n.
 Proof.
-  induction n using Induction_ω; intuition.
-  - exfalso; eapply Empty_set_classification; eauto.
-  - apply Pairwise_union_classification in H1 as [H1 | H1]; intros z H3;
-      eapply Pairwise_union_classification, or_introl.
-    + eapply IHn; eauto.
-    + apply Singleton_classification in H1.
-      congruence.
+  elim/Induction_ω =>
+  [* | _ _ /Empty_set_classification |
+   n H H0 m H1 /Pairwise_union_classification
+     [/(H0 _ H) | /Singleton_classification -> ]]
+    //; eauto using Subset_transitive, subset_succ.
 Qed.
 
 Lemma ω_is_transitive : ∀ x y z,
     x ∈ ω → y ∈ ω → z ∈ ω → x ∈ y → y ∈ z → x ∈ z.
 Proof.
-  intros x y z H H0 H1 H2 H3.
-  apply elements_of_naturals_are_subsets in H3; auto.
+  move=> x y z H H0 /[swap] H1 /[swap] /elements_of_naturals_are_subsets
+           /(_ _ H1) /[apply] //.
 Qed.
 
 Lemma subsets_of_naturals_are_elements :
   ∀ n m, n ∈ ω → m ∈ ω → m ⊂ n → m ≠ n → m ∈ n.
 Proof.
-  induction n using Induction_ω; intuition.
-  - apply Nonempty_classification in H2 as [x H2].
-    apply H1 in H2.
-    contradiction (Empty_set_classification x).
-  - destruct (classic (m = n)) as [H4 | H4]; subst; auto using in_succ.
-    eapply elements_of_naturals_are_subsets; auto.
-    + now apply Pairwise_union_classification, or_intror,
-      Singleton_classification.
-    + apply IHn; auto.
-      intros x H5.
-      pose proof H2 _ H5 as H6.
-      apply Pairwise_union_classification in H6 as [H6 | H6]; auto.
-      apply Singleton_classification in H6.
-      subst.
-      contradict H3.
-      apply Subset_equality_iff.
-      split; auto.
-      intros x H6.
-      apply Pairwise_union_classification in H6 as [H6 | H6].
-      * eapply elements_of_naturals_are_subsets; eauto.
-      * apply Singleton_classification in H6.
-        congruence.
+  elim/Induction_ω => [* | m H H0 /[swap] /Nonempty_classification [x] /[swap]
+                             /[apply] /Empty_set_classification |
+                       n H H0 m] //; elim (classic (m = n)) =>
+  [-> | H1 H2 H3 H4 H5]; try apply subset_succ, H0; eauto using in_succ =>
+  x /[dup] /H4 /Pairwise_union_classification
+    [H7 | /Singleton_classification ->] H6 //; contradict H5.
+  apply Subset_equality_iff, conj; auto =>
+  y /Pairwise_union_classification [ | /Singleton_classification ->] //.
+  move: H6 H3 => /elements_of_naturals_are_subsets /[apply] /[apply] //.
 Qed.
 
 Lemma ω_trichotomy : ∀ n m, n ∈ ω → m ∈ ω → m ⊂ n ∨ n ⊂ m.
 Proof.
-  intros n m H H0.
-  induction n using Induction_ω; intuition;
-    eauto using Empty_set_is_subset, Subset_transitive, subset_succ.
-  destruct (classic (n = m)); [ left | right ]; intros x H4; subst.
-  - now apply subset_succ.
-  - apply subsets_of_naturals_are_elements in H2; auto.
-    apply Pairwise_union_classification in H4 as [H4 | H4]; auto.
-    apply Singleton_classification in H4.
-    congruence.
+  elim/Induction_ω =>
+  [ | | n ? H m ? /[dup] ? /H ] //; intuition eauto using Empty_set_is_subset,
+  Subset_transitive, subset_succ.
+  elim (classic (n = m)) => [-> | /[dup] ? /subsets_of_naturals_are_elements];
+                              intuition eauto using subset_succ.
+  right => x /Pairwise_union_classification [ | /Singleton_classification ->];
+             eauto using ω_is_transitive.
 Qed.
 
 Lemma ω_irreflexive : ∀ n m, n ∈ ω → m ∈ ω → ¬ (n ∈ m ∧ m ∈ n).
 Proof.
-  intros n m H H0 [H1 H2].
-  apply elements_of_naturals_are_subsets in H1; auto.
-  eapply pigeonhole_precursor; eauto using Set_is_subset.
+  move=> n m H H0 [/(elements_of_naturals_are_subsets _ _ H0) H1 H2].
+  apply /pigeonhole_precursor; eauto using Set_is_subset.
 Qed.
 
 Theorem union_succ : ∀ n, n ∈ ω → ⋃ succ n = n.
 Proof.
-  intros n H.
-  unfold succ.
-  apply Extensionality.
-  split; intros H0; rewrite -> Union_classification in *; eauto using in_succ.
-  destruct H0 as [x [H0 H1]].
-  rewrite -> Pairwise_union_classification, Singleton_classification in H0.
-  destruct H0; try congruence.
-  apply (ω_is_transitive _ x); eauto using elements_of_naturals_are_naturals.
+  rewrite /succ => n H.
+  apply Extensionality => z.
+  split; rewrite Union_classification; eauto using in_succ =>
+  [[x [/Pairwise_union_classification [ | /Singleton_classification ->]]]] //.
+  intuition eauto using ω_is_transitive, elements_of_naturals_are_naturals.
 Qed.
 
 Theorem union_ω : ∀ {n}, n ∈ ω → ⋃ n ∈ ω.
 Proof.
-  induction n using Induction_ω; rewrite -> ? Empty_union, ? union_succ; tauto.
+  elim/Induction_ω => [ | | m H]; rewrite ? Empty_union ? union_succ //.
 Qed.
 
 Theorem PA5_ω : ∀ n m, n ∈ ω → m ∈ ω → succ n = succ m → n = m.
 Proof.
-  intros n m H H0 H1.
-  now rewrite <-union_succ, <-H1, union_succ.
+  move=> n m H H0 H1.
+  rewrite -(union_succ m) // -(union_succ n) // H1 //.
 Qed.
 
 Theorem ω_WOP : ∀ X, X ≠ ∅ → X ⊂ ω → ∃ x, x ∈ X ∧ ∀ y, y ∈ X → x ⊂ y.
 Proof.
-  intros X H H0.
-  apply Nonempty_classification in H as [x H].
-  assert (x ∈ ω) as H1 by now apply H0.
-  revert x X H0 H1 H.
-  induction x using Induction_ω; intuition; eauto using Empty_set_is_subset.
-  destruct (IHx (X ∪ {x,x})) as [y [H3 H4]];
-    rewrite ? Pairwise_union_classification ? Singleton_classification; auto.
-  { intros y H3.
-    rewrite -> Pairwise_union_classification, Singleton_classification in H3.
-    destruct H3; subst; auto. }
-  destruct (classic (x ∈ X)) as [H5 | H5].
-  - assert (X ∪ {x,x} = X); auto.
-    apply Extensionality.
-    split; intros H6;
-      rewrite -> Pairwise_union_classification, Singleton_classification in *;
-      try destruct H6; subst; auto.
-  - apply Pairwise_union_classification in H3 as [H3 | H3].
-    + exists y.
-      split; auto.
-      intros y0 H7.
-      now apply H4, Pairwise_union_classification, or_introl.
-    + rewrite -> Singleton_classification in H3.
-      subst.
-      exists (x ∪ {x,x}).
-      split; auto.
-      intros y H3 z H6.
-      assert (x ⊂ y) as H7.
-      { apply H4; auto.
-        now apply Pairwise_union_classification, or_introl. }
-      rewrite -> Pairwise_union_classification, Singleton_classification in H6.
-      destruct H6; subst; auto.
-      apply subsets_of_naturals_are_elements; auto.
-      contradict H5.
+  move=> X /Nonempty_classification [x H] H0.
+  have H1: x ∈ ω by eauto.
+  elim/Induction_ω: x X H0 H H1; intuition eauto using Empty_set_is_subset.
+  elim (classic (m ∈ X)) => [H4 | H4]; auto.
+  (elim (H0 (X ∪ {m,m}));
+   rewrite ? Pairwise_union_classification ? Singleton_classification; auto)
+  => [x [/Pairwise_union_classification
+          [? | /Singleton_classification ->]] H5 | y].
+  - eapply ex_intro, conj; eauto => y ?.
+    apply /H5 /Pairwise_union_classification; eauto.
+  - exists (m ∪ {m,m}).
+    split; auto => y ? z /Pairwise_union_classification
+                     [/(H5 y) | /Singleton_classification ->].
+    + rewrite Pairwise_union_classification Singleton_classification; tauto.
+    + apply subsets_of_naturals_are_elements; eauto.
+      apply /H5 /Pairwise_union_classification /or_introl => //.
       congruence.
+  - rewrite Pairwise_union_classification Singleton_classification
+    => [[/H1 | ->]] //.
 Qed.
 
 Definition 𝐍 := ω.

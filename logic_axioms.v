@@ -8,15 +8,15 @@ Require Export Utf8 IndefiniteDescription FunctionalExtensionality
 Lemma classic : ∀ P, P ∨ ¬ P.
 Proof.
   move=> P.
-  assert (∃ b, b = true ∨ P) as H1; assert (∃ b, b = false ∨ P) as H2; eauto.
-  elim (proj2_sig (constructive_indefinite_description _ H1));
-    elim (proj2_sig (constructive_indefinite_description _ H2)); auto.
+  have H: ∃ b, b = true ∨ P; have H0: ∃ b, b = false ∨ P; eauto.
+  elim (proj2_sig (constructive_indefinite_description _ H));
+    elim (proj2_sig (constructive_indefinite_description _ H0)); auto.
   right => HP.
-  assert ((λ b, b = true ∨ P) = (λ b, b = false ∨ P)) as EB.
+  have EB: (λ b, b = true ∨ P) = (λ b, b = false ∨ P).
   { extensionality x.
     firstorder using propositional_extensionality. }
   destruct EB.
-  now rewrite -> (proof_irrelevance _ H1 H2), H in *.
+  move: H1 H2; rewrite (proof_irrelevance _ H H0) => -> //.
 Qed.
 
 (* Strong law of the excluded middle: We can always construct P or ¬ P. *)

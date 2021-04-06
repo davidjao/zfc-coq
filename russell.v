@@ -10,39 +10,34 @@ Section Russell's_paradox.
   (* Proof of False from Frege's universal comprehension axiom. *)
   Theorem UC_False : False.
   Proof.
-    destruct (Universal_comprehension (λ x, x ∉ x)) as [x H].
-    destruct (H x) as [H0 H1], (classic (x ∈ x)) as [H2 | H2].
-    - contradiction H0.
-    - contradiction (H1 H2).
+    elim (Universal_comprehension (λ x, x ∉ x)) => [x /(_ x)] // [H H0].
+    elim (classic (x ∈ x)) => [/[dup] /H | /[dup] /H0] //.
   Qed.
 
   (* Proof of False from universal set axiom. *)
   Theorem US_False : False.
   Proof.
-    destruct Universal_set as [X H].
-    destruct (classic ({x in X | x ∉ x} ∈ {x in X | x ∉ x})).
-    - apply Specify_classification in H0 as H1.
-      tauto.
-    - pose proof H0 as H1.
-      contradict H1.
-      now apply Specify_classification.
+    move: Universal_set => [X H].
+    elim (classic ({x in X | x ∉ x} ∈ {x in X | x ∉ x})) =>
+    [/[dup] H0 /Specify_classification [H1 H2] | /[dup] H0 H1] //.
+    apply /H1 /Specify_classification => //.
   Qed.
 
   (* Proof that universal comprehension implies universal set. *)
   Theorem UC_implies_US : ∃ x, ∀ y, y ∈ x.
   Proof.
-    destruct (Universal_comprehension (λ x, ∀ y : set, y = y)) as [x H].
-    exists x.
-    intros y.
-    now rewrite H.
+    move: (Universal_comprehension (λ x, ∀ y : set, y = y)) => [x H].
+    exists x => y.
+    apply /H => //.
   Qed.
 
   (* Proof that universal set implies universal comprehension. *)
   Theorem US_implies_UC : ∀ P, ∃ x, ∀ y, y ∈ x ↔ P y.
   Proof.
     move: Universal_set => [X H] P.
-    exists {x in X | P x}.
-    split; rewrite Specify_classification//; tauto.
+    exists {x in X | P x} => y.
+    rewrite Specify_classification.
+    split; auto => [[H0 H1]] //.
   Qed.
 
 End Russell's_paradox.
