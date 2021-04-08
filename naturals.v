@@ -720,182 +720,133 @@ Theorem trichotomy : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ (a > b)) ∨
                             (¬ (a < b) ∧ a = b ∧ ¬ (a > b)) ∨
                             (¬ (a < b) ∧ a ≠ b ∧ a > b).
 Proof.
-  intros a b.
-  destruct (lt_trichotomy a b) as [H | [H | H]], (classic (a = b));
-    try subst; auto using lt_antisym, lt_irrefl; congruence.
+  move=> a b.
+  elim (lt_trichotomy a b) => [ | [ | ]]; elim (classic (a = b))
+  => [-> | ]; auto using lt_antisym, lt_irrefl; congruence.
 Qed.
 
 Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
 Proof.
-  intros a b c H H0.
-  rewrite -> lt_def in *.
-  destruct H as [x [H H1]], H0 as [y [H0 H2]].
+  move=> a b c.
+  rewrite ? lt_def => [[x [H <-]]] [y [/neq_sym H0 <-]].
   exists (x+y).
-  split.
-  - intros H3.
-    apply eq_sym, cancellation_0_add in H3 as [H3 H4].
-    now subst.
-  - subst; ring.
+  split; try ring.
+  move: H => /[swap] /(@eq_sym N) /cancellation_0_add => [[]]//.
 Qed.
 
 Theorem O1 : ∀ {a b} c, a < b → a + c < b + c.
 Proof.
-  intros a b c H.
-  rewrite -> lt_def in *.
-  destruct H as [x [H H0]].
+  move=> a b c.
+  rewrite ? lt_def => [[x [H <-]]].
   exists x.
-  split; auto.
-  subst; ring.
+  split; auto; ring.
 Qed.
 
 Theorem O1_iff : ∀ {a b} c, a < b ↔ a + c < b + c.
 Proof.
-  intros a b c.
-  split; intros H; auto using O1.
-  rewrite -> lt_def in *.
-  destruct H as [x [H H0]].
+  split; auto using O1.
+  rewrite ? lt_def => [[x [H]]].
+  rewrite -? (add_comm c) -add_assoc.
   exists x.
-  split; auto.
-  apply (cancellation_add c).
-  rewrite -> (add_comm _ b), <-H0.
-  ring.
+  split; eauto using cancellation_add.
 Qed.
 
 Theorem O1_le : ∀ {a b} c, a ≤ b → a + c ≤ b + c.
 Proof.
-  intros a b c [x H].
+  move=> a b c [x <-].
   exists x.
-  subst; ring.
+  ring.
 Qed.
 
 Theorem O1_le_iff : ∀ {a b} c, a ≤ b ↔ a + c ≤ b + c.
 Proof.
-  intros a b c.
-  split; intros H; auto using O1_le.
-  destruct H as [x H].
-  exists x.
-  apply (cancellation_add c).
-  rewrite -> (add_comm _ b), <-H.
-  ring.
+  split; auto using O1_le => [[x]].
+  rewrite -? (add_comm c) -add_assoc => /cancellation_add <-.
+  exists x => //.
 Qed.
 
 Theorem lt_add : ∀ a b, 0 < a → 0 < b → 0 < a + b.
 Proof.
-  intros a b H H0.
-  rewrite <-(add_0_l b) in H0.
+  move=> a b.
+  rewrite -{1}(add_0_l b).
   eauto using lt_trans, O1.
 Qed.
 
 Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
 Proof.
-  intros a b H H0.
-  rewrite -> lt_def in *.
-  destruct H as [x [H H1]], H0 as [y [H0 H2]].
+  move=> a b.
+  rewrite ? lt_def => [[x [H <-]]] [y [H1 <-]].
   exists (x*y).
-  rewrite -> add_0_l in *.
-  subst.
-  split; auto.
-  intros H1.
-  apply eq_sym, cancellation_0_mul in H1 as [H1 | H1]; congruence.
+  split; try ring.
+  move: H => /[swap] /(@eq_sym N) /cancellation_0_mul => [[]] /(@eq_sym N) //.
 Qed.
 
 Theorem O3 : ∀ {a b} c, a < b → 0 < c → a * c < b * c.
 Proof.
-  intros a b c H H0.
-  rewrite -> lt_def in *.
-  destruct H as [x [H H1]], H0 as [y [H0 H2]].
-  rewrite -> add_0_l in *.
-  subst.
-  exists (x*c).
+  move=> a b c.
+  rewrite ? lt_def => [[x [H <-]]] [y [H1 <-]].
+  rewrite add_0_l.
+  exists (x*y).
   split; try ring.
-  intros H1.
-  apply eq_sym, cancellation_0_mul in H1 as [H1 | H1]; congruence.
+  move: H => /[swap] /(@eq_sym N) /cancellation_0_mul => [[]] /(@eq_sym N) //.
 Qed.
 
 Theorem lt_0_1 : ∀ a, ¬ 0 < a < 1.
 Proof.
-  induction a using Induction; intros [H H0].
-  - eapply lt_irrefl; eauto.
-  - rewrite -> lt_def in *.
-    destruct H0 as [c [H0 H1]].
-    rewrite -> add_comm, add_succ_r, neq_sym in *.
-    now apply PA5, cancellation_0_add in H1 as [H1 H2].
+  induction a using Induction => [[/lt_irrefl H H0] | [H [[c]]]] //.
+  rewrite add_comm add_succ_r => /PA5 /[dup] /cancellation_0_add [-> ->] //.
 Qed.
 
 Theorem lt_succ : ∀ m, 0 < S m.
 Proof.
-  intros m.
-  rewrite lt_def.
-  exists (S m).
-  split; auto using PA4; ring.
+  split; auto using PA4.
+  exists (S m); ring.
 Qed.
 
 Theorem nonzero_lt : ∀ m, m ≠ 0 ↔ 0 < m.
 Proof.
-  split; intros H.
-  - apply succ_0 in H as [k H]; subst.
-    apply lt_succ.
-  - intros H0.
-    subst.
-    contradiction (lt_irrefl 0).
+  split => [/succ_0 [k ->] | /[swap] -> /lt_irrefl]; eauto using lt_succ.
 Qed.
 
 Theorem succ_lt : ∀ m, m < S m.
 Proof.
-  intros m.
-  rewrite lt_def.
-  exists 1.
-  unfold one.
-  split; auto using PA4, add_1_r.
+  split; eauto using neq_succ.
+  rewrite -add_1_r /le; eauto.
 Qed.
 
 Theorem S_lt : ∀ m n, m < n ↔ S m < S n.
 Proof.
-  split; intros H.
-  - rewrite <-? (add_1_r m), <-? (add_1_r n).
-    now apply O1.
-  - apply lt_def in H as [c [H H0]].
-    rewrite -> add_comm, add_succ_r, add_comm in H0.
-    apply lt_def.
-    eauto using PA5.
+  split => [| [[c]]].
+  - rewrite -(add_1_r m) -(add_1_r n) => /O1 //.
+  - rewrite add_comm add_succ_r add_comm /lt /le => /PA5 <- H.
+    split; eauto.
+    move: H => /[swap] <- //.
 Qed.
 
 Theorem zero_le : ∀ n, 0 ≤ n.
 Proof.
-  intros n.
-  apply le_is_subset, Empty_set_is_subset.
+  move=> n.
+  apply /le_is_subset /Empty_set_is_subset.
 Qed.
 
 Theorem lt_not_ge : ∀ a b, a < b ↔ ¬ b ≤ a.
 Proof.
-  split; intros H.
-  - destruct H as [H H0].
-    contradict H0.
-    now apply le_antisymm.
-  - destruct (lt_trichotomy b a) as [[H0 H1] | [H0 | H0]]; try tauto.
-    contradict H.
-    subst.
-    apply le_refl.
+  split => [[/le_antisymm] H /[swap] /H // |].
+  move: (lt_trichotomy b a) (le_refl a) => [[H0 H1] | [-> | H0]] //.
 Qed.
 
 Theorem le_not_gt : ∀ a b, a ≤ b ↔ ¬ b < a.
 Proof.
-  split; intros H.
-  - intros [H0 H1].
-    contradict H1.
-    now apply le_antisymm.
-  - apply NNPP.
-    intros H0.
-    now rewrite <-lt_not_ge in H0.
+  split => [/le_antisymm H [/H] /(@eq_sym N) // |].
+  rewrite lt_not_ge => /NNPP //.
 Qed.
 
 Theorem lt_1_eq_0 : ∀ n, n < 1 → n = 0.
 Proof.
-  intros n H.
-  induction n as [| n _ ] using Induction; auto.
-  apply le_not_gt in H; intuition.
+  elim/Induction => // => n H /lt_not_ge H0.
+  contradiction H0.
   exists n.
-  rewrite <-add_1_r; ring.
+  rewrite -add_1_r add_comm //.
 Qed.
 
 Definition pred (n : N) := (exist (union_ω (elts_in_set n)) : N).
@@ -906,402 +857,315 @@ Infix "-" := sub : N_scope.
 
 Theorem pred_0 : pred 0 = 0.
 Proof.
-  apply set_proj_injective; simpl.
-  apply Empty_union.
+  apply /set_proj_injective /Empty_union.
 Qed.
 
 Theorem pred_succ : ∀ a, pred (S a) = a.
 Proof.
-  intros a.
-  apply set_proj_injective; simpl.
-  rewrite <-S_is_succ, union_succ; eauto using elts_in_set.
+  move=> a.
+  apply /set_proj_injective => /=.
+  rewrite -/(INS (S a)) -S_is_succ union_succ; eauto using elts_in_set.
 Qed.
 
 Theorem sub_0_r : ∀ a, a - 0 = a.
 Proof.
-  intros a.
-  unfold sub.
-  now rewrite iterated_op_0.
+  rewrite /sub => a.
+  rewrite iterated_op_0 //.
 Qed.
 
 Theorem sub_0_l : ∀ a, 0 - a = 0.
 Proof.
-  induction a using Induction; unfold sub in *.
-  - now rewrite iterated_op_0.
-  - now rewrite -> iterated_op_succ, IHa, pred_0.
+  induction a using Induction.
+  - rewrite /sub iterated_op_0 //.
+  - rewrite /sub iterated_op_succ -{2}pred_0 -{2}IHa //.
 Qed.
 
 Theorem sub_succ_r : ∀ a b, a - S b = pred (a - b).
 Proof.
-  induction b using Induction; unfold sub;
-    now rewrite -> iterated_op_succ, ? iterated_op_0.
+  elim/Induction => * ; rewrite /sub iterated_op_succ ? iterated_op_0 //.
 Qed.
 
 Theorem sub_succ : ∀ a b, S a - S b = a - b.
 Proof.
-  induction b using Induction.
-  - now rewrite -> sub_succ_r, ? sub_0_r, pred_succ.
-  - now rewrite -> sub_succ_r, IHb, sub_succ_r.
+  induction b using Induction;
+    rewrite sub_succ_r ? sub_0_r ? pred_succ ? IHb ? sub_succ_r //.
 Qed.
 
 Theorem sub_abba : ∀ a b, a + b - b = a.
 Proof.
-  induction b using Induction.
-  - now rewrite -> add_0_r, sub_0_r.
-  - now rewrite -> add_succ_r, sub_succ.
+  induction b using Induction;
+    rewrite ? add_0_r ? sub_0_r ? add_succ_r ? sub_succ //.
 Qed.
 
 Theorem sub_diag : ∀ a, a - a = 0.
 Proof.
-  intros a.
-  now rewrite <-(add_0_l a), sub_abba at 1.
+  move=> a.
+  rewrite -{1}(add_0_l a) sub_abba //.
 Qed.
 
 Theorem sub_spec : ∀ a b c, a + c = b → c = b - a.
 Proof.
-  intros a b c H.
-  now rewrite <-H, add_comm, sub_abba.
+  move=> a b c <-.
+  rewrite add_comm sub_abba //.
 Qed.
 
 Theorem sub_0_le : ∀ a b, a - b = 0 → a ≤ b.
 Proof.
-  intros a b H.
-  destruct (le_trichotomy a b) as [H0 | [c H0]]; auto.
-  apply sub_spec in H0 as H1.
-  rewrite <-H0, H1, H, add_0_r.
+  move: le_trichotomy =>
+  /[swap] a /[swap] b /(_ a b) [H | [c /[dup] /sub_spec <- /[swap] -> <-]] //.
+  rewrite add_0_r.
   apply le_refl.
 Qed.
 
 Theorem sub_abab : ∀ a b, a ≤ b → a + (b - a) = b.
 Proof.
-  intros a b [c H].
-  subst.
-  now rewrite -> (add_comm _ c), sub_abba, add_comm.
+  move=> a b [c <-].
+  rewrite -(add_comm c) sub_abba add_comm //.
 Qed.
 
 Theorem sub_ne_0_lt : ∀ a b, a - b ≠ 0 → b < a.
 Proof.
   intros a b H.
-  apply lt_not_ge.
-  contradict H.
-  destruct H as [c H].
-  subst.
-  induction c using Induction.
-  - now rewrite -> add_0_r, <-(add_0_l a), sub_abba at 1.
-  - now rewrite -> add_succ_r, sub_succ_r, IHc, pred_0.
+  apply /lt_not_ge.
+  move: H => /[swap] [[c <-]].
+  induction a using Induction;
+    rewrite ? sub_0_l 1? add_comm ? add_succ_r ? sub_succ 1? add_comm //.
 Qed.
 
 Definition min : N → N → N.
 Proof.
-  intros a b.
-  destruct (excluded_middle_informative (a < b)).
+  move=> a b.
+  elim (excluded_middle_informative (a < b)) => *.
   - exact a.
   - exact b.
 Defined.
 
 Theorem min_le_l : ∀ a b, min a b ≤ a.
 Proof.
-  intros a b.
-  unfold min.
-  destruct excluded_middle_informative.
-  - apply le_refl.
-  - now rewrite <-le_not_gt in n.
+  rewrite /min => a b.
+  elim excluded_middle_informative => * /=.
+  - apply /le_refl.
+  - apply /le_not_gt => //.
 Qed.
 
 Theorem min_le_r : ∀ a b, min a b ≤ b.
 Proof.
-  intros a b.
-  unfold min.
-  destruct excluded_middle_informative.
-  - now destruct l.
-  - apply le_refl.
+  rewrite /min => a b.
+  elim excluded_middle_informative => [[*] | *] /= //.
+  apply /le_refl.
 Qed.
 
 Theorem min_eq : ∀ a b, min a b = a ∨ min a b = b.
 Proof.
-  intros a b.
-  unfold min.
-  destruct excluded_middle_informative; intuition.
+  rewrite /min => a b.
+  elim excluded_middle_informative; auto.
 Qed.
 
 Definition max : N → N → N.
 Proof.
-  intros a b.
-  destruct (excluded_middle_informative (a < b)).
+  move=> a b.
+  elim (excluded_middle_informative (a < b)) => *.
   - exact b.
   - exact a.
 Defined.
 
 Theorem max_le_l : ∀ a b, a ≤ max a b.
 Proof.
-  intros a b.
-  unfold max.
-  destruct excluded_middle_informative.
-  - now destruct l.
-  - apply le_refl.
+  rewrite /max => a b.
+  elim excluded_middle_informative => [[*] | *] /= //.
+  apply /le_refl.
 Qed.
 
 Theorem max_le_r : ∀ a b, b ≤ max a b.
 Proof.
-  intros a b.
-  unfold max.
-  destruct excluded_middle_informative.
-  - apply le_refl.
-  - now rewrite <-le_not_gt in n.
+  rewrite /max => a b.
+  elim excluded_middle_informative => * /=.
+  - apply /le_refl.
+  - apply /le_not_gt => //.
 Qed.
 
 Theorem max_eq : ∀ a b, max a b = a ∨ max a b = b.
 Proof.
-  intros a b.
-  unfold max.
-  destruct excluded_middle_informative; intuition.
+ rewrite /max => a b.
+ elim excluded_middle_informative; auto.
 Qed.
 
 Theorem max_sym : ∀ a b, max a b = max b a.
 Proof.
-  intros a b.
-  unfold max.
-  repeat destruct excluded_middle_informative; auto.
-  - contradiction (lt_antisym a b).
-  - rewrite <-le_not_gt in *.
-    auto using le_antisymm.
+  rewrite /max => a b.
+  (repeat elim excluded_middle_informative => /=; auto) =>
+  [/lt_antisym | /le_not_gt /[swap] /le_not_gt /le_antisymm /[apply]] //.
 Qed.
 
 Theorem max_0_l : ∀ a, max 0 a = a.
 Proof.
-  intros a.
-  unfold max.
-  destruct excluded_middle_informative; auto.
+  rewrite /max => a.
+  elim excluded_middle_informative; auto => H /=.
   apply NNPP.
-  contradict n.
-  apply neq_sym, succ_0 in n as [m H].
-  subst.
+  move: H => /[swap] /neq_sym /succ_0 [m] ->.
   auto using lt_succ.
 Qed.
 
 Theorem max_0_r : ∀ a, max a 0 = a.
 Proof.
-  intros a.
-  now rewrite -> max_sym, max_0_l.
+  move=> a.
+  rewrite max_sym max_0_l //.
 Qed.
 
 Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
 Proof.
-  intros a b c [d H] [e H0].
+  move=> a b c [d <-] [e <-].
   exists (d + e).
-  subst; ring.
+  ring.
 Qed.
 
 Theorem le_lt_trans : ∀ a b c, a ≤ b → b < c → a < c.
 Proof.
-  intros a b c [d H] [[e H0] H1].
-  rewrite lt_def.
-  exists (d + e).
+  move=> a b c [d <-] [[e <-] H0].
   split.
-  - intros H2.
-    apply eq_sym, cancellation_0_add in H2 as [H2 H3].
-    subst.
-    now rewrite -> ? add_0_r in *.
-  - subst; ring.
+  - exists (d + e); ring.
+  - move: add_assoc H0 <- =>
+    /[swap] /(@eq_sym N) /cancellation_0 /cancellation_0_add [-> ->].
+    rewrite add_0_l //.
 Qed.
 
 Theorem lt_le_trans : ∀ a b c, a < b → b ≤ c → a < c.
 Proof.
-  intros a b c [[d H] H0] [e H1].
-  rewrite lt_def.
-  exists (d + e).
+  move=> a b c [[d <-] H0] [e <-].
   split.
-  - intros H2.
-    apply eq_sym, cancellation_0_add in H2 as [H2 H3].
-    subst.
-    now rewrite -> ? add_0_r in *.
-  - subst; ring.
+  - exists (d + e); ring.
+  - move: add_assoc H0 <- =>
+    /[swap] /(@eq_sym N) /cancellation_0 /cancellation_0_add [->].
+    rewrite add_0_r //.
 Qed.
 
 Theorem lt_cross_add : ∀ a b c d, a < b → c < d → a + c < b + d.
 Proof.
-  intros a b c d H H0.
-  apply (O1 c) in H.
-  apply (O1 b) in H0.
-  rewrite ? (add_comm _ b) in H0.
-  eauto using lt_trans.
+  move=> a b c d /(O1 c) /lt_trans /[swap] /(O1 b).
+  rewrite ? (add_comm _ b) => /[swap] /[apply] //.
 Qed.
 
 Theorem le_cross_add : ∀ a b c d, a ≤ b → c ≤ d → a + c ≤ b + d.
 Proof.
-  intros a b c d [e H] [f H0].
-  exists (e + f).
-  subst; ring.
+  intros a b c d [e <-] [f <-].
+  exists (e + f); ring.
 Qed.
 
 Theorem lub : ∀ P, (∃ n : N, P n) → (∃ m : N, ∀ n : N, P n → n ≤ m)
                    → ∃ s : N, P s ∧ ∀ n : N, P n → n ≤ s.
 Proof.
-  intros P H [m H0].
-  revert P H H0.
-  induction m using Induction; intros P [x H] H0.
-  - replace x with 0 in H; eauto using le_antisymm, zero_le.
-  - destruct (classic (P (S m))) as [H1 | H1]; eauto.
-    destruct (IHm P) as [s [H2 H3]]; eauto.
-    intros n H2.
-    apply NNPP.
-    intros H3.
-    apply lt_not_ge in H3.
-    pose proof H2 as H4.
-    apply H0 in H4 as [c H4].
-    destruct (classic (c = 0)) as [H5 | H5]; subst.
-    + rewrite add_0_r in H4.
-      now subst.
-    + apply succ_0 in H5 as [d H5].
-      subst.
-      rewrite add_succ_r in H4.
-      apply PA5 in H4.
-      subst.
-      apply le_not_gt in H3; auto.
-      now (exists d).
+  move=> P H [m H0].
+  elim/Induction: m P H H0 =>
+  [P [x] /[dup] H /[swap] /[dup] H0 | m H P [x H0] H1].
+  - suff -> : x = 0; eauto using le_antisymm, zero_le.
+  - elim (classic (P (S m))) => [H2 | H2]; eauto.
+    elim: (H P); eauto => n /[dup] H3 /H1 [c H4].
+    apply NNPP => /lt_not_ge => H5.
+    move: (classic (c = 0)) H4 H2 H3 H5 => [-> | /succ_0 [d ->]].
+    + rewrite add_0_r => -> //.
+    + rewrite add_succ_r => /PA5 <- H2 H3 /lt_not_ge.
+      rewrite /le.
+      eauto.
 Qed.
 
 Theorem squeeze_upper : ∀ n m, n < m → m ≤ S n → m = S n.
 Proof.
-  intros n m H [c H0].
-  replace c with 0 in H0; try ring [H0].
-  apply NNPP.
-  intros H1.
-  apply neq_sym, succ_0 in H1 as [d H1].
-  subst.
-  rewrite add_succ_r in H0.
-  apply PA5 in H0.
-  subst.
-  contradiction (lt_irrefl m).
-  eapply le_lt_trans; eauto.
-  now exists d.
+  move: add_1_r => /[swap] n /(_ n) <- m [[c <-]] /[swap] [[d]].
+  (rewrite <-add_assoc =>
+   /cancellation_add /[dup] /cancellation_1_add [-> | ->];
+   rewrite add_0_r ? add_0_l) => [ | ->] //.
 Qed.
 
 Theorem squeeze_lower : ∀ n m, n ≤ m → m < S n → m = n.
 Proof.
-  intros n m [c H] H0.
-  replace c with 0 in H; try ring [H].
-  apply NNPP.
-  intros H1.
-  apply neq_sym, succ_0 in H1 as [d H1].
-  subst.
-  rewrite -> add_succ_r, <-S_lt in H0.
-  contradiction (lt_irrefl n).
-  eapply le_lt_trans; eauto.
-  now exists d.
+  move: add_1_r => /[swap] n /(_ n) <- m [c <-] [[d]].
+  (rewrite <-add_assoc =>
+   /cancellation_add /[dup] /cancellation_1_add [-> | ->];
+   rewrite add_0_r ? add_0_l) => [ | ->] //.
 Qed.
 
 Theorem succ_le : ∀ a b, a ≤ b ↔ S a ≤ S b.
 Proof.
-  split; intros [c H]; exists c; subst; [ | apply PA5 ];
-    now rewrite -> add_comm, add_succ_r, add_comm in *.
+  split => [[c <-] | [c H]]; exists c; [ | move: H ];
+             rewrite add_comm add_succ_r add_comm // => /PA5 //.
 Qed.
 
 Theorem le_lt_succ : ∀ n m, m ≤ n ↔ m < S n.
 Proof.
-  split; rewrite lt_def; intros [c H].
-  - exists (S c).
-    rewrite add_succ_r.
-    split; auto using PA4; congruence.
-  - destruct H as [H H0].
-    apply neq_sym, succ_0 in H as [d H].
-    subst.
-    exists d.
-    rewrite add_succ_r in H0.
-    now apply PA5.
+  (split; rewrite lt_def) =>
+  [[c <-] | [c [/neq_sym /succ_0 [d ->]]]];
+    rewrite /le -? (add_succ_r m c) ? (add_succ_r m d); eauto using PA4, PA5.
 Qed.
 
 Theorem lt_le_succ : ∀ n m, m < n ↔ S m ≤ n.
 Proof.
-  split; rewrite lt_def; intros [c H].
-  - destruct H as [H H0].
-    apply neq_sym, succ_0 in H as [d H].
-    subst.
-    exists d.
-    now rewrite -> add_comm, ? add_succ_r, add_comm.
-  - exists (S c).
-    split; auto using PA4.
-    now rewrite <-H, (add_comm _ c), ? add_succ_r, add_comm.
+  (split; rewrite lt_def) =>
+  [[c [/neq_sym /succ_0 [d ->] <-]] | [c <-]]; [ exists d | exists (S c) ];
+    rewrite (add_comm (S m)) ? add_succ_r add_comm; auto using PA4.
 Qed.
 
 Theorem disjoint_succ : ∀ n : N, n ∩ {n,n} = ∅.
 Proof.
-  intros n.
-  apply Extensionality.
-  split; intros H.
-  - apply Pairwise_intersection_classification in H as [H H0].
-    apply Singleton_classification in H0.
-    subst.
-    contradiction (no_quines n).
-  - contradiction (Empty_set_classification z).
+  move=> n.
+  apply Subset_equality_iff, conj; auto using Empty_set_is_subset =>
+  x /Pairwise_intersection_classification /and_comm
+    [/Singleton_classification] -> /no_quines //.
 Qed.
 
 Theorem le_lt_or_eq : ∀ a b, a ≤ b ↔ a < b ∨ a = b.
 Proof.
-  split; intros H; unfold lt in *.
-  - destruct (classic (a = b)); tauto.
-  - destruct H as [[H H0] | H]; subst; auto using le_refl.
+  (split; rewrite /lt) =>
+  [| [[H H0] | ->]]; elim (classic (a = b)); auto using le_refl.
 Qed.
 
 Theorem le_succ : ∀ n, n ≤ S n.
 Proof.
-  intros n.
-  exists 1.
-  now rewrite add_1_r.
+  rewrite /le => n.
+  rewrite -add_1_r.
+  eauto.
 Qed.
 
 Theorem one_le_succ : ∀ n, 1 ≤ S n.
 Proof.
-  intros n.
-  exists n.
-  now rewrite -> add_comm, add_1_r.
+  rewrite /le => n.
+  rewrite -add_1_r add_comm.
+  eauto.
 Qed.
 
 Theorem Strong_Induction : ∀ P : N → Prop,
     (∀ n : N, (∀ k : N, k < n → P k) → P n) → ∀ n : N, P n.
 Proof.
-  intros P H n.
-  apply Strong_Induction_ω.
-  intros n0 H0.
-  apply H.
-  intros k H1.
-  now apply H0, lt_is_in.
+  move=> P H n.
+  apply Strong_Induction_ω => n0 H0.
+  apply /H => k /lt_is_in /H0 //.
 Qed.
 
 Theorem not_succ_le : ∀ n, ¬ S n ≤ n.
 Proof.
-  intros n H.
-  apply le_not_gt in H.
+  move=> n /le_not_gt H.
   eauto using succ_lt.
 Qed.
 
 Theorem WOP : ∀ P, (∃ n : N, P n) → ∃ m : N, P m ∧ (∀ k : N, P k → m ≤ k).
 Proof.
-  intros P [n H].
-  destruct (ω_WOP {x of type ω | P x}) as [x [H0 H1]].
+  move=> P [n H].
+  elim (ω_WOP {x of type ω | P x}) =>
+  [x [/Specify_classification [H0]] | | x /Specify_classification []] //.
+  - rewrite (reify H0) despecify.
+    exists (exist H0 : N).
+    split; auto => k H1.
+    apply /le_is_subset /b0 /Specify_classification.
+    rewrite despecify.
+    eauto using elts_in_set.
   - apply Nonempty_classification.
     exists n.
     apply Specify_classification.
-    rewrite despecify.
-    eauto using elts_in_set.
-  - intros x H0.
-    now apply Specify_classification in H0.
-  - apply Specify_classification in H0 as [H0 H2].
-    rewrite -> (reify H0), despecify in H2.
-    exists (exist H0 : N).
-    split; auto.
-    intros k H3.
-    apply le_is_subset, H1, Specify_classification.
     rewrite despecify.
     eauto using elts_in_set.
 Qed.
 
 Theorem lt_0_le_1 : ∀ n, 0 < n ↔ 1 ≤ n.
 Proof.
-  split; intros H.
-  - apply nonzero_lt, succ_0 in H as [m H]; subst; apply one_le_succ.
-  - apply nonzero_lt, succ_0.
-    destruct H as [m H].
-    exists m.
-    now rewrite <-add_1_r, add_comm, H.
+  split => [/nonzero_lt /succ_0 [m ->] | [m <-]];
+             rewrite 1? add_comm 1? add_1_r; auto using lt_succ, one_le_succ.
 Qed.

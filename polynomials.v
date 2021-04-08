@@ -735,8 +735,8 @@ Section Polynomial_theorems.
   Proof.
     intros f g.
     unfold naturals.max.
-    destruct excluded_middle_informative; apply degree_bound; intros m H;
-      try apply naturals.le_not_gt in n;
+    destruct excluded_middle_informative; unfold sumbool_rect;
+    apply degree_bound; intros m H; try apply naturals.le_not_gt in n;
       rewrite -> coefficient_add, ? coeffs_above_degree, rings.A3;
       eauto using naturals.lt_trans, naturals.le_lt_trans.
   Qed.
