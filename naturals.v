@@ -402,6 +402,12 @@ Proof.
   - rewrite ? add_succ_r IHb -? IHa ? add_succ_r IHa //.
 Qed.
 
+Theorem add_succ_l : ∀ x y, S x + y = S (x + y).
+Proof.
+  move=> x y.
+  rewrite add_comm add_succ_r add_comm //.
+Qed.
+
 Theorem add_assoc : ∀ a b c, a + (b + c) = (a + b) + c.
 Proof.
   induction c using Induction.
@@ -742,6 +748,13 @@ Proof.
   split; auto; ring.
 Qed.
 
+Theorem O1_l : ∀ {a b} c, a < b → c + a < c + b.
+Proof.
+  move=> a b c H.
+  rewrite ? (add_comm c).
+  auto using O1.
+Qed.
+
 Theorem O1_iff : ∀ {a b} c, a < b ↔ a + c < b + c.
 Proof.
   split; auto using O1.
@@ -749,6 +762,13 @@ Proof.
   rewrite -? (add_comm c) -add_assoc.
   exists x.
   split; eauto using cancellation_add.
+Qed.
+
+Theorem O1_l_iff : ∀ {a b} c, a < b ↔ c + a < c + b.
+Proof.
+  move=> a b c.
+  rewrite ? (add_comm c).
+  auto using O1_iff.
 Qed.
 
 Theorem O1_le : ∀ {a b} c, a ≤ b → a + c ≤ b + c.
@@ -763,6 +783,20 @@ Proof.
   split; auto using O1_le => [[x]].
   rewrite -? (add_comm c) -add_assoc => /cancellation_add <-.
   exists x => //.
+Qed.
+
+Theorem O1_l_le : ∀ {a b} c, a ≤ b → c + a ≤ c + b.
+Proof.
+  move=> a b c.
+  rewrite ? (add_comm c).
+  auto using O1_le.
+Qed.
+
+Theorem O1_l_le_iff : ∀ {a b} c, a ≤ b ↔ c + a ≤ c + b.
+Proof.
+  move=> a b c.
+  rewrite ? (add_comm c).
+  auto using O1_le_iff.
 Qed.
 
 Theorem lt_add : ∀ a b, 0 < a → 0 < b → 0 < a + b.
@@ -1168,4 +1202,17 @@ Theorem lt_0_le_1 : ∀ n, 0 < n ↔ 1 ≤ n.
 Proof.
   split => [/nonzero_lt /succ_0 [m ->] | [m <-]];
              rewrite 1? add_comm 1? add_1_r; auto using lt_succ, one_le_succ.
+Qed.
+
+Theorem le_add : ∀ a b, a ≤ a + b.
+Proof.
+  move=> a b.
+  exists b => //.
+Qed.
+
+Theorem le_add_l : ∀ a b, a ≤ b + a.
+Proof.
+  move=> a b.
+  rewrite add_comm.
+  auto using le_add.
 Qed.
