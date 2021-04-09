@@ -1468,7 +1468,7 @@ Section Modular_arithmetic.
       INZ_mul; auto using odd_prime_positive.
       apply INZ_eq, equivalence_to_card.
       rewrite -> add_1_r, <-(card_of_natural 2), mul_comm,
-      <-finite_products_card, card_equiv, Euler_Phi_unit, <-domain_usf,
+      <-finite_products_card, <-card_equiv, Euler_Phi_unit, <-domain_usf,
       <-image_usf; auto using finite_products_are_finite, naturals_are_finite,
         finite_QR, odd_prime_positive.
       apply orbit_stabilizer_cardinality_image.

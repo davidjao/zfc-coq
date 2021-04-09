@@ -814,13 +814,13 @@ Proof.
   exists ((S n) * m)%N.
   symmetry.
   now rewrite -> permutation_succ, H, <-(card_of_natural (S n)),
-  <-(card_of_natural m), <-natural_prod_card, card_equiv at 1;
+  <-(card_of_natural m), <-natural_prod_card, <-card_equiv at 1;
     auto using finite_products_are_finite, naturals_are_finite.
 Qed.
 
 Theorem size_of_bijections_of_empty_set : size_of_bijections 0%N 0%N = 1%N.
 Proof.
-  apply natural_cardinality_uniqueness.
+  apply natural_cardinality_uniqueness, cardinality_sym.
   rewrite <-bijections_of_empty_set.
   eauto using card_equiv, permutations_are_finite.
 Qed.

@@ -444,7 +444,7 @@ Section Quadratic_reciprocity.
     # (upper_triangle p q) = sum_N (λ l, QR_ε_exp (q*l) p) 1 (# QR p).
   Proof.
     apply equivalence_to_card.
-    rewrite <-lower_to_upper, <-card_equiv, sum_lower_triangle;
+    rewrite <-lower_to_upper, card_equiv, sum_lower_triangle;
       eauto using cardinality_refl, subsets_of_finites_are_finite,
       rectangle_finite, lower_subset.
   Qed.
