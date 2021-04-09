@@ -618,7 +618,7 @@ Qed.
 Theorem lt_trichotomy : ∀ a b, a < b ∨ a = b ∨ a > b.
 Proof.
   rewrite /lt=> a b.
-  elim (le_trichotomy a b); elim (classic (a = b)); intuition.
+  case (le_trichotomy a b), (classic (a = b)); intuition.
 Qed.
 
 Theorem le_antisymm : ∀ a b, a ≤ b → b ≤ a → a = b.

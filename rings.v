@@ -569,9 +569,7 @@ Section Ring_theorems.
 
     Definition ISR : sub_R → R.
     Proof.
-      intros x.
-      pose proof (elts_in_set x) as H; simpl in H.
-      apply subset in H.
+      move: (@elts_in_set) => /[swap] x /(_ _ x) /subset H.
       exact (exist H).
     Defined.
 
@@ -579,27 +577,27 @@ Section Ring_theorems.
 
     Definition sub_add : sub_R → sub_R → sub_R.
     Proof.
-      intros a b.
-      assert (a + b ∈ S) as H.
-      { destruct SR as [H [H0 [H1 H2]]].
+      move=> a b.
+      have H: a + b ∈ S.
+      { elim SR => [H [H0 [H1 H2]]].
         apply H; apply (@elts_in_set S). }
       exact (exist H).
     Defined.
 
     Definition sub_mul : sub_R → sub_R → sub_R.
     Proof.
-      intros a b.
-      assert (a * b ∈ S) as H.
-      { destruct SR as [H [H0 [H1 H2]]].
+      move=> a b.
+      have H: a * b ∈ S.
+      { elim SR => [H [H0 [H1 H2]]].
         apply H0; apply (@elts_in_set S). }
       exact (exist H).
     Defined.
 
     Definition sub_neg : sub_R → sub_R.
     Proof.
-      intros a.
-      assert (-a ∈ S) as H.
-      { destruct SR as [H [H0 [H1 H2]]].
+      move=> a.
+      have H: -a ∈ S.
+      { elim SR => [H [H0 [H1 H2]]].
         apply H1; apply (@elts_in_set S). }
       exact (exist H).
     Defined.
@@ -616,41 +614,37 @@ Section Ring_theorems.
 
     Definition sub_one : sub_R.
     Proof.
-      destruct SR as [H [H0 [H1 H2]]].
+      elim SR => [H [H0 [H1 H2]]].
       exact (exist H2).
     Defined.
     Notation "1" := sub_one : Subring_scope.
 
     Theorem ISR_eq : ∀ a b : sub_R, (a : R) = (b : R) → a = b.
     Proof.
-      intros [a A] [b B] H.
-      unfold ISR in H.
-      simpl in *.
-      apply set_proj_injective.
+      move=> [a A] [b B].
+      rewrite /ISR /= => H.
+      apply /set_proj_injective.
       now inversion H.
     Qed.
 
     Theorem ISR_add : ∀ a b : sub_R, (a + b)%ring = a + b.
     Proof.
-      intros a b.
-      now apply set_proj_injective.
+      auto using set_proj_injective.
     Qed.
 
     Theorem ISR_mul : ∀ a b : sub_R, (a * b)%ring = a * b.
     Proof.
-      intros a b.
-      now apply set_proj_injective.
+      auto using set_proj_injective.
     Qed.
 
     Theorem ISR_neg : ∀ a : sub_R, (-a)%ring = -a.
     Proof.
-      intros a.
-      now apply set_proj_injective.
+      auto using set_proj_injective.
     Qed.
 
     Lemma zero_construction : 0 ∈ S.
     Proof.
-      destruct SR as [H [H0 [H1 H2]]].
+      elim SR => [H [H0 [H1 H2]]].
       rewrite <-(A4 _ (1%ring)).
       auto.
     Qed.
@@ -659,70 +653,70 @@ Section Ring_theorems.
     Notation "0" := sub_zero : Subring_scope.
     Theorem sub_A1 : ∀ a b, a + b = b + a.
     Proof.
-      intros a b.
+      move=> a b.
       apply ISR_eq.
-      now rewrite <-? ISR_add, A1.
+      rewrite -? ISR_add A1 //.
     Qed.
 
     Theorem sub_A2 : ∀ a b c, a + (b + c) = (a + b) + c.
     Proof.
-      intros a b c.
+      move=> a b c.
       apply ISR_eq.
-      now rewrite <-? ISR_add, A2.
+      rewrite -? ISR_add A2 //.
     Qed.
 
     Theorem sub_zero_is_zero : 0%ring = 0.
     Proof.
-      now apply set_proj_injective.
+      auto using set_proj_injective.
     Qed.
 
     Theorem sub_one_is_one : 1%ring = 1.
     Proof.
-      unfold sub_one.
-      destruct SR as [H [H0 [H1 H2]]].
-      now apply set_proj_injective.
+      rewrite /sub_one /and_rect.
+      case SR, a, a.
+      auto using set_proj_injective.
     Qed.
 
     Theorem sub_A3 : ∀ a, 0 + a = a.
     Proof.
-      intros a.
+      move=> a.
       apply ISR_eq.
-      now rewrite <-? ISR_add, <-sub_zero_is_zero, A3.
+      rewrite -? ISR_add -sub_zero_is_zero A3 //.
     Qed.
 
     Theorem sub_A4 : ∀ a, a + -a = 0.
     Proof.
-      intros a.
+      move=> a.
       apply ISR_eq.
-      now rewrite <-? ISR_add, <-ISR_neg, A4, sub_zero_is_zero.
+      rewrite -? ISR_add -ISR_neg A4 sub_zero_is_zero //.
     Qed.
 
     Theorem sub_M1 : ∀ a b, a * b = b * a.
     Proof.
-      intros a b.
+      move=> a b.
       apply ISR_eq.
-      now rewrite <-? ISR_mul, M1.
+      rewrite -? ISR_mul M1 //.
     Qed.
 
     Theorem sub_M2 : ∀ a b c, a * (b * c) = (a * b) * c.
     Proof.
-      intros a b c.
+      move=> a b c.
       apply ISR_eq.
-      now rewrite <-? ISR_mul, M2.
+      rewrite -? ISR_mul M2 //.
     Qed.
 
     Theorem sub_M3 : ∀ a, 1 * a = a.
     Proof.
-      intros a.
+      move=> a.
       apply ISR_eq.
-      now rewrite <-? ISR_mul, <-sub_one_is_one, M3.
+      rewrite -? ISR_mul -sub_one_is_one M3 //.
     Qed.
 
     Theorem sub_D1 : ∀ a b c, (a + b) * c = a * c + b * c.
     Proof.
-      intros a b c.
+      move=> a b c.
       apply ISR_eq.
-      now rewrite <-? ISR_mul, <-? ISR_add, <-? ISR_mul, D1.
+      rewrite -? ISR_mul -? ISR_add -? ISR_mul D1 //.
     Qed.
 
     Definition subring :=
@@ -733,8 +727,8 @@ Section Ring_theorems.
 
   Definition subring_of_arbitrary_set (S : set) : rings.ring.
   Proof.
-    destruct (excluded_middle_informative (S ⊂ Rset Ring)).
-    - destruct (excluded_middle_informative (is_subring S)).
+    elim (excluded_middle_informative (S ⊂ Rset Ring)) => s.
+    - elim (excluded_middle_informative (is_subring S)) => i.
       + exact (mkRing _ (sub_zero S i) (sub_one S i) (sub_add S s i)
                       (sub_mul S s i) (sub_neg S s i) (sub_A3 S s i)
                       (sub_A1 S s i) (sub_A2 S s i) (sub_M3 S s i)
@@ -755,57 +749,33 @@ Section Ring_theorems.
 
     Lemma generated_nonempty : {s in P (Rset Ring) | S ⊂ s ∧ is_subring s} ≠ ∅.
     Proof.
-      apply Nonempty_classification.
+      apply /Nonempty_classification.
       exists (Rset Ring).
-      rewrite -> Specify_classification, Powerset_classification.
+      rewrite Specify_classification Powerset_classification.
       repeat split; eauto using Set_is_subset, elts_in_set.
     Qed.
 
     Lemma generated_subset : subset_generated_by S ⊂ Rset Ring.
     Proof.
-      unfold subset_generated_by.
-      intros x H.
-      rewrite -> Intersection_classification in H;
-        auto using generated_nonempty.
-      pose proof generated_nonempty as H0.
-      apply Nonempty_classification in H0 as [s H0].
-      apply H in H0 as H1.
-      apply Specify_classification in H0 as [H0 [H2 H3]].
-      apply Powerset_classification in H0.
-      auto.
+      rewrite /subset_generated_by => x /Intersection_classification
+      => /(_ generated_nonempty) H; move: generated_nonempty =>
+      /Nonempty_classification [s /[dup] /Specify_classification
+                                  [/Powerset_classification H1 [H2 H3]]]; auto.
     Qed.
 
     Lemma subring_generation_construction : is_subring (subset_generated_by S).
     Proof.
-      unfold subset_generated_by.
-      repeat split.
-      - intros a b H H0.
-        rewrite -> Intersection_classification in *;
-          auto using generated_nonempty.
-        intros s H1.
-        apply H in H1 as H2.
-        apply H0 in H1 as H3.
-        apply Specify_classification in H1 as [H1 [H4 [H5 [H6 [H7 H8]]]]].
-        auto.
-      - intros a b H H0.
-        rewrite -> Intersection_classification in *;
-          auto using generated_nonempty.
-        intros s H1.
-        apply H in H1 as H2.
-        apply H0 in H1 as H3.
-        apply Specify_classification in H1 as [H1 [H4 [H5 [H6 [H7 H8]]]]].
-        auto.
-      - intros a H.
-        rewrite -> Intersection_classification in *;
-          auto using generated_nonempty.
-        intros s H1.
-        apply H in H1 as H2.
-        apply Specify_classification in H1 as [H1 [H3 [H4 [H5 [H6 H7]]]]].
-        auto.
-      - rewrite -> Intersection_classification in *;
-          auto using generated_nonempty.
-        intros s H.
-        now apply Specify_classification in H as [H [H0 [H1 [H2 [H3 H4]]]]].
+      ((repeat split) =>
+       [? ? /Intersection_classification /[swap] /Intersection_classification |
+        ? ? /Intersection_classification /[swap] /Intersection_classification |
+        ? /Intersection_classification | ];
+       (try move: generated_nonempty => /[swap] /[apply] H);
+       (try move: generated_nonempty => /[swap] /[apply] H0);
+       try apply Intersection_classification; auto using generated_nonempty) =>
+      [s /[dup] /Specify_classification [?[?[?[?[??]]]]] /[dup] /H ? /H0 ? |
+       s /[dup] /Specify_classification [?[?[?[?[??]]]]] /[dup] /H ? /H0 ? |
+       s /[dup] /Specify_classification [?[?[?[?[??]]]]] /H ? |
+       s /Specify_classification [?[?[?[?[??]]]]]]; auto.
     Qed.
 
     Definition subring_generated_by :=
@@ -815,20 +785,14 @@ Section Ring_theorems.
     Theorem subset_generated_by_subring :
       is_subring S → S = subset_generated_by S.
     Proof.
-      intros H.
-      unfold subset_generated_by.
-      apply Extensionality.
-      split; intros H0.
-      - apply Intersection_classification; auto using generated_nonempty.
-        intros s H1.
-        apply Specify_classification in H1 as [H1 [H2 H3]].
-        auto.
-      - rewrite -> Intersection_classification in *;
-          auto using generated_nonempty.
-        assert (S ∈ {s in P (Rset Ring) | S ⊂ s ∧ is_subring s}) as H1; auto.
-        apply Specify_classification.
-        split; auto using Set_is_subset.
-        now apply Powerset_classification.
+      rewrite /subset_generated_by => H.
+      apply Extensionality => z.
+      split => [H0 | /Intersection_classification].
+      - apply /Intersection_classification; auto using generated_nonempty =>
+        s /Specify_classification [H1 [H2 H3]]; auto.
+      - move: subset => /Powerset_classification H0 /(_ generated_nonempty).
+        suff: (S ∈ {s in P (Rset Ring) | S ⊂ s ∧ is_subring s}); auto.
+        apply Specify_classification, conj, conj; auto using Set_is_subset.
     Qed.
 
   End Subring_generation.
@@ -836,11 +800,11 @@ Section Ring_theorems.
   Theorem subring_wf :
     ∀ S T, S = T → subring_of_arbitrary_set S = subring_of_arbitrary_set T.
   Proof.
-    intros S T H.
-    now rewrite -> H.
+    move=> S T -> //.
   Qed.
 
   Section Subrings_match.
+
     Variable S : set.
     Hypothesis subset_S : S ⊂ Rset Ring.
     Hypothesis subring_S : is_subring S.
@@ -848,15 +812,16 @@ Section Ring_theorems.
     Theorem subrings_match :
       subring_of_arbitrary_set S = subring S subset_S subring_S.
     Proof.
-      unfold subring_of_arbitrary_set.
-      repeat destruct excluded_middle_informative; try tauto.
-      unfold subring.
-      replace s with subset_S by now apply proof_irrelevance.
-      now replace i with subring_S by now apply proof_irrelevance.
+      rewrite /subring_of_arbitrary_set /subring.
+      (repeat elim excluded_middle_informative => /=; try tauto) => s i.
+      suff -> : s = subset_S; auto using proof_irrelevance.
+      suff -> : i = subring_S; auto using proof_irrelevance.
     Qed.
+
   End Subrings_match.
 
   Section Subrings_generated_by_subrings.
+
     Variable S : set.
     Hypothesis subset_S : S ⊂ Rset Ring.
     Hypothesis subring_S : is_subring S.
@@ -864,94 +829,74 @@ Section Ring_theorems.
     Theorem subring_generated_by_subring :
       subring S subset_S subring_S = subring_generated_by S subset_S.
     Proof.
-      unfold subring_generated_by.
-      rewrite <-? subrings_match, <-(subset_generated_by_subring S); auto.
+      rewrite /subring_generated_by -? subrings_match
+      -(subset_generated_by_subring S); auto.
     Qed.
+
   End Subrings_generated_by_subrings.
 
   Theorem zero_ring_degeneracy : 1 = 0 → ∀ a b : R, a = b.
   Proof.
-    intros H a b.
+    move=> H a b.
     ring [H].
   Qed.
 
   Theorem unit_nonzero : 1 ≠ 0 → ∀ a, unit a → a ≠ 0.
   Proof.
-    intros H a [x H0] H1.
-    subst.
+    move=> H a /[swap] -> [x H0].
     now ring_simplify in H0.
   Qed.
 
   Theorem singleton_sum :
     ∀ m n a, m ≤ n → sum (λ k, If k = m then a else 0) 0 n = a.
   Proof.
-    intros m n a H.
-    induction n using Induction.
-    { rewrite -> sum_0.
-      destruct excluded_middle_informative; auto.
-      assert (m ≠ 0%N) as H0 by auto.
-      apply succ_0 in H0 as [k H0].
-      subst.
-      rewrite -> le_not_gt in H.
-      contradict H.
-      now apply lt_succ. }
-    destruct (classic (m = S n)) as [H0 | H0].
-    - subst.
-      rewrite -> sum_succ, <-(A3 _ a) at 1; auto using zero_le.
-      f_equal.
-      + rewrite <-(sum_of_0 n).
-        apply iterate_extensionality.
-        intros k H0.
-        destruct excluded_middle_informative; auto using sum_of_0.
-        subst.
-        destruct H0 as [H0 H1].
-        apply le_not_gt in H1.
-        contradict H1.
-        auto using succ_lt.
-      + destruct excluded_middle_informative; tauto.
-    - rewrite -> sum_succ, IHn; auto using zero_le.
-      + destruct excluded_middle_informative; try congruence; ring.
-      + destruct H as [c H].
-        rewrite <-H in H0.
-        assert (c ≠ 0%N) as H1 by (contradict H0; ring [H0]).
-        apply succ_0 in H1 as [d H1].
-        exists d.
-        rewrite -> H1, add_succ_r in H.
-        now apply PA5.
+    move=> m /[swap] a.
+    elim/Induction => [ | n].
+    - rewrite sum_0.
+      (elim excluded_middle_informative; auto) =>
+      /neq_sym /succ_0 [k ->] /le_not_gt.
+      move: lt_succ => /(_ k) //.
+    - elim (classic (m = S n)) => [-> H H0 | H H0 H1].
+      + rewrite sum_succ -1?{3} (A3 _ a) -1 ? (sum_of_0 n); auto using zero_le.
+        f_equal; last by (elim excluded_middle_informative => /=; tauto).
+        apply /iterate_extensionality => k.
+        elim excluded_middle_informative; auto using sum_of_0
+        => -> [H1] /not_succ_le //.
+      + rewrite sum_succ ? H0; auto using zero_le.
+        * apply le_lt_succ, conj => //.
+        * elim excluded_middle_informative => [ /(@eq_sym N) | ] //.
+          rewrite A3_r //.
   Qed.
 
   Theorem prod_sum_0 :
     ∀ k x f, prod (λ n, x^(f n)) 0 k = x^(sum_N (λ n, f n) 0 k).
   Proof.
-    intros k x f.
-    induction k using Induction.
-    - now rewrite -> sum_N_0, prod_0.
-    - rewrite -> prod_succ, sum_N_succ, IHk, pow_add_r; auto using zero_le.
+    elim/Induction =>
+    [ | k H] *; rewrite ? sum_N_0 ? prod_0 ? prod_succ ? sum_N_succ
+                        ? H ? pow_add_r; auto using zero_le.
   Qed.
 
   Theorem prod_sum :
     ∀ a b x f, prod (λ n, x^(f n)) a b = x^(sum_N (λ n, f n) a b).
   Proof.
-    intros a b x f.
-    destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
-    - unfold prod, sum_N.
-      rewrite -> ? iterate_shift.
-      now apply prod_sum_0.
-    - now rewrite <-lt_not_ge, prod_neg, sum_N_neg, pow_0_r in *.
+    move=> a b x f.
+    elim (classic (a ≤ b)%N) => [[c <-] | /lt_not_ge H].
+    - rewrite /prod /sum_N ? iterate_shift -prod_sum_0 //.
+    - rewrite prod_neg ? sum_N_neg ? pow_0_r //.
   Qed.
 
   Theorem pow_neg_1_l : ∀ n, (-1)^n = 1 ∨ (-1)^n = -1.
   Proof.
-    induction n using Induction.
-    - apply or_introl, pow_0_r.
-    - destruct IHn as [H | H]; [ right | left ]; rewrite -> pow_succ_r, H; ring.
+    elim/Induction => [ | n].
+    - apply /or_introl /pow_0_r.
+    - elim; [ right | left ]; rewrite pow_succ_r H; ring.
   Qed.
 
   Theorem pow_sign_l : ∀ a n, (-a)^n = a^n ∨ (-a)^n = -a^n.
   Proof.
-    intros a n.
-    rewrite <-mul_neg_1_l, ? pow_mul_l.
-    destruct (pow_neg_1_l n) as [H | H]; rewrite H ? M3 ? mul_neg_1_l; auto.
+    move=> a n.
+    rewrite -mul_neg_1_l ? pow_mul_l.
+    case (pow_neg_1_l n) => [-> | ->]; rewrite ? M3 ? mul_neg_1_l; auto.
   Qed.
 
 End Ring_theorems.
