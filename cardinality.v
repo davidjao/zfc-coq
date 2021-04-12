@@ -191,7 +191,7 @@ Proof.
     => /set_proj_injective H3.
     f_equal.
     rewrite <-H, <-H3, H => //.
-  - exists (g (exist H1)).
+  - exists (g (mkSet H1)).
     rewrite functionify_action H0.
     auto using elts_in_set.
 Qed.
@@ -263,8 +263,8 @@ Proof.
       /set_proj_injective /cancellation_add -> //.
     + move: H0 H2 -> =>
       /Complement_classification [H0] /Singleton_classification H2.
-      exists (exist H0 - 1).
-      (have: (exist H0) ≠ 0 by (contradict H2; now inversion H2)) =>
+      exists (mkSet H0 - 1).
+      (have: (mkSet H0) ≠ 0 by (contradict H2; now inversion H2)) =>
       /succ_0 => [[m /[dup] H3]].
       rewrite H H1 /f ? functionify_action 1? add_comm ? sub_abab H3;
         repeat split; eauto using elts_in_set, one_le_succ.
@@ -1465,7 +1465,7 @@ Section Powerset_powers.
       intros z H1.
       apply Specify_classification in H1.
       tauto. }
-    exact (exist H1).
+    exact (mkSet H1).
   Defined.
 
   Theorem powerset_powers : 2^X ~ P X.

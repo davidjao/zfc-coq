@@ -236,7 +236,7 @@ Section permutation_succ_helper_functions.
   Proof.
     pose proof naturals.succ_lt n.
     rewrite -> lt_is_in in H.
-    exact (exist H).
+    exact (mkSet H).
   Defined.
 
   Theorem psp_action :
@@ -273,7 +273,7 @@ Section permutation_succ_helper_functions.
     unfold inverse_image_of_element in F.
     apply Specify_classification in F as [F F0].
     rewrite -> psp_domain in F.
-    exact (exist F).
+    exact (mkSet F).
   Defined.
 
   Lemma inverse_image_incl_value :
@@ -294,11 +294,11 @@ Section permutation_succ_helper_functions.
     destruct Specify_classification, a, Specify_classification, a0,
     constructive_indefinite_description as [f'].
     destruct a1 as [H [H0 [H1 H2]]].
-    apply Specify_classification in i0 as [H3 H4]; auto.
-    clear i a i1 i2 a0 i3 e0.
+    apply Specify_classification in elts_in_set as [H3 H4]; auto.
+    clear i a i1 i2 a0 e0.
     rewrite -> psp_domain in H3.
-    set (ξ := exist H3 : elts (bijection_set (S n) (S n))).
-    replace x with (ξ : set) in * by auto.
+    set (ξ := mkSet H3 : elts (bijection_set (S n) (S n))).
+    replace elt_to_set with (ξ : set) in * by auto.
     rewrite <-e, psp_action.
     f_equal.
     apply function_record_injective;
@@ -340,7 +340,7 @@ Section permutation_succ_helper_functions.
     elts n → elts (S n \ {y, y}).
   Proof.
     intros f x.
-    exact (exist (permutation_succ_left_helper_lemma f x)).
+    exact (mkSet (permutation_succ_left_helper_lemma f x)).
   Defined.
 
   Theorem pslh_action : ∀ f (x : elts n),
@@ -363,8 +363,8 @@ Section permutation_succ_helper_functions.
       destruct constructive_indefinite_description as [f'].
       destruct a as [H2 [H3 H4]].
       rewrite -> H2 in H, H0.
-      set (ξ1 := (exist H : elts n)).
-      set (ξ2 := (exist H0 : elts n)).
+      set (ξ1 := (mkSet H : elts n)).
+      set (ξ2 := (mkSet H0 : elts n)).
       replace x1 with (ξ1 : set) in * by auto.
       replace x2 with (ξ2 : set) in * by auto.
       rewrite -> ? H4, ? pslh_action in H1.
@@ -392,7 +392,7 @@ Section permutation_succ_helper_functions.
         apply Singleton_classification in H6; subst.
         now rewrite -> inverse_image_classification in H3. }
       split; try congruence.
-      set (ξ := (exist H8 : elts n)).
+      set (ξ := (mkSet H8 : elts n)).
       replace x with (ξ : set) by auto.
       now rewrite -> H2, <-pslh_action.
   Qed.
@@ -429,7 +429,7 @@ Section permutation_succ_helper_functions.
     elts (bijection_set n (S n \ {y, y})).
   Proof.
     intros f.
-    exact (exist (permutation_succ_left_construction f)).
+    exact (mkSet (permutation_succ_left_construction f)).
   Defined.
 
   Definition permutation_succ_right_helper :
@@ -448,7 +448,7 @@ Section permutation_succ_helper_functions.
         apply Pairwise_union_classification in H as [H | H]; auto.
         now apply Singleton_classification in H. }
       apply Complement_classification in H as [H H0].
-      exact (exist H).
+      exact (mkSet H).
   Defined.
 
   Theorem psrh_n : ∀ f, permutation_succ_right_helper f n_in_Sn = y.
@@ -471,8 +471,8 @@ Section permutation_succ_helper_functions.
     - rewrite -> Injective_classification.
       intros x1 x2 H2 H3 H4.
       rewrite -> H in H2, H3.
-      set (ξ1 := exist H2 : elts (S n)).
-      set (ξ2 := exist H3 : elts (S n)).
+      set (ξ1 := mkSet H2 : elts (S n)).
+      set (ξ2 := mkSet H3 : elts (S n)).
       replace x1 with (ξ1 : set) in * by auto.
       replace x2 with (ξ2 : set) in * by auto.
       rewrite -> ? H1 in H4.
@@ -496,7 +496,7 @@ Section permutation_succ_helper_functions.
     - rewrite -> Surjective_classification.
       intros z H2.
       rewrite -> H0 in H2.
-      set (ζ := exist H2 : elts (S n)).
+      set (ζ := mkSet H2 : elts (S n)).
       replace z with (ζ : set) in * by auto.
       destruct (classic (ζ = y)).
       + exists n.
@@ -523,7 +523,7 @@ Section permutation_succ_helper_functions.
         * assert (x ∈ S n).
           { rewrite <-S_is_succ.
             apply Pairwise_union_classification; tauto. }
-          set (ξ := exist H8 : elts (S n)).
+          set (ξ := mkSet H8 : elts (S n)).
           replace x with (ξ : set) in * by auto.
           rewrite -> H1.
           unfold permutation_succ_right_helper.
@@ -569,7 +569,7 @@ Section permutation_succ_helper_functions.
       destruct constructive_indefinite_description.
       destruct a as [H0 [H1 H2]].
       rewrite -> H0; auto.
-    - set (γ := exist H : elts (bijection_set (S n) (S n))).
+    - set (γ := mkSet H : elts (bijection_set (S n) (S n))).
       replace (graph (sets.functionify (permutation_succ_right_helper f)))
         with (γ : set) in * by auto.
       rewrite -> psp_action.
@@ -593,7 +593,7 @@ Section permutation_succ_helper_functions.
     elts (inverse_image_of_element permutation_succ_proj y).
   Proof.
     intros f.
-    exact (exist (permutation_succ_right_construction f)).
+    exact (mkSet (permutation_succ_right_construction f)).
   Defined.
 
 End permutation_succ_helper_functions.
@@ -613,7 +613,7 @@ Proof.
   2: { apply equivalence_minus_element; auto using cardinality_refl;
        apply lt_is_in, naturals.succ_lt. }
   apply two_sided_inverse_bijective.
-  set (γ := exist H : elts (S n)).
+  set (γ := mkSet H : elts (S n)).
   replace y with (γ : set) in * by auto.
   exists (permutation_succ_left _ γ), (permutation_succ_right _ γ).
   split.
@@ -644,7 +644,7 @@ Proof.
       2: { now rewrite -> psp_range. }
       apply Specify_classification in H0 as [H0 H3].
       rewrite -> psp_domain in H0.
-      set (α := exist H0 : elts (bijection_set (S n) (S n))).
+      set (α := mkSet H0 : elts (bijection_set (S n) (S n))).
       replace (a : set) with (α : set) in * by auto.
       rewrite -> psp_action in H2.
       simpl.
@@ -679,17 +679,17 @@ Proof.
       clear H8 H5 H3 H2 H1.
       rewrite -> Inverse_image_classification in H0.
       2: { rewrite -> psp_domain.
-           pose proof (elts_in_set (inverse_image_incl n (exist H) a)).
+           pose proof (elts_in_set (inverse_image_incl n (mkSet H) a)).
            simpl in *.
            now rewrite -> inverse_image_incl_value in H1. }
       2: { now rewrite -> psp_range. }
-      replace (a : set) with (inverse_image_incl n (exist H) a : set) in *.
+      replace (a : set) with (inverse_image_incl n (mkSet H) a : set) in *.
       2: { now rewrite -> inverse_image_incl_value. }
       rewrite -> psp_action in H0.
       unfold functionify in H0.
       destruct inverse_image_incl, Specify_classification, a0,
       constructive_indefinite_description as [f].
-      clear a0 i0 i1 e.
+      clear a0 i i0 e.
       simpl.
       destruct Specify_classification, a0,
       constructive_indefinite_description, a2 as [H1 [H2 [H3 H5]]].
@@ -718,7 +718,7 @@ Proof.
     apply Graph_classification in H3 as [z1 [H3 H7]].
     subst.
     rewrite -> H4 in H3.
-    set (ζ := exist H3 : elts n).
+    set (ζ := mkSet H3 : elts n).
     replace z1 with (ζ : set) in * by auto.
     rewrite -> H6.
     apply Specify_classification in H0 as [H0 [f' [H7 [H8 [H9 H10]]]]].
@@ -744,7 +744,7 @@ Proof.
     assert (z1 ∈ S n) as H12.
     { rewrite <-S_is_succ.
       apply Pairwise_union_classification; tauto. }
-    set (ζ' := exist H12 : elts (S n)).
+    set (ζ' := mkSet H12 : elts (S n)).
     replace (ζ : set) with (ζ' : set) by auto.
     rewrite -> H11.
     unfold permutation_succ_right_helper.
@@ -864,7 +864,7 @@ Section Combinations_orbit_stabilizer.
   Proof.
     intros f.
     destruct (excluded_middle_informative (f ∈ bijection_set n n)).
-    - exact (φ (exist i)).
+    - exact (φ (mkSet i)).
     - exact ∅.
   Defined.
 
@@ -875,7 +875,7 @@ Section Combinations_orbit_stabilizer.
     intros f H.
     unfold combinations_proj_helper.
     destruct excluded_middle_informative; try tauto.
-    set (η := exist i : elts (bijection_set n n)).
+    set (η := mkSet i : elts (bijection_set n n)).
     replace f with (η : set) in * by auto.
     apply Specify_classification.
     split.
@@ -1064,7 +1064,7 @@ Section Combinations_orbit_stabilizer.
     split; auto.
     rewrite -> cp_domain in H13.
     replace (graph h)
-      with ((exist H13 : elts (bijection_set n n)) : set) by auto.
+      with ((mkSet H13 : elts (bijection_set n n)) : set) by auto.
     rewrite <-cp_action.
     apply Extensionality.
     split; intros H17.
@@ -1107,7 +1107,7 @@ Section Combinations_orbit_stabilizer.
     destruct (constructive_indefinite_description H) as [h].
     assert (h ∈ inverse_image_of_element combinations_proj y) by
         now apply Specify_classification.
-    exact (exist H1).
+    exact (mkSet H1).
   Defined.
 
   Theorem image_of_comb_proj : ∀ x (f : elts (bijection_set n n)),
@@ -1148,7 +1148,7 @@ Section Combinations_orbit_stabilizer.
         apply function_maps_domain_to_range.
         rewrite -> H1, functionify_range.
         eauto using elts_in_set. }
-    replace f1' with ((exist H4 : elts (bijection_set n n)) : set)
+    replace f1' with ((mkSet H4 : elts (bijection_set n n)) : set)
       in * by auto.
     rewrite <-functionify_graph in H7.
     apply function_record_injective in H7; subst;
@@ -1171,8 +1171,8 @@ Section Combinations_orbit_stabilizer.
     rewrite -> cp_domain in H.
     apply Specify_classification in H0 as [H0 H2].
     rewrite -> cp_domain in H0.
-    exact (exist (combinations_left_helper_k_construction_1
-                    (exist H) (exist H0) x H1 H2)).
+    exact (mkSet (combinations_left_helper_k_construction_1
+                    (mkSet H) (mkSet H0) x H1 H2)).
   Defined.
 
   Theorem image_of_comb_proj_2 : ∀ x (f : elts (bijection_set n n)),
@@ -1222,7 +1222,7 @@ Section Combinations_orbit_stabilizer.
         apply function_maps_domain_to_range.
         rewrite -> H1, functionify_range.
         apply (complement_subset k n), elts_in_set. }
-    replace f1' with ((exist H4 : elts (bijection_set n n)) : set)
+    replace f1' with ((mkSet H4 : elts (bijection_set n n)) : set)
       in * by auto.
     rewrite <-functionify_graph in H7.
     apply function_record_injective in H7; subst;
@@ -1245,8 +1245,8 @@ Section Combinations_orbit_stabilizer.
     rewrite -> cp_domain in H.
     apply Specify_classification in H0 as [H0 H2].
     rewrite -> cp_domain in H0.
-    exact (exist (combinations_left_helper_k_construction_2
-                    (exist H) (exist H0) x H1 H2)).
+    exact (mkSet (combinations_left_helper_k_construction_2
+                    (mkSet H) (mkSet H0) x H1 H2)).
   Defined.
 
   Lemma combinations_left_helper_k_bijective : ∀ h',
@@ -1262,8 +1262,8 @@ Section Combinations_orbit_stabilizer.
     - rewrite -> Injective_classification.
       intros x1 x2 H2 H3 H4.
       rewrite -> ? H, ? H0 in *.
-      set (ξ1 := exist H2 : elts k).
-      set (ξ2 := exist H3 : elts k).
+      set (ξ1 := mkSet H2 : elts k).
+      set (ξ2 := mkSet H3 : elts k).
       replace x1 with (ξ1 : set) in * by auto.
       replace x2 with (ξ2 : set) in * by auto.
       rewrite -> ? H1 in H4.
@@ -1307,8 +1307,8 @@ Section Combinations_orbit_stabilizer.
     - rewrite -> Injective_classification.
       intros x1 x2 H2 H3 H4.
       rewrite -> ? H, ? H0 in *.
-      set (ξ1 := exist H2 : elts (n \ k)).
-      set (ξ2 := exist H3 : elts (n \ k)).
+      set (ξ1 := mkSet H2 : elts (n \ k)).
+      set (ξ2 := mkSet H3 : elts (n \ k)).
       replace x1 with (ξ1 : set) in * by auto.
       replace x2 with (ξ2 : set) in * by auto.
       rewrite -> ? H1 in H4.
@@ -1377,7 +1377,7 @@ Section Combinations_orbit_stabilizer.
     elts (bijection_set k k × bijection_set (n \ k) (n \ k)).
   Proof.
     intros h0.
-    exact (exist (combinations_left_construction h0)).
+    exact (mkSet (combinations_left_construction h0)).
   Defined.
 
   Definition comb_inverse_image_incl :
@@ -1388,7 +1388,7 @@ Section Combinations_orbit_stabilizer.
       apply Inverse_image_classification_domain in F as H0;
       try (rewrite -> cp_range; auto using elts_in_set).
     rewrite -> cp_domain in H0.
-    exact (functionify n n (exist H0)).
+    exact (functionify n n (mkSet H0)).
   Defined.
 
   Theorem cii_domain : ∀ f, domain (comb_inverse_image_incl f) = n.
@@ -1446,12 +1446,12 @@ Section Combinations_orbit_stabilizer.
       try (rewrite -> cp_range; auto using elts_in_set).
     rewrite -> cp_domain in H0.
     replace (h : set)
-      with ((exist H0 : elts (bijection_set n n)) : set) in H1 by auto.
+      with ((mkSet H0 : elts (bijection_set n n)) : set) in H1 by auto.
     rewrite <-cp_action in H1.
     split; intros H6; destruct h; simpl in *.
     - destruct Specify_classification, a,
       constructive_indefinite_description as [h'].
-      clear a i0 i1 e.
+      clear a i i0 e.
       destruct a0 as [H7 [H8 [H9 H10]]].
       rewrite <-H1 in H6.
       apply Specify_classification in H6 as [H6 H11].
@@ -1462,7 +1462,7 @@ Section Combinations_orbit_stabilizer.
       apply function_record_injective in H9; congruence.
     - destruct Specify_classification, a,
       constructive_indefinite_description as [h'].
-      clear a i0 i1 e.
+      clear a i i0 e.
       destruct a0 as [H7 [H8 [H9 H10]]].
       rewrite <-H1.
       apply Specify_classification.
@@ -1567,11 +1567,11 @@ Section Combinations_orbit_stabilizer.
   Proof.
     intros z1 z2 x.
     destruct (excluded_middle_informative (x ∈ k)).
-    - exact (exist (combinations_right_helper_l x z1 i)).
+    - exact (mkSet (combinations_right_helper_l x z1 i)).
     - assert (x ∈ n \ k) as H.
       { apply Complement_classification.
         split; auto using elts_in_set. }
-      exact (exist (combinations_right_helper_r x z2 H)).
+      exact (mkSet (combinations_right_helper_r x z2 H)).
   Defined.
 
   Theorem combinations_right_helper_bijective : ∀ z1 z2,
@@ -1590,8 +1590,8 @@ Section Combinations_orbit_stabilizer.
       unfold sets.functionify in H3.
       destruct constructive_indefinite_description as [g].
       destruct a as [H4 [H5 H6]].
-      set (ξ1 := exist H1 : elts n).
-      set (ξ2 := exist H2 : elts n).
+      set (ξ1 := mkSet H1 : elts n).
+      set (ξ2 := mkSet H2 : elts n).
       replace x1 with (ξ1 : set) in * by auto.
       replace x2 with (ξ2 : set) in * by auto.
       rewrite -> ? H6 in H3.
@@ -1679,7 +1679,7 @@ Section Combinations_orbit_stabilizer.
     - unfold sets.functionify.
       destruct constructive_indefinite_description as [crh].
       destruct a as [H1 [H2 H3]].
-      set (ξ := exist H : elts n).
+      set (ξ := mkSet H : elts n).
       replace x with (ξ : set) in * by auto.
       rewrite -> H3.
       unfold combinations_right_helper.
@@ -1690,7 +1690,7 @@ Section Combinations_orbit_stabilizer.
     - unfold sets.functionify in *.
       destruct constructive_indefinite_description as [crh].
       destruct a as [H1 [H2 H3]].
-      set (ξ := exist H : elts n).
+      set (ξ := mkSet H : elts n).
       replace x with (ξ : set) in * by auto.
       rewrite -> H3 in H0.
       unfold combinations_right_helper in H0.
@@ -1714,7 +1714,7 @@ Section Combinations_orbit_stabilizer.
     - set (g := (inverse (sets.functionify (combinations_right_helper z1 z2)))).
       assert (graph g ∈ bijection_set n n).
       { apply combinations_right_construction_proto. }
-      replace (graph g) with ((exist H : elts (bijection_set n n)) : set);
+      replace (graph g) with ((mkSet H : elts (bijection_set n n)) : set);
         rewrite <-? cp_action; auto.
       apply Extensionality.
       split; intros H2.
@@ -1781,7 +1781,7 @@ Section Combinations_orbit_stabilizer.
     apply Product_classification in H.
     destruct (constructive_indefinite_description H) as [z1].
     destruct (constructive_indefinite_description e) as [z2 [H0 [H1 H2]]].
-    exact (exist (combinations_right_construction (exist H0) (exist H1))).
+    exact (mkSet (combinations_right_construction (mkSet H0) (mkSet H1))).
   Defined.
 
   Theorem combinations_left_right :
@@ -1805,7 +1805,7 @@ Section Combinations_orbit_stabilizer.
       apply func_ext; try congruence.
       intros z H9.
       rewrite -> H6 in H9.
-      set (ζ := exist H9 : elts k).
+      set (ζ := mkSet H9 : elts k).
       replace z with (ζ : set) in * by auto.
       rewrite -> H8.
       unfold combinations_left_helper_k.
@@ -1865,7 +1865,7 @@ Section Combinations_orbit_stabilizer.
         rewrite -> e3, <-e1.
         apply function_maps_domain_to_range.
         rewrite -> e; auto. }
-      set (ζ' := exist H17 : elts n).
+      set (ζ' := mkSet H17 : elts n).
       replace (crh_inv (cr_inv z)) with (ζ' : set) by auto.
       rewrite -> H16.
       unfold combinations_right_helper.
@@ -1909,7 +1909,7 @@ Section Combinations_orbit_stabilizer.
       apply func_ext; try congruence.
       intros z H9.
       rewrite -> H6 in H9.
-      set (ζ := exist H9 : elts (n \ k)).
+      set (ζ := mkSet H9 : elts (n \ k)).
       replace z with (ζ : set) in * by auto.
       rewrite -> H8.
       unfold combinations_left_helper_n_minus_k.
@@ -1969,7 +1969,7 @@ Section Combinations_orbit_stabilizer.
         rewrite -> e3, <-e1.
         apply function_maps_domain_to_range.
         rewrite -> e; apply (complement_subset k n); auto. }
-      set (ζ' := exist H17 : elts n).
+      set (ζ' := mkSet H17 : elts n).
       replace (crh_inv (cr_inv z)) with (ζ' : set) by auto.
       rewrite -> H16.
       unfold combinations_right_helper.
@@ -2051,7 +2051,7 @@ Section Combinations_orbit_stabilizer.
     unfold sets.functionify.
     destruct constructive_indefinite_description as [crh].
     destruct a as [H7 [H8 H9]].
-    set (ξ'ζ := exist H6 : elts n).
+    set (ξ'ζ := mkSet H6 : elts n).
     replace (x' z) with (ξ'ζ : set) by auto.
     rewrite -> H9.
     clear H9.
@@ -2066,7 +2066,7 @@ Section Combinations_orbit_stabilizer.
       clear a i2 i3 e.
       apply function_record_injective in H14; try congruence.
       subst.
-      set (ξ'ζ' := exist i1 : elts k).
+      set (ξ'ζ' := mkSet i1 : elts k).
       replace (x' z) with (ξ'ζ' : set) by auto.
       rewrite -> H11.
       unfold combinations_left_helper_k.
@@ -2108,7 +2108,7 @@ Section Combinations_orbit_stabilizer.
       clear a i1 i2 e.
       apply function_record_injective in H14; try congruence.
       subst.
-      set (ξ'ζ' := exist Z : elts (n \ k)).
+      set (ξ'ζ' := mkSet Z : elts (n \ k)).
       replace (x' z) with (ξ'ζ' : set) by auto.
       rewrite -> H11.
       unfold combinations_left_helper_n_minus_k.
@@ -2152,7 +2152,7 @@ Proof.
   apply orbit_stabilizer_cardinality.
   intros y H0.
   rewrite -> cp_range in H0.
-  set (γ := exist H0 : elts (set_of_combinations n k)).
+  set (γ := mkSet H0 : elts (set_of_combinations n k)).
   replace y with (γ : set) in * by auto.
   apply two_sided_inverse_bijective.
   exists (combinations_left n k H γ), (combinations_right n k H γ).

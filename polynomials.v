@@ -233,11 +233,11 @@ Section Polynomial_theorems.
   Add Ring poly_ring : (ringify _ : ring_theory 0 _ _ _ _ _ eq).
   Add Ring poly_ring_raw : (ringify PR).
 
-  Definition IRP (c : R) := (exist (consts_are_polys _ c)) : poly.
+  Definition IRP (c : R) := (mkSet (consts_are_polys _ c)) : poly.
   Coercion IRP : R >-> poly.
 
   Definition coefficient (f : poly) n := coefficient _ (f : series) n : R.
-  Definition x := (exist (x_is_poly _)) : poly.
+  Definition x := (mkSet (x_is_poly _)) : poly.
 
   Theorem IPS_eq : ∀ f g : poly, (f : series) = (g : series) ↔ f = g.
   Proof.
@@ -1493,7 +1493,7 @@ Section Polynomial_theorems.
       apply Extensionality.
       split; intros H; rewrite -> Singleton_classification in *; subst.
       - apply roots_in_R in H as H0.
-        set (ζ := exist H0 : R).
+        set (ζ := mkSet H0 : R).
         rewrite -> (reify H0) in *; fold ζ in H |-*.
         apply roots_action in H.
         unfold rings.sub, IRs, rings.IRS in *.
@@ -1538,7 +1538,7 @@ Section Polynomial_theorems.
         now exists 0%N. }
       apply Nonempty_classification in H1 as [a H1].
       apply roots_in_R in H1 as H2.
-      set (α := exist H2 : R).
+      set (α := mkSet H2 : R).
       rewrite -> (reify H2) in *; fold α in H1.
       apply root_classification in H1 as [g H1].
       subst.
@@ -1565,7 +1565,7 @@ Section Polynomial_theorems.
         apply zero_le. }
       apply Nonempty_classification in H1 as [a H1].
       apply roots_in_R in H1 as H2.
-      set (α := exist H2 : R).
+      set (α := mkSet H2 : R).
       rewrite -> (reify H2) in *; fold α in H1.
       apply root_classification in H1 as [g H1].
       subst.

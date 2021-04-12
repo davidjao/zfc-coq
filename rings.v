@@ -570,7 +570,7 @@ Section Ring_theorems.
     Definition ISR : sub_R → R.
     Proof.
       move: (@elts_in_set) => /[swap] x /(_ _ x) /subset H.
-      exact (exist H).
+      exact (mkSet H).
     Defined.
 
     Coercion ISR : sub_R >-> R.
@@ -581,7 +581,7 @@ Section Ring_theorems.
       have H: a + b ∈ S.
       { elim SR => [H [H0 [H1 H2]]].
         apply H; apply (@elts_in_set S). }
-      exact (exist H).
+      exact (mkSet H).
     Defined.
 
     Definition sub_mul : sub_R → sub_R → sub_R.
@@ -590,7 +590,7 @@ Section Ring_theorems.
       have H: a * b ∈ S.
       { elim SR => [H [H0 [H1 H2]]].
         apply H0; apply (@elts_in_set S). }
-      exact (exist H).
+      exact (mkSet H).
     Defined.
 
     Definition sub_neg : sub_R → sub_R.
@@ -599,7 +599,7 @@ Section Ring_theorems.
       have H: -a ∈ S.
       { elim SR => [H [H0 [H1 H2]]].
         apply H1; apply (@elts_in_set S). }
-      exact (exist H).
+      exact (mkSet H).
     Defined.
 
     Declare Scope Subring_scope.
@@ -615,7 +615,7 @@ Section Ring_theorems.
     Definition sub_one : sub_R.
     Proof.
       elim SR => [H [H0 [H1 H2]]].
-      exact (exist H2).
+      exact (mkSet H2).
     Defined.
     Notation "1" := sub_one : Subring_scope.
 
@@ -649,7 +649,7 @@ Section Ring_theorems.
       auto.
     Qed.
 
-    Definition sub_zero := (exist zero_construction) : sub_R.
+    Definition sub_zero := (mkSet zero_construction) : sub_R.
     Notation "0" := sub_zero : Subring_scope.
     Theorem sub_A1 : ∀ a b, a + b = b + a.
     Proof.

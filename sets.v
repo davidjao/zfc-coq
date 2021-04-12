@@ -25,13 +25,10 @@ Axiom Infinity : ∃ X, (∃ y, (∀ z, z ∉ y) ∧ y ∈ X) ∧ ∀ x,
 
 (* End of axioms. *)
 
-Section Set_to_type.
-  Variable S : set.
-  Definition elts := {x : set | x ∈ S}.
-  Definition elt_to_set (x : elts) := proj1_sig x.
-  Coercion elt_to_set : elts >-> set.
-End Set_to_type.
+Record elts S := mkSet { elt_to_set :> set; elts_in_set : elt_to_set ∈ S; }.
+Arguments mkSet {S} {elt_to_set}.
 Arguments elt_to_set {S}.
+Arguments elts_in_set {S}.
 
 Theorem set_proj_injective :
   ∀ X (n m : elts X), (n : set) = (m : set) → n = m.
@@ -41,12 +38,7 @@ Proof.
   apply /f_equal /proof_irrelevance.
 Qed.
 
-Theorem elts_in_set : ∀ {S} (x : elts S), elt_to_set x ∈ S.
-Proof.
-  move=> S [x X] /= //.
-Qed.
-
-Theorem reify : ∀ {x} {S} (H : x ∈ S), x = (exist H : elts S).
+Theorem reify : ∀ {x} {S} (H : x ∈ S), x = (mkSet H : elts S).
 Proof.
   auto.
 Qed.
@@ -107,7 +99,7 @@ Definition specify_lift (A : set) (p : elts A → Prop) : set → Prop.
 Proof.
   move=> a.
   elim (excluded_middle_informative (a ∈ A)) => H.
-  - exact (p (exist H)).
+  - exact (p (mkSet H)).
   - exact False.
 Defined.
 
@@ -141,7 +133,7 @@ Proof.
   - exists X => x.
     rewrite H.
     split => [[_] [_ [s [H0 _]]] | [[s H0]] H1]; eauto using elts_in_set.
-  - exists (f (exist H)).
+  - exists (f (mkSet H)).
     split; eauto => _ [s [<- H1]].
       by apply /f_equal /set_proj_injective.
 Qed.
@@ -705,7 +697,7 @@ Section Projections.
     move: (elts_in_set z) => /Product_classification
     => /constructive_indefinite_description [a] =>
     /constructive_indefinite_description [b] [H0 [H1 H2]].
-    exact (exist H0).
+    exact (mkSet H0).
   Defined.
 
   Definition π2 : elts (A × B) → elts B.
@@ -714,13 +706,13 @@ Section Projections.
     move: (elts_in_set z) => /Product_classification
     => /constructive_indefinite_description [a] =>
     /constructive_indefinite_description [b] [H0 [H1 H2]].
-    exact (exist H1).
+    exact (mkSet H1).
   Defined.
 
   Theorem π1_action :
     ∀ a b (Ha : a ∈ A) (Hb : b ∈ B)
-      (H : (exist Ha : elts A, exist Hb : elts B) ∈ A × B),
-      π1 (exist H) = exist Ha.
+      (H : (mkSet Ha : elts A, mkSet Hb : elts B) ∈ A × B),
+      π1 (mkSet H) = mkSet Ha.
   Proof.
     rewrite /π1 => a b Ha Hb H.
     elim constructive_indefinite_description => x [z [p [p0 p1]]].
@@ -731,8 +723,8 @@ Section Projections.
 
   Theorem π2_action :
     ∀ a b (Ha : a ∈ A) (Hb : b ∈ B)
-      (H : (exist Ha : elts A, exist Hb : elts B) ∈ A × B),
-      π2 (exist H) = exist Hb.
+      (H : (mkSet Ha : elts A, mkSet Hb : elts B) ∈ A × B),
+      π2 (mkSet H) = mkSet Hb.
   Proof.
     rewrite /π2 => a b Ha Hb H.
     elim constructive_indefinite_description => x [z [p [p0 p1]]].
@@ -824,7 +816,7 @@ Proof.
   [x /Specify_classification [H _] | | ] //.
   - exists σ.
     split; auto using elts_in_set => y; rewrite Specify_classification //.
-  - exists (exist H : elts X).
+  - exists (mkSet H : elts X).
     apply Extensionality => z.
     rewrite Specify_classification H0 //.
 Qed.
@@ -955,12 +947,12 @@ Proof.
     eauto using elts_in_set. }
   have H0: is_function {z in A × B | ∃ a : elts A, z = (a, p a)} A B.
   { (split => a; try rewrite 1 ? Specify_classification => [[H0 H1]] //) => H0.
-    exists (p (exist H0)).
+    exists (p (mkSet H0)).
     ((repeat split; eauto using elts_in_set) =>
      [| y]; rewrite Specify_classification ? Product_classification)
     => [| [H1 [H2 [c /Ordered_pair_iff [H3 H4]]]]].
     - split; eauto using elts_in_set.
-      now (exists (exist H0 : elts A)).
+      exists (mkSet H0 : elts A) => //.
     - move: H3 H4 H0 H1 => -> -> H0 H1.
       apply /f_equal /f_equal /set_proj_injective => //. }
   exists (mkFunc H0).
@@ -996,7 +988,7 @@ Section Function_evaluation.
     move=> [x H].
     have H0: f x ∈ range f.
       by auto using function_maps_domain_to_range.
-      exact (exist H0).
+      exact (mkSet H0).
   Defined.
 
   Definition functionify : (elts A → elts B) → function.
@@ -1111,10 +1103,10 @@ Theorem Surjective_classification : ∀ f, surjective f ↔ ∀ y,
         y ∈ range f → ∃ x, x ∈ domain f ∧ f x = y.
 Proof.
   split => [H y H0 | H [y Y]].
-  - elim (H (exist H0 : elts (range f))) => [[x X] H1].
+  - elim (H (mkSet H0 : elts (range f))) => [[x X] H1].
     inversion H1; eauto.
   - elim (H _ Y) => [x [H0]].
-    exists (exist H0 : elts (domain f)).
+    exists (mkSet H0 : elts (domain f)).
     exact: set_proj_injective.
 Qed.
 
@@ -1497,7 +1489,7 @@ Section Quotient_maps.
       [y /Specify_classification [H0 H1] | ] //.
       exists x.
       repeat split; auto; rewrite -> Specify_classification in *; intuition. }
-    exact (exist H0).
+    exact (mkSet H0).
   Defined.
 
 End Quotient_maps.
@@ -1507,7 +1499,7 @@ Theorem quotient_lift : ∀ {X R : set} (y : elts (X / R)),
 Proof.
   rewrite /quotient => X R [y /[dup] /quotient_classification [H [x [H0 H1]]]]
                          /[dup] /replacement_classification [γ H2] H3.
-  exists (exist H0 : elts X).
+  exists (mkSet H0 : elts X).
   apply /set_proj_injective /Extensionality => /= z.
   split => [/Specify_classification /H1 H4 | H4] //.
   apply /Specify_classification /H1 => //.
@@ -1799,7 +1791,7 @@ Proof.
   move=> [z /Product_classification /constructive_indefinite_description
             [x /constructive_indefinite_description [y [H [H0 H1]]]]].
   have H2: (y, x) ∈ T × S by apply Product_classification; eauto.
-  exact (exist H2).
+  exact (mkSet H2).
 Defined.
 
 Definition swap_function S T := functionify (swap_product S T).

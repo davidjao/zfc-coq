@@ -201,12 +201,12 @@ Bind Scope N_scope with N.
 Definition INS (a : N) := elt_to_set a : set.
 Coercion INS : N >-> set.
 
-Definition zero := (exist PA1_ω) : N. (* PA1 : Zero is a natural. *)
+Definition zero := (mkSet PA1_ω) : N. (* PA1 : Zero is a natural. *)
 
 Definition S : N → N. (* PA2 : The successor of a natural is a natural. *)
 Proof.
   move=> [n H].
-  exact (exist (PA2_ω n H)).
+  exact (mkSet (PA2_ω n H)).
 Defined.
 
 Notation "0" := zero : N_scope.
@@ -883,7 +883,7 @@ Proof.
   rewrite -add_1_r add_comm //.
 Qed.
 
-Definition pred (n : N) := (exist (union_ω (elts_in_set n)) : N).
+Definition pred (n : N) := (mkSet (union_ω (elts_in_set n)) : N).
 
 Definition sub a b := (iterated_op (λ x _, pred x) a id b).
 
@@ -1186,7 +1186,7 @@ Proof.
   elim (ω_WOP {x of type ω | P x}) =>
   [x [/Specify_classification [H0]] | | x /Specify_classification []] //.
   - rewrite (reify H0) despecify.
-    exists (exist H0 : N).
+    exists (mkSet H0 : N).
     split; auto => k H1.
     apply /le_is_subset /b0 /Specify_classification.
     rewrite despecify.

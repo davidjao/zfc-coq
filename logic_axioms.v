@@ -34,7 +34,6 @@ Proof.
   move: classic => / [swap] P / [swap] H / (λ x, x P); by tauto.
 Qed.
 
-Arguments exist {A P x}.
 Arguments constructive_indefinite_description {A P}.
 
 Notation "'If' P 'then' v1 'else' v2" :=

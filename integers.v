@@ -29,7 +29,7 @@ Proof.
     rewrite -> (reify H), (reify H0), (reify H1), (reify H2), (reify H3),
     (reify H6), despecify, ? π1_action, ? π2_action in *.
     split; auto.
-    apply (naturals.cancellation_add (π2 (exist H0))).
+    apply (naturals.cancellation_add (π2 (mkSet H0))).
     ring_simplify [H4 H5].
     rewrite <-H5; ring_simplify [H4]; now rewrite -> H4.
 Qed.
@@ -50,7 +50,7 @@ Proof.
   intros [a A] [b B].
   assert ((a, b) ∈ ω × ω) as H.
   { apply Product_classification; eauto. }
-  exact (quotient_map _ (exist H)).
+  exact (quotient_map _ (mkSet H)).
 Defined.
 
 Infix "-" := embed : set_scope.
@@ -61,7 +61,7 @@ Proof.
   destruct (quotient_lift z) as [y H], (unique_set_element y)
       as [x [[H0 H1] H2]].
   apply Product_classification in H0 as [a [b [H3 [H4 H5]]]].
-  exists (exist H3 : N), (exist H4 : N).
+  exists (mkSet H3 : N), (mkSet H4 : N).
   apply set_proj_injective.
   simpl in *.
   now rewrite <-H, <-H5, H1, quotient_image.

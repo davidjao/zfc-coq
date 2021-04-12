@@ -66,7 +66,7 @@ Proof.
   apply Powerset_classification in H.
   assert (𝐐 ≠ α) as H4 by (now contradict H1).
   apply not_proper_subset_inhab in H4 as [z [H4 H5]].
-  - exists (exist H4 : Q); auto.
+  - exists (mkSet H4 : Q); auto.
   - contradict H4.
     destruct H4 as [H4 H5].
     now apply Subset_equality_iff.
@@ -120,8 +120,8 @@ Proof.
   split.
   - intros q H4.
     apply Dedekind_cut_0 in H4 as H5.
-    replace q with ((exist H5 : Q) : set) in * by auto.
-    replace p with ((exist H3 : Q) : set) in * by auto.
+    replace q with ((mkSet H5 : Q) : set) in * by auto.
+    replace p with ((mkSet H3 : Q) : set) in * by auto.
     eauto using Dedekind_cut_2, Dedekind_cut_4.
   - contradict H0.
     now apply set_proj_injective.
@@ -159,9 +159,9 @@ Proof.
     - apply Powerset_classification.
       intros z H2.
       apply Union_classification in H2 as [a [H2 H3]].
-      now apply (Dedekind_cut_0 (exist (H _ H2))).
+      now apply (Dedekind_cut_0 (mkSet (H _ H2))).
     - apply Nonempty_classification in H0 as [z H0].
-      set (ζ := (exist (H _ H0)) : R).
+      set (ζ := (mkSet (H _ H0)) : R).
       pose proof Dedekind_cut_1 ζ as H2.
       rewrite -> neq_sym in H2.
       apply Nonempty_classification in H2 as [x H2].
@@ -179,7 +179,7 @@ Proof.
       + rewrite <-H2.
         intros z H8.
         apply Union_classification in H8 as [x [H8 H9]].
-        destruct (H1 (exist (H _ H8)) H8) as [H10 | H10].
+        destruct (H1 (mkSet (H _ H8)) H8) as [H10 | H10].
         * now apply H10.
         * inversion H10.
           congruence.
@@ -199,7 +199,7 @@ Proof.
       split; auto.
       apply Union_classification.
       now (exists x). }
-  set (γ := exist H2 : R).
+  set (γ := mkSet H2 : R).
   exists γ.
   split.
   - intros α H3.
@@ -220,7 +220,7 @@ Proof.
         by eauto using not_proper_subset_inhab, set_proj_injective.
     simpl in *.
     apply Union_classification in H7 as [a [H7 H9]].
-    set (α := exist (H _ H7) : R).
+    set (α := mkSet (H _ H7) : R).
     apply (H3 α) in H7 as H10.
     unfold le in H10.
     assert (¬ δ < α) as H12 by (pose proof (T α δ); tauto).
@@ -229,8 +229,8 @@ Proof.
     + intros z H12.
       apply (Dedekind_cut_0 α) in H9 as H13.
       apply Dedekind_cut_0 in H12 as H17.
-      replace s with ((exist H13 : Q) : set) in * by auto.
-      replace z with ((exist H17 : Q) : set) in * by auto.
+      replace s with ((mkSet H13 : Q) : set) in * by auto.
+      replace z with ((mkSet H17 : Q) : set) in * by auto.
       eapply Dedekind_cut_2; eauto using Dedekind_cut_4.
     + intros H12.
       rewrite -> H12 in H8.
@@ -280,7 +280,7 @@ Proof.
     now rewrite -> despecify in *.
 Qed.
 
-Definition IQR (q : Q) := (exist (iqr_in q)) : R.
+Definition IQR (q : Q) := (mkSet (iqr_in q)) : R.
 Definition zero := IQR 0.
 
 Coercion IQR : Q >-> R.
@@ -321,7 +321,7 @@ Proof.
     apply neq_sym, Nonempty_classification in H0 as [y H0].
     apply Dedekind_cut_0 in H as H1.
     apply Dedekind_cut_0 in H0 as H2.
-    exists (exist H1 + exist H2).
+    exists (mkSet H1 + mkSet H2).
     apply Specify_classification.
     split; eauto using elts_in_set.
   - destruct (not_proper_subset_inhab 𝐐 α)
@@ -329,8 +329,8 @@ Proof.
     auto using not_Q_subset, not_Q_eq.
     intros H3.
     apply Subset_equality_iff in H3 as [H3 H4].
-    set (ρ := exist H : Q).
-    set (σ := exist H1 : Q).
+    set (ρ := mkSet H : Q).
+    set (σ := mkSet H1 : Q).
     pose proof (elts_in_set (ρ + σ)) as H5.
     apply H4, Specify_classification in H5 as [H5 [r [s [H6 [H7 H8]]]]].
     assert (r + s < ρ + σ)%Q.
@@ -367,7 +367,7 @@ Qed.
 Definition add : R → R → R.
 Proof.
   intros a b.
-  exact (exist (add_in a b)).
+  exact (mkSet (add_in a b)).
 Defined.
 
 Infix "+" := add : R_scope.
@@ -431,7 +431,7 @@ Proof.
   - apply Specify_classification.
     apply Dedekind_cut_0 in H as H0.
     split; auto.
-    set (ζ := (exist H0) : Q).
+    set (ζ := (mkSet H0) : Q).
     replace z with (ζ : set) in * by auto.
     apply Dedekind_cut_3 in H as [r [H H1]].
     exists r, (ζ+-r)%Q.
@@ -464,7 +464,7 @@ Proof.
     { intros [H4 H5].
       contradict H1.
       now apply Subset_equality_iff. }
-    set (σ := exist H4 : Q).
+    set (σ := mkSet H4 : Q).
     exists (-σ-1).
     apply Specify_classification.
     split; unfold IQS; auto using elts_in_set.
@@ -475,7 +475,7 @@ Proof.
     apply neq_sym in H.
     apply Nonempty_classification in H as [s H].
     apply Dedekind_cut_0 in H as H0.
-    set (σ := (exist H0) : Q).
+    set (σ := (mkSet H0) : Q).
     intros H1.
     pose proof (elts_in_set (-σ)) as H2; simpl in *.
     rewrite <-H1 in H2.
@@ -519,7 +519,7 @@ Qed.
 Definition neg : R → R.
 Proof.
   intros a.
-  exact (exist (neg_in a)).
+  exact (mkSet (neg_in a)).
 Defined.
 
 Notation "- a" := (neg a) : R_scope.
@@ -533,7 +533,7 @@ Proof.
   apply Nonempty_classification in H1 as [x H1].
   apply Powerset_classification in H0.
   assert (x ∈ 𝐐) as H5 by eauto.
-  set (ξ := exist H5 : Q).
+  set (ξ := mkSet H5 : Q).
   destruct (Q_archimedean ξ b) as [k [H6 H7]]; auto.
   destruct (WOP (λ m, (k + m)%Z * b ∉ α)) as [n [H8 H9]].
   - intros m H8.
@@ -560,7 +560,7 @@ Proof.
     { intros [H8 H9].
       contradict H9.
       now apply Subset_equality_iff. }
-    set (ζ := exist H8 : Q).
+    set (ζ := mkSet H8 : Q).
     destruct (Q_archimedean ζ b) as [m [H10 H11]]; auto.
     exists (m - k + 1)%Z.
     split.
@@ -620,7 +620,7 @@ Proof.
     rewrite -> (ordered_rings.lt_shift ℚ_ring_order) in *; simpl in *.
     now replace (0+-(r+s))%Q with (-s+-r)%Q by ring.
   - rewrite -> (reify H), despecify in *.
-    set (v := exist H : Q) in *.
+    set (v := mkSet H : Q) in *.
     set (w := (-v * 2^-1)%Q).
     assert (0 < 2)%Z as H1 by apply (ordered_rings.zero_lt_2 ℤ_order).
     assert (0 < w)%Q as H2.
@@ -700,7 +700,7 @@ Proof.
     apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
     apply Powerset_classification in H1.
     now apply H1. }
-  set (γ := exist H1 : Q).
+  set (γ := mkSet H1 : Q).
   assert (¬ γ < 0)%Q as H2.
   { contradict H0.
     unfold zero, IQR, iqr_set.
@@ -783,7 +783,7 @@ Proof.
   intros a b.
   destruct (excluded_middle_informative (0 < a)),
   (excluded_middle_informative (0 < b)).
-  - exact (exist (mul_pos_in a b l l0)).
+  - exact (mkSet (mul_pos_in a b l l0)).
   - exact 0.
   - exact 0.
   - exact 0.
@@ -819,7 +819,7 @@ Proof.
     split; auto.
     apply pos_nonempty in H as [c [H H3]].
     apply pos_nonempty in H0 as [d [H0 H4]].
-    set (ξ := exist H1 : Q).
+    set (ξ := mkSet H1 : Q).
     exists c, d, ξ.
     repeat split; auto.
     left; simpl.
@@ -970,7 +970,7 @@ Proof.
     + apply Specify_classification.
       split; eauto using Dedekind_cut_0.
       apply Dedekind_cut_0 in H0 as H1.
-      set (ζ := exist H1 : Q).
+      set (ζ := mkSet H1 : Q).
       replace z with (ζ : set) in * by auto.
       destruct (classic (0 < ζ)%Q) as [H2 | H2].
       * apply Dedekind_cut_3 in H0 as [t [H0 H3]].
@@ -1135,7 +1135,7 @@ Definition inv_pos : R → R.
 Proof.
   intros a.
   destruct (excluded_middle_informative (0 < a)).
-  - exact (exist (inv_pos_in _ l)).
+  - exact (mkSet (inv_pos_in _ l)).
   - exact 0.
 Defined.
 
@@ -1163,7 +1163,7 @@ Proof.
     apply Specify_classification.
     split; auto.
     rewrite -> (reify H0), despecify in *.
-    set (ξ := exist H0 : Q) in *.
+    set (ξ := mkSet H0 : Q) in *.
     exists ξ, 2%Q.
     repeat split; auto using one_lt_2.
     now left; left.
@@ -1281,7 +1281,7 @@ Proof.
     unfold iqr_set in H0.
     apply Specify_classification in H0 as [H0 H1].
     rewrite -> (reify H0), despecify in H1.
-    set (ξ := exist H0 : Q) in *.
+    set (ξ := mkSet H0 : Q) in *.
     set (w := (ξ^-1)%Q).
     apply NNPP; intros H2.
     assert (0 < ξ)%Q as H3.
@@ -1432,7 +1432,7 @@ Proof.
     + apply (O0_opp ℚ_ring_order) in H7.
       tauto.
   - destruct H3 as [H3 [ac [bc [H4 [H5 H6]]]]].
-    set (ζ := exist H3 : Q).
+    set (ζ := mkSet H3 : Q).
     replace z with (IQS ζ) in * by auto.
     apply set_proj_injective in H4.
     apply Specify_classification in H5
@@ -1791,7 +1791,7 @@ Proof.
     apply Specify_classification in H as [H H0].
     apply Specify_classification.
     rewrite -> (reify H), despecify in *.
-    set (ρ := exist H : Q) in *.
+    set (ρ := mkSet H : Q) in *.
     split; auto.
     rewrite -> (ordered_rings.lt_shift ℚ_ring_order) in H0; simpl in H0.
     apply lt_dense in H0 as [c [H0 H1]].
@@ -1813,7 +1813,7 @@ Proof.
     unfold IQR, iqr_set in H1, H2.
     apply Specify_classification in H1 as [H1 H3].
     rewrite -> (reify H1), despecify in *.
-    set (ρ := exist H1 : Q) in *.
+    set (ρ := mkSet H1 : Q) in *.
     assert (a ≤ ρ)%Q as [H4 | H4].
     { rewrite -> (le_not_gt ℚ_ring_order); simpl.
       contradict H2.
@@ -1879,7 +1879,7 @@ Proof.
   - apply Specify_classification in H3 as [H3 H4].
     apply Specify_classification.
     rewrite -> (reify H3), despecify in *.
-    set (ξ := exist H3 : Q) in *.
+    set (ξ := mkSet H3 : Q) in *.
     split; auto.
     destruct (rationals.T 0 ξ) as [[H5 _] | [[_ [H5 _]] | [_ [_ H5]]]].
     + assert (1 < a * (b * ξ^-1))%Q.

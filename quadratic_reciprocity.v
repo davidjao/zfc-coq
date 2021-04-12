@@ -282,7 +282,7 @@ Section Pretty_picture_lemmas.
       { intros y.
         apply Product_classification.
         eauto using elts_in_set. }
-      set (f := sets.functionify (λ y : N, exist (H0 y))).
+      set (f := sets.functionify (λ y : N, mkSet (H0 y))).
       assert (x ⊂ domain f) as H1.
       { unfold f.
         rewrite -> sets.functionify_domain.
@@ -309,7 +309,7 @@ Section Pretty_picture_lemmas.
         apply Specify_classification.
         unfold f in *.
         rewrite -> sets.functionify_domain in H4.
-        set (γ := exist H4 : N).
+        set (γ := mkSet H4 : N).
         rewrite -> (reify H4) in *; fold γ in H3, H4 |-*.
         apply lt_is_in in H3.
         split; rewrite -> functionify_action.

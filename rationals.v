@@ -16,7 +16,7 @@ Proof.
     apply Product_classification in H as [x [y [H1 [H2 H3]]]].
     subst; simpl.
     rewrite proj2_eval in H0; auto.
-    exists (exist H1 : Z), (exist H2 : Z), (exist H1 : Z), (exist H2 : Z).
+    exists (mkSet H1 : Z), (mkSet H2 : Z), (mkSet H1 : Z), (mkSet H2 : Z).
     rewrite integers.M1 //.
   - intros x y H H0 H1.
     rewrite -> Specify_classification in *.
@@ -85,9 +85,9 @@ Proof.
   intros a b.
   destruct (excluded_middle_informative (b = 0)).
   - pose proof embed_zero as H.
-    exact (quotient_map rational_relation (exist H)).
+    exact (quotient_map rational_relation (mkSet H)).
   - apply (embed_nonzero a) in n.
-    exact (quotient_map rational_relation (exist n)).
+    exact (quotient_map rational_relation (mkSet n)).
 Defined.
 
 Infix "/" := embed : Q_scope.
@@ -100,8 +100,8 @@ Proof.
   apply Specify_classification in H0 as [H0 H3].
   apply Product_classification in H0 as [a [b [H0 [H4 H5]]]].
   subst.
-  exists (exist H0 : Z), (exist H4 : Z).
-  assert (exist H4 ≠ 0) as H5.
+  exists (mkSet H0 : Z), (mkSet H4 : Z).
+  assert (mkSet H4 ≠ 0) as H5.
   { contradict H3.
     rewrite proj2_eval; auto.
     now rewrite <-H3. }
@@ -124,7 +124,7 @@ Proof.
     repeat rewrite -> Ordered_pair_iff in *.
     intuition.
     subst.
-    destruct a', b', c', d'.
+    destruct a' as [a i], b' as [b i0], c' as [c i1], d' as [d i2].
     simpl in *.
     replace A with i; replace B with i0; replace C with i1;
       replace D with i2; auto using proof_irrelevance.
@@ -133,14 +133,14 @@ Proof.
     split.
     + apply Product_classification.
       exists (c, d), (a, b).
-      cut (∀ e f (F : f ∈ 𝐙), e ∈ 𝐙 → exist F ≠ 0 → (e, f) ∈ 𝐙0); eauto.
+      cut (∀ e f (F : f ∈ 𝐙), e ∈ 𝐙 → mkSet F ≠ 0 → (e, f) ∈ 𝐙0); eauto.
       intros e f F E H2.
       apply Specify_classification.
       split; try apply Product_classification; eauto.
       rewrite proj2_eval; auto.
       contradict H2.
       now apply set_proj_injective.
-    + exists (exist C : Z), (exist D : Z), (exist A : Z), (exist B : Z).
+    + exists (mkSet C : Z), (mkSet D : Z), (mkSet A : Z), (mkSet B : Z).
       repeat split; auto.
       ring [H1].
 Qed.

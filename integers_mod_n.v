@@ -207,7 +207,7 @@ Section Modular_arithmetic.
   Coercion IZnS : Z_ >-> set.
 
   Definition Z_to_Z_n (x : Z) :=
-    quotient_map relation_mod (exist (elts_in_set x)) : Z_.
+    quotient_map relation_mod (mkSet (elts_in_set x)) : Z_.
 
   Coercion Z_to_Z_n : Z >-> Z_.
 
@@ -457,7 +457,7 @@ Section Modular_arithmetic.
       intros x.
       pose proof (elts_in_set x) as H.
       apply elements_of_naturals_are_naturals in H; eauto using elts_in_set.
-      exact (exist H).
+      exact (mkSet H).
     Defined.
 
     Theorem map_to_lt_n : ∀ x, map_to_N x < n.
@@ -490,7 +490,7 @@ Section Modular_arithmetic.
         now replace H with H0 in H1 by now apply proof_irrelevance.
       - intros y H.
         rewrite -> (reify H) in *.
-        destruct (surjective_mod_n_on_interval (exist H))
+        destruct (surjective_mod_n_on_interval (mkSet H))
           as [x [[[H0 H1] H2] H3]].
         apply le_def in H0 as [ξ H4].
         ring_simplify in H4; subst.
@@ -593,7 +593,7 @@ Section Modular_arithmetic.
         destruct (constructive_indefinite_description H0) as [f [H1 [H2 H3]]].
         rewrite -> lt_is_in, <-H1 in l.
         apply Euler_Phi_helper in l; auto.
-        exact (exist l).
+        exact (mkSet l).
       - exact 0.
     Defined.
 
@@ -649,7 +649,7 @@ Section Modular_arithmetic.
         rewrite -> inverse_domain, e1; auto. }
       assert ((inverse f) a ∈ ω) as H2 by
             (eapply elements_of_naturals_are_naturals; eauto using elts_in_set).
-      set (ι := exist H2 : N).
+      set (ι := mkSet H2 : N).
       exists ι.
       assert (ι < x)%N as H3 by now apply lt_is_in.
       destruct excluded_middle_informative; try tauto.
@@ -1125,7 +1125,7 @@ Section Modular_arithmetic.
       - subst; repeat destruct excluded_middle_informative; auto;
           apply Specify_classification in i as [H0 H1];
           rewrite -> (reify H0), despecify in *;
-          replace (exist H0 : Z_) with (0 : Z_) in *
+          replace (mkSet H0 : Z_) with (0 : Z_) in *
             by (now apply set_proj_injective);
           destruct H1 as [[x H1] H2], Z_mod_prime_is_ID as [H3 H4];
           contradiction H4;
@@ -1277,7 +1277,7 @@ Section Modular_arithmetic.
           rewrite -> sets.functionify_action in H2.
           apply set_proj_injective in H2.
           rewrite <-H2 in H5.
-          exists (y * (exist H4)).
+          exists (y * (mkSet H4)).
           now rewrite -> H5, M2. }
         rewrite -> Inverse_image_classification in *; eauto;
           unfold unit_square_function; rewrite <-? restriction_action; auto;
@@ -1340,7 +1340,7 @@ Section Modular_arithmetic.
         split; intros H.
         + assert (z ∈ 𝐙_) as H0.
           { now apply Specify_classification in H. }
-          set (ζ := exist H0 : Z_).
+          set (ζ := mkSet H0 : Z_).
           replace z with (ζ : set) in * by auto.
           apply unit_classification in H as H1.
           apply Specify_classification.
@@ -1352,7 +1352,7 @@ Section Modular_arithmetic.
           now apply eq_sym, max_order_pow.
         + apply Specify_classification in H as [H H0].
           assert (z ∈ 𝐙_) as H1 by easy.
-          set (ζ := exist H1 : Z_).
+          set (ζ := mkSet H1 : Z_).
           replace z with (ζ : set) in * by auto.
           rewrite -> despecify in H0.
           unfold rings.sub in H0.
@@ -1450,7 +1450,7 @@ Section Modular_arithmetic.
                                          ? sets.functionify_range; auto.
         subst.
         apply set_proj_injective in H3.
-        pose proof difference_of_squares ℤ_ (exist H4) a as H1; simpl in H1.
+        pose proof difference_of_squares ℤ_ (mkSet H4) a as H1; simpl in H1.
         rewrite -> H3, A4 in H1.
         apply Pairing_classification.
         apply eq_sym, (integral_domains.cancellation (ℤ_ID prime_modulus)) in H1
@@ -1967,8 +1967,8 @@ Section Modular_arithmetic.
       clear Q.
       unfold QR_r_function, QR_r_N in *.
       apply Specify_classification in H as [H H2], H0 as [H0 H3].
-      set (ξ := exist H : N).
-      set (γ := exist H0 : N).
+      set (ξ := mkSet H : N).
+      set (γ := mkSet H0 : N).
       rewrite -> (reify H), (reify H0), despecify,
       ? @sets.functionify_action in *.
       rewrite -/ξ -/γ in H1 H2 H3 |-*.
@@ -2033,7 +2033,7 @@ Section Modular_arithmetic.
           apply Specify_classification.
           rewrite -> despecify.
           eauto using elts_in_set. }
-        set (η := exist H0 : N).
+        set (η := mkSet H0 : N).
         exists η.
         split.
         + assert (1 ≤ η ≤ # QR)%N as H1.

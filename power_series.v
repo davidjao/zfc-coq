@@ -31,7 +31,7 @@ Section Power_series_construction.
     set (F := mkFunc H0).
     assert (F n ∈ Rset) as H1
         by apply function_maps_domain_to_range, elts_in_set.
-    exact (exist H1).
+    exact (mkSet H1).
   Defined.
 
   Definition seriesify : (N → R) → power_series.
@@ -44,7 +44,7 @@ Section Power_series_construction.
     assert (graph (functionify f) ∈
                   {x in P (ω × Rset) | is_function x ω Rset})
       as H1 by now apply Specify_classification.
-    exact (exist H1).
+    exact (mkSet H1).
   Defined.
 
   Theorem seriesify_coefficient : ∀ f, seriesify (coefficient f) = f.
@@ -69,7 +69,7 @@ Section Power_series_construction.
     apply func_ext; simpl; auto.
     intros x H3.
     assert (x ∈ ω) as H4 by congruence.
-    replace x with ((exist H4 : elts ω) : set) by auto.
+    replace x with ((mkSet H4 : elts ω) : set) by auto.
     now rewrite -> H2.
   Qed.
 
@@ -109,7 +109,7 @@ Section Power_series_construction.
     f_equal.
     apply func_ext; simpl; auto.
     intros n H0.
-    apply (f_equal (λ f: N → R, f (exist H0))) in H.
+    apply (f_equal (λ f: N → R, f (mkSet H0))) in H.
     now inversion H.
   Qed.
 
