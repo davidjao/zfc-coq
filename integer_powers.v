@@ -4,7 +4,7 @@ Require Export rings integers.
 Section Integer_powers.
 
   Variable Ring : rings.ring.
-  Notation R := (elts (Rset Ring)).
+  Notation R := (elts Ring).
   Declare Scope Ring_scope.
   Delimit Scope Ring_scope with R.
   Open Scope Ring_scope.

@@ -1,7 +1,7 @@
 Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Export rationals.
 
-Definition 𝐑 := {α in P 𝐐 | α ≠ ∅ ∧ α ≠ 𝐐 ∧
+Definition 𝐑 := {α in P ℚ | α ≠ ∅ ∧ α ≠ ℚ ∧
                             (∀ p q : Q, p ∈ α → q < p → q ∈ α) ∧
                             ∀ p : Q, p ∈ α → ∃ r : Q, p < r ∧ r ∈ α}.
 
@@ -10,7 +10,7 @@ Definition R := elts 𝐑.
 Definition IRS (a : R) := elt_to_set a : set.
 Coercion IRS : R >-> set.
 
-Lemma Dedekind_cut_0 : ∀ (α : R) (p : set), p ∈ α → p ∈ 𝐐.
+Lemma Dedekind_cut_0 : ∀ (α : R) (p : set), p ∈ α → p ∈ ℚ.
 Proof.
   intros α p H.
   pose proof elts_in_set α as H0.
@@ -64,8 +64,8 @@ Proof.
   pose proof elts_in_set α as H.
   apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
   apply Powerset_classification in H.
-  assert (𝐐 ≠ α) as H4 by (now contradict H1).
-  apply not_proper_subset_inhab in H4 as [z [H4 H5]].
+  assert ((α : set) ≠ ℚ) as H4 by (now contradict H1).
+  apply neq_sym, not_proper_subset_inhab in H4 as [z [H4 H5]].
   - exists (mkSet H4 : Q); auto.
   - contradict H4.
     destruct H4 as [H4 H5].
@@ -237,7 +237,7 @@ Proof.
       contradiction.
 Qed.
 
-Definition iqr_set (q : Q) := {x of type 𝐐 | (x < q)%Q}.
+Definition iqr_set (q : Q) := {x of type ℚ | (x < q)%Q}.
 
 Theorem iqr_in : ∀ q, iqr_set q ∈ 𝐑.
 Proof.
@@ -255,7 +255,7 @@ Proof.
     replace (q+-(q-1)) with 1 by field.
     apply (ordered_rings.zero_lt_1 ℚ_ring_order).
   - intros H.
-    assert (q+1 ∈ 𝐐) as H1 by (unfold IQS; auto using elts_in_set).
+    assert (q+1 ∈ ℚ) as H1 by (unfold IQS; auto using elts_in_set).
     rewrite <-H in H1.
     unfold iqr_set in *.
     apply Specify_classification in H1 as [H1 H2].
@@ -287,9 +287,9 @@ Coercion IQR : Q >-> R.
 
 Notation "0" := zero : R_scope.
 
-Definition add_set (α β : R) := {x in 𝐐 | ∃ r s, x = r + s ∧ r ∈ α ∧ s ∈ β}.
+Definition add_set (α β : R) := {x in ℚ | ∃ r s, x = r + s ∧ r ∈ α ∧ s ∈ β}.
 
-Lemma not_Q_subset : ∀ α : R, ¬ 𝐐 ⊊ α.
+Lemma not_Q_subset : ∀ α : R, ¬ ℚ ⊊ α.
 Proof.
   intros α [H H0].
   contradict H0.
@@ -298,7 +298,7 @@ Proof.
   eauto using Dedekind_cut_0.
 Qed.
 
-Lemma not_Q_eq : ∀ α : R, 𝐐 ≠ α.
+Lemma not_Q_eq : ∀ α : R, (α : set) ≠ ℚ.
 Proof.
   intros α H.
   pose proof elts_in_set α as H0.
@@ -324,8 +324,8 @@ Proof.
     exists (mkSet H1 + mkSet H2).
     apply Specify_classification.
     split; eauto using elts_in_set.
-  - destruct (not_proper_subset_inhab 𝐐 α)
-      as [r' [H H0]], (not_proper_subset_inhab 𝐐 β) as [s' [H1 H2]];
+  - destruct (not_proper_subset_inhab ℚ α)
+      as [r' [H H0]], (not_proper_subset_inhab ℚ β) as [s' [H1 H2]];
     auto using not_Q_subset, not_Q_eq.
     intros H3.
     apply Subset_equality_iff in H3 as [H3 H4].
@@ -446,7 +446,7 @@ Proof.
 Qed.
 
 Definition neg_set (α : R) :=
-  {p in 𝐐 | ∃ ρ r : Q, p = ρ ∧ (0 < r)%Q ∧ (- ρ - r)%Q ∉ α}.
+  {p in ℚ | ∃ ρ r : Q, p = ρ ∧ (0 < r)%Q ∧ (- ρ - r)%Q ∉ α}.
 
 Theorem neg_in : ∀ a, neg_set a ∈ 𝐑.
 Proof.
@@ -460,7 +460,7 @@ Proof.
     pose proof elts_in_set α as H; simpl in *.
     apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
     apply Powerset_classification in H.
-    destruct (not_proper_subset_inhab 𝐐 α) as [s [H4 H5]]; auto.
+    destruct (not_proper_subset_inhab ℚ α) as [s [H4 H5]]; auto.
     { intros [H4 H5].
       contradict H1.
       now apply Subset_equality_iff. }
@@ -532,7 +532,7 @@ Proof.
   apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
   apply Nonempty_classification in H1 as [x H1].
   apply Powerset_classification in H0.
-  assert (x ∈ 𝐐) as H5 by eauto.
+  assert (x ∈ ℚ) as H5 by eauto.
   set (ξ := mkSet H5 : Q).
   destruct (Q_archimedean ξ b) as [k [H6 H7]]; auto.
   destruct (WOP (λ m, (k + m)%Z * b ∉ α)) as [n [H8 H9]].
@@ -556,7 +556,7 @@ Proof.
       destruct H6 as [H6 | H6].
       * apply (H3 ξ); auto.
       * rewrite -> H6; auto.
-  - destruct (not_proper_subset_inhab 𝐐 α) as [z [H8 H9]]; auto.
+  - destruct (not_proper_subset_inhab ℚ α) as [z [H8 H9]]; auto.
     { intros [H8 H9].
       contradict H9.
       now apply Subset_equality_iff. }
@@ -685,7 +685,7 @@ Proof.
 Qed.
 
 Definition mul_pos_set (a b : R) :=
-  {x in 𝐐 | (∃ r s ξ : Q, x = ξ ∧ r ∈ a ∧ s ∈ b ∧ 0 < r ∧ 0 < s ∧ ξ ≤ r * s)%Q}.
+  {x in ℚ | (∃ r s ξ : Q, x = ξ ∧ r ∈ a ∧ s ∈ b ∧ 0 < r ∧ 0 < s ∧ ξ ≤ r * s)%Q}.
 
 Definition one : R := IQR 1.
 Notation "1" := one : R_scope.
@@ -695,7 +695,7 @@ Theorem pos_nonempty : ∀ a, 0 < a → ∃ c : Q, (0 < c)%Q ∧ c ∈ a.
 Proof.
   intros a H.
   apply proper_subset_inhab in H as [c [H H0]].
-  assert (c ∈ 𝐐) as H1.
+  assert (c ∈ ℚ) as H1.
   { pose proof (elts_in_set a) as H1; simpl in *.
     apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
     apply Powerset_classification in H1.
@@ -1003,7 +1003,7 @@ Proof.
 Qed.
 
 Definition inv_pos_set (α : R) :=
-  {p in 𝐐 | ∃ ρ r : Q,
+  {p in ℚ | ∃ ρ r : Q,
      p = ρ ∧ (1 < r)%Q ∧ ((ρ ≤ 0)%Q ∨ ((0 < ρ)%Q ∧ (ρ*r)^-1 ∉ α))}.
 
 Theorem inv_pos_in : ∀ a, 0 < a → inv_pos_set a ∈ 𝐑.
@@ -1025,7 +1025,7 @@ Proof.
   - pose proof H as H0.
     apply pos_nonempty in H0 as [c [H0 H1]].
     intros H2.
-    assert (c^-1 ∈ 𝐐) by (unfold IQS; auto using elts_in_set).
+    assert (c^-1 ∈ ℚ) by (unfold IQS; auto using elts_in_set).
     rewrite <-H2 in H3.
     apply Specify_classification in H3
       as [H3 [p [r [H4 [H5 [[H6 | H6] | [H6 H7]]]]]]];

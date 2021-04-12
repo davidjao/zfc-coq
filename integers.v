@@ -34,8 +34,7 @@ Proof.
     rewrite <-H5; ring_simplify [H4]; now rewrite -> H4.
 Qed.
 
-Definition 𝐙 := (ω × ω) / integer_relation.
-Definition Z := (elts 𝐙).
+Definition Z := elts ((ω × ω) / integer_relation).
 
 Declare Scope Z_scope.
 Delimit Scope Z_scope with Z.
@@ -1151,7 +1150,7 @@ Qed.
 Section IZR.
 
   Variable Ring : rings.ring.
-  Notation R := (elts (Rset Ring)).
+  Notation R := (elts Ring).
   Add Ring generic_ring : (ringify Ring).
 
   Definition IZR : Z → R.

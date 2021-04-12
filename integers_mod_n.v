@@ -164,42 +164,41 @@ Section Modular_arithmetic.
     now ring_simplify.
   Qed.
 
-  Definition relation_mod :=
-    {z in 𝐙 × 𝐙 | ∃ a b : Z, (a, b) = z ∧ a ≡ b (mod n)}.
+  Definition relation_mod := {z of type ℤ × ℤ | π1 z ≡ π2 z (mod n)}.
 
-  Theorem equivalence_mod : is_equivalence 𝐙 relation_mod.
+  Theorem equivalence_mod : is_equivalence ℤ relation_mod.
   Proof.
     repeat split.
     - intros a H.
       rewrite -> (reify H).
       apply Specify_classification; split.
       + apply Product_classification; eauto.
-      + eauto using eqm_refl.
+      + assert ((a, a) ∈ ℤ × ℤ) as H0 by (apply Product_classification; eauto).
+        now rewrite (reify H0) despecify π1_action ? π2_action.
     - intros a b H H0 H1.
       apply Specify_classification; split.
       + apply Product_classification; eauto.
-      + apply Specify_classification in H1 as [H1 [a' [b' [H2 H3]]]].
-        apply Ordered_pair_iff in H2 as [H2 H4].
-        subst.
-        eauto using eqm_sym.
+      + apply Specify_classification in H1 as [H1 H2].
+        assert ((b, a) ∈ ℤ × ℤ) as H3 by (apply Product_classification; eauto).
+        rewrite -> (reify H1), (reify H3), despecify in *.
+        rewrite π1_action // π2_action // in H2 => //.
+        now rewrite π1_action // π2_action // H2.
     - intros a b c H H0 H1 H2 H3.
       apply Specify_classification; split.
       + apply Product_classification; eauto.
-      + apply Specify_classification in H2
-          as [H2 [a' [b' [H4 H5]]]], H3 as [H3 [b'' [c' [H6 H7]]]].
-        apply Ordered_pair_iff in H4 as [H4 H8], H6 as [H6 H9].
-        subst.
-        apply set_proj_injective in H6; subst.
-        eauto using eqm_trans.
+      + apply Specify_classification in H2 as [? ?], H3 as [? ?].
+        assert ((a, c) ∈ ℤ × ℤ) as H6 by (apply Product_classification; eauto).
+        rewrite -> (reify H2), (reify H3), (reify H6), ? despecify in *.
+        rewrite π1_action // π2_action // in H4.
+        rewrite π1_action // π2_action // in H5.
+        rewrite π1_action // π2_action // H4 //.
   Qed.
 
   Declare Scope Zn_scope.
   Delimit Scope Zn_scope with Zn.
   Open Scope Zn_scope.
 
-  Definition 𝐙_ := (𝐙 / relation_mod)%set.
-
-  Definition Z_ := elts (𝐙_).
+  Definition Z_ := elts (ℤ / relation_mod)%set.
 
   Bind Scope Zn_scope with Z_.
 
@@ -235,18 +234,19 @@ Section Modular_arithmetic.
 
   Theorem IZn_eq : ∀ a b : Z, (a : Z_) = (b : Z_) ↔ a ≡ b (mod n).
   Proof.
-    intros a b.
+    intros [a A] [b B].
     split; intros H; unfold Z_to_Z_n in *.
     - apply quotient_equiv in H; auto using equivalence_mod.
-      apply Specify_classification in H as [H [a' [b' [H0 H1]]]].
-      apply Ordered_pair_iff in H0 as [H0 H2].
       simpl in *.
-      apply set_proj_injective in H0, H2.
-      now subst.
+      apply Specify_classification in H as [H H0].
+      rewrite -> (reify H), despecify in *.
+      rewrite π1_action // π2_action in H0 => //.
     - apply quotient_equiv, Specify_classification; auto using equivalence_mod.
       split.
       + apply Product_classification; eauto using elts_in_set.
-      + now exists a, b.
+      + simpl.
+        assert ((a, b) ∈ ℤ × ℤ) as H0 by (apply Product_classification; eauto).
+        rewrite (reify H0) despecify π1_action // π2_action //.
   Qed.
 
   Theorem Zproj_eq : ∀ a : Z_, a = ((a : Z) : Z_).
@@ -336,7 +336,7 @@ Section Modular_arithmetic.
   Qed.
 
   Definition ℤ_ :=
-    mkRing 𝐙_ (0 : Z_) (1 : Z_) add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
+    mkRing _ (0 : Z_) (1 : Z_) add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
 
   Add Ring Z_ring_raw : (ringify ℤ_).
   Add Ring Z_ring : (ringify ℤ_ : ring_theory (0 : Z_) _ _ _ _ _ eq).
@@ -404,11 +404,11 @@ Section Modular_arithmetic.
   Theorem units_in_ℤ_ : ∀ a : Z_, @rings.unit ℤ_ a ↔ gcd(a, n) = 1.
   Proof.
     split; intros H.
-    - destruct H as [x H]; simpl in *.
-      apply IZn_eq in H as [y H]; simpl in *; fold Z Z_ in x, y.
+    - destruct H as [x H].
+      apply IZn_eq in H as [y H]; fold Z Z_ in x, y; simpl in H.
       repeat split; try apply div_1_l.
       intros z H1 H2.
-      replace 1 with (a * x + n * (-y))%Z; try now apply div_mul_add.
+      replace 1 with (a * (Z_n_to_Z x) + n * (-y))%Z; try now apply div_mul_add.
       replace (n*(-y))%Z with (-(y*n))%Z by ring.
       rewrite <-H.
       ring.
@@ -503,7 +503,7 @@ Section Modular_arithmetic.
         IZn_eq, eq_eqm, f_equal, set_proj_injective.
     Qed.
 
-    Theorem bijection_of_Z_mod : (𝐙_ ~ modulus_in_N)%set.
+    Theorem bijection_of_Z_mod : (ℤ_ ~ modulus_in_N)%set.
     Proof.
       symmetry.
       exists (sets.functionify map_to_mod_n).
@@ -511,22 +511,22 @@ Section Modular_arithmetic.
       auto using bijective_map_to_mod_n.
     Qed.
 
-    Theorem finite_Z_mod : finite 𝐙_.
+    Theorem finite_Z_mod : finite ℤ_.
     Proof.
       exists modulus_in_N.
       auto using bijection_of_Z_mod.
     Qed.
 
-    Theorem Z_mod_card : # 𝐙_ = modulus_in_N.
+    Theorem Z_mod_card : # ℤ_ = modulus_in_N.
     Proof.
       auto using equivalence_to_card, bijection_of_Z_mod.
     Qed.
 
-    Definition Euler_Phi_set := {x of type 𝐙_ | gcd(x : Z_, n) = 1}.
+    Definition Euler_Phi_set := {x of type ℤ_ | gcd(x : Z_, n) = 1}.
 
     Definition Euler_Phi := # Euler_Phi_set.
 
-    Definition 𝐔_ := {x of type 𝐙_ | @rings.unit ℤ_ x}.
+    Definition 𝐔_ := {x of type ℤ_ | @rings.unit ℤ_ x}.
 
     Theorem Euler_Phi_unit : Euler_Phi_set = 𝐔_.
     Proof.
@@ -575,7 +575,7 @@ Section Modular_arithmetic.
     Qed.
 
     Theorem Euler_Phi_helper : ∀ f,
-        range f = Euler_Phi_set → ∀ x, x ∈ domain f → f x ∈ 𝐙_.
+        range f = Euler_Phi_set → ∀ x, x ∈ domain f → f x ∈ ℤ_.
     Proof.
       intros f H x H0.
       pose proof function_maps_domain_to_range f x H0 as H1.
@@ -1031,8 +1031,8 @@ Section Modular_arithmetic.
 
   Definition square_function := sets.functionify square.
 
-  Definition QR := {x of type 𝐙_ | @rings.unit ℤ_ x ∧ ∃ a, square a = x}.
-  Definition QNR := {x of type 𝐙_ | @rings.unit ℤ_ x ∧ (x : Z_) ∉ QR}.
+  Definition QR := {x of type ℤ_ | @rings.unit ℤ_ x ∧ ∃ a, square a = x}.
+  Definition QNR := {x of type ℤ_ | @rings.unit ℤ_ x ∧ (x : Z_) ∉ QR}.
 
   Definition legendre_symbol (a : Z_) : Z.
   Proof.
@@ -1238,7 +1238,7 @@ Section Modular_arithmetic.
         destruct H0 as [[x H0] [a H1]].
         split; eauto.
         exists a.
-        enough (a ∈ 𝐔_ ∩ 𝐙_).
+        enough (a ∈ 𝐔_ ∩ ℤ_).
         { now rewrite <-restriction_action, @functionify_action, H1;
             try now rewrite -> sets.functionify_domain. }
         rewrite -> Pairwise_intersection_classification.
@@ -1291,7 +1291,7 @@ Section Modular_arithmetic.
 
     Theorem finite_QR : finite QR.
     Proof.
-      apply (subsets_of_finites_are_finite _ 𝐙_); auto using finite_Z_mod.
+      apply (subsets_of_finites_are_finite _ ℤ_); auto using finite_Z_mod.
       intros x H.
       now apply Specify_classification in H.
     Qed.
@@ -1338,7 +1338,7 @@ Section Modular_arithmetic.
         rewrite -> Euler_Phi_unit.
         apply INZ_le, or_intror, INZ_eq, f_equal, Extensionality.
         split; intros H.
-        + assert (z ∈ 𝐙_) as H0.
+        + assert (z ∈ ℤ_) as H0.
           { now apply Specify_classification in H. }
           set (ζ := mkSet H0 : Z_).
           replace z with (ζ : set) in * by auto.
@@ -1351,7 +1351,7 @@ Section Modular_arithmetic.
           replace (ζ^d) with (1 : Z_); auto using A4.
           now apply eq_sym, max_order_pow.
         + apply Specify_classification in H as [H H0].
-          assert (z ∈ 𝐙_) as H1 by easy.
+          assert (z ∈ ℤ_) as H1 by easy.
           set (ζ := mkSet H1 : Z_).
           replace z with (ζ : set) in * by auto.
           rewrite -> despecify in H0.
@@ -1433,7 +1433,7 @@ Section Modular_arithmetic.
           now rewrite -> eqm_div_n, <-IZn_eq, H2, (mul_0_r ℤ_) in *. }
       apply Extensionality.
       unfold square_function.
-      assert ({a,-a} ⊂ 𝐙_) as H2.
+      assert ({a,-a} ⊂ ℤ_) as H2.
       { intros z H2.
         apply Pairing_classification in H2 as [H2 | H2];
           subst; eauto using elts_in_set. }
@@ -1451,7 +1451,7 @@ Section Modular_arithmetic.
         subst.
         apply set_proj_injective in H3.
         pose proof difference_of_squares ℤ_ (mkSet H4) a as H1; simpl in H1.
-        rewrite -> H3, A4 in H1.
+        rewrite <-H3, A4 in H1.
         apply Pairing_classification.
         apply eq_sym, (integral_domains.cancellation (ℤ_ID prime_modulus)) in H1
           as [H1 | H1]; simpl in H1.
@@ -1552,7 +1552,7 @@ Section Modular_arithmetic.
     Proof.
       assert (QR ⊂ roots ℤ_ (x ^ (# QR) + -1%poly)%poly) as S.
       { intros x H.
-        apply Specify_classification; simpl Rset.
+        apply Specify_classification.
         pose proof H as H0.
         apply Specify_classification in H0 as [H0 H1].
         rewrite -> (reify H0), despecify in *.

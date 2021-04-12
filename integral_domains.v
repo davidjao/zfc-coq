@@ -3,7 +3,7 @@ Require Export rings.
 
 Record integral_domain :=
   mkID {
-      ring where
+      ring :> ring where
       "a + b" :=
         (add ring a b)
           and "a * b" :=
@@ -19,7 +19,7 @@ Record integral_domain :=
 Section Integral_domain_construction.
 
   Variable ring : rings.ring.
-  Notation R := (elts (Rset ring)).
+  Notation R := (elts ring).
   Notation "0" := (zero ring).
   Notation "1" := (one ring).
   Infix "+" := (add ring).
@@ -46,7 +46,7 @@ Section Integral_domain_theorems.
   Variable ID : integral_domain.
 
   Notation ring := (ring ID).
-  Notation R := (elts (Rset ring)).
+  Notation R := (elts ring).
   Notation "0" := (zero ring).
   Notation "1" := (one ring).
   Infix "+" := (add ring).

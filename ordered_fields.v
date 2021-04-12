@@ -3,7 +3,7 @@ Require Export ordered_rings fields.
 
 Record ordered_field :=
   mkOF {
-      field : field where
+      field :> field where
       "a + b" :=
         (rings.add (fields.ring field) a b)
           and "a * b" :=
@@ -12,7 +12,7 @@ Record ordered_field :=
           (rings.zero (fields.ring field))
           and "1" :=
             (rings.one (fields.ring field));
-      lt : elts (Rset (fields.ring field)) → elts (Rset (fields.ring field))
+      lt : elts (fields.ring field) → elts (fields.ring field)
               → Prop
       where "a < b" := (lt a b);
       lt_trans : ∀ a b c, a < b → b < c → a < c;
@@ -28,7 +28,7 @@ Section Ordered_field_theorems.
   Variable OF : ordered_field.
 
   Notation Field := (field OF).
-  Notation F := (elts (Rset (fields.ring Field))).
+  Notation F := (elts (fields.ring Field)).
   Notation "0" := (rings.zero (fields.ring Field)).
   Notation "1" := (rings.one (fields.ring Field)).
   Infix "+" := (rings.add (fields.ring Field)).

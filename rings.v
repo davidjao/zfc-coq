@@ -4,7 +4,7 @@ Set Warnings "-ambiguous-paths,-uniform-inheritance".
 
 Record ring :=
   mkRing {
-      Rset : set;
+      Rset :> set;
       zero : elts Rset where "0" := zero;
       one : elts Rset where "1" := one;
       add : elts Rset → elts Rset → elts Rset where "a + b" := (add a b);
@@ -23,7 +23,7 @@ Record ring :=
 Section Ring_theorems.
 
   Variable Ring : ring.
-  Notation R := (elts (Rset Ring)).
+  Notation R := (elts Ring).
   Declare Scope Ring_scope.
   Delimit Scope Ring_scope with ring.
   Open Scope Ring_scope.
@@ -270,7 +270,7 @@ Section Ring_theorems.
     split; eapply div_trans; eauto.
   Qed.
 
-  Add Parametric Relation : (elts (Rset Ring)) assoc
+  Add Parametric Relation : (elts Ring) assoc
       reflexivity proved by (assoc_refl)
       symmetry proved by (assoc_sym)
       transitivity proved by (assoc_trans) as assoc_equivalence.
@@ -559,7 +559,7 @@ Section Ring_theorems.
   Section Subring_construction.
 
     Variable S : set.
-    Hypothesis subset : S ⊂ Rset Ring.
+    Hypothesis subset : S ⊂ Ring.
     Definition is_subring S := (∀ a b : R, a ∈ S → b ∈ S → a + b ∈ S) ∧
                                (∀ a b : R, a ∈ S → b ∈ S → a * b ∈ S) ∧
                                (∀ a : R, a ∈ S → -a ∈ S) ∧
@@ -727,7 +727,7 @@ Section Ring_theorems.
 
   Definition subring_of_arbitrary_set (S : set) : rings.ring.
   Proof.
-    elim (excluded_middle_informative (S ⊂ Rset Ring)) => s.
+    elim (excluded_middle_informative (S ⊂ Ring)) => s.
     - elim (excluded_middle_informative (is_subring S)) => i.
       + exact (mkRing _ (sub_zero S i) (sub_one S i) (sub_add S s i)
                       (sub_mul S s i) (sub_neg S s i) (sub_A3 S s i)
@@ -742,20 +742,20 @@ Section Ring_theorems.
 
     Variable S : set.
 
-    Hypothesis subset : S ⊂ Rset Ring.
+    Hypothesis subset : S ⊂ Ring.
 
     Definition subset_generated_by S :=
-      ⋂ {s in P (Rset Ring) | S ⊂ s ∧ is_subring s}.
+      ⋂ {s in P Ring | S ⊂ s ∧ is_subring s}.
 
-    Lemma generated_nonempty : {s in P (Rset Ring) | S ⊂ s ∧ is_subring s} ≠ ∅.
+    Lemma generated_nonempty : {s in P Ring | S ⊂ s ∧ is_subring s} ≠ ∅.
     Proof.
       apply /Nonempty_classification.
-      exists (Rset Ring).
+      exists Ring.
       rewrite Specify_classification Powerset_classification.
       repeat split; eauto using Set_is_subset, elts_in_set.
     Qed.
 
-    Lemma generated_subset : subset_generated_by S ⊂ Rset Ring.
+    Lemma generated_subset : subset_generated_by S ⊂ Ring.
     Proof.
       rewrite /subset_generated_by => x /Intersection_classification
       => /(_ generated_nonempty) H; move: generated_nonempty =>
@@ -791,7 +791,7 @@ Section Ring_theorems.
       - apply /Intersection_classification; auto using generated_nonempty =>
         s /Specify_classification [H1 [H2 H3]]; auto.
       - move: subset => /Powerset_classification H0 /(_ generated_nonempty).
-        suff: (S ∈ {s in P (Rset Ring) | S ⊂ s ∧ is_subring s}); auto.
+        suff: (S ∈ {s in P Ring | S ⊂ s ∧ is_subring s}); auto.
         apply Specify_classification, conj, conj; auto using Set_is_subset.
     Qed.
 
@@ -806,7 +806,7 @@ Section Ring_theorems.
   Section Subrings_match.
 
     Variable S : set.
-    Hypothesis subset_S : S ⊂ Rset Ring.
+    Hypothesis subset_S : S ⊂ Ring.
     Hypothesis subring_S : is_subring S.
 
     Theorem subrings_match :
@@ -823,7 +823,7 @@ Section Ring_theorems.
   Section Subrings_generated_by_subrings.
 
     Variable S : set.
-    Hypothesis subset_S : S ⊂ Rset Ring.
+    Hypothesis subset_S : S ⊂ Ring.
     Hypothesis subring_S : is_subring S.
 
     Theorem subring_generated_by_subring :

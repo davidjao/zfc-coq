@@ -9,8 +9,7 @@ Section Power_series_construction.
   Delimit Scope Ring_scope with ring.
   Bind Scope Ring_scope with Ring.
   Open Scope Ring_scope.
-  Notation Rset := (Rset Ring).
-  Notation R := (elts Rset).
+  Notation R := (elts Ring).
   Infix "+" := (add Ring) : Ring_scope.
   Infix "*" := (mul Ring) : Ring_scope.
   Notation "0" := (zero Ring) : Ring_scope.
@@ -19,7 +18,7 @@ Section Power_series_construction.
 
   Add Ring generic_ring : (ringify Ring).
 
-  Definition power_series_set := {x in P (ω × Rset) | is_function x ω Rset}.
+  Definition power_series_set := {x in P (ω × Ring) | is_function x ω Ring}.
 
   Definition power_series := elts power_series_set.
 
@@ -29,7 +28,7 @@ Section Power_series_construction.
     pose proof elts_in_set f as H; simpl in H.
     apply Specify_classification in H as [H H0].
     set (F := mkFunc H0).
-    assert (F n ∈ Rset) as H1
+    assert (F n ∈ Ring) as H1
         by apply function_maps_domain_to_range, elts_in_set.
     exact (mkSet H1).
   Defined.
@@ -42,7 +41,7 @@ Section Power_series_construction.
     rewrite -> sets.functionify_domain, sets.functionify_range in H, H0.
     rewrite <-Powerset_classification in H.
     assert (graph (functionify f) ∈
-                  {x in P (ω × Rset) | is_function x ω Rset})
+                  {x in P (ω × Ring) | is_function x ω Ring})
       as H1 by now apply Specify_classification.
     exact (mkSet H1).
   Defined.
@@ -62,7 +61,7 @@ Section Power_series_construction.
     destruct constructive_indefinite_description as [f'].
     simpl in *.
     replace f with
-        (graph {| domain := ω; range := Rset; graph := f; func_hyp := i1 |})
+        (graph {| domain := ω; range := Ring; graph := f; func_hyp := i1 |})
       by auto.
     destruct a as [H0 [H1 H2]].
     f_equal.

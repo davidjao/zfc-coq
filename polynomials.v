@@ -12,7 +12,7 @@ Section Polynomials_construction.
   Delimit Scope Series_scope with series.
   Bind Scope Series_scope with power_series.
   Open Scope R_scope.
-  Notation R := (elts (Rset ring)).
+  Notation R := (elts ring).
   Infix "+" := (rings.add ring) : R_scope.
   Infix "*" := (rings.mul ring) : R_scope.
   Notation "- a" := (rings.neg ring a) : R_scope.
@@ -30,8 +30,7 @@ Section Polynomials_construction.
     {f of type power_series_set ring |
       ∃ n : N, ∀ m, (n ≤ m)%N → coefficient _ f m = 0}.
 
-  Theorem polynomials_are_subset :
-    polynomial_set ⊂ Rset (power_series_ring ring).
+  Theorem polynomials_are_subset : polynomial_set ⊂ power_series_ring ring.
   Proof.
     intros f H.
     now apply Specify_classification in H as [H H0].
@@ -99,7 +98,7 @@ Section Polynomials_construction.
   Definition polynomial_ring :=
     subring _ polynomial_set polynomials_are_subset polynomials_are_subring.
 
-  Notation poly := (elts (Rset polynomial_ring)).
+  Notation poly := (elts polynomial_ring).
 
   Declare Scope Poly_scope.
   Delimit Scope Poly_scope with poly.
@@ -156,11 +155,11 @@ End Polynomials_construction.
 Section Polynomial_theorems.
 
   Variable ring : rings.ring.
-  Definition R := elts (Rset ring).
+  Definition R := elts ring.
   Notation SR := (power_series_ring ring).
   Notation PR := (polynomial_ring ring).
-  Definition series := elts (Rset SR).
-  Definition poly := elts (Rset PR).
+  Definition series := elts SR.
+  Definition poly := elts PR.
   Definition IPS :=
     ISR (power_series_ring _) (polynomial_set _)
         (polynomials_are_subset _) : poly → series.
@@ -779,9 +778,9 @@ Section Polynomial_theorems.
 
   Coercion eval : poly >-> Funclass.
 
-  Definition roots (f : poly) := {r of type (Rset ring) | f r = 0%R}.
+  Definition roots (f : poly) := {r of type ring | f r = 0%R}.
 
-  Theorem roots_in_R : ∀ f a, a ∈ roots f → a ∈ (Rset ring).
+  Theorem roots_in_R : ∀ f a, a ∈ roots f → a ∈ ring.
   Proof.
     intros f a H.
     apply Specify_classification in H; tauto.
@@ -789,7 +788,7 @@ Section Polynomial_theorems.
 
   Theorem roots_action : ∀ f (a : R), a ∈ roots f ↔ f a = 0%R.
   Proof.
-    split; assert (a ∈ (Rset ring)) as H
+    split; assert (a ∈ ring) as H
         by eauto using elts_in_set; intros H0;
       [ apply Specify_classification in H0 as [H0 H1] |
         apply Specify_classification ];

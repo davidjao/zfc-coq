@@ -3,7 +3,7 @@ Require Export integral_domains.
 
 Record ordered_ring :=
   mkOR {
-      ring : rings.ring where
+      ring :> rings.ring where
       "a + b" :=
         (add ring a b)
           and "a * b" :=
@@ -12,7 +12,7 @@ Record ordered_ring :=
           (zero ring)
           and "1" :=
             (one ring);
-      lt : elts (Rset ring) → elts (Rset ring) → Prop
+      lt : elts ring → elts ring → Prop
       where "a < b" := (lt a b);
       lt_trans : ∀ a b c, a < b → b < c → a < c;
       T : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ b < a) ∨
@@ -28,7 +28,7 @@ Section Ordered_ring_theorems.
   Variable OR : ordered_ring.
 
   Notation Ring := (ring OR).
-  Notation R := (elts (Rset Ring)).
+  Notation R := (elts Ring).
   Notation "0" := (zero Ring).
   Notation "1" := (one Ring).
   Infix "+" := (add Ring).

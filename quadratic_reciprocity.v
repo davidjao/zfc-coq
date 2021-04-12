@@ -39,7 +39,7 @@ Section Pretty_picture_lemmas.
       now apply odd_prime_positive.
   Qed.
 
-  Lemma rectangle_slice_equiv : ∀ n : N, ({x of type 𝐙 | 1 ≤ x ≤ n} ~ n)%set.
+  Lemma rectangle_slice_equiv : ∀ n : N, ({x of type ℤ | 1 ≤ x ≤ n} ~ n)%set.
   Proof.
     intros n.
     set (f := sets.functionify (λ x : N, x + 1)).
@@ -88,14 +88,14 @@ Section Pretty_picture_lemmas.
       + now rewrite <-lt_le_succ, lt_is_in.
   Qed.
 
-  Lemma rectangle_slice_finite : ∀ n : N, finite {x of type 𝐙 | 1 ≤ x ≤ n}.
+  Lemma rectangle_slice_finite : ∀ n : N, finite {x of type ℤ | 1 ≤ x ≤ n}.
   Proof.
     intros n.
     exists n.
     auto using rectangle_slice_equiv.
   Qed.
 
-  Lemma rectangle_slice_card : ∀ n : N, # {x of type 𝐙 | 1 ≤ x ≤ n} = n.
+  Lemma rectangle_slice_card : ∀ n : N, # {x of type ℤ | 1 ≤ x ≤ n} = n.
   Proof.
     intros n.
     auto using equivalence_to_card, rectangle_slice_equiv.
@@ -165,12 +165,12 @@ Section Pretty_picture_lemmas.
   Qed.
 
   Definition rectangle :=
-    {z in 𝐙 × 𝐙 | ∃ x y : Z, z = (x,y) ∧ 1 ≤ x ≤ # QR q ∧ 1 ≤ y ≤ # QR p}.
+    {z in ℤ × ℤ | ∃ x y : Z, z = (x,y) ∧ 1 ≤ x ≤ # QR q ∧ 1 ≤ y ≤ # QR p}.
   Definition lower_triangle :=
-    {z in 𝐙 × 𝐙 | ∃ x y : Z,
+    {z in ℤ × ℤ | ∃ x y : Z,
        z = (x,y) ∧ 1 ≤ x ≤ # QR q ∧ 1 ≤ y ≤ # QR p ∧ (y < p * x / q)%Q}.
   Definition upper_triangle :=
-    {z in 𝐙 × 𝐙 | ∃ x y : Z,
+    {z in ℤ × ℤ | ∃ x y : Z,
        z = (x,y) ∧ 1 ≤ x ≤ # QR q ∧ 1 ≤ y ≤ # QR p ∧ (x < q * y / p)%Q}.
 
   Definition lower_triangle_f (a : N) :=
@@ -180,7 +180,7 @@ Section Pretty_picture_lemmas.
 
   Lemma rectangle_prod :
     rectangle =
-    {x of type 𝐙 | 1 ≤ x ≤ # QR q} × {x of type 𝐙 | 1 ≤ x ≤ # QR p}.
+    {x of type ℤ | 1 ≤ x ≤ # QR q} × {x of type ℤ | 1 ≤ x ≤ # QR p}.
   Proof.
     apply Extensionality.
     split; intros H.
@@ -278,7 +278,7 @@ Section Pretty_picture_lemmas.
       destruct constructive_indefinite_description.
       rewrite -> integers.A3 in e.
       apply INZ_eq, eq_sym, equivalence_to_card, cardinality_sym.
-      assert (∀ y, (k : Z, y+1) ∈ 𝐙 × 𝐙) as H0.
+      assert (∀ y, (k : Z, y+1) ∈ ℤ × ℤ) as H0.
       { intros y.
         apply Product_classification.
         eauto using elts_in_set. }
@@ -393,12 +393,12 @@ Section Quadratic_reciprocity.
 
   Theorem lower_to_upper : (lower_triangle q p ~ upper_triangle p q)%set.
   Proof.
-    assert (lower_triangle q p = lower_triangle q p ∩ (𝐙 × 𝐙)) as H.
+    assert (lower_triangle q p = lower_triangle q p ∩ (ℤ × ℤ)) as H.
     { apply eq_sym, Intersection_subset.
       intros z H.
       now apply Specify_classification in H. }
     replace (lower_triangle q p) with
-        (domain (restriction (swap_function 𝐙 𝐙) (lower_triangle q p))).
+        (domain (restriction (swap_function ℤ ℤ) (lower_triangle q p))).
     2: { now rewrite -> restriction_domain, swap_domain. }
     rewrite -> injective_into_image.
     - apply cardinality_eq, Extensionality.
@@ -435,7 +435,7 @@ Section Quadratic_reciprocity.
         rewrite -> ? restriction_domain, ? swap_domain, <-? H in *;
         try congruence.
       apply Specify_classification in H0, H1.
-      pose proof swap_bijective 𝐙 𝐙 as [H3 H4].
+      pose proof swap_bijective ℤ ℤ as [H3 H4].
       rewrite -> Injective_classification, swap_domain in H3.
       intuition.
   Qed.

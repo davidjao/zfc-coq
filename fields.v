@@ -4,14 +4,14 @@ Require Export integer_powers Field.
 
 Record field :=
   mkField {
-      ring : rings.ring where
+      ring :> rings.ring where
       "a * b" :=
         (rings.mul ring a b)
           and "0" :=
         (rings.zero ring)
           and "1" :=
           (rings.one ring);
-      inv : elts (Rset ring) → elts (Rset ring);
+      inv : elts ring → elts ring;
       M4 : ∀ a, a ≠ 0 → (inv a) * a = 1;
       one_ne_0 : 1 ≠ 0;
     }.
@@ -19,7 +19,7 @@ Record field :=
 Section Field_theorems.
 
   Variable Field : field.
-  Notation F := (elts (Rset (ring Field))).
+  Notation F := (elts (ring Field)).
   Notation "0" := (rings.zero (ring Field)).
   Notation "1" := (rings.one (ring Field)).
   Infix "+" := (rings.add (ring Field)).
