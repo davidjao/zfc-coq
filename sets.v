@@ -766,6 +766,18 @@ Proof.
                in *; intuition (eauto; congruence).
 Qed.
 
+Theorem Product_in_left : ∀ a b A B, (a, b) ∈ A × B → a ∈ A.
+Proof.
+  move=> a b A B /Product_classification
+           [a' [b' [H [H0 /Ordered_pair_iff [->]]]]] //.
+Qed.
+
+Theorem Product_in_right : ∀ a b A B, (a, b) ∈ A × B → b ∈ B.
+Proof.
+  move=> a b A B /Product_classification
+           [a' [b' [H [H0 /Ordered_pair_iff [_ ->]]]]] //.
+Qed.
+
 Theorem Product_intersection_distr_l :
   ∀ A B X, (A ∩ B) × X = (A × X) ∩ (B × X).
 Proof.

@@ -708,192 +708,133 @@ Qed.
 Add Morphism product with signature
     equinumerous ==> equinumerous ==> equinumerous as product_equiv.
 Proof.
-  intros E n H F m H0.
-  destruct H as [f [H [H1 [H2 H3]]]], H0 as [g [H0 [H4 [H5 H6]]]].
-  destruct (function_construction
-              (E × F) (n × m)
-              (λ z, (f (proj1 E F z), g (proj2 E F z)))) as [h [H7 [H8 H9]]].
-  { intros z H7.
-    apply Product_classification in H7 as [a [b [H7 [H8 H9]]]].
-    subst.
-    rewrite -> proj1_eval, proj2_eval; auto.
-    apply Product_classification.
-    exists (f a), (g b).
-    repeat split; auto; rewrite <-? H1, <-? H4;
-      now apply function_maps_domain_to_range. }
-  exists h.
-  repeat split; auto.
-  - rewrite -> Injective_classification in *.
-    intros x y H10 H11 H12.
-    rewrite -> ? H9, H7 in *; try congruence.
-    apply Product_classification in H10 as [a [b [H10 [H13 H14]]]].
-    apply Product_classification in H11 as [c [d [H11 [H15 H16]]]].
-    subst.
-    rewrite -> ? proj1_eval, ? proj2_eval, Ordered_pair_iff in *; intuition.
-  - rewrite -> Surjective_classification in *.
-    intros y H10.
-    rewrite -> H8, Product_classification in H10.
-    destruct H10 as [a [b [H10 [H11 H12]]]].
-    subst.
-    apply H3 in H10 as [x [H10 H12]].
-    apply H6 in H11 as [y [H11 H13]].
-    exists (x,y).
-    split.
-    + rewrite -> H7, Product_classification; eauto.
-    + rewrite -> H9, proj1_eval, proj2_eval, Ordered_pair_iff; auto.
-      apply Product_classification; eauto.
+  move=>
+  E n [f [<- [<- [/Injective_classification H /Surjective_classification H0]]]]
+    F m [g [<- [<- [/Injective_classification H1
+                     /Surjective_classification H2]]]].
+  elim (function_construction
+          (domain f × domain g) (range f × range g)
+          (λ z, (f (proj1 (domain f) (domain g) z),
+                 g (proj2 (domain f) (domain g) z)))) =>
+  [h [H3 [H4 H5]] | z /Product_classification [a [b [H3 [H4 ->]]]]].
+  - exists h.
+    rewrite /bijective Injective_classification Surjective_classification.
+    (repeat split; auto) => [x y /[dup] H6 /[swap] /[dup] H7 | z].
+    + rewrite ? H5 -? H3 // ? H3 =>
+      /[swap] /Product_classification [a [b [H8 [H9 ->]]]]
+       /Product_classification [c [d [H10 [H11 ->]]]].
+      rewrite ? pro1j_eval ? proj2_eval ? proj1_eval // =>
+      /Ordered_pair_iff [/H] /[swap] /H1; intuition congruence.
+    + rewrite H3 H4 => /Product_classification
+                        [a [b [/H0 [x [H6 <-]] [/H2 [y [H7 <-]]] ->]]].
+      exists (x,y).
+      rewrite ? H5 ? Product_classification ? proj1_eval ? proj2_eval;
+        repeat split; eauto.
+  - rewrite proj1_eval ? proj2_eval ? Product_classification //.
+    repeat esplit; eauto using function_maps_domain_to_range.
 Qed.
 
 Theorem finite_products_are_finite :
   ∀ E F, finite E → finite F → finite (E × F).
 Proof.
-  intros E F [n H] [m H0].
-  rewrite -> H, H0.
-  apply natural_products_are_finite.
+  move=> E F [n ->] [m ->].
+  auto using natural_products_are_finite.
 Qed.
 
 Theorem finite_products_card :
   ∀ E F, finite E → finite F → # (E × F) = (# E) * (# F).
 Proof.
-  intros E F [n H] [m H0].
-  now rewrite -> H, H0, natural_prod_card.
+  move=> E F [n ->] [m ->].
+  auto using natural_prod_card.
 Qed.
 
 Theorem power_union_r : ∀ A B C, B ∩ C = ∅ → A ^ (B ∪ C) ~ A ^ B × A ^ C.
 Proof.
-  assert (∀ A B C z, z ∈ A ^ (B ∪ C) →
-                     {x in z | proj1 (B ∪ C) A x ∈ B} ∈ A ^ B) as Z.
-  { intros A B C z H.
-    apply Specify_classification in H as [H [H0 H1]].
-    apply Specify_classification.
-    rewrite -> Powerset_classification.
-    assert ({x in z | proj1 (B ∪ C) A x ∈ B} ⊂ B × A).
-    { intros x H2.
-      apply Specify_classification in H2 as [H2 H3].
-      apply H0, Product_classification in H2 as [b [a [H2 [H4 H5]]]].
-      subst.
-      rewrite -> proj1_eval, Product_classification in *; eauto. }
-    repeat split; auto.
-    intros x H3.
-    destruct (H1 x) as [y [[H4 H5] H6]];
-      try (apply Pairwise_union_classification; tauto).
+  have Z:
+    ∀ A B C z, z ∈ A ^ (B ∪ C) → {x in z | proj1 (B ∪ C) A x ∈ B} ∈ A ^ B
+  => [A B C z /Specify_classification [H [H0 H1]] | A B C H].
+  { rewrite Specify_classification Powerset_classification.
+    have: {x in z | proj1 (B ∪ C) A x ∈ B} ⊂ B × A =>
+    [x /Specify_classification
+       [/H0 /Product_classification [b [a [H2 [H3 ->]]]]] | ];
+      first by rewrite proj1_eval ? Product_classification; eauto.
+    (repeat split; auto) => a /[dup] H3 /Union_left =>
+    /(_ C) /H1 [y [[H4 H5] H6]].
     exists y.
-    repeat split; auto.
-    + rewrite -> Specify_classification, proj1_eval; auto.
-      apply Pairwise_union_classification; tauto.
-    + intros x' [H7 H8].
-      rewrite -> Specify_classification in H8.
-      intuition. }
-  intros A B C H.
-  destruct (function_construction
-              (A ^ (B ∪ C)) (A ^ B × A ^ C)
-              (λ z, ({x in z | proj1 (B ∪ C) A x ∈ B},
-                     {x in z | proj1 (B ∪ C) A x ∈ C})))
-    as [f [H0 [H1 H2]]].
-  { intros z H0.
-    apply Product_classification.
-    exists {x in z | proj1 (B ∪ C) A x ∈ B}, {x in z | proj1 (B ∪ C) A x ∈ C}.
-    repeat split; auto.
-    rewrite -> Union_comm in *; auto. }
-  exists f.
-  repeat split; auto.
-  - rewrite -> Injective_classification.
-    intros u v H3 H4 H5.
-    rewrite -> ? H2 in H5; try congruence.
+    repeat split => // =>
+    [ | x' [H7]]; rewrite Specify_classification ? rewrite proj1_eval;
+      try apply Union_left; intuition. }
+  elim (function_construction
+          (A ^ (B ∪ C)) (A ^ B × A ^ C)
+          (λ z, ({x in z | proj1 (B ∪ C) A x ∈ B},
+                 {x in z | proj1 (B ∪ C) A x ∈ C}))) =>
+  [f [/[dup] H0 <- [H1 H2]] | z /[dup]].
+  2: { rewrite {2 4}Union_comm => *.
+       eapply Product_classification, ex_intro, ex_intro, conj, conj; eauto. }
+  (do 2 esplit; repeat split; eauto;
+   rewrite ? Injective_classification ? Surjective_classification) => [u v | y].
+  - move: H0 => /[swap] /[dup] H3 /[swap] /[dup] {2}->
+                /[swap] /Specify_classification [/Powerset_classification H4 _]
+                 /[swap] /[dup] H5 /[swap] -> /Specify_classification
+                                               [/Powerset_classification H6 _].
+    rewrite ? H2 // => /Ordered_pair_iff [H7 H8].
     apply Extensionality.
-    rewrite -> H0 in *.
-    apply Specify_classification in H3 as [H3 _].
-    apply Specify_classification in H4 as [H4 _].
-    rewrite -> Powerset_classification in *.
-    apply Ordered_pair_iff in H5 as [H5 H6].
-    move=> z; wlog: u v z H3 H4 H5 H6 / z ∈ u.
-    { split; intros H7; [ apply (x u v z) | apply (x v u z) ]; auto. }
-    split; intros H8; try tauto.
-    apply H3, Product_classification in H8 as [y [x [H8 [H9 H10]]]].
-    apply Pairwise_union_classification in H8 as H11.
-    clear Z H H0 H1 H2 H3 H4.
-    wlog: B C y H5 H6 H8 H10 H11 / y ∈ B.
-    { destruct H11 as [H11 | H11]; [ | rewrite -> Union_comm in * ]; eauto. }
-    intros H.
-    assert (z ∈ {x in v | proj1 (B ∪ C) A x ∈ B}) as H0.
-    { rewrite <-H5.
-      apply Specify_classification.
-      subst.
-      rewrite -> proj1_eval; auto. }
-    apply Specify_classification in H0; tauto.
-  - rewrite -> Surjective_classification.
-    intros y H3.
-    rewrite -> H1, Product_classification in H3.
-    destruct H3 as [u [v [H3 [H4 H5]]]].
+    move=> z; wlog: u v z H3 H4 H5 H6 H7 H8 / z ∈ u.
+    { split => *; [ apply (x u v z) | apply (x v u z) ]; auto. }
+    (split; try tauto) =>
+    /H4 /Product_classification
+     [y [x [/Pairwise_union_classification H9 [H10 H11]]]] =>
+    {Z H H1 H2 H3 H4 H5 H6}.
+    wlog: B C y H7 H8 H9 H10 H11 / y ∈ B => [ | /[dup] H /(Union_left _ C) H1].
+    { elim H9 => *; [ | rewrite Union_comm in H7 H8 ]; eauto. }
+    have: z ∈ {x in v | proj1 (B ∪ C) A x ∈ B} =>
+    [ | /Specify_classification]; last by tauto.
+    move: H11 H0 H7 -> => H0 <-.
+    apply Specify_classification.
+    rewrite proj1_eval //.
+  - move: H1 -> => /Product_classification
+                    [u [v [/Specify_classification [H3 [H4 H5]]
+                            [/Specify_classification [H6 [H7 H8]] H9]]]].
     exists (u ∪ v).
-    apply Specify_classification in H3 as [H3 [H6 H7]], H4 as [H4 [H8 H9]].
-    assert (u ∪ v ∈ A ^ (B ∪ C)) as H10.
-    { apply Specify_classification.
-      rewrite -> Powerset_classification.
-      assert (u ∪ v ⊂ (B ∪ C) × A) as H10.
-      { intros z H10.
-        apply Pairwise_union_classification in H10.
-        clear H5 H f H0 H1 H2 Z y.
-        wlog: A B C u v z H3 H4 H6 H7 H8 H9 H10 / z ∈ u.
-        - intros x.
-          destruct H10; eauto.
-          rewrite -> Union_comm; eauto.
-        - clear H10; intros H.
-          apply H6 in H as H0.
-          apply Product_classification in H0 as [b [a [H0 [H1 H2]]]].
-          apply Product_classification.
-          exists b, a.
-          repeat split; auto.
-          apply Pairwise_union_classification; auto. }
-      repeat split; auto.
-      intros a H11.
-      apply Pairwise_union_classification in H11.
-      clear Z f H0 H1 H2 y H5.
-      wlog: A B C a u v H H3 H4 H6 H7 H8 H9 H10 H11 / a ∈ B.
-      { destruct H11; [ | rewrite -> (Union_comm B C), (Union_comm u v),
-                          Intersection_comm in * ]; eauto. }
-      clear H11; intros H0.
-      apply H7 in H0 as [z [[H0 H1] H2]].
+    have: u ∪ v ∈ A ^ (B ∪ C).
+    { rewrite Specify_classification Powerset_classification.
+      have: u ∪ v ⊂ (B ∪ C) × A => [z /Pairwise_union_classification H10 | ].
+      { rewrite Product_union_distr_l Pairwise_union_classification.
+        intuition eauto. }
+      repeat split; auto => a /Pairwise_union_classification H10.
+      clear Z f H0 H2 H3 H6 H9.
+      wlog: A B C a u v H H4 H5 H7 H8 H10 x / a ∈ B =>
+      [ | {H10} /[dup] H10 /H5 [z [[H0 /[dup] /H4 /Product_in_left
+                                       H1 /(Union_left _ v) H2] H3]]].
+      { elim H10; [ | rewrite ? (Union_comm B C) ? (Union_comm u v)
+                              1 ? Intersection_comm in H x |-* ]; eauto. }
       exists z.
-      repeat split; auto.
-      - apply Pairwise_union_classification; auto.
-      - intros x' [H5 H11].
-        apply H2.
-        apply Pairwise_union_classification in H11 as [H11 | H11]; try tauto.
-        contradiction (Empty_set_classification a).
-        rewrite <-H.
-        apply Pairwise_intersection_classification.
-        apply H6, Product_classification in H1 as [c [d [H1 [H12 H13]]]].
-        apply H8, Product_classification in H11 as [e [g [H11 [H14 H15]]]].
-        rewrite -> Ordered_pair_iff in *.
-        intuition; subst; auto. }
-    repeat split; try congruence.
-    rewrite -> H2; subst; auto.
-    enough (∀ X Y W a b : set, Y ∩ W = ∅ → a ⊂ Y × X → b ⊂ W × X →
-                               a = {x in a ∪ b | proj1 (Y ∪ W) X x ∈ Y}).
-    { replace {x in u ∪ v | proj1 (B ∪ C) A x ∈ B} with u; auto.
-      replace {x in u ∪ v | proj1 (B ∪ C) A x ∈ C} with v;
-        rewrite -> (Union_comm B C), Union_comm, Intersection_comm in *; auto. }
-    clear.
-    intros X Y W a b H H0 H1.
-    apply Extensionality.
-    split; intros H2.
-    + apply Specify_classification.
-      split.
-      * apply Pairwise_union_classification; auto.
-      * apply H0, Product_classification in H2 as [x [y [H2 [H3 H4]]]].
-        subst.
-        rewrite -> proj1_eval; auto.
-        apply Pairwise_union_classification; tauto.
-    + apply Specify_classification in H2 as [H2 H3].
-      apply Pairwise_union_classification in H2 as [H2 | H2]; auto.
-      contradiction (Empty_set_classification (proj1 (Y ∪ W) X z)).
-      rewrite <-H, Pairwise_intersection_classification.
-      split; auto.
-      apply H1, Product_classification in H2 as [x [y [H2 [H4 H5]]]].
-      subst.
-      rewrite -> proj1_eval in *; auto;
-        apply Pairwise_union_classification; auto.
+      repeat split; auto =>
+      x' [H6 /Pairwise_union_classification [H9 | /H7 /Product_in_left H9]];
+        apply H3 => //.
+      contradiction (Empty_set_classification a).
+      rewrite -H Pairwise_intersection_classification //. }
+    move: H0 => /[swap] /[dup] H0 /[swap] <- H1.
+    split; auto.
+    rewrite H2 //.
+    suff H10: (∀ X Y W a b : set, Y ∩ W = ∅ → a ⊂ Y × X → b ⊂ W × X →
+                                  a = {x in a ∪ b | proj1 (Y ∪ W) X x ∈ Y}).
+    { suff <- : u = {x in u ∪ v | proj1 (B ∪ C) A x ∈ B}; auto.
+      suff <- : v = {x in u ∪ v | proj1 (B ∪ C) A x ∈ C};
+        rewrite (Union_comm B C) Union_comm
+                Intersection_comm in H0 H |-*; auto. }
+    clear => X Y W a b H H0 H1.
+    apply Extensionality => z.
+    split =>
+    [/[dup] /H0 /Product_classification
+      [x [y [/[dup] H2 /(Union_left _ W) H3 [H4 ->]]]] /(Union_left _ b) H5 |
+     /Specify_classification
+      [/Pairwise_union_classification
+        [H2 | /H1 /Product_classification
+               [x [y [/[dup] H2 /(Union_right Y) H3 [H4 ->]]]]] H5]]; auto.
+    + rewrite Specify_classification proj1_eval //.
+    + contradiction (Empty_set_classification (proj1 (Y ∪ W) X (x, y))).
+      rewrite -H Pairwise_intersection_classification {2}proj1_eval //.
 Qed.
 
 Theorem power_1_r : ∀ m n, m^{n,n} ~ m.
