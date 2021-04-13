@@ -959,7 +959,7 @@ Qed.
 
 Theorem sub_ne_0_lt : ∀ a b, a - b ≠ 0 → b < a.
 Proof.
-  intros a b H.
+  move=> a b H.
   apply /lt_not_ge.
   move: H => /[swap] [[c <-]].
   induction a using Induction;
@@ -1081,7 +1081,7 @@ Qed.
 
 Theorem le_cross_add : ∀ a b c d, a ≤ b → c ≤ d → a + c ≤ b + d.
 Proof.
-  intros a b c d [e <-] [f <-].
+  move=> a b c d [e <-] [f <-].
   exists (e + f); ring.
 Qed.
 

@@ -319,6 +319,12 @@ Proof.
   rewrite ? Pairing_classification; tauto.
 Qed.
 
+Lemma in_singleton : ∀ x, x ∈ {x,x}.
+Proof.
+  move=> x.
+  apply /Pairing_classification /or_introl => //.
+Qed.
+
 Lemma Singleton_classification : ∀ x y, y ∈ {x,x} ↔ y = x.
 Proof.
   move=> x y.
