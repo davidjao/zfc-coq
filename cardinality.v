@@ -1190,42 +1190,24 @@ Qed.
 
 Lemma finite_subsets_bijective : ∀ E F, finite F → E ⊂ F → E ~ F → E = F.
 Proof.
-  intros E F H H0 H1.
-  apply Subset_equality_iff, conj; auto.
-  apply equinumerous_cardinality in H1.
-  apply Union_subset in H0 as H2.
-  rewrite <-H2, disjoint_union_complement, finite_union_cardinality in H1;
+  move=> E F H /[dup] H0 /Union_subset {1}<- /equinumerous_cardinality.
+  rewrite disjoint_union_complement finite_union_cardinality;
     eauto using disjoint_intersection_complement,
-    subsets_of_finites_are_finite, complement_subset.
-  rewrite <-(add_0_r (# E)) in H1 at 1.
-  apply naturals.cancellation_add, eq_sym in H1.
-  assert (# (F \ E) ~ 0%N) as H3 by now rewrite -> H1.
-  rewrite <- card_equiv in H3;
+    subsets_of_finites_are_finite, complement_subset =>
+  /(@eq_sym N) /cancellation_0 /finite_empty => H1.
+  rewrite -Subset_equality_iff (Complement_subset F) H1;
     eauto using subsets_of_finites_are_finite, complement_subset.
-  apply empty_card in H3.
-  intros x H4.
-  apply NNPP.
-  intros H5.
-  contradiction (Empty_set_classification x).
-  now rewrite <-H3, Complement_classification.
 Qed.
 
 Lemma finite_set_injection_is_bijection :
   ∀ f, finite (domain f) → domain f ~ range f → injective f → bijective f.
 Proof.
-  intros f H H0 H1.
-  apply injective_into_image in H1 as H2.
-  assert (image f = range f) as H3.
-  { apply finite_subsets_bijective.
-    - now rewrite <-H0.
-    - apply image_subset_range.
-    - now rewrite <-H2, H0. }
-  split; auto.
-  rewrite -> Surjective_classification.
-  intros z H4.
-  rewrite <-H3 in H4.
-  apply Specify_classification in H4 as [H4 [x H5]].
-  now (exists x).
+  move=> f H H0 /[dup] H1 /injective_into_image H2.
+  move: (H0) (H0) (H) (H2) => {2}-> -> H3 /cardinality_sym H4.
+  rewrite /bijective Surjective_classification.
+  suff <- : image f = range f;
+    auto using finite_subsets_bijective, image_subset_range.
+  split => // z /Specify_classification [] //.
 Qed.
 
 Section Powerset_powers.
@@ -1234,160 +1216,101 @@ Section Powerset_powers.
 
   Definition powerset_bijection_helper : elts (2^X) → elts (P X).
   Proof.
-    intros [x H].
-    apply Specify_classification in H as [H H0].
-    set (f := mkFunc H0).
-    assert ({x in X | f x = 1} ∈ P X).
-    { apply Powerset_classification.
-      intros z H1.
-      apply Specify_classification in H1.
-      tauto. }
+    move=> [x /Specify_classification [H H0]].
+    have H1: {x in X | (mkFunc H0) x = 1} ∈ P X.
+    { apply Powerset_classification => z /Specify_classification [] //. }
     exact (mkSet H1).
   Defined.
 
   Theorem powerset_powers : 2^X ~ P X.
   Proof.
     exists (functionify powerset_bijection_helper).
-    rewrite -> functionify_domain, functionify_range.
-    repeat split; auto.
-    - apply Injective_classification.
-      intros x y H H0 H1.
-      rewrite -> @functionify_domain, (reify H), (reify H0),
-      ? @functionify_action in *.
-      unfold powerset_bijection_helper in *.
-      repeat destruct Specify_classification.
-      destruct a, a0.
-      simpl in H1 |-*.
-      set (f := (mkFunc i2)).
-      set (g := (mkFunc i4)).
-      assert (x = graph f) as H2 by auto.
-      assert (y = graph g) as H3 by auto.
-      rewrite -> H2, H3.
+    rewrite /bijective Injective_classification Surjective_classification
+            @functionify_domain functionify_range.
+    (repeat split; auto) => [x y H H0 | y /Powerset_classification H].
+    - rewrite (reify H) (reify H0) ? @functionify_action
+              /powerset_bijection_helper.
+      (repeat destruct iffLR => /=) => H1.
+      suff -> : (x = graph (mkFunc i0)); last by auto.
+      suff -> : (y = graph (mkFunc i2)); last by auto.
       f_equal.
-      apply func_ext; auto.
-      intros z H4; simpl in H4.
-      replace ({| domain := X; range := succ (succ ∅);
-                  graph := x; func_hyp := i2 |}) with f in H1 by auto.
-      replace ({| domain := X; range := succ (succ ∅);
-                  graph := y; func_hyp := i4 |}) with g in H1 by auto.
-      assert (f z ∈ range f) by now apply function_maps_domain_to_range.
-      assert (g z ∈ range g) by now apply function_maps_domain_to_range.
-      simpl in H5, H6.
-      unfold succ in H5, H6, H1.
-      rewrite -> Pairwise_union_classification, Union_comm, Union_empty,
-      Singleton_classification in H5, H6.
-      rewrite -> Union_comm, Union_empty, Singleton_classification in *.
-      destruct H5, H6; try congruence.
-      + assert (z ∈ {x in X | g x = {∅,∅}}) as H7
-            by now apply Specify_classification.
-        rewrite <-H1 in H7.
-        apply Specify_classification in H7 as [H7 H8].
-        congruence.
-      + assert (z ∈ {x in X | f x = {∅,∅}}) as H7
-            by now apply Specify_classification.
-        rewrite -> H1 in H7.
-        apply Specify_classification in H7 as [H7 H8].
-        congruence.
-    - rewrite -> Surjective_classification.
-      assert (1 ∈ 2) as Z.
-      { now apply Pairwise_union_classification, or_intror,
-        Singleton_classification. }
-      assert (0 ∈ 2) as Z0.
-      { now apply Pairwise_union_classification, or_introl,
-        Pairwise_union_classification, or_intror, Singleton_classification. }
-      intros y H.
-      rewrite -> @functionify_range, functionify_domain in *.
+      apply func_ext; auto => z /= H2.
+      have /= /Pairwise_union_classification: (mkFunc i0) z ∈ range (mkFunc i0);
+        auto using function_maps_domain_to_range.
+      have /= /Pairwise_union_classification: (mkFunc i2) z ∈ range (mkFunc i2);
+        auto using function_maps_domain_to_range.
+      (rewrite {3 10}/succ Union_comm Union_empty ? Singleton_classification) =>
+      [[H3 | H3]] [H4 | H4]; try congruence.
+      + have: z ∈ {x in X | (mkFunc i0) x = succ ∅} by
+            apply Specify_classification, conj => //.
+        rewrite H1 => /Specify_classification [] _ -> //.
+      + have: z ∈ {x in X | (mkFunc i2) x = succ ∅} by
+            apply Specify_classification, conj => //.
+        rewrite -H1 => /Specify_classification [] _ -> //.
+    - have H0: 1 ∈ 2 by apply /lt_is_in /succ_lt.
+      have H1: 0 ∈ 2 by apply lt_is_in; eauto using lt_trans, succ_lt.
       exists {z in X × 2 | proj2 X 2 z = 1 ↔ proj1 X 2 z ∈ y}.
-      assert ({z in X × 2 | proj2 X 2 z = 1 ↔ proj1 X 2 z ∈ y} ∈ 2 ^ X) as Z1.
-      { apply Specify_classification.
-        rewrite -> Powerset_classification.
-        repeat split; intros z H0;
-          try (apply Specify_classification in H0; tauto).
+      have H2: {z in X × 2 | proj2 X 2 z = 1 ↔ proj1 X 2 z ∈ y} ∈ 2 ^ X.
+      { rewrite Specify_classification Powerset_classification.
+        (repeat split) => [z /Specify_classification [] |
+                           z /Specify_classification [] | z] //.
         exists (If z ∈ y then 1 else 0).
-        destruct excluded_middle_informative; split.
-        - rewrite -> Specify_classification, proj1_eval, proj2_eval,
-          Product_classification; repeat split; eauto.
-        - intros x' [H1 H2].
-          apply Specify_classification in H2 as [H2 H3].
-          rewrite -> proj1_eval, proj2_eval in H3; intuition.
-        - rewrite -> Specify_classification, proj1_eval, proj2_eval,
-          Product_classification; repeat split; eauto; intros H1; try tauto.
-          now apply set_proj_injective, neq_succ in H1.
-        - intros x' [H1 H2].
-          apply Specify_classification in H2 as [H2 H3].
-          rewrite -> proj1_eval, proj2_eval in H3; intuition.
-          apply Pairwise_union_classification in H1 as [H1 | H1].
-          * unfold succ in H1.
-            now rewrite -> Union_comm, Union_empty,
-            Singleton_classification in H1.
-          * rewrite -> Singleton_classification in H1.
-            now apply H4 in H1. }
+        (elim excluded_middle_informative; repeat split => //) =>
+        [ | x' [H3 /Specify_classification] | |
+          x' [] /Pairwise_union_classification
+             [/Pairwise_union_classification
+               [/Empty_set_classification | /Singleton_classification] |
+              /Singleton_classification ->] ]
+          //; (rewrite Specify_classification proj1_eval // proj2_eval //
+                       ? Product_classification; repeat split;
+               try by intuition eauto) => /set_proj_injective /neq_succ //. }
       split; auto.
-      rewrite -> (reify Z1), functionify_action.
-      unfold powerset_bijection_helper.
-      destruct Specify_classification, a.
-      simpl.
-      clear a i.
-      apply Extensionality.
-      set (f := mkFunc i1).
-      split; intros H0.
-      + apply Specify_classification in H0 as [H0 H1].
-        assert (f z = 1) as H2 by auto.
-        apply function_maps_domain_to_graph in H2; simpl in H2 |-*; auto.
-        apply Specify_classification in H2 as [H2 H3].
-        rewrite -> proj1_eval, proj2_eval in H3; tauto.
-      + apply Specify_classification.
-        apply Powerset_classification in H.
-        split; auto.
-        assert (f z = 1); auto.
-        apply function_maps_domain_to_graph; auto; simpl.
-        apply Specify_classification.
-        split.
-        * apply Product_classification.
-          exists z, 1.
-          split; auto.
-        * rewrite -> proj1_eval, proj2_eval; intuition.
+      rewrite (reify H2) functionify_action /powerset_bijection_helper.
+      destruct iffLR as [_] => /=.
+      apply Extensionality => z.
+      split => [/Specify_classification /= [] H3
+                 /function_maps_domain_to_graph /= /(_ H3) /(_ H0)
+                 /Specify_classification | H3];
+                 first by rewrite proj1_eval // proj2_eval //; tauto.
+      apply Specify_classification, conj, function_maps_domain_to_graph,
+      Specify_classification, conj; auto => /=.
+      + eapply Product_classification, ex_intro, ex_intro, conj; eauto.
+      + rewrite proj1_eval // ? proj2_eval; intuition.
   Qed.
 
 End Powerset_powers.
 
 Theorem powerset_finite : ∀ X, finite X → finite (P X).
 Proof.
-  intros X H.
-  rewrite <-powerset_powers.
+  move=> X.
+  rewrite -powerset_powers.
   auto using finite_powers_are_finite, naturals_are_finite.
 Qed.
 
 Theorem powerset_card : ∀ X, finite X → # P X = (2^(# X))%N.
 Proof.
-  intros X H.
-  rewrite <-powerset_powers, finite_power_card, card_of_natural;
+  move=> X H.
+  rewrite -powerset_powers ? finite_power_card ? card_of_natural;
     auto using naturals_are_finite.
 Qed.
 
 Theorem complement_card : ∀ E F, E ⊂ F → finite E → # (F \ E) = # F - # E.
 Proof.
-  intros E F H H0.
-  apply Union_subset in H as H1.
-  destruct (classic (finite F)) as [H2 | H2].
-  - rewrite <-H1 at 2.
-    rewrite -> disjoint_union_complement, finite_union_cardinality,
-    naturals.add_comm, sub_abba;
+  move=> E F /[dup] H /Union_subset H0 H1.
+  case (classic (finite F)) => [H2 | H2].
+  - rewrite -{2}H0 disjoint_union_complement finite_union_cardinality
+                1 ? naturals.add_comm ? sub_abba;
       eauto using subsets_of_finites_are_finite, complement_subset,
       disjoint_intersection_complement.
-  - unfold finite_cardinality.
-    destruct excluded_middle_informative at 2; try tauto.
-    rewrite -> sub_0_l.
-    destruct excluded_middle_informative; auto.
-    contradict n.
-    rewrite <-H1, disjoint_union_complement.
-    now apply finite_unions_are_finite.
+  - rewrite {1 2}/finite_cardinality /sumbool_rect.
+    repeat elim excluded_middle_informative; try tauto; rewrite ? sub_0_l //
+    => /[swap] /[dup] /finite_unions_are_finite /(_ H1).
+    rewrite Union_comm -disjoint_union_complement H0 //.
 Qed.
 
 Theorem pairing_card : ∀ x y, x ≠ y → {x,y} ~ 2.
 Proof.
-  intros x y H.
-  apply Pairing_intersection_disjoint in H.
-  now rewrite -> Pairing_union_singleton, finite_union_equinumerosity,
-  ? singleton_card, add_1_r; eauto using singletons_are_finite.
+  move=> x y /Pairing_intersection_disjoint H.
+  now rewrite Pairing_union_singleton finite_union_equinumerosity
+      ? singleton_card ? add_1_r; eauto using singletons_are_finite.
 Qed.
