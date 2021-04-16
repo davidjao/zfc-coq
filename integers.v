@@ -7,31 +7,23 @@ Definition integer_relation :=
 
 Theorem integer_equivalence : is_equivalence (ω × ω) integer_relation.
 Proof.
-  repeat split; unfold integer_relation in *.
-  - intros a H.
-    apply Specify_classification.
-    assert ((a, a) ∈ (ω × ω) × (ω × ω)) as H0.
-    { apply Product_classification; eauto. }
-    now rewrite -> (reify H), (reify H0), despecify,
-    ? π2_action, ? π1_action, add_comm in *.
-  - intros x y H H0 H1.
-    apply Specify_classification in H1 as [H1 H2].
-    assert ((y, x) ∈ (ω × ω) × (ω × ω)) as H3.
-    { apply Product_classification; eauto. }
-    apply Specify_classification.
-    now rewrite -> (reify H), (reify H0), (reify H1), (reify H3),
-    despecify, ? π1_action, ? π2_action, add_comm, <-H2 in *.
-  - intros x y z H H0 H1 H2 H3.
-    apply Specify_classification in H2 as [H2 H4], H3 as [H3 H5].
-    apply Specify_classification.
-    assert ((x, z) ∈ (ω × ω) × (ω × ω)) as H6.
-    { apply Product_classification; eauto. }
-    rewrite -> (reify H), (reify H0), (reify H1), (reify H2), (reify H3),
-    (reify H6), despecify, ? π1_action, ? π2_action in *.
+  (repeat split) => [a H | x y H H0 /Specify_classification [H1] |
+                     x y z H H0 H1 /Specify_classification [H2]
+                     /[swap] /Specify_classification [H3]].
+  - have H0: (a, a) ∈ (ω × ω) × (ω × ω) by apply Product_classification; eauto.
+    rewrite (reify H0) Specify_classification despecify
+            ? π2_action ? π1_action 1 ? add_comm //.
+  - have H3: (y, x) ∈ (ω × ω) × (ω × ω) by apply Product_classification; eauto.
+    rewrite Specify_classification (reify H) (reify H0) (reify H1) (reify H3)
+            ? despecify ? π1_action ? π2_action 1 ? add_comm // => ->.
+    rewrite add_comm //.
+  - have H4: (x, z) ∈ (ω × ω) × (ω × ω) by apply Product_classification; eauto.
+    rewrite Specify_classification (reify H3) ? (reify H2) (reify H4)
+            ? despecify ? π1_action ? π2_action //.
     split; auto.
     apply (naturals.cancellation_add (π2 (mkSet H0))).
-    ring_simplify [H4 H5].
-    rewrite <-H5; ring_simplify [H4]; now rewrite -> H4.
+    ring_simplify [H5 H6].
+    rewrite H6; ring_simplify [H5]; rewrite -H5 //.
 Qed.
 
 Definition Z := elts ((ω × ω) / integer_relation).
@@ -46,9 +38,8 @@ Coercion IZS : Z >-> set.
 
 Definition embed : N → N → Z.
 Proof.
-  intros [a A] [b B].
-  assert ((a, b) ∈ ω × ω) as H.
-  { apply Product_classification; eauto. }
+  move=> [a A] [b B].
+  have H: (a, b) ∈ ω × ω  by apply Product_classification; eauto.
   exact (quotient_map _ (mkSet H)).
 Defined.
 
@@ -56,37 +47,28 @@ Infix "-" := embed : set_scope.
 
 Theorem Zlift : ∀ z, ∃ a b, (a - b = z)%set.
 Proof.
-  intros z.
-  destruct (quotient_lift z) as [y H], (unique_set_element y)
-      as [x [[H0 H1] H2]].
-  apply Product_classification in H0 as [a [b [H3 [H4 H5]]]].
-  exists (mkSet H3 : N), (mkSet H4 : N).
-  apply set_proj_injective.
-  simpl in *.
-  now rewrite <-H, <-H5, H1, quotient_image.
+  move=> z.
+  elim (quotient_lift z) => [y].
+  elim (unique_set_element y) =>
+  [x [[/Product_classification [a [b [H0 [H1 ->]]]] /[dup] H3 <-] H4]] <-.
+  exists (mkSet H0 : N), (mkSet H1 : N).
+  apply set_proj_injective => /=.
+  rewrite -quotient_image H3 //.
 Qed.
 
 Theorem Zequiv : (∀ a b c d, a - b = c - d ↔ a + d = b + c)%set.
 Proof.
-  intros [a A] [b B] [c C] [d D].
-  assert ((a, b) ∈ ω × ω) as H; assert ((c, d) ∈ ω × ω) as H0;
-    try apply Product_classification; eauto.
-  unfold embed.
-  split; intros H1.
-  - apply quotient_equiv in H1; auto using integer_equivalence.
-    simpl in *.
-    apply Specify_classification in H1 as [H1 H2].
-    rewrite -> (reify A), (reify B), (reify C), (reify D), (reify H),
-    (reify H0), (reify H1), despecify in *.
-    now repeat rewrite -> ? π1_action, ? π2_action in H2.
-  - apply quotient_equiv; auto using integer_equivalence.
-    simpl.
-    assert (((a, b), (c, d)) ∈ (ω × ω) × (ω × ω)) as H2.
-    { apply Product_classification; eauto. }
-    apply Specify_classification.
-    now rewrite -> (reify A), (reify B), (reify C), (reify D), (reify H),
-    (reify H0), (reify H2), despecify,
-    ? π2_action, ? π1_action, ? π2_action in *.
+  move=> [a A] [b B] [c C] [d D].
+  have H: (a, b) ∈ ω × ω by apply Product_classification; eauto.
+  have H0: (c, d) ∈ ω × ω by apply Product_classification; eauto.
+  rewrite /embed /ssr_have.
+  (split; rewrite ? quotient_equiv /=; auto using integer_equivalence) =>
+  [ /Specify_classification [H1] | H1].
+  - rewrite (reify H1) despecify ? π1_action ? π2_action ? π1_action //.
+  - have H2: ((a, b), (c, d)) ∈ (ω × ω) × (ω × ω) by
+        apply Product_classification; eauto.
+    rewrite Specify_classification (reify H2) despecify
+            ? π2_action ? π1_action ? π2_action //.
 Qed.
 
 Definition INZ a := (a - 0)%set.
@@ -94,29 +76,29 @@ Coercion INZ : N >-> Z.
 
 Definition add : Z → Z → Z.
 Proof.
-  intros x y.
-  destruct (constructive_indefinite_description (Zlift x)) as [a H].
-  destruct (constructive_indefinite_description H) as [b H0].
-  destruct (constructive_indefinite_description (Zlift y)) as [c H1].
-  destruct (constructive_indefinite_description H1) as [d H2].
+  move=> x y.
+  elim (constructive_indefinite_description (Zlift x)) =>
+  [a /constructive_indefinite_description [b H]].
+  elim (constructive_indefinite_description (Zlift y)) =>
+  [c /constructive_indefinite_description [d H0]].
   exact ((a + c) - (b + d))%set.
 Defined.
 
 Definition mul : Z → Z → Z.
 Proof.
-  intros x y.
-  destruct (constructive_indefinite_description (Zlift x)) as [m H].
-  destruct (constructive_indefinite_description H) as [n H0].
-  destruct (constructive_indefinite_description (Zlift y)) as [p H1].
-  destruct (constructive_indefinite_description H1) as [q H2].
+  move=> x y.
+  elim (constructive_indefinite_description (Zlift x)) =>
+  [m /constructive_indefinite_description [n H]].
+  elim (constructive_indefinite_description (Zlift y)) =>
+  [p /constructive_indefinite_description [q H0]].
   exact ((m * p + n * q) - (n * p + m * q))%set.
 Defined.
 
 Definition neg : Z → Z.
 Proof.
-  intros x.
-  destruct (constructive_indefinite_description (Zlift x)) as [a H].
-  destruct (constructive_indefinite_description H) as [b H0].
+  move=> x.
+  elim (constructive_indefinite_description (Zlift x)) =>
+  [a /constructive_indefinite_description [b H]].
   exact (b - a)%set.
 Defined.
 
@@ -133,144 +115,166 @@ Notation "2" := (1+1) : Z_scope.
 Notation "3" := (2+1) : Z_scope.
 Notation "4" := (3+1) : Z_scope.
 
+Theorem add_wf : ∀ a b c d, ((a - b) + (c - d) = (a + c) - (b + d))%set.
+Proof.
+  rewrite /add /sig_rect => a b c d.
+  (repeat elim constructive_indefinite_description) => x [y H] z [w H0].
+  (repeat elim constructive_indefinite_description) => e /Zequiv H1 f /Zequiv.
+  move: H H0 => /Zequiv H /Zequiv H0 H2.
+  rewrite Zequiv.
+  ring_simplify [H H1].
+  rewrite -H1 -? add_assoc H2 //.
+Qed.
+
 Theorem INZ_add : ∀ a b : N, a + b = (a + b)%N.
 Proof.
-  intros a b.
-  unfold add, INZ.
-  repeat destruct constructive_indefinite_description.
-  rewrite -> Zequiv in *.
-  ring [e0 e2].
+  rewrite /add /sig_rect /INZ => a b.
+  (repeat elim constructive_indefinite_description) => x [y H] z [w H0].
+  (repeat elim constructive_indefinite_description) => c H1 d H2.
+  move: H H0 H1 H2.
+  rewrite ? Zequiv ? add_0_r => -> -> -> ->.
+  ring.
 Qed.
 
 Theorem INZ_mul : ∀ a b : N, a * b = (a * b)%N.
 Proof.
-  intros a b.
-  unfold mul, INZ.
-  repeat destruct constructive_indefinite_description.
-  rewrite -> Zequiv in *.
-  ring [e0 e2].
+  rewrite /mul /sig_rect /INZ => a b.
+  (repeat elim constructive_indefinite_description) => x [y H] z [w H0].
+  (repeat elim constructive_indefinite_description) => c H1 d H2.
+  move: H H0 H1 H2.
+  rewrite ? Zequiv ? add_0_r => -> -> -> ->.
+  ring.
 Qed.
 
 Theorem INZ_eq : ∀ a b : N, (a : Z) = (b : Z) ↔ a = b.
 Proof.
-  intros a b.
-  split; intros H; try now subst.
-  apply Zequiv in H.
+  split => [/Zequiv H | ->] //.
   ring [H].
-Qed.
-
-Theorem add_wf : ∀ a b c d, ((a - b) + (c - d) = (a + c) - (b + d))%set.
-Proof.
-  intros a b c d.
-  unfold add.
-  repeat destruct constructive_indefinite_description.
-  rewrite -> Zequiv in *.
-  ring_simplify [e0 e2].
-  rewrite -> e2, <-add_assoc, e0.
-  ring.
 Qed.
 
 Theorem A1 : ∀ a b, a + b = b + a.
 Proof.
-  intros a b.
-  unfold add.
-  repeat destruct constructive_indefinite_description.
-  rewrite -> Zequiv.
+  move=> a b.
+  elim (Zlift a) => [a1 [a2 <-]].
+  elim (Zlift b) => [b1 [b2 <-]].
+  rewrite ? add_wf Zequiv.
   ring.
 Qed.
 
 Theorem A2 : ∀ a b c, a + (b + c) = (a + b) + c.
 Proof.
-  intros a b c.
-  unfold add.
-  repeat destruct constructive_indefinite_description.
-  rewrite -> Zequiv in *.
-  apply (naturals.cancellation_add x2).
-  ring_simplify [e6]; ring_simplify in e6; rewrite <-e6;
-    ring_simplify [e8]; ring_simplify in e8; rewrite -> e8; ring.
+  move=> a b c.
+  elim (Zlift a) => [a1 [a2 <-]].
+  elim (Zlift b) => [b1 [b2 <-]].
+  elim (Zlift c) => [c1 [c2 <-]].
+  rewrite ? add_wf Zequiv.
+  ring.
 Qed.
 
 Theorem A3 : ∀ a, 0 + a = a.
 Proof.
-  intros a.
-  unfold add.
-  repeat destruct constructive_indefinite_description.
-  unfold zero, INZ in *.
-  subst.
-  rewrite -> Zequiv in *.
-  ring [e0].
+  move=> a.
+  elim (Zlift a) => [a1 [a2 <-]].
+  rewrite add_wf Zequiv.
+  ring.
 Qed.
 
 Theorem neg_wf : ∀ a b, - (a - b)%set = (b - a)%set.
 Proof.
-  intros a b.
-  unfold neg.
-  repeat destruct constructive_indefinite_description.
-  now rewrite -> Zequiv in *.
+  move=> a b.
+  rewrite /neg /sig_rect.
+  elim constructive_indefinite_description => x [y H].
+  elim constructive_indefinite_description => z /Zequiv H0.
+  rewrite ? Zequiv //.
 Qed.
 
 Theorem A4 : ∀ a, a + -a = 0.
 Proof.
-  intros a.
-  unfold add, neg.
-  repeat destruct constructive_indefinite_description.
-  unfold zero, INZ.
-  rewrite -> Zequiv in *.
-  now ring_simplify [e2].
-Qed.
-
-Theorem M1 : ∀ a b, a * b = b * a.
-Proof.
-  intros a b.
-  unfold mul.
-  repeat destruct constructive_indefinite_description.
-  rewrite -> Zequiv.
+  move=> a.
+  elim (Zlift a) => [a1 [a2 <-]].
+  rewrite neg_wf add_wf Zequiv.
   ring.
 Qed.
 
 Theorem mul_wf : ∀ a b c d,
     ((a - b) * (c - d) = (a * c + b * d) - (b * c + a * d))%set.
 Proof.
-  intros a b c d.
-  unfold mul.
-  repeat destruct constructive_indefinite_description.
-  rewrite -> Zequiv in *.
-  apply (naturals.cancellation_add (b*x1)).
-  rewrite -> ? add_assoc, <-mul_distr_r, (add_comm _ (b*d)), ? add_assoc,
-  <-mul_distr_l, (add_comm b), (add_comm d), e0, e2, (add_comm x0),
-  <-? add_assoc, (add_comm (x*x2)), ? add_assoc, (add_comm _ (a*d)),
-  (add_comm _ (x*x2)), mul_distr_l, mul_distr_r, ? add_assoc, <-mul_distr_l,
-  <-mul_distr_r, (add_comm d), e0, e2.
+  rewrite /mul /sig_rect => a b c d.
+  (repeat elim constructive_indefinite_description) => x [y H] z [w H0].
+  (repeat elim constructive_indefinite_description) => e H1 f H2.
+  move: H H0 H1 H2.
+  rewrite ? Zequiv ? (add_comm _ c) ? (add_comm _ a) => /[dup] H =>
+  -> /[dup] H0 -> /naturals.cancellation_add <- /naturals.cancellation_add <-.
+  apply (naturals.cancellation_add (a*x)).
+  suff -> : (a*x+(z*x+w*y+(b*c+a*d)) = b*c+a*(x+d)+w*y+x*z)%N; last by ring.
+  rewrite H; ring_simplify [H0]; rewrite -? add_assoc -? mul_distr_r -? H0.
+  ring_simplify [H0]; f_equal; rewrite -? add_assoc -? mul_distr_l -? H //.
+Qed.
+
+Theorem M1 : ∀ a b, a * b = b * a.
+Proof.
+  move=> a b.
+  elim (Zlift a) => [a1 [a2 <-]].
+  elim (Zlift b) => [b1 [b2 <-]].
+  rewrite ? mul_wf Zequiv.
   ring.
 Qed.
 
 Theorem M2 : ∀ a b c, a * (b * c) = (a * b) * c.
 Proof.
-  intros a b c.
-  unfold mul.
-  repeat destruct constructive_indefinite_description.
-  rewrite <-? mul_wf, e6, e8, ? mul_wf, Zequiv.
+  move=> a b c.
+  elim (Zlift a) => [a1 [a2 <-]].
+  elim (Zlift b) => [b1 [b2 <-]].
+  elim (Zlift c) => [c1 [c2 <-]].
+  rewrite ? mul_wf Zequiv.
   ring.
 Qed.
 
 Theorem M3 : ∀ a, 1 * a = a.
 Proof.
-  intros [a H].
-  unfold mul in *.
-  repeat destruct constructive_indefinite_description.
-  unfold one, INZ in *.
-  destruct e2.
-  rewrite -> Zequiv in *.
-  ring [e0].
+  move=> a.
+  elim (Zlift a) => [a1 [a2 <-]].
+  rewrite ? mul_wf Zequiv.
+  ring.
 Qed.
 
 Theorem D1 : ∀ a b c, (a + b) * c = a * c + b * c.
 Proof.
-  intros a b c.
-  unfold mul, add.
-  repeat destruct constructive_indefinite_description.
-  rewrite <-mul_wf, <-add_wf, e4, e8, e10, add_wf, mul_wf, Zequiv.
+  move=> a b c.
+  elim (Zlift a) => [a1 [a2 <-]].
+  elim (Zlift b) => [b1 [b2 <-]].
+  elim (Zlift c) => [c1 [c2 <-]].
+  rewrite ? mul_wf ? add_wf ? mul_wf Zequiv.
   ring.
+Qed.
+
+Definition lt : Z → Z → Prop.
+Proof.
+  move=> x y.
+  elim (constructive_indefinite_description (Zlift x)) =>
+  [a /constructive_indefinite_description [b H]].
+  elim (constructive_indefinite_description (Zlift y)) =>
+  [c /constructive_indefinite_description [d H0]].
+  exact (a+d < b+c).
+Defined.
+
+Infix "<" := lt : Z_scope.
+
+Theorem lt_wf : ∀ a b c d : N, (a - b < c - d)%set ↔ (a + d < b + c)%N.
+Proof.
+  rewrite /lt /sig_rect => a b c d.
+  (repeat elim constructive_indefinite_description) => x [y H] z [w H0].
+  (repeat elim constructive_indefinite_description) => e H1 f H2.
+  move: H H0 H1 H2.
+  rewrite ? Zequiv ? (add_comm _ c) ? (add_comm _ a) => /[dup] H =>
+  -> /[dup] H0 -> /naturals.cancellation_add <- /naturals.cancellation_add <-.
+  split => [/(naturals.O1_iff (b+c)) | /(naturals.O1_iff (w+x))].
+  - rewrite -add_assoc (add_comm y) ? add_assoc H0 -add_assoc -H
+    -(add_assoc a) (add_assoc w) (add_assoc a) (add_comm a) -? (add_assoc (w+x))
+    -naturals.O1_l_iff (add_comm b) //.
+  - rewrite (add_comm a) -(add_assoc d) (add_assoc a)
+    -H0 add_comm -? add_assoc H (add_comm z) ? add_assoc (add_comm c)
+        -? (add_assoc (b+c)) -naturals.O1_l_iff add_comm //.
 Qed.
 
 Definition sub a b := (a + -b).
@@ -282,107 +286,65 @@ Add Ring integer_ring_raw : (ringify ℤ).
 Add Ring integer_ring : (ringify ℤ : ring_theory 0 1 add mul sub neg eq).
 Infix "^" := (rings.pow ℤ) : Z_scope.
 
-Definition lt : Z → Z → Prop.
-Proof.
-  intros x y.
-  destruct (constructive_indefinite_description (Zlift x)) as [a H].
-  destruct (constructive_indefinite_description H) as [b H0].
-  destruct (constructive_indefinite_description (Zlift y)) as [c H1].
-  destruct (constructive_indefinite_description H1) as [d H2].
-  exact (a+d < b+c).
-Defined.
-
-Infix "<" := lt : Z_scope.
 
 Theorem T : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ b < a) ∨
                    (¬ a < b ∧ a = b ∧ ¬ b < a) ∨
                    (¬ a < b ∧ a ≠ b ∧ b < a).
 Proof.
-  intros a b.
-  unfold lt.
-  repeat destruct constructive_indefinite_description.
-  subst.
-  unfold not.
-  rewrite -> Zequiv, ? (add_comm x1), ? (add_comm x2).
-  eauto using naturals.trichotomy.
+  move=> a b.
+  elim (Zlift a) => [a1 [a2 <-]].
+  elim (Zlift b) => [b1 [b2 <-]].
+  rewrite ? lt_wf ? Zequiv ? (add_comm b1) ? (add_comm b2).
+  auto using naturals.trichotomy.
 Qed.
 
 Theorem lt_def : ∀ a b, a < b ↔ ∃ c : N, 0 ≠ c ∧ b = a + c.
 Proof.
-  intros a b.
-  split; intros H; unfold lt, zero, INZ in *;
-    repeat destruct constructive_indefinite_description; rewrite -> lt_def in *;
-      destruct H as [z [H H0]]; exists z; split; subst;
-        try rewrite -> add_wf, Zequiv in *.
-  - contradict H.
-    rewrite -> Zequiv in *.
-    now ring_simplify in H.
-  - now ring_simplify [H0].
-  - contradict H.
-    now subst.
-  - now ring_simplify in e2; ring_simplify [e2].
+  move=> a b.
+  elim (Zlift a) => [a1 [a2 <-]].
+  elim (Zlift b) => [b1 [b2 <-]].
+  ((split; rewrite lt_wf ? lt_def) =>
+   [[c [H H0]] | [c [H H0]]]; exists c; move: H0;
+   rewrite add_wf Zequiv add_0_r (add_comm a2)) =>
+  [<- | ->]; split; try ring; contradict H; rewrite -? INZ_eq -H //.
 Qed.
 
 Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
 Proof.
-  intros a b c H H0.
-  rewrite -> lt_def in *.
-  destruct H as [x [H H1]], H0 as [y [H0 H2]].
+  move=> a b c.
+  rewrite ? lt_def => [[x [/neq_sym /INZ_eq ? ->]] [y [/neq_sym /INZ_eq ? ->]]].
   exists (x+y)%N.
-  split.
-  - intros H3.
-    apply INZ_eq, eq_sym, naturals.cancellation_0_add in H3 as [H3 H4];
-      subst; auto.
-  - subst.
-    rewrite <-INZ_add.
-    ring.
+  rewrite -{2} INZ_add A2.
+  (split; try ring) => /(@eq_sym Z) /INZ_eq /naturals.cancellation_0_add [*] //.
 Qed.
 
 Theorem O1 : ∀ a b c, b < c → a + b < a + c.
 Proof.
-  intros a b c H.
-  rewrite -> lt_def in *.
-  destruct H as [x [H H0]].
-  exists x.
-  split; auto.
-  ring [H0].
+  move=> a b c.
+  rewrite ? lt_def => [[x [H ->]]].
+  repeat esplit; eauto; ring.
 Qed.
 
 Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
 Proof.
-  intros a b H H0.
-  rewrite -> lt_def in *.
-  destruct H as [x [H H1]], H0 as [y [H0 H2]].
+  move=> a b.
+  elim (Zlift a) => [a1 [a2 <-]].
+  elim (Zlift b) => [b1 [b2 <-]].
+  rewrite mul_wf ? lt_wf ? add_0_l ? naturals.lt_def => [[x [? <-]] [y [? <-]]].
   exists (x*y)%N.
-  split.
-  - intros H3.
-    unfold lt in *.
-    repeat destruct constructive_indefinite_description.
-    subst.
-    apply INZ_eq, eq_sym, naturals.cancellation_0_mul in H3 as [H3 | H3];
-      subst; auto.
-  - subst.
-    ring_simplify.
-    auto using INZ_mul.
+  split => [/(@eq_sym N) /naturals.cancellation_0_mul
+             [/(@eq_sym N) | /(@eq_sym N)] | ] //; ring.
 Qed.
 
 Theorem zero_lt_1 : 0 < 1.
 Proof.
-  rewrite -> lt_def.
-  exists 1%N.
-  split.
-  - intros H.
-    replace 0 with (INZ 0) in *; auto.
-    now apply INZ_eq, PA4 in H.
-  - now ring_simplify.
+  rewrite lt_wf ? add_0_l.
+  eauto using naturals.lt_succ.
 Qed.
 
 Theorem zero_ne_1 : 1 ≠ 0.
 Proof.
-  intros H.
-  pose proof zero_lt_1 as H0.
-  apply lt_def in H0 as [x [H1 H2]].
-  now rewrite <-(A3 x), <-H2, H in H1.
+  move /INZ_eq /(@eq_sym N) /PA4 => //.
 Qed.
 
 Definition ℤ_order := mkOR ℤ lt lt_trans T O1 O2 zero_ne_1.

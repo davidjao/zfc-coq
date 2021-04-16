@@ -1654,29 +1654,23 @@ Section Modular_arithmetic.
     Theorem Euler_Criterion_QNR :
       ∀ a : Z_, a ∈ QNR → a^(# QR) = ((-1%Z) : Z_)%Z.
     Proof.
-      intros a H.
-      rewrite <-roots_QNR in H.
-      apply Specify_classification in H as [H H0]; simpl Rset in *.
-      rewrite -> (reify H), despecify, eval_add, IRP_1, eval_const, eval_x_to_n,
-      (A1 _ 1), <-(rings.A4 ℤ_ (1:Z_)) in H0.
-      apply (rings.cancellation_add ℤ_) in H0; simpl in H0.
-      rewrite <-IZn_neg, <-H0.
+      move=> a.
+      rewrite -roots_QNR => /Specify_classification [H].
+      rewrite (reify H) despecify eval_add IRP_1 eval_const eval_x_to_n /=
+              (A1 _ 1) -(A4 1) -IZn_neg => /(rings.cancellation_add ℤ_) <-.
       f_equal.
       now apply set_proj_injective.
     Qed.
 
     Theorem Euler's_Criterion : ∀ a : Z_, a^(# QR) = ((legendre_symbol a) : Z_).
     Proof.
-      intros a.
-      unfold legendre_symbol.
-      repeat destruct excluded_middle_informative;
-        auto using Euler_Criterion_QR, Euler_Criterion_QNR.
-      destruct (classic (a = 0)) as [H | H]; subst.
-      - rewrite -> rings.pow_0_l; auto.
-        intros H.
-        contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
-        now rewrite -> size_of_QR, H, naturals.mul_0_r.
-      - exfalso; eauto using QR_QNR_0.
+      rewrite /legendre_symbol => a.
+      repeat elim excluded_middle_informative;
+        auto using Euler_Criterion_QR, Euler_Criterion_QNR =>
+      /[dup] ? /QR_QNR_0 /[swap] ? -> //.
+      rewrite rings.pow_0_l; auto => H.
+      contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
+      rewrite size_of_QR H naturals.mul_0_r //.
     Qed.
 
     Definition trinary_value (a : Z) := a = 0 ∨ a = 1 ∨ a = (-1%Z)%Z.
