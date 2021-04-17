@@ -361,107 +361,59 @@ Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level)
 
 Theorem le_def : ∀ a b, a ≤ b ↔ ∃ c : N, b = a + c.
 Proof.
-  split; intros H; unfold le, ordered_rings.le in *; rewrite -> lt_def in *.
-  - destruct H as [[c [H H0]] | H]; eauto.
-    subst.
-    exists 0%N.
-    now rewrite -> A1, A3.
-  - destruct H as [c H].
-    destruct (classic (0 = c)).
-    + subst.
-      right; now rewrite <-H0, A1, A3.
-    + left; eauto.
+  split => [[/lt_def [c [H0 H1]] | ->] | [c]]; eauto.
+  - exists 0%N; rewrite A1 A3 //.
+  - case (classic (0 = c)) => [<- -> | ].
+    + right; rewrite A1 A3 //.
+    + left => /=; rewrite lt_def; exists c => //.
 Qed.
 
 Theorem INZ_lt : ∀ a b : N, a < b ↔ (a < b)%N.
 Proof.
-  intros a b.
-  split; intros H; rewrite -> lt_def, naturals.lt_def in *;
-    destruct H as [c [H H0]]; exists c; split.
-  - contradict H.
-    now subst.
-  - now rewrite -> INZ_add, INZ_eq in H0.
-  - contradict H.
-    now apply INZ_eq in H.
-  - subst.
-    auto using INZ_add.
+  split => [/lt_def [c [H]] | /naturals.lt_def [c [H]]];
+             rewrite ? lt_def ? naturals.lt_def; exists c; split;
+               [ contradict H | | contradict H | ];
+               rewrite -? H -? INZ_eq -? H0 -? INZ_add //.
 Qed.
 
 Theorem INZ_le : ∀ a b : N, a ≤ b ↔ (a ≤ b)%N.
 Proof.
-  intros a b.
-  split; intros H.
-  - apply le_def in H as [c H].
-    exists c.
-    rewrite -> INZ_add in H.
-    now apply INZ_eq in H.
-  - destruct H as [c H].
-    apply le_def.
-    exists c.
-    rewrite -> INZ_add.
-    now subst.
+  split => [/le_def [c H] | [c H]]; rewrite ? le_def; exists c;
+             rewrite -? INZ_eq -? INZ_add // ? INZ_add ? INZ_eq //.
 Qed.
 
 Theorem lt_0_1 : ∀ a, 0 < a → ¬ a < 1.
 Proof.
-  intros a H H0.
-  rewrite -> lt_def in *.
-  destruct H as [x [H H1]], H0 as [y [H0 H2]].
-  contradiction (naturals.lt_0_1 x).
-  split; rewrite -> naturals.lt_def.
-  - exists x.
-    split; try ring; subst.
-    contradict H.
-    now subst.
-  - exists y.
-    split.
-    + contradict H0.
-      now subst.
-    + subst.
-      ring_simplify in H2.
-      now rewrite <-INZ_eq, <-INZ_add.
+  move=> a /[dup] /lt_def [c [H ->]].
+  rewrite A3 ? INZ_lt => H0 H1.
+  contradiction (naturals.lt_0_1 c) => //.
 Qed.
 
 Theorem lt_n_Sn : ∀ x n, x < S n → x < n ∨ x = n.
 Proof.
-  intros x n H.
-  destruct (T x n); intuition; try tauto.
-  rewrite -> lt_def in *.
-  destruct H as [a [H H2]], H3 as [b [H3 H4]].
-  subst.
-  rewrite -> ? INZ_add, INZ_eq, <-add_1_r, <-add_assoc in H2.
-  apply naturals.cancellation_add, eq_sym, cancellation_1_add in H2
-    as [H2 | H2]; subst; [ contradiction H3 | contradiction H ]; auto.
+  move=> x n.
+  case (T x n) => [H | [H | [H [H0]]]]; try tauto.
+  rewrite ? lt_def => [[a [H1 ->]]] [b [H2]].
+  rewrite ? INZ_add INZ_eq -add_1_r -add_assoc =>
+  /naturals.cancellation_add /[dup] /(@eq_sym N) /cancellation_1_add =>
+  [[/INZ_eq /(@eq_sym Z) | /INZ_eq /(@eq_sym Z)]] //.
 Qed.
 
 Theorem strong_induction : ∀ P : Z → Prop,
     (∀ x : Z, (∀ y : Z, 0 < y < x → P y) → P x) → ∀ a : Z, P a.
 Proof.
-  intros P H x.
-  destruct (T x 0) as [[H0 [H1 H2]] | [[H0 [H1 H2]] | [H0 [H1 H2]]]];
-    try now (apply H; intros y [H3 H4]; contradict H2; eauto using lt_trans).
-  apply lt_def in H2 as [c [H2 H3]].
-  subst.
-  rewrite -> A3 in *.
-  apply (Induction (λ x : N, P x ∧ ∀ y : N, 0 < y ∧ y < x → P y))%N.
-  - split; [ apply H |]; intros y [H3 H4]; contradiction (naturals.lt_irrefl 0);
-      [ eapply INZ_lt, lt_trans | eapply naturals.lt_trans ]; eauto.
-  - intros n [H3 H4].
-    split.
-    + apply H.
-      intros y [H5 H6].
-      apply lt_n_Sn in H6 as [H6 | H6]; try congruence.
-      apply H.
-      intros z [H8 H9].
-      pose proof H8 as H10.
-      apply lt_def in H10 as [d [H10 H11]].
-      rewrite -> H11, A3 in *.
-      apply H4.
-      split; apply INZ_lt; eauto using lt_trans.
-    + intros y [H5 H6].
-      apply INZ_lt, lt_n_Sn in H6 as [H6 | H6]; try congruence.
-      rewrite -> INZ_lt in H6.
-      auto.
+  move=> P H x.
+  case (T x 0) =>
+  [[? [? ?]] | [[? [? ?]] | [H0 [H1 /lt_def [c [H2 H3]]]]]];
+    try now apply H => y [] /lt_trans /[apply] // => _.
+  move: H3 H0 H1 H2 => ->; rewrite A3 => H0 H1 _.
+  (apply (Induction (λ x : N, P x ∧ ∀ y : N, 0 < y < x → P y))%N =>
+   [ | n [? ?]]; (split; [ apply H | ])) =>
+  [y [/(lt_antisym ℤ_order)] |
+   y [] /INZ_lt /(lt_antisym ℤ_order) /[swap] /INZ_lt |
+   y [/[swap] /lt_n_Sn [/[swap] /[dup] /lt_def [d [? ->]] | ->]] |
+   y [/[swap] /INZ_lt /lt_n_Sn [/INZ_lt ? | ->]]]
+    //; rewrite ? A3 ? INZ_lt; auto.
 Qed.
 
 Definition divide := divide ℤ : Z → Z → Prop.
@@ -470,30 +422,29 @@ Notation "x ｜ y" := (divide x y) (at level 60, format "x '｜' y") : Z_scope.
 
 Theorem N_ge_0 : ∀ a : N, 0 ≤ a.
 Proof.
-  induction a using Induction.
-  - now right.
-  - left.
-    destruct IHa as [H | H]; rewrite <-add_1_r, <-INZ_add.
-    + now apply succ_lt.
-    + rewrite <-H, A3.
-      now apply zero_lt_1.
+  induction a using Induction; rewrite /le; auto using ordered_rings.le_refl.
+  (case IHa; rewrite <-add_1_r, <-INZ_add) =>
+  [/succ_lt | <-] //; rewrite ? A3; left => //.
+  now apply zero_lt_1.
 Qed.
 
 Theorem lt_0_le_1 : ∀ a, 0 < a ↔ 1 ≤ a.
 Proof.
-  intros a.
-  destruct (T a 1); unfold le, ordered_rings.le in *; intuition; subst;
-    eauto using zero_lt_1, (one_lt ℤ_order : ∀ a, 1 < a → 0 < a).
-  exfalso; apply (lt_0_1 a); auto.
+  move=> a.
+  ((case (T a 1) =>
+    [[H _] | [[_ [-> _]] | [_ [_ H]]]]; split; try move: zero_lt_1 H) =>
+   [_ /lt_0_1 /[apply] | /[swap] _ /[swap] /lt_le_trans /[apply] | | | |
+    /lt_trans /[apply]] //; auto using zero_lt_1 => * ); [right | left] => //.
 Qed.
 
 Theorem div_le : ∀ a b, 0 < b → a｜b → a ≤ b.
 Proof.
-  intros a b H [d H0]; simpl in *; fold Z in *.
-  apply le_not_gt; simpl; intros H1; subst.
-  assert (0 < a) by eauto using lt_trans.
-  eapply (pos_div_r ℤ_order), lt_0_le_1, mul_le_r in H;
-    try rewrite -> M3, le_not_gt in H; eauto.
+  move=> a b /[swap] [[]] /=.
+  rewrite -/Z => [d ->].
+  rewrite /le (le_not_gt ℤ_order) /= =>
+  /[dup] H /[swap] /[dup] H0 /[swap] /lt_trans /[apply] H1.
+  move: H => /(pos_div_r ℤ_order a d) /lt_0_le_1 => /(_ H1) /mul_le_r /(_ H1).
+  rewrite rings.M3 le_not_gt //.
 Qed.
 
 Definition assoc := @assoc ℤ : Z → Z → Prop.
@@ -506,23 +457,20 @@ Global Hint Unfold assoc unit pm : Z.
 
 Theorem pm_refl : ∀ a, a = ± a.
 Proof.
-  intros a.
-  now left.
+  left => //.
 Qed.
 
 Theorem pm_sym : ∀ a b, a = ± b → b = ± a.
 Proof.
-  intros a b [H | H].
-  - now left.
-  - right.
-    ring [H].
+  move=> a b [H | H].
+  - left => //.
+  - right; ring [H].
 Qed.
 
 Theorem pm_trans : ∀ a b c, a = ± b → b = ± c → a = ± c.
 Proof.
-  intros a b c [H | H] [H0 | H0]; subst; intuition.
-  left.
-  ring.
+  move=> a b c [<- | ->] [<- | ->]; intuition.
+  left; ring.
 Qed.
 
 Add Parametric Relation : Z pm
@@ -532,99 +480,90 @@ Add Parametric Relation : Z pm
 
 Add Morphism mul with signature pm ==> pm ==> pm as pm_mul.
 Proof.
-  intros x y [H | H] x0 y0 [H0 | H0]; subst; unfold pm;
-    rewrite -> ? (mul_neg_l ℤ), ? (mul_neg_r ℤ), ? (neg_neg ℤ); intuition.
+  move=> x y [-> | ->] x0 y0 [-> | ->]; rewrite /pm;
+           [left | right | right | left]; ring.
 Qed.
 
 Theorem neg_pm : ∀ x, x = ± - x.
 Proof.
-  intros x.
-  symmetry.
-  intuition.
+  move=> x.
+  apply /pm_sym /or_intror => //.
 Qed.
 
 Add Morphism neg with signature pm ==> pm as pm_neg.
 Proof.
-  intros x y [H | H]; subst; intuition.
+  move=> x y [-> | ->]; intuition.
 Qed.
 
 Theorem assoc_N : ∀ a b : N, a ~ b → a = b.
 Proof.
-  intros a b [H H0]; apply INZ_eq; fold divide in *.
-  destruct (N_ge_0 a), (N_ge_0 b); simpl in *; try rewrite <-H1 in *;
-    try rewrite <-H2 in *; try rewrite -> (div_0_l ℤ) in *; auto;
-      apply (le_antisymm ℤ_order); now apply div_le.
+  rewrite /assoc /rings.assoc -/divide => a b [] /[dup] H; rewrite -INZ_eq.
+  elim (N_ge_0 b) => [/div_le /[apply] | <- /[swap] /div_0_l ->] // /[swap].
+  elim (N_ge_0 a) => [/div_le /[apply] /le_antisymm /[apply] | ] //.
+  move: H => /[swap] <- /div_0_l -> //.
 Qed.
 
 Theorem assoc_unit : ∀ a b, a ~ b → ∃ u, unit u ∧ b = a * u.
 Proof.
-  intros a b [[c H] [d H0]];
-    destruct (classic (b = 0)); simpl in *; subst.
-  - exists 1.
-    split; auto using (one_unit ℤ) with Z.
-    rewrite -> H0, H1.
-    ring.
+  move=> a b [[c] /[swap] [[d]]].
+  case (classic (b = 0)) => [-> -> | /= H -> /[dup] H1 {1}->].
+  - esplit; split; eauto using (one_unit ℤ) with Z.
+    rewrite mul_0_r M1 M3 //.
   - exists c.
     split; try ring.
-    exists d; simpl.
-    apply (cancellation_mul_r ℤ_ID a); simpl.
-    + contradict H1; subst; ring.
-    + now rewrite -> M3, <-M2.
+    exists d => /=.
+    apply (cancellation_mul_r ℤ_ID b) => /= //.
+    rewrite {1}H1 M3 M2 (M1 c) //.
 Qed.
 
 Theorem assoc_pm : ∀ a b, a ~ b → a = ± b.
 Proof.
-  assert (∀ a b, 0 < a → 0 < b → a ~ b → a = b) as assoc_pos.
-  { intros a b H H0 H1.
-    rewrite -> lt_def in H, H0.
-    destruct H as [c [H H2]], H0 as [d [H0 H3]].
-    subst.
-    rewrite -> ? A3 in *.
-    now apply INZ_eq, assoc_N. }
-  intros a b H.
-  destruct (T a 0), (T b 0); intuition; rewrite -> (lt_neg_0 ℤ_order) in *;
-    subst; try (now (destruct H; rewrite -> (div_0_l ℤ) in * )); simpl in *;
-      [ assert (-a = -b → a = b) by (intro M; ring [M]); left |
-        assert (-a = b → a = -b) by (intro M; ring [M]); right | right ];
-      eauto 8 using (assoc_sign ℤ), (assoc_sym ℤ) with Z.
+  have: ∀ a b, 0 < a → 0 < b → a ~ b → a = b => [a b | H a b].
+  { rewrite ? lt_def => [[c [H ->]]] [d [H0 ->]].
+    rewrite ? A3 INZ_eq => /assoc_N //. }
+  wlog: b / 0 < b => [H0 | H0].
+  - move: (trichotomy ℤ_order b 0) =>
+    [/lt_neg_0 /H0 /[swap] /assoc_sign /[swap] /[apply] -> |
+     [-> /assoc_zero -> | ]]; auto using pm_sym, neg_pm, pm_refl.
+  - move: (trichotomy ℤ_order a 0) =>
+    [/lt_neg_0 /H /(_ H0) /[swap] /assoc_sym /assoc_sign /assoc_sym
+      /[swap] /[apply] <- | [-> /assoc_sym /assoc_zero -> | /H /[apply] ->]];
+      auto using neg_pm, pm_refl.
 Qed.
 
 Theorem unit_pm_1 : ∀ a, unit a → a = ± 1.
 Proof.
-  intros a H.
+  move=> a H.
   apply assoc_pm; split; auto using (div_1_l ℤ) with Z.
 Qed.
 
 Theorem division_algorithm : ∀ a b, 0 < b → ∃ q r, b * q + r = a ∧ 0 ≤ r < b.
 Proof.
-  intros a b H.
-  wlog: a H / 0 < a.
-  - intros x.
-    destruct (T a 0) as [[H0 [H1 H2]] | [[H0 [H1 H2]] | [H0 [H1 H2]]]]; auto.
-    + rewrite -> (lt_neg_0 ℤ_order) in H0; simpl in *.
-      destruct (x _ H H0) as [q [r [H3 [[H4 | H4] H5]]]]; auto; simpl in *;
-        apply (f_equal (mul (-1))) in H3; ring_simplify in H3; subst.
+  move=> a b H.
+  wlog: a H / 0 < a => [x | H0].
+  - case (trichotomy ℤ_order a 0) => [ | [-> | ]]; auto.
+    + rewrite (lt_neg_0 ℤ_order) /= => /x =>
+      /(_ H) [q [r [] /[swap] [[[H0 | <-] H1] /(f_equal (mul (-1))) H2]]];
+      ring_simplify in H2; move: H2 <-.
       * exists (-q-1), (b+-r).
-        repeat split; try ring.
-        -- rewrite <-(A4 r), ? (A1 _ (-r)).
-           now apply or_introl, O1.
-        -- rewrite -> A1, <-(A3_r ℤ b), A1, <-A2, A3.
-           now apply O1, (neg_lt_0 ℤ_order).
+        rewrite ((lt_shift ℤ_order) : ∀ a b, a < b ↔ 0 < b + -a)
+                /le -(le_shift ℤ_order) /ordered_rings.le.
+        suff <- : r = b + - (b + - r); intuition ring.
       * exists (-q), 0.
-        repeat split; auto using (le_refl ℤ_order : ∀ a : Z, a ≤ a); ring.
+        intuition auto using (le_refl ℤ_order : ∀ a : Z, a ≤ a); ring.
     + exists 0, 0.
-      subst; repeat split; auto using (le_refl ℤ_order : ∀ a : Z, a ≤ a); ring.
-  - intros H0.
-    induction a as [a IHa] using strong_induction.
-    destruct (T a b); unfold le, ordered_rings.le; intuition;
-      [ exists 0, a | exists 1, 0 | ]; repeat split; auto; subst; try ring.
-    rewrite -> (lt_shift ℤ_order) in H4; simpl in *.
-    apply IHa in H4 as [q [r [H5 H6]]]; repeat split; auto.
+      intuition auto using (le_refl ℤ_order : ∀ a : Z, a ≤ a); ring.
+  - induction a as [a IHa] using strong_induction.
+    case (trichotomy ℤ_order a b) =>
+    [ | [-> | ]]; [ exists 0, a | exists 1, 0 | ];
+      try now repeat split; try ring; rewrite /le /ordered_rings.le; intuition.
+    rewrite lt_shift => /= /[dup] H1 /IHa.
+    elim => [q [r [H2 H3]] | ].
     + exists (q+1), r.
-      split; auto.
-      rewrite -> M1, D1, (M1 _ b), <-A2, (A1 _ r), A2, H5; ring.
-    + rewrite <-(A3_r ℤ a) at 2.
-      now apply O1, (neg_lt_0 ℤ_order).
+      rewrite -M1 D1 (M1 _ b) -A2 (A1 _ r) A2 H2.
+      intuition ring.
+    + rewrite ((lt_shift ℤ_order (a+-b) a) : a+-b < a ↔ 0 < a + -(a+-b)).
+      suff <- : b =  a + -(a + - b); intuition ring.
 Qed.
 
 Definition is_gcd a b d := d｜a ∧ d｜b ∧ ∀ x, x｜a → x｜b → x｜d.
@@ -643,105 +582,82 @@ Global Hint Resolve (div_add ℤ : ∀ a b c, a｜b → a｜c → a｜b+c)
       (O0 ℤ_order : ∀ a b, 0 < a → 0 < b → 0 < a + b)
       (square_ne0 ℤ_order : ∀ a : Z, a ≠ 0 → 0 < a * a) : Z.
 
-Theorem Euclidean_algorithm_N :
-  ∀ a b, 0 < a → 0 < b → gcd(a, b) = 1 → ∃ x y, 1 = a * x + b * y.
-Proof.
-  intros a b H; revert b.
-  induction a as [a IHa] using strong_induction.
-  intros b H0 [H1 [H2 H3]].
-  destruct (division_algorithm b a) as [q [r [H4 [[H5 | H5] H6]]]]; subst; auto.
-  - destruct (IHa r (conj H5 H6) H5 a) as [x [y H4]]; repeat split;
-      auto using (div_mul_r ℤ) with Z.
-    exists (y+-(q*x)), x.
-    ring_simplify.
-    now rewrite -> A1, M1.
-  - exists 1, 0.
-    ring_simplify.
-    apply (ordered_rings.le_antisymm ℤ_order), div_le; try apply div_le;
-      auto using (div_mul_r ℤ), (div_add ℤ), (div_0_r ℤ), (div_mul_r ℤ),
-      (div_refl ℤ), zero_lt_1 with Z.
-Qed.
-
 Lemma gcd_0_l : ∀ a d, gcd(0, a) = d → a ~ d.
 Proof.
-  intros a d [H [H0 H1]].
-  split; fold divide; auto using (div_0_r ℤ), (div_refl ℤ) with Z.
+  move=> a d [H [H0 H1]].
+  split; rewrite -/divide; auto using (div_0_r ℤ), (div_refl ℤ) with Z.
 Qed.
 
 Lemma is_gcd_sym : ∀ a b d, gcd(a, b) = d → gcd(b, a) = d.
 Proof.
-  intros a b d [H [H0 H1]].
+  move=> a b d [H [H0 H1]].
   repeat split; auto.
 Qed.
 
 Lemma gcd_0_r : ∀ a d, gcd(a, 0) = d → a ~ d.
 Proof.
-  intros a d H.
   auto using gcd_0_l, is_gcd_sym.
 Qed.
 
 Lemma gcd_1_l : ∀ a, gcd(1, a) = 1.
 Proof.
-  intros a.
   repeat split; auto using (div_1_l ℤ) with Z.
 Qed.
 
 Lemma gcd_1_r : ∀ a, gcd(a, 1) = 1.
 Proof.
-  intros a.
   repeat split; auto using (div_1_l ℤ) with Z.
 Qed.
 
 Lemma gcd_neg : ∀ a b d, gcd(a, b) = d ↔ gcd(a, -b) = d.
 Proof.
-  intros a b d.
-  split; intros [H [H0 H1]].
-  - repeat split; try rewrite <-(div_sign_r ℤ); auto.
-    intros x H2 H3.
-    rewrite <-(div_sign_r ℤ) in *.
-    auto.
-  - repeat split; try rewrite <-(div_sign_r ℤ) in H0; auto.
-    intros x H2 H3.
-    rewrite -> (div_sign_r ℤ) in H3.
-    auto.
+  (rewrite /is_gcd => a b d; split =>
+   [[/[swap] [[]] /(div_sign_r ℤ)] H H0 H1 |
+    [/[swap] [[]] /(div_sign_neg_r ℤ) H H0 H1]]; repeat split; auto)
+  => x H2 => [/(div_sign_neg_r ℤ) | /(div_sign_r ℤ)]; auto.
 Qed.
 
 Lemma neg_gcd : ∀ a b d, gcd(a, b) = d ↔ gcd(a, b) = -d.
 Proof.
-  intros a b d.
-  split; intros [H [H0 H1]]; repeat split; try (now rewrite <-(div_sign_l ℤ));
-    try (now rewrite -> (div_sign_l ℤ)); intros x H2 H3;
-      [ rewrite <-(div_sign_r ℤ) | rewrite -> (div_sign_r ℤ) ]; now apply H1.
+  (rewrite /is_gcd => a b d; split =>
+   [[] /(div_sign_l ℤ) H [] /(div_sign_l ℤ) H0 H1 |
+    [] /(div_sign_neg_l ℤ) H [] /(div_sign_neg_l ℤ) H0 H1]; repeat split; auto)
+  => x /H1 /[apply] [/(div_sign_r_neg ℤ) | /(div_sign_neg_r ℤ)] //.
 Qed.
-
 
 Theorem Euclidean_algorithm :
   ∀ a b, gcd(a, b) = 1 → ∃ x y, 1 = a * x + b * y.
 Proof.
-  intros a b H.
-  destruct (T a 0), (T b 0); intuition; subst;
-    try apply gcd_0_l in H; try apply gcd_0_r in H;
-      try (now (destruct H as [[x H]]; exists x, 0;
-                simpl in *; fold Z in x; rewrite -> H; ring));
-      try (now (destruct H as [[x H]]; exists 0, x;
-                simpl in *; fold Z in x; rewrite -> H; ring));
-      destruct H; intuition; rewrite -> (lt_neg_0 ℤ_order) in *; simpl in *;
-        [ set (c := -a) | set (c := -a) | set (c := a) | set (c := a) ];
-        [ set (d := -b) | set (d := b) | set (d := -b) | set (d := b) ];
-        destruct (Euclidean_algorithm_N c d) as [x [y Z]]; try split;
-          auto using (div_1_l ℤ), (div_sign_neg_r ℤ) with Z;
-          unfold c, d in *;
-          [ exists (-x), (-y) | exists (-x), y | exists x, (-y) | exists x, y ];
-          rewrite -> Z; ring.
+  have EA_pos: ∀ a b, 0 < a → 0 < b → gcd(a, b) = 1 → ∃ x y, 1 = a * x + b * y
+  => [a /[swap] H | a b].
+  { induction a as [a IHa] using strong_induction => b H0 [H1 [H2]].
+    elim (division_algorithm b a) => [q [r [<- [[H3 | <-] ]]] | ] //
+    => [H4 H5 | /lt_def [c [_] ->]].
+    - elim (IHa r (conj H3 H4) H3 a) =>
+      [x [y ->] | | ] //; repeat split; auto using (div_mul_r ℤ) with Z.
+      exists (y+-(q*x)), x; ring.
+    - rewrite A3 A1 A3 /one /divide.
+      exists 1, 0.
+      rewrite M1 M3 (mul_0_r ℤ : ∀ a, a * 0 = 0) A1 A3 INZ_eq.
+      apply assoc_N, conj; auto using (div_1_l ℤ), div_refl, (div_mul_r ℤ). }
+  wlog: b / 0 < b => [H | H].
+  - elim (trichotomy ℤ_order b 0) =>
+    [/(lt_neg_0 ℤ_order) /H /[swap] /gcd_neg /[swap] /[apply] [[x [y]]] -> |
+     [-> /gcd_0_r [[x]] -> | /H /[apply]]]
+      /= //; [exists x, (-y) | exists x, 0]; ring.
+  - elim (trichotomy ℤ_order a 0) =>
+    [/(lt_neg_0 ℤ_order) /[swap] /is_gcd_sym /gcd_neg /EA_pos
+      /[apply] /(_ H) [x [y]] -> |
+     [-> /gcd_0_l [[x]] -> | /[swap] /EA_pos /[apply] /(_ H)]]
+      /= //; [exists (-y), x | exists 0, x]; ring.
 Qed.
 
 Theorem FTA : ∀ a b c, gcd(a, b) = 1 → a｜b * c → a｜c.
 Proof.
-  intros a b c H [d H0]; simpl in *; fold Z in *.
-  destruct (Euclidean_algorithm a b H) as [x [y H1]].
-  rewrite <-(M3 c), H1.
-  exists (c*x + d*y); simpl.
-  now ring_simplify [H0].
+  move=> a b c H [d] /= H0.
+  elim (Euclidean_algorithm a b H) => [x [y H1]].
+  exists (c*x + d*y) => /=.
+  rewrite -{1}(M3 c) H1 ? D1 ? (M1 _ a) ? M2 ? (M1 a) -H0; now ring_simplify.
 Qed.
 
 Definition prime p := ¬ unit p ∧ ∀ d : Z, d｜p → unit d ∨ d ~ p.
@@ -763,11 +679,8 @@ Lemma prod_lemma : ∀ t1 t2 p,
     ∏ (t1 ++ p :: t2) = p * (∏ (t1 ++ t2)).
 
 Proof.
-  induction t1 as [| a t1 IHt1]; auto.
-  intros t2 p.
-  simpl.
-  rewrite -> IHt1.
-  ring.
+  induction t1 as [| a t1 IHt1]; auto => t2 p /=.
+  rewrite IHt1 ? M2 (M1 a) //.
 Qed.
 
 Theorem not_prime_divide :
@@ -775,60 +688,38 @@ Theorem not_prime_divide :
 Proof.
   intros p H H0.
   apply NNPP; contradict H0.
-  split; eauto.
-  { intros H1.
-    pose proof (T p 1) as H2.
-    apply div_le in H1 as [H1 | H1]; auto using zero_lt_1; intuition. }
-  move=> d H1; wlog: d H1 / 0 < d.
-  - intros x.
-    destruct (trichotomy ℤ_order d 0) as [H2 | [H2 | H2]]; subst; auto.
-    + apply (lt_neg_0 ℤ_order), x in H2 as [H2 | H2]; simpl in *.
-      * now apply or_introl, unit_sign.
-      * rewrite -> (assoc_sym_iff ℤ), <-(neg_neg ℤ d).
-        now apply or_intror, assoc_sign, assoc_sym.
-      * now apply div_sign_l_neg.
-    + apply (lt_not_ge ℤ_order) in H.
-      apply div_0_l in H1.
-      contradiction H.
-      rewrite -> H1.
-      apply or_introl, zero_lt_1.
-  - intros H2.
-    pose proof H1 as H3.
-    apply div_le in H3 as [H3 | H3]; eauto using lt_trans, zero_lt_1; subst.
-    + apply lt_0_le_1 in H2 as [H2 | H2]; simpl in *; auto; subst.
-      * contradict H0.
-        eauto.
-      * apply or_introl, one_unit.
-    + apply or_intror, assoc_refl.
+  (split; auto) => [/div_le [ | /lt_antisym | ] | d]; auto using zero_lt_1;
+                     first by move: H => /[swap] -> /(lt_irrefl ℤ_order) //.
+  wlog: d / 0 < d => [x | /[swap] /[dup] /div_le].
+  - elim (trichotomy ℤ_order d 0) =>
+    [/(lt_neg_0 ℤ_order) /x /[swap] /div_sign_l_neg /[swap] /[apply] /=
+      [[/unit_sign | /assoc_sym /assoc_sign /assoc_sym]] |
+     [-> /div_0_l -> | ]]; rewrite ? neg_neg; auto using (assoc_refl ℤ) with Z.
+  - (elim; eauto using lt_trans, zero_lt_1) =>
+    [H1 H2 /lt_0_le_1 [H3 | <-] | -> ];
+      auto using (one_unit ℤ), (assoc_refl ℤ) with Z.
+    exfalso; eauto.
 Qed.
 
 Theorem exists_prime_divisor :
   ∀ n, 1 < n → ∃ p, 0 < p ∧ prime p ∧ p｜n.
 Proof.
-  intros n H.
-  induction n as [n H0] using strong_induction.
-  destruct (classic (prime n)) as [H1 | H1].
-  - exists n; split;
-      eauto using (div_refl ℤ), lt_trans, zero_lt_1 with Z.
-  - destruct (not_prime_divide n H H1) as [x [[H2 H3] H4]].
-    apply H0 in H2 as [p [H5 [H6 H7]]];
-      eauto 6 using (div_trans ℤ), lt_trans, zero_lt_1 with Z.
+  induction n as [n IH] using strong_induction => H.
+  (case (classic (prime n)) => [H0 | H0]);
+    [ (exists n; split) |
+      elim (not_prime_divide n H H0) => [x] [] [] /[dup] /IH H1 ? ? ?; elim H1
+      => [p [] ? [] | ]]; eauto using (div_trans ℤ), lt_trans, zero_lt_1 with Z.
 Qed.
 
 Lemma prime_factors_in_interval :
   ∀ p x, 0 < p → 0 < x → prime p → p｜x → ∃ k, k * p = x ∧ 0 < k < x.
 Proof.
-  intros p x H H0 [H1 H2] [k H3].
-  subst.
-  assert (0 < k) as H4 by (eapply (pos_div_r ℤ_order) in H0; eauto).
-  exists k.
-  repeat split; auto.
-  assert (k ≤ k * p) as [H3 | H3];
-    eauto using div_le, (div_mul_r ℤ), (div_refl ℤ) with Z.
-  rewrite <-(M3_r _ k) in H3 at 1.
-  apply (cancellation_mul_l ℤ_ID) in H3.
-  - contradict H1; subst; eauto using (one_unit ℤ) with Z.
-  - intro; subst; contradiction (lt_irrefl ℤ_order 0).
+  move=> p x /[dup] H /lt_0_le_1 H0 /[swap] [[H1 H2]] /[swap] [[k ->]] /=
+           /[dup] H3 /(pos_div_r ℤ_order p k H) H4.
+  repeat esplit; eauto.
+  move: H0 H1 H4 =>
+  [/[swap] _ /(O3 ℤ_order k) /[apply] | <- /(_ (one_unit ℤ))] //.
+  rewrite rings.M3_r /= //.
 Qed.
 
 Theorem exists_prime_factorization : ∀ n, 0 < n → ∃ L : list Z, n = ∏' L.
