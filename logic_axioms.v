@@ -31,7 +31,7 @@ Qed.
 
 Lemma NNPP : ∀ P, ¬ ¬ P → P.
 Proof.
-  move: classic => / [swap] P / [swap] H / (λ x, x P); by tauto.
+  move: classic => /[swap] P /[swap] H /(_ P) => [[? | ?]] //.
 Qed.
 
 Arguments constructive_indefinite_description {A P}.
