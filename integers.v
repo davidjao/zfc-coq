@@ -548,7 +548,7 @@ Proof.
       * exists (-q-1), (b+-r).
         rewrite ((lt_shift ℤ_order) : ∀ a b, a < b ↔ 0 < b + -a)
                 /le -(le_shift ℤ_order) /ordered_rings.le.
-        suff <- : r = b + - (b + - r); intuition ring.
+        repeat split; try refine (eq_rect _ _ H0 _ _); intuition ring.
       * exists (-q), 0.
         intuition auto using (le_refl ℤ_order : ∀ a : Z, a ≤ a); ring.
     + exists 0, 0.
@@ -936,20 +936,19 @@ Section IZR.
 
   Coercion IZR : Z >-> R.
 
-  Theorem IZR_INZ : ∀ n : N, INR _ n = (n : Z).
-  Proof.
-    rewrite /IZR /sig_rect => n.
-    elim constructive_indefinite_description => [x H].
-    elim constructive_indefinite_description => [y /Zequiv H0].
-    rewrite add_move_l INR_add add_comm -H0 add_0_r //.
-  Qed.
-
   Theorem IZR_wf : ∀ a b : N, (INR _ a) + - (INR _ b) = (a - b)%set.
   Proof.
     rewrite /IZR /sig_rect => a b.
     elim constructive_indefinite_description => [x H].
     elim constructive_indefinite_description => [y /Zequiv H0].
     rewrite add_move_lr ? INR_add add_comm -H0 add_comm //.
+  Qed.
+
+  Theorem IZR_INZ : ∀ n : N, INR _ n = (n : Z).
+  Proof.
+    move=> n.
+    rewrite -IZR_wf -INR_zero.
+    ring.
   Qed.
 
   Theorem IZR_zero : rings.zero _ = 0%Z.
@@ -992,50 +991,44 @@ End IZR.
 
 Theorem INZ_pow : ∀ a b : N, ((a : Z)^b) = ((a^b)%N : Z).
 Proof.
-  intros a b.
+  move=> a b.
   induction b using Induction.
-  - now rewrite -> pow_0_r, naturals.pow_0_r.
-  - now rewrite -> pow_succ_r, naturals.pow_succ_r, IHb, INZ_mul.
+  - rewrite pow_0_r naturals.pow_0_r //.
+  - rewrite pow_succ_r naturals.pow_succ_r IHb -INZ_mul //.
 Qed.
 
 Theorem INZ_sum_0 : ∀ m (f : N → N),
     (sum ℤ (λ n, f n : Z) 0 m : Z) = sum_N f 0 m.
 Proof.
-  intros m f.
-  induction m using Induction.
-  - now rewrite -> sum_0, sum_N_0.
-  - rewrite -> sum_succ, sum_N_succ, IHm, INZ_add; auto using zero_le.
+  induction m using Induction => f.
+  - rewrite sum_0 sum_N_0 //.
+  - rewrite sum_succ ? sum_N_succ ? IHm -? INZ_add; auto using zero_le.
 Qed.
 
 Theorem INZ_sum : ∀ a b (f : N → N),
     (sum ℤ (λ n, f n : Z) a b : Z) = sum_N f a b.
 Proof.
-  intros a b f.
-  destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
-  - unfold sum, sum_N.
-    rewrite -> ? iterate_shift.
-    apply INZ_sum_0.
-  - now rewrite <-naturals.lt_not_ge, sum_neg, sum_N_neg in *.
+  move=> a b f.
+  case (classic (a ≤ b)%N) => [[c <-] | /naturals.lt_not_ge H].
+  - rewrite /sum /sum_N ? iterate_shift -INZ_sum_0 //.
+  - rewrite sum_neg ? sum_N_neg //.
 Qed.
 
 Theorem INZ_prod_0 : ∀ m (f : N → N),
     (prod ℤ (λ n, f n : Z) 0 m : Z) = prod_N f 0 m.
 Proof.
-  intros m f.
-  induction m using Induction.
-  - now rewrite -> prod_0, prod_N_0.
-  - rewrite -> prod_succ, prod_N_succ, IHm, INZ_mul; auto using zero_le.
+  induction m using Induction => f.
+  - rewrite prod_0 prod_N_0 //.
+  - rewrite prod_succ ? prod_N_succ ? IHm -? INZ_mul; auto using zero_le.
 Qed.
 
 Theorem INZ_prod : ∀ a b (f : N → N),
     (prod ℤ (λ n, f n : Z) a b : Z) = prod_N f a b.
 Proof.
-  intros a b f.
-  destruct (classic (a ≤ b)%N) as [[c H] | H]; subst.
-  - unfold prod, prod_N.
-    rewrite -> ? iterate_shift.
-    apply INZ_prod_0.
-  - now rewrite <-naturals.lt_not_ge, prod_neg, prod_N_neg in *.
+  move=> a b f.
+  case (classic (a ≤ b)%N) => [[c <-] | /naturals.lt_not_ge H].
+  - rewrite /prod /prod_N ? iterate_shift -INZ_prod_0 //.
+  - rewrite prod_neg ? prod_N_neg //.
 Qed.
 
 Definition even (x : Z) := 2｜x.
@@ -1043,53 +1036,35 @@ Definition odd (x : Z) := ¬ even x.
 
 Theorem odd_classification : ∀ x, odd x ↔ ∃ k, x = 2 * k + 1.
 Proof.
-  split; intros H.
-  - destruct (division_algorithm x 2) as [q [r [H0 H1]]];
-      try apply (ordered_rings.zero_lt_2 ℤ_order).
+  split => [ | [k -> [{}x /= H]]].
+  - elim (division_algorithm x 2) =>
+    [q [r [<- H]] | ]; last by apply (ordered_rings.zero_lt_2 ℤ_order).
     exists q.
-    rewrite <-H0.
     f_equal.
-    destruct (integers.T r 1) as [[H2 _] | [[_ [H2_]] | [_ [_ H2]]]].
-    + destruct H1 as [[H1 | H1] _]; simpl in *.
-      * contradiction (lt_0_1 r).
-      * subst.
-        contradiction H.
-        exists q; simpl.
-        now replace (2*q+0) with (q*2) by ring.
-    + congruence.
-    + destruct H1 as [_ H1].
-      contradiction (lt_0_1 (r+(-1%Z))%Z).
-      * now rewrite <-(ordered_rings.lt_shift ℤ_order).
-      * rewrite <-(integers.A3 1) at 2.
-        rewrite -> (integers.A1 0), <-(integers.A4 1), integers.A2,
-        ? (integers.A1 _ (-1)).
-        now apply (ordered_rings.O1 ℤ_order).
-  - destruct H as [k H].
-    subst.
-    intros [x H]; simpl in *.
-    destruct two_is_prime as [H0 H1].
-    contradict H0.
-    exists (x+-k); simpl.
-    rewrite -> integers.D1, <-H.
+    case (trichotomy ℤ_order r 1) => [ | [-> | ]] //; move: H.
+    + move: H0 => /[swap] [[[/lt_0_1 ? | <- ] _]] // [].
+      rewrite A1 A3 M1 /even /divide /rings.divide /=.
+      eauto.
+    + rewrite INZ_add add_1_r => [[_ /lt_n_Sn [/[swap] /lt_antisym | H]]] //.
+  - move: two_is_prime => [[]].
+    exists (x+-k) => /=.
+    rewrite D1 -H.
     now ring_simplify.
 Qed.
 
 Theorem odd_add : ∀ a b, odd a → odd b → even (a+b).
 Proof.
-  intros a b H H0.
-  apply odd_classification in H as [k H], H0 as [l H0].
-  subst.
-  exists (k+l+1).
-  simpl.
-  now replace ((k+l+1)*2) with (2*k+1+(2*l+1)) by ring.
+  move=> a b /odd_classification [k ->] /odd_classification [l ->].
+  exists (k+l+1) => /=.
+  (suff -> : (k+l+1)*2 = 2*k+1+(2*l+1); last by ring) => //.
 Qed.
 
 Definition div : Z → Z → Z.
 Proof.
-  intros a b.
-  destruct (excluded_middle_informative (b｜a)).
-  - destruct (constructive_indefinite_description d) as [k].
-    exact k.
+  move=> a b.
+  case (excluded_middle_informative (b｜a)) =>
+  [/constructive_indefinite_description [k H] | H].
+  - exact k.
   - exact 0.
 Defined.
 
@@ -1097,360 +1072,324 @@ Infix "/" := div : Z_scope.
 
 Theorem div_inv_refl : ∀ a, a ≠ 0 → a/a = 1.
 Proof.
-  intros a H.
-  unfold div.
-  destruct excluded_middle_informative.
-  - destruct constructive_indefinite_description.
-    rewrite <-(M3 a), ? (M1 a) in e at 1.
-    apply (cancellation_mul_r ℤ_ID) in e; auto.
-  - contradict n.
-    auto using div_refl with Z.
+  rewrite /div => a H.
+  case excluded_middle_informative => [H0 | []]; auto using div_refl with Z.
+  elim constructive_indefinite_description => x.
+  rewrite -{1}(M3 a) => /(cancellation_mul_r ℤ_ID) -> //.
 Qed.
 
 Theorem div_inv_l : ∀ a b, b｜a → b * (a/b) = a.
 Proof.
-  intros a b H.
-  unfold div.
-  destruct excluded_middle_informative; try tauto.
-  destruct constructive_indefinite_description.
-  now rewrite -> M1.
+  rewrite /div => a b H.
+  (case excluded_middle_informative; try tauto) => H0.
+  elim constructive_indefinite_description => x.
+  rewrite M1 //.
 Qed.
 
 Theorem div_inv_r : ∀ a b, b｜a → (a/b) * b = a.
 Proof.
-  intros a b H.
-  now rewrite -> M1, div_inv_l.
+  move=> a b H.
+  rewrite M1 div_inv_l //.
 Qed.
 
 Theorem div_spec : ∀ a b k, b｜a → b ≠ 0 → a/b = k ↔ a = k * b.
 Proof.
-  intros a b k H H0.
-  unfold div.
-  split; intros H1; destruct excluded_middle_informative; try tauto;
-    try destruct constructive_indefinite_description; subst; auto.
-  now apply (cancellation_mul_r ℤ_ID) in e.
+  rewrite /div => a b k H H0.
+  (split; (case excluded_middle_informative; try tauto)
+   => H1; elim constructive_indefinite_description => x ->) =>
+  [-> | /(cancellation_mul_r ℤ_ID) /= ->] //.
 Qed.
 
 Theorem mul_div : ∀ a b d, d｜b → d ≠ 0 → a * (b / d) = (a * b) / d.
 Proof.
-  intros a b d H H0.
-  apply eq_sym, div_spec; auto.
-  - destruct H as [k H].
-    exists (k*a).
-    rewrite -> H.
-    simpl; now ring_simplify.
-  - now rewrite <-M2, div_inv_r.
+  move=> a b d /[dup] [[k ->]] H H0.
+  apply /eq_sym /div_spec; auto.
+  - exists (k*a) => /=.
+    now ring_simplify.
+  - rewrite -M2 div_inv_r //.
 Qed.
 
 Theorem div_nonneg : ∀ a b, 0 ≤ a → 0 < b → 0 ≤ a / b.
 Proof.
-  intros a b H H0.
-  unfold div.
-  destruct excluded_middle_informative; try apply (le_refl ℤ_order).
-  destruct constructive_indefinite_description; subst; simpl in *.
-  rewrite -> M1 in H.
-  eapply pos_mul_nonneg; eauto.
+  rewrite /div => a b H H0.
+  case excluded_middle_informative => H1; last by apply (le_refl ℤ_order).
+  elim constructive_indefinite_description => x.
+  move: (rings.M1 ℤ) H => -> /[swap] -> /pos_mul_nonneg => /(_ H0) //.
 Qed.
 
 Theorem div_pos : ∀ a b, b｜a → 0 < a → 0 < b → 0 < a / b.
 Proof.
-  intros a b H H0 H1.
-  unfold div.
-  destruct excluded_middle_informative; try tauto.
-  destruct constructive_indefinite_description; simpl in *; subst.
-  eapply (pos_div_r ℤ_order); eauto.
+  rewrite /div => a b H H0 H1.
+  (case excluded_middle_informative; try tauto) => H2.
+  elim constructive_indefinite_description => x.
+  move: H0 => /[swap] -> /(pos_div_r ℤ_order _ _ H1) //.
 Qed.
 
 Theorem div_div : ∀ a b, b｜a → a ≠ 0 → b ≠ 0 → a / (a / b) = b.
 Proof.
-  intros a b H H0 H1.
-  apply div_spec; auto using eq_sym, div_inv_l.
+  move=> a b H H0 H1.
+  apply /div_spec; auto using eq_sym, div_inv_l.
   - exists b.
-    now apply eq_sym, div_inv_l.
+    apply /eq_sym /div_inv_l => //.
   - contradict H0.
-    rewrite <-(div_inv_l a b); auto.
-    now rewrite -> H0, (mul_0_r ℤ).
+    rewrite -(div_inv_l a b) ? H0 //.
+    ring.
 Qed.
 
 Theorem gcd_exists : ∀ a b, ∃ d, gcd(a, b) = d.
 Proof.
-  intros a b.
-  wlog: a b / 0 < a ∧ 0 < b.
-  - intros x.
-    destruct (T 0 a) as [[H _] | [[_ [H _]] | [_ [_ H]]]], (T 0 b)
-        as [[H0 _] | [[_ [H0 _]] | [_ [_ H0]]]]; subst; auto;
-      try (now (exists a; repeat split; auto using div_0_r with Z));
-      try (now (exists b; repeat split; auto using div_0_r with Z));
-      try (now (exists 0; repeat split; auto using div_0_r with Z));
-      rewrite -> (lt_neg_0 ℤ_order) in *;
-      destruct (x _ _ (conj H H0)) as [d H1]; exists d.
-    + now rewrite -> gcd_neg.
-    + now apply is_gcd_sym; rewrite -> gcd_neg; apply is_gcd_sym.
-    + now rewrite gcd_neg; apply is_gcd_sym; rewrite gcd_neg; apply is_gcd_sym.
+  move=> a b.
+  wlog: a b / 0 < a ∧ 0 < b => [x | ].
+  - (((case (trichotomy ℤ_order 0 a) =>
+       [ | [<- | ]]; try (by exists b; repeat split; auto using div_0_r with Z);
+       case (trichotomy ℤ_order 0 b) =>
+       [ | [<- | ]]; try now exists a; repeat split; auto using div_0_r with Z)
+      => [H H0 | /lt_neg_0 H H0 | H /lt_neg_0 H0 | /lt_neg_0 H /lt_neg_0 H0];
+         elim (x _ _ (conj H0 H))) =>
+     [d | d | d /is_gcd_sym | d]; eauto; rewrite -gcd_neg;
+     eauto using is_gcd_sym) => /is_gcd_sym.
+    rewrite -gcd_neg; eauto using is_gcd_sym.
   - revert b.
-    induction a using strong_induction.
-    intros b [H0 H1].
-    apply (division_algorithm b) in H0 as H2.
-    destruct H2 as [q [r [H2 [[H3 | H3] H4]]]]; simpl in *; subst.
-    + destruct (H r (conj H3 H4) a) as [d [H5 [H6 H7]]]; auto.
+    induction a using strong_induction =>
+    b [/[dup] H0 /(division_algorithm b) [q [r [H1 [H2 H3]]]] H4].
+    move: H1 H H4 H2 <- => H H4 [H2 | <-].
+    + elim (H r (conj H2 H3) a) => [d [H5 [H6 H7]] | ]; auto.
       exists d.
-      repeat split; auto.
-      * apply div_add; try apply div_mul_r; auto.
-      * intros x H2 H8.
-        apply H7; auto.
-        replace r with ((a*q+r) + a*(-q)) by ring.
-        apply div_add; try apply div_mul_r; auto.
+      (repeat split; auto) => [ | x H1 H8].
+      * move: H6 H5 => /(div_mul_r ℤ _ _ q) /div_add /[apply] //.
+      * apply H7; auto.
+        suff -> : r = (a*q+r) + a*(-q); last by ring.
+        move: H1 H8 => /(div_mul_r ℤ _ _ (-q)) /[swap] /div_add /[apply] //.
     + exists a.
-      repeat split; try intros; try ring_simplify; auto using div_refl with Z.
+      repeat split => *; try ring_simplify; auto using div_refl with Z.
 Qed.
 
 Theorem pos_gcd_exists : ∀ a b, ∃ d, 0 ≤ d ∧ gcd(a, b) = d.
 Proof.
-  intros a b.
-  destruct (gcd_exists a b) as [d H], (classic (0 ≤ d)) as [H0 | H0]; eauto.
-  exists (-d).
-  rewrite <-neg_gcd.
-  split; auto.
-  now apply or_introl, lt_neg_0, lt_not_ge.
+  move=> a b.
+  elim (gcd_exists a b) => [d].
+  case (classic (0 ≤ d)) => [H | /lt_not_ge /lt_neg_0 H /neg_gcd H0]; eauto.
+  eapply ex_intro, and_comm, conj, or_introl; eauto.
+Qed.
+
+
+Definition abs (a : Z) := If 0 ≤ a then a else (-a).
+
+Notation " '|' a '|' " := (abs a) (at level 30, format "'|' a '|'") : Z_scope.
+
+Theorem abs_pos : ∀ a, 0 ≤ |a|.
+Proof.
+  rewrite /abs /le /ordered_rings.le => a.
+  elim excluded_middle_informative => [H | /lt_not_ge /lt_neg_0]; intuition.
+Qed.
+
+Theorem abs_zero : ∀ a, |a| = 0 ↔ a = 0.
+Proof.
+  rewrite /abs => a.
+  elim excluded_middle_informative; split => // => [H | H]; ring [H].
 Qed.
 
 Definition gcd : Z → Z → Z.
 Proof.
-  intros a b.
-  destruct (constructive_indefinite_description (pos_gcd_exists a b)) as [d].
+  move=> a b.
+  elim (constructive_indefinite_description (pos_gcd_exists a b)) => [d H].
   exact d.
 Defined.
 
 Theorem is_gcd_gcd : ∀ a b, gcd(a, b) = gcd a b.
 Proof.
-  intros a b.
-  unfold gcd.
-  now destruct constructive_indefinite_description.
+  rewrite /gcd /sig_rect => a b.
+  elim constructive_indefinite_description => ? [? ?] //.
 Qed.
 
 Theorem gcd_l_div : ∀ a b, gcd a b｜a.
 Proof.
-  intros a b.
-  unfold gcd.
-  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
+  rewrite /gcd /sig_rect => a b.
+  elim constructive_indefinite_description => [d [? [? [? ?]]]] //.
 Qed.
 
 Theorem gcd_r_div : ∀ a b, gcd a b｜b.
 Proof.
-  intros a b.
-  unfold gcd.
-  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
+  rewrite /gcd /sig_rect => a b.
+  elim constructive_indefinite_description => [d [? [? [? ?]]]] //.
 Qed.
 
 Theorem gcd_spec : ∀ a b x, x｜a → x｜b → x｜gcd a b.
 Proof.
-  intros a b.
-  unfold gcd.
-  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
+  rewrite /gcd /sig_rect => a b.
+  elim constructive_indefinite_description => [d [? [? [? ?]]]] //.
 Qed.
 
 Theorem gcd_nonneg : ∀ a b, 0 ≤ gcd a b.
 Proof.
-  intros a b.
-  unfold gcd.
-  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
+  rewrite /gcd /sig_rect => a b.
+  elim constructive_indefinite_description => [d [? [? [? ?]]]] //.
 Qed.
 
 Theorem pm_pos : ∀ a b, a = ± b → 0 ≤ a → 0 ≤ b → a = b.
 Proof.
-  intros a b [H | H] H0 H1; auto; subst.
-  replace b with 0; try ring.
-  apply (ordered_rings.le_antisymm ℤ_order); auto.
-  now apply le_neg_0.
+  move=> a b [-> | -> /le_neg_0 /le_antisymm /[apply] ->] /=; auto; ring.
 Qed.
 
 Theorem gcd_is_gcd : ∀ a b d, gcd(a, b) = d → 0 ≤ d → gcd a b = d.
 Proof.
-  intros a b d [H [H0 H1]] H2.
-  apply pm_pos; auto using gcd_nonneg.
-  apply assoc_pm, conj; fold divide; auto using gcd_l_div, gcd_r_div, gcd_spec.
+  move=> a b d [H [H0 H1]] H2.
+  apply pm_pos; try apply assoc_pm, conj; rewrite -/divide;
+    auto using gcd_l_div, gcd_r_div, gcd_spec, gcd_nonneg.
 Qed.
 
 Theorem gcd_refl : ∀ a, 0 ≤ a → gcd a a = a.
 Proof.
-  intros a H.
+  move=> a H.
   apply gcd_is_gcd; auto.
   repeat split; auto using div_refl with Z.
 Qed.
 
 Theorem gcd_l_0 : ∀ a, gcd 0 a = ± a.
 Proof.
-  intros a.
-  destruct (classic (0 ≤ a)).
-  - apply or_introl, gcd_is_gcd; auto.
-    repeat split; auto using div_0_r with Z.
-  - apply or_intror, gcd_is_gcd; auto.
-    repeat split; rewrite <-? (div_sign_l ℤ); auto using div_refl, (div_0_r ℤ).
-    + intros x H0 H1.
-      now rewrite <-(div_sign_r ℤ).
-    + left.
-      now apply lt_neg_0, lt_not_ge.
+  move=> a.
+  case (classic (0 ≤ a)) => [H | /(lt_not_ge ℤ_order) /lt_neg_0 H /=].
+  - apply or_introl, gcd_is_gcd; repeat split; auto using div_0_r with Z.
+  - apply or_intror, gcd_is_gcd, or_introl => //.
+    apply gcd_neg, conj; auto using div_refl, (div_0_r ℤ) with Z.
 Qed.
 
 Theorem gcd_sym : ∀ a b, gcd a b = gcd b a.
 Proof.
-  intros a b.
+  move=> a b.
   apply pm_pos; auto using gcd_nonneg.
-  apply assoc_pm.
-  split; apply gcd_spec; auto using gcd_l_div, gcd_r_div.
+  apply assoc_pm, conj; apply gcd_spec; auto using gcd_l_div, gcd_r_div.
 Qed.
 
 Theorem gcd_r_0 : ∀ a, gcd a 0 = ± a.
 Proof.
-  intros a.
-  rewrite -> gcd_sym.
+  move=> a.
+  rewrite gcd_sym.
   apply gcd_l_0.
 Qed.
 
 Theorem gcd_l_1 : ∀ a, gcd 1 a = 1.
 Proof.
-  intros a.
+  move=> a.
   apply gcd_is_gcd; auto using gcd_1_l.
   apply or_introl, zero_lt_1.
 Qed.
 
 Theorem gcd_r_1 : ∀ a, gcd a 1 = 1.
 Proof.
-  intros a.
-  now rewrite -> gcd_sym, gcd_l_1.
+  move=> a.
+  rewrite gcd_sym gcd_l_1 //.
 Qed.
 
 Theorem gcd_pos : ∀ a b, a ≠ 0 → gcd a b ≠ 0.
 Proof.
-  intros a b H.
-  contradict H.
-  pose proof gcd_l_div a b.
-  rewrite -> H in H0.
-  now apply div_0_l in H0.
+  move=> a b /[swap] H [].
+  move: H (gcd_l_div a b) -> => /div_0_l //.
 Qed.
 
 Theorem gcd_rel_prime :
   ∀ a b, a ≠ 0 → b ≠ 0 → gcd(a / gcd a b, b / gcd a b) = 1.
 Proof.
-  intros a b H H0.
-  repeat split; auto using div_1_l with Z.
-  intros x [k H1] [l H2]; simpl in *.
-  apply (div_spec a (gcd a b)) in H1; apply (div_spec b (gcd a b)) in H2;
-    auto using gcd_l_div, gcd_r_div, gcd_pos.
-  rewrite <-M2 in H1, H2.
-  assert (x * gcd a b｜gcd a b) as [z H3].
-  { apply is_gcd_gcd; [ now (exists k) | now (exists l) ]. }
-  exists z.
-  apply (cancellation_mul_r ℤ_ID (gcd a b)); simpl in *.
-  - now apply gcd_pos.
-  - now rewrite -> M3, <-M2.
+  move=> a b H H0.
+  repeat split; auto using div_1_l with Z =>
+  [x [k /div_spec]] /[swap] [[l /div_spec]].
+  rewrite -? M2 => H1 H2.
+  have [z H3] : x * gcd a b｜gcd a b.
+  { apply is_gcd_gcd; [ (exists k) | (exists l) ];
+      auto using gcd_l_div, gcd_r_div, gcd_pos. }
+  esplit.
+  apply (cancellation_mul_r ℤ_ID (gcd a b)); auto using gcd_pos.
+  rewrite rings.M3 -rings.M2 {1}H3 //.
 Qed.
 
 Theorem Euclidean_gcd : ∀ a b, ∃ x y, a * x + b * y = gcd a b.
 Proof.
-  intros a b.
-  destruct (classic (a = 0)) as [H | H], (classic (b = 0)) as [H0 | H0]; subst.
-  - exists 0, 0.
-    rewrite -> (mul_0_l ℤ), A3.
-    destruct (gcd_l_0 0) as [H | H]; replace (-0) with 0 in * by ring; auto.
-  - destruct (gcd_l_0 b) as [H | H]; rewrite -> H.
-    + exists 0, 1; ring.
-    + exists 0, (-1); ring.
-  - destruct (gcd_r_0 a) as [H0 | H0]; rewrite -> H0.
-    + exists 1, 0; ring.
-    + exists (-1), 0; ring.
-  - eapply gcd_rel_prime in H; eauto.
-    apply Euclidean_algorithm in H as [x [y H]].
-    rewrite -> gcd_sym in H.
-    exists y, x.
-    rewrite <-(M3 (gcd a b)), H, D1, ? (M1 _ (gcd a b)), ? M2, ? div_inv_l;
-      auto using gcd_l_div, gcd_r_div; ring.
+  move=> a b.
+  case (classic (a = 0)) => [-> | /gcd_rel_prime].
+  - elim (gcd_l_0 b) => [-> | ->]; [ exists 0, 1 | exists 0, (-1) ]; ring.
+  - case (classic (b = 0)) =>
+    [-> | /[swap] /[apply] /Euclidean_algorithm [x [y H]]].
+    + elim (gcd_r_0 a) => [-> | ->]; [ exists 1, 0 | exists (-1), 0 ]; ring.
+    + repeat esplit.
+      rewrite -(M3 (gcd a b)) H D1 ? (M1 _ (gcd a b)) ? M2 ? div_inv_l;
+        auto using gcd_l_div, gcd_r_div.
 Qed.
 
 Theorem rel_prime_mul : ∀ a b c, gcd(a, b) = 1 → a｜c → b｜c → a * b｜c.
 Proof.
-  intros a b c H [m H0] [n H1].
-  apply Euclidean_algorithm in H as [x [y H]].
-  rewrite <-(M3 c), H, D1, ? (M1 _ c), ? M2.
+  move=> a b c /Euclidean_algorithm [x [y H]] [m /= ->] [n /= H0].
+  rewrite -(M3 (m*a)) H D1 ? (M1 _ (m*a)) ? M2.
   apply div_add; apply div_mul_r;
-    [ exists n; rewrite H1 | exists m; rewrite H0 ]; simpl; now ring_simplify.
+    [ exists n; rewrite H0 | exists m ] => /=; ring_simplify => //.
 Qed.
 
 Lemma gcd_mul_rel_prime : ∀ a b c, gcd(b, c) = 1 → gcd(gcd a b, gcd a c) = 1.
 Proof.
-  intros a b c H.
-  repeat split; auto using div_1_l with Z.
-  intros x H0 H1.
-  apply H.
-  - clear H1; eapply div_trans; eauto; apply gcd_r_div.
-  - clear H0; eapply div_trans; eauto; apply gcd_r_div.
+  move=> a b c H.
+  (repeat split; auto using div_1_l with Z) => x H0 H1.
+  apply H => [{H1} | {H0}]; eapply div_trans; eauto; apply gcd_r_div.
 Qed.
 
 Theorem gcd_r_mul :
   ∀ a b c, gcd(b, c) = 1 → gcd(a, b * c) = gcd a b * gcd a c.
 Proof.
-  intros a b c H.
-  repeat split;
+  move=> a b c H.
+  (repeat split;
     try (apply rel_prime_mul; auto using gcd_mul_rel_prime, gcd_l_div);
-    [ apply div_mul_r | apply div_mul_l | ]; try apply gcd_r_div.
-  intros x H0 H1.
-  destruct (Euclidean_gcd a b) as
-      [x1 [y1 H2]], (Euclidean_gcd a c) as [x2 [y2 H3]]; rewrite <-H2, <-H3.
-  replace ((a*x1+b*y1)*(a*x2+c*y2)) with
-      (a*(a*x1*x2+b*x2*y1+c*x1*y2)+(b*c)*(y1*y2)) by ring.
-  now apply div_add; apply div_mul_r.
+    [ apply div_mul_r | apply div_mul_l | ]; try apply gcd_r_div) => x H0 H1.
+  elim (Euclidean_gcd a b) => [x1 [y1 <-]].
+  elim (Euclidean_gcd a c) => [x2 [y2 <-]].
+  suff -> : (a*x1+b*y1)*(a*x2+c*y2) = a*(a*x1*x2+b*x2*y1+c*x1*y2)+(b*c)*(y1*y2);
+    [ apply /div_add; apply /div_mul_r | ring ] => //.
 Qed.
 
-Theorem gcd_mul_r : ∀ a b c, gcd(b, c) = 1 → gcd a (b*c) = gcd a b * gcd a c.
+Theorem gcd_mul_r : ∀ a b c, gcd(b, c) = 1 → gcd a (b * c) = gcd a b * gcd a c.
 Proof.
-  intros a b c H.
+  move=> a b c H.
   apply gcd_is_gcd; auto using gcd_r_mul.
   apply mul_nonneg_nonneg; apply gcd_nonneg.
 Qed.
 
-Theorem gcd_l_mul :
-  ∀ a b c, gcd(a, b) = 1 → gcd(a * b, c) = gcd a c * gcd b c.
+Theorem gcd_l_mul : ∀ a b c, gcd(a, b) = 1 → gcd(a * b, c) = gcd a c * gcd b c.
 Proof.
-  intros a b c H.
+  move=> a b c H.
   apply is_gcd_sym.
-  rewrite -> ? (gcd_sym _ c).
+  rewrite ? (gcd_sym _ c).
   now apply gcd_r_mul.
 Qed.
 
-Theorem gcd_mul_l : ∀ a b c, gcd(a, b) = 1 → gcd (a*b) c = gcd a c * gcd b c.
+Theorem gcd_mul_l : ∀ a b c, gcd(a, b) = 1 → gcd (a * b) c = gcd a c * gcd b c.
 Proof.
-  intros a b c H.
-  now rewrite -> gcd_sym, gcd_mul_r, ? (gcd_sym c).
+  move=> a b c H.
+  rewrite gcd_sym gcd_mul_r ? (gcd_sym c) //.
 Qed.
 
 Theorem gcd_pow_l : ∀ a b k, gcd(a, b) = 1 → gcd (a^k) b = 1.
 Proof.
-  intros a b k H.
-  apply not_exists_prime_divisor; auto using gcd_nonneg.
-  intros [p [H0 H1]].
-  pose proof H0 as [H2 H3].
-  contradict H2.
+  move=> a b k H.
+  (apply not_exists_prime_divisor; auto using gcd_nonneg) =>
+  [[p [/[dup] H0 /[swap] H1 [/[swap] H2 []]]]].
   apply H; [ eapply Euclid_power; auto | ];
-    eapply div_trans; eauto; fold divide; auto using gcd_l_div, gcd_r_div.
+    eapply div_trans; eauto; rewrite -/divide; auto using gcd_l_div, gcd_r_div.
 Qed.
 
 Theorem gcd_pow_r : ∀ a b k, gcd(a, b) = 1 → gcd a (b^k) = 1.
 Proof.
-  intros a b k H.
-  rewrite -> gcd_sym.
+  move=> a b k H.
+  rewrite gcd_sym.
   now apply gcd_pow_l, is_gcd_sym.
 Qed.
 
 Theorem div_l_gcd : ∀ a b, 0 ≤ a → a｜b → gcd a b = a.
 Proof.
-  intros a b H H0.
+  move=> a b H H0.
   apply gcd_is_gcd; auto.
   repeat split; auto using (div_refl ℤ) with Z.
 Qed.
 
 Theorem div_r_gcd : ∀ a b, 0 ≤ b → b｜a → gcd a b = b.
 Proof.
-  intros a b H H0.
+  move=> a b H H0.
   apply gcd_is_gcd; auto.
   repeat split; auto using (div_refl ℤ) with Z.
 Qed.
@@ -1462,13 +1401,13 @@ Notation "'lcm(' a , b ) = m" :=
 
 Lemma lcm_0_l : ∀ a, lcm(0, a) = 0.
 Proof.
-  intros a.
-  split; fold divide; auto using (div_0_r ℤ), (div_refl ℤ) with Z.
+  move=> a.
+  split; rewrite -/divide; auto using (div_0_r ℤ), (div_refl ℤ) with Z.
 Qed.
 
 Lemma is_lcm_sym : ∀ a b m, lcm(a, b) = m → lcm(b, a) = m.
 Proof.
-  intros a b d [H [H0 H1]].
+  move=> a b d [H [H0 H1]].
   repeat split; auto.
 Qed.
 
@@ -1479,195 +1418,175 @@ Qed.
 
 Lemma lcm_1_l : ∀ a, lcm(1, a) = a.
 Proof.
-  intros a.
   repeat split; auto using (div_1_l ℤ) with Z.
 Qed.
 
 Lemma lcm_1_r : ∀ a, lcm(a, 1) = a.
 Proof.
-  intros a.
   repeat split; auto using (div_1_l ℤ) with Z.
 Qed.
 
 Lemma lcm_neg : ∀ a b m, lcm(a, b) = m ↔ lcm(a, -b) = m.
 Proof.
-  intros a b m.
-  split; intros [H [H0 H1]].
-  - repeat split; try rewrite <-(div_sign_l ℤ); auto.
-    intros x H2 H3.
-    rewrite <-(div_sign_l ℤ) in *.
-    auto.
-  - repeat split; try rewrite <-(div_sign_l ℤ) in H0; auto.
-    intros x H2 H3.
-    rewrite -> (div_sign_l ℤ) in H3.
-    auto.
+  (split => [[? [/div_sign_l ? ?]] | [? [/div_sign_neg_l ? ?]]]; repeat split
+   => //) => [? ? /div_sign_neg_l ? | ? ? /div_sign_l ?]; auto.
 Qed.
 
 Lemma neg_lcm : ∀ a b m, lcm(a, b) = m ↔ lcm(a, b) = -m.
 Proof.
-  intros a b d.
-  split; intros [H [H0 H1]]; repeat split; try (now rewrite <-(div_sign_r ℤ));
-    try (now rewrite -> (div_sign_r ℤ)); intros x H2 H3;
-      [ rewrite <-(div_sign_l ℤ) | rewrite -> (div_sign_l ℤ) ]; now apply H1.
+  (split => [[/div_sign_r H [/div_sign_r H0 H1]] |
+             [/div_sign_neg_r H [/div_sign_neg_r ? H1]]]; repeat split => //) =>
+  [x /H1 /[apply] /div_sign_l_neg | x /H1 /[apply] /div_sign_neg_l] //.
 Qed.
 
 Theorem lcm_gcd_ident : ∀ a b, a ≠ 0 → b ≠ 0 → lcm(a, b) = (a*b) / gcd a b.
 Proof.
-  intros a b H H0.
-  assert (gcd a b ≠ 0) as H1.
-  { contradict H.
-    pose proof gcd_l_div a b.
-    rewrite -> H in H1.
-    now apply div_0_l in H1. }
-  unfold div.
-  destruct excluded_middle_informative as [y | n].
-  2: { contradict n.
-       apply div_mul_r, gcd_l_div. }
-  destruct constructive_indefinite_description as [k]; simpl in *.
-  repeat split; rewrite -> (M1 k) in e.
-  - exists (b / gcd a b); simpl.
-    rewrite -> M1, mul_div; auto using gcd_r_div.
-    apply eq_sym, div_spec; auto.
-    now rewrite -> e, M1.
-  - exists (a / gcd a b); simpl.
-    rewrite -> M1, mul_div; auto using gcd_l_div.
-    apply eq_sym, div_spec; try rewrite -> M1; auto.
-    now rewrite -> e, M1.
-  - intros x H2 H3.
-    set (d := gcd a b) in *.
-    assert (d｜x) as H4.
-    { clear y; eapply div_trans; eauto; apply gcd_r_div. }
-    assert ((a/d) * (b/d)｜x/d) as [z H5].
-    { apply rel_prime_mul; try apply gcd_rel_prime; auto.
-      - destruct H2 as [z H2].
-        exists z.
-        apply div_spec; auto.
-        rewrite <-M2, div_inv_r; auto.
-        apply gcd_l_div.
-      - destruct H3 as [z H3].
-        exists z.
-        apply div_spec; auto.
-        rewrite <-M2, div_inv_r; auto.
-        apply gcd_r_div. }
-    apply (div_spec x d) in H5; auto.
-    rewrite <-? M2, div_inv_r, (M1 _ b), mul_div, (M1 b), e, (M1 _ k),
-    <-mul_div, div_inv_refl, (M1 k), M3 in H5; try (now (exists z));
-      eauto using gcd_l_div, gcd_r_div, div_refl with Z.
+  rewrite /div => a b H H0.
+  have: gcd a b ≠ 0 by move: (gcd_l_div a b) => /[swap] -> /div_0_l //.
+  case excluded_middle_informative =>
+  [y | n]; last by contradict n; apply div_mul_r, gcd_l_div.
+  elim constructive_indefinite_description; rewrite -/Z /= => k /[dup] H1 H2 H3.
+  (repeat split; rewrite (M1 k) in H1) =>
+  [ | | x /[dup] H4 [c H5] /[dup] H6 [d H7]];
+    [ exists (b / gcd a b) | exists (a / gcd a b) | ] =>
+  /= ; try (rewrite M1 mul_div ? (M1 b); auto using gcd_l_div, gcd_r_div;
+            apply eq_sym, div_spec => //).
+  have: ((a/gcd a b) * (b/gcd a b)｜x/gcd a b) => [ | [z /div_spec ->]] //.
+  - apply rel_prime_mul; auto using gcd_rel_prime; [ exists c | exists d ];
+      apply div_spec; try apply (div_trans ℤ _ a); try apply gcd_l_div; auto;
+        rewrite -M2 div_inv_r; auto using gcd_l_div, gcd_r_div.
+  - apply (div_trans ℤ _ a); try apply gcd_l_div; auto.
+  - exists z.
+    rewrite -? M2 div_inv_r 1 ? (M1 _ b) ? mul_div ? (M1 b) ? H1 ? div_inv_l
+            -? (mul_div z) ? (M1 _ k) -? (mul_div k) ? div_inv_refl ? (M1 k)
+            ? M3; eauto using gcd_l_div, gcd_r_div, div_refl with Z.
 Qed.
 
 Theorem lcm_exists : ∀ a b, ∃ m, lcm(a, b) = m.
 Proof.
-  intros a b.
-  destruct (classic (a = 0)) as [H | H], (classic (b = 0)) as [H0 | H0];
-    subst; eauto using lcm_0_l, lcm_0_r, lcm_gcd_ident.
+  move=> a b.
+  case (classic (a = 0)) => [-> | H]; case (classic (b = 0)) =>
+  [-> | H0]; eauto using lcm_0_l, lcm_0_r, lcm_gcd_ident.
 Qed.
 
 Theorem pos_lcm_exists : ∀ a b, ∃ m, 0 ≤ m ∧ lcm(a, b) = m.
 Proof.
-  intros a b.
-  destruct (lcm_exists a b) as [m H], (classic (0 ≤ m)) as [H0 | H0]; eauto.
+  move: lcm_exists => /[swap] a /[swap] b /(_ a b) [m H].
+  case (classic (0 ≤ m)) => [H0 | /lt_not_ge /lt_neg_0]; eauto.
   exists (-m).
-  rewrite <-neg_lcm.
-  split; auto.
-  now apply or_introl, lt_neg_0, lt_not_ge.
+  rewrite -neg_lcm /le /ordered_rings.le.
+  intuition.
 Qed.
 
 Definition lcm : Z → Z → Z.
 Proof.
-  intros a b.
-  destruct (constructive_indefinite_description (pos_lcm_exists a b)) as [m].
+  move=> a b.
+  elim (constructive_indefinite_description (pos_lcm_exists a b)) => [m H].
   exact m.
 Defined.
 
 Theorem is_lcm_lcm : ∀ a b, lcm(a, b) = lcm a b.
 Proof.
-  intros a b.
-  unfold lcm.
-  now destruct constructive_indefinite_description.
+  rewrite /lcm /sig_rect => a b.
+  elim constructive_indefinite_description => [d [H [H0 [H1 H2]]]] //.
 Qed.
 
 Theorem lcm_div_l : ∀ a b, a｜lcm a b.
 Proof.
-  intros a b.
-  unfold lcm.
-  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
+  rewrite /lcm /sig_rect => a b.
+  elim constructive_indefinite_description => [d [H [H0 [H1 H2]]]] //.
 Qed.
 
 Theorem lcm_div_r : ∀ a b, b｜lcm a b.
 Proof.
-  intros a b.
-  unfold lcm.
-  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
+  rewrite /lcm /sig_rect => a b.
+  elim constructive_indefinite_description => [d [H [H0 [H1 H2]]]] //.
 Qed.
 
 Theorem lcm_l_0 : ∀ a, lcm 0 a = 0.
 Proof.
-  intros a.
+  move=> a.
   apply (div_0_l ℤ), lcm_div_l.
 Qed.
 
 Theorem lcm_r_0 : ∀ a, lcm a 0 = 0.
 Proof.
-  intros a.
+  move=> a.
   apply (div_0_l ℤ), lcm_div_r.
 Qed.
 
 Theorem lcm_spec : ∀ a b x, a｜x → b｜x → lcm a b｜x.
 Proof.
-  intros a b.
-  unfold lcm.
-  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
+  rewrite /lcm /sig_rect => a b.
+  elim constructive_indefinite_description => [d [H [H0 [H1 H2]]]] //.
 Qed.
 
 Theorem lcm_nonneg : ∀ a b, 0 ≤ lcm a b.
 Proof.
-  intros a b.
-  unfold lcm.
-  now destruct constructive_indefinite_description as [d [H [H0 [H1 H2]]]].
+  rewrite /lcm /sig_rect => a b.
+  elim constructive_indefinite_description => [d [H [H0 [H1 H2]]]] //.
 Qed.
 
 Theorem lcm_is_lcm : ∀ a b m, lcm(a, b) = m → 0 ≤ m → lcm a b = m.
 Proof.
-  intros a b d [H [H0 H1]] H2.
-  apply pm_pos; auto using lcm_nonneg.
-  apply assoc_pm, conj; fold divide; auto using lcm_div_l, lcm_div_r, lcm_spec.
+  move=> a b d [H [H0 H1]] H2.
+  apply pm_pos; try apply assoc_pm, conj; rewrite -/divide;
+    auto using lcm_div_l, lcm_div_r, lcm_spec, lcm_nonneg.
 Qed.
 
 Theorem lcm_sym : ∀ a b, lcm a b = lcm b a.
 Proof.
-  intros a b.
+  move=> a b.
   apply pm_pos; auto using lcm_nonneg.
-  apply assoc_pm.
-  split; apply lcm_spec; auto using lcm_div_l, lcm_div_r.
+  apply assoc_pm, conj; apply lcm_spec; auto using lcm_div_l, lcm_div_r.
 Qed.
 
 Theorem lcm_l_1 : ∀ a, 0 ≤ a → lcm 1 a = a.
 Proof.
-  intros a H.
+  move=> a H.
   apply lcm_is_lcm; auto using lcm_1_l.
 Qed.
 
 Theorem lcm_r_1 : ∀ a, 0 ≤ a → lcm a 1 = a.
 Proof.
-  intros a H.
+  move=> a H.
   apply lcm_is_lcm; auto using lcm_1_r.
 Qed.
 
 Theorem lcm_prod : ∀ a b, lcm a b｜a * b.
 Proof.
-  intros a b.
+  move=> a b.
   apply lcm_spec; auto using div_mul_r, div_refl with Z.
 Qed.
 
-Theorem lcm_pos : ∀ a b, a ≠ 0 → b ≠ 0 → lcm a b ≠ 0.
+Theorem gcd_sign : ∀ a b, gcd a b = gcd a (-b).
 Proof.
-  intros a b H H0.
-  intros H1.
-  eapply (ne0_cancellation ℤ_ID) in H; eauto.
-  contradict H.
-  rewrite -> M1; apply (div_0_l ℤ); simpl.
-  rewrite <-H1.
-  apply lcm_spec; auto using div_mul_l, div_mul_r, div_refl with Z.
+  move=> a b.
+  apply eq_sym, gcd_is_gcd; rewrite -? gcd_neg;
+    auto using is_gcd_gcd, gcd_nonneg.
+Qed.
+
+Theorem lcm_sign : ∀ a b, lcm a b = lcm a (-b).
+Proof.
+  move=> a b.
+  apply eq_sym, lcm_is_lcm; rewrite - ? lcm_neg;
+    auto using is_lcm_lcm, lcm_nonneg.
+Qed.
+
+Theorem gcd_abs : ∀ a b, gcd a b = gcd (|a|) (|b|).
+Proof.
+  rewrite /abs => a b.
+  repeat elim excluded_middle_informative =>
+  //; rewrite gcd_sign //; rewrite gcd_sym gcd_sign gcd_sym //;
+      rewrite -gcd_sign //.
+Qed.
+
+Theorem lcm_abs : ∀ a b, lcm a b = lcm (|a|) (|b|).
+Proof.
+  rewrite /abs => a b.
+  repeat elim excluded_middle_informative =>
+  //; rewrite lcm_sign //; rewrite lcm_sym lcm_sign lcm_sym //;
+      rewrite -lcm_sign //.
 Qed.
 
 Theorem gcd_lcm_ident : ∀ a b, 0 ≤ a → 0 ≤ b → a * b = gcd a b * lcm a b.
@@ -1693,6 +1612,33 @@ Proof.
       intros H4.
       subst.
       contradiction (ordered_rings.lt_irrefl ℤ_order 0).
+Qed.
+
+Theorem lcm_0 : ∀ a b, lcm a b = 0 → a = 0 ∨ b = 0.
+Proof.
+  intros a b H.
+  rewrite <-(abs_zero a), <-(abs_zero b), lcm_abs in *.
+  apply (cancellation ℤ_ID); simpl.
+  rewrite -> gcd_lcm_ident, H, (mul_0_r ℤ); auto using abs_pos.
+Qed.
+
+Theorem lcm_bound : ∀ a b, 0 < a → b ≤ lcm a b.
+Proof.
+  intros a b H.
+  destruct (classic (b = 0)); subst.
+  - rewrite -> lcm_r_0.
+    apply le_refl.
+  - apply div_le.
+    + destruct (lcm_nonneg a b) as [H1 | H1]; auto.
+      apply eq_sym, lcm_0 in H1 as [H1 | H1]; subst; try tauto.
+      contradiction (lt_irrefl ℤ_order 0).
+    + apply lcm_div_r.
+Qed.
+
+Theorem lcm_pos : ∀ a b, a ≠ 0 → b ≠ 0 → lcm a b ≠ 0.
+Proof.
+  move=> a b /(ne0_cancellation ℤ_ID) /[apply] /[swap] /lcm_0 =>
+  [[-> | ->]]; rewrite ? mul_0_l ? mul_0_r //.
 Qed.
 
 Lemma prime_quotients :
@@ -2133,83 +2079,4 @@ Proof.
   - rewrite -> H1, M1, <-M2, div_inv_r; auto.
   - apply (cancellation_mul_l ℤ_ID b); auto; simpl.
     rewrite -> H1, (M1 b), <-M2, div_inv_r; auto.
-Qed.
-
-Definition abs (a : Z) := If 0 ≤ a then a else (-a).
-
-Notation " '|' a '|' " := (abs a) (at level 30, format "'|' a '|'") : Z_scope.
-
-Theorem abs_pos : ∀ a, 0 ≤ |a|.
-Proof.
-  intros a.
-  unfold abs.
-  destruct excluded_middle_informative; auto.
-  apply or_introl, lt_not_ge.
-  contradict n.
-  now apply neg_le_0.
-Qed.
-
-Theorem abs_zero : ∀ a, |a| = 0 ↔ a = 0.
-Proof.
-  unfold abs.
-  split; intros H; destruct excluded_middle_informative; ring [H].
-Qed.
-
-Theorem gcd_sign : ∀ a b, gcd a b = gcd a (-b).
-Proof.
-  intros a b.
-  apply eq_sym, gcd_is_gcd.
-  - rewrite <-gcd_neg.
-    apply is_gcd_gcd.
-  - apply gcd_nonneg.
-Qed.
-
-Theorem lcm_sign : ∀ a b, lcm a b = lcm a (-b).
-Proof.
-  intros a b.
-  apply eq_sym, lcm_is_lcm.
-  - rewrite <-lcm_neg.
-    apply is_lcm_lcm.
-  - apply lcm_nonneg.
-Qed.
-
-Theorem gcd_abs : ∀ a b, gcd a b = gcd (|a|) (|b|).
-Proof.
-  intros a b.
-  unfold abs.
-  repeat destruct excluded_middle_informative; auto.
-  - now rewrite -> gcd_sign.
-  - now rewrite -> gcd_sym, gcd_sign, gcd_sym.
-  - now rewrite -> gcd_sign, gcd_sym, gcd_sign, gcd_sym.
-Qed.
-
-Theorem lcm_abs : ∀ a b, lcm a b = lcm (|a|) (|b|).
-Proof.
-  intros a b.
-  unfold abs.
-  repeat destruct excluded_middle_informative; auto.
-  - now rewrite -> lcm_sign.
-  - now rewrite -> lcm_sym, lcm_sign, lcm_sym.
-  - now rewrite -> lcm_sign, lcm_sym, lcm_sign, lcm_sym.
-Qed.
-
-Theorem lcm_0 : ∀ a b, lcm a b = 0 → a = 0 ∨ b = 0.
-Proof.
-  intros a b H.
-  rewrite <-(abs_zero a), <-(abs_zero b), lcm_abs in *.
-  apply (cancellation ℤ_ID); simpl.
-  rewrite -> gcd_lcm_ident, H, (mul_0_r ℤ); auto using abs_pos.
-Qed.
-
-Theorem lcm_bound : ∀ a b, 0 < a → b ≤ lcm a b.
-Proof.
-  intros a b H.
-  destruct (classic (b = 0)); subst.
-  - rewrite -> lcm_r_0.
-    apply le_refl.
-  - apply div_le.
-    + destruct (lcm_nonneg a b) as [H1 | H1]; auto.
-      apply eq_sym, lcm_0 in H1 as [H1 | H1]; subst; try tauto.
-      contradiction (lt_irrefl ℤ_order 0).
-    + apply lcm_div_r.
 Qed.
