@@ -899,6 +899,16 @@ Section Ring_theorems.
     case (pow_neg_1_l n) => [-> | ->]; rewrite ? M3 ? mul_neg_1_l; auto.
   Qed.
 
+  Theorem add_move_l : ∀ a b c, a = b + -c ↔ a + c = b.
+  Proof.
+    split => [-> | <-]; ring.
+  Qed.
+
+  Theorem add_move_lr : ∀ a b c d, a + -b = c + -d ↔ a + d = b + c.
+  Proof.
+    split => [/add_move_l <- | /add_move_l ->]; ring.
+  Qed.
+
 End Ring_theorems.
 
 Arguments assoc {Ring}.
