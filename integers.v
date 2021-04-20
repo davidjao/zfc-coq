@@ -1591,48 +1591,36 @@ Qed.
 
 Theorem gcd_lcm_ident : ∀ a b, 0 ≤ a → 0 ≤ b → a * b = gcd a b * lcm a b.
 Proof.
-  intros a b [H | H] [H0 | H0]; subst;
-    rewrite -> ? lcm_l_0, ? lcm_r_0, ? (mul_0_r ℤ), ? (mul_0_l ℤ); auto.
-  pose proof is_lcm_lcm a b as H1.
-  pose proof lcm_gcd_ident a b as H2.
-  rewrite -> (M1 (gcd a b)).
+  move=> a b [H | <-] [H0 | <-];
+           rewrite ? lcm_l_0 ? lcm_r_0 ? (M1 (gcd a b)); try ring.
   apply div_spec.
   - apply div_mul_r, gcd_l_div.
   - now apply gcd_pos, (pos_ne_0 ℤ_order).
   - apply pm_pos; auto using lcm_nonneg.
-    + apply assoc_pm, conj.
-      * apply H2; try (now apply (pos_ne_0 ℤ_order));
-          auto using lcm_div_l, lcm_div_r.
-      * apply H1; apply H2; now apply (pos_ne_0 ℤ_order).
-    + rewrite <-mul_div;
-        auto using (pos_ne_0 ℤ_order a H : a ≠ 0), gcd_pos, gcd_r_div.
-      apply mul_nonneg_nonneg; try (now left; intuition).
-      apply div_nonneg; try (now left).
-      destruct (gcd_nonneg a b); auto; contradiction (gcd_pos a b); auto.
-      intros H4.
-      subst.
-      contradiction (ordered_rings.lt_irrefl ℤ_order 0).
+    + apply assoc_pm, conj; try apply lcm_gcd_ident; try apply is_lcm_lcm;
+        try apply lcm_gcd_ident; apply (pos_ne_0 ℤ_order); auto.
+    + have H1: gcd a b ≠ 0 by apply gcd_pos, (pos_ne_0 ℤ_order); eauto.
+      rewrite -mul_div; auto using gcd_r_div.
+      apply mul_nonneg_nonneg, div_nonneg; try (now left; intuition).
+      (elim (gcd_nonneg a b); auto) => /(@eq_sym Z) //.
 Qed.
 
 Theorem lcm_0 : ∀ a b, lcm a b = 0 → a = 0 ∨ b = 0.
 Proof.
-  intros a b H.
-  rewrite <-(abs_zero a), <-(abs_zero b), lcm_abs in *.
+  move=> a b.
+  rewrite -(abs_zero a) -(abs_zero b) 1 ? lcm_abs => H.
   apply (cancellation ℤ_ID); simpl.
-  rewrite -> gcd_lcm_ident, H, (mul_0_r ℤ); auto using abs_pos.
+  rewrite gcd_lcm_ident ? H ? (mul_0_r ℤ : ∀ a, a * 0 = 0); auto using abs_pos.
 Qed.
 
 Theorem lcm_bound : ∀ a b, 0 < a → b ≤ lcm a b.
 Proof.
-  intros a b H.
-  destruct (classic (b = 0)); subst.
-  - rewrite -> lcm_r_0.
+  move: classic => /[swap] a /[swap] b /(_ (b = 0)) => [[-> | H]] H0.
+  - rewrite lcm_r_0.
     apply le_refl.
-  - apply div_le.
-    + destruct (lcm_nonneg a b) as [H1 | H1]; auto.
-      apply eq_sym, lcm_0 in H1 as [H1 | H1]; subst; try tauto.
-      contradiction (lt_irrefl ℤ_order 0).
-    + apply lcm_div_r.
+  - apply div_le; auto using lcm_div_r.
+    (elim (lcm_nonneg a b); auto) => /(@eq_sym Z) /lcm_0 => [[H1 | H1]] //.
+    move: H1 H0 -> => /(lt_irrefl ℤ_order) //.
 Qed.
 
 Theorem lcm_pos : ∀ a b, a ≠ 0 → b ≠ 0 → lcm a b ≠ 0.
@@ -1644,15 +1632,12 @@ Qed.
 Lemma prime_quotients :
   ∀ p x, 0 < p → 0 < x → prime p → p｜x → 0 < x/p < x.
 Proof.
-  intros p x H H0 H1 H2.
-  unfold div.
-  destruct excluded_middle_informative; try tauto.
-  destruct constructive_indefinite_description; simpl in *.
-  apply prime_factors_in_interval in H2 as [k [H2 H3]]; auto.
-  replace x0 with k; auto; subst.
-  eapply (cancellation_mul_r ℤ_ID); eauto.
-  intros H4; subst; simpl in *.
-  contradiction (lt_irrefl ℤ_order 0).
+  rewrite /div => p x H H0 H1 H2.
+  (elim excluded_middle_informative; try tauto) => /[dup] /[swap] => {}H2.
+  elim constructive_indefinite_description =>
+  [y] /[swap] /(prime_factors_in_interval _ _ H H0 H1)
+      [k [<- H4]] /(cancellation_mul_r ℤ_ID) <- //.
+  move: H1 => /[swap] -> /zero_not_prime //.
 Qed.
 
 Theorem valuation_construction :
