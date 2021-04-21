@@ -10,3 +10,4 @@ Makefile*
 .Makefile.d
 *.bat
 *.swp
+.coq-native
