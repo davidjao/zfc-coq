@@ -1667,52 +1667,41 @@ Proof.
     apply H2, conj => //.
     move: H4 => /[swap] /div_sign_neg_r //. }
   induction m using strong_induction => H0 H1 H2 H3.
-  elim (classic (p｜m)) =>
+  case (classic (p｜m)) =>
   [/[dup] H4 /(prime_quotients _ _ H1 H0 H2) /[dup] [[]] /[swap] _ /[dup]
     /(pos_ne_0 ℤ_order) /H /[apply] /[apply] /(_ H1) /(_ H2)
     [k [[/[dup] H5 [d H6] H7]] H8]|].
   - exists (k+1)%N.
-    have H9: p^(k+1)｜m.
-    { exists d.
-      rewrite add_1_r pow_succ_r rings.M2 -H6 /= div_inv_r //. }
-    have H10 : ¬ p ^ (k + 1 + 1)｜m.
-    { move: (H1) H7 => /(pos_ne_0 ℤ_order) H7 /[swap] [[e ->]] [].
-      exists e.
-      rewrite add_1_r pow_succ_r -? mul_div ? div_inv_refl ? (M1 _ 1)
-              ? M3 /divide //; auto using div_refl, div_mul_l. }
+    have H9: p^(k+1)｜m by
+        (exists d; rewrite add_1_r pow_succ_r rings.M2 -H6 /= div_inv_r //).
+    have H10 : ¬ p ^ (k + 1 + 1)｜m by move: (H1) H7 =>
+    /(pos_ne_0 ℤ_order) H7 /[swap] [[e ->]] [];
+      exists e; rewrite add_1_r pow_succ_r -? mul_div ? div_inv_refl ? (M1 _ 1)
+                        ? M3 /divide //; auto using div_refl, div_mul_l.
     repeat split; auto => x' [H11 H12].
-    apply naturals.le_antisymm; apply naturals.le_not_gt.
-    + contradict H12 => {H11}.
-      eapply div_trans; eauto.
-      move: add_1_r H12 => {1}-> /le_lt_succ => [[z <-]].
-      exists (p^z).
-      rewrite ? pow_add_r /= M2 (M1 (p^z)) //.
-    + contradict H10 => {H9}.
-      eapply div_trans; eauto.
-      move: add_1_r H10 => {1}-> /lt_le_succ => [[x <-]].
-      exists (p^x).
-      rewrite pow_add_r rings.M1 ? add_1_r //.
+    (apply naturals.le_antisymm; apply naturals.le_not_gt;
+     [ move: H12 => {}H10 {H11} | move {H9}];
+     contradict H10; eapply div_trans; eauto; move: add_1_r H10 => {1}->) =>
+    [/le_lt_succ [x] <- | /lt_le_succ [x] <-]; exists (p^x).
+    + rewrite ? pow_add_r /= M2 (M1 (p^x)) //.
+    + rewrite pow_add_r rings.M1 ? add_1_r //.
   - exists 0%N.
     (repeat split; rewrite ? pow_0_r ? add_0_l ? pow_1_r;
      auto using div_1_l with Z) => x' [H5 H6].
-    apply naturals.le_antisymm; auto using zero_le.
-    rewrite naturals.le_not_gt.
-    contradict H4.
-    eapply div_trans; eauto.
-    move: H4 => /nonzero_lt /succ_0 => [[z ->]].
-    rewrite pow_succ_r.
-    apply div_mul_l, div_refl.
+    apply NNPP => /neq_sym /succ_0 => [[z H7]].
+    move: H7 H4 (H5) -> =>
+    /[swap] /(div_trans ℤ p (p^(S z))) [| x -> []];
+      rewrite ? pow_succ_r; auto using div_mul_l, div_mul_r, div_refl with Z.
 Qed.
 
 Definition v : Z → Z → N.
 Proof.
-  intros p m.
-  destruct (excluded_middle_informative (prime p)).
-  - destruct (excluded_middle_informative (m = 0)).
+  move=> p m.
+  elim (excluded_middle_informative (prime p)) => H.
+  - elim (excluded_middle_informative (m = 0)) => H0.
     + exact 0%N.
-    + destruct
-        (constructive_definite_description _ (valuation_construction _ _ p0 n))
-        as [k].
+    + elim (constructive_definite_description
+              _ (valuation_construction _ _ H H0)) => [k H1].
       exact k.
   - exact 0%N.
 Defined.
@@ -1724,299 +1713,255 @@ Section Valuations.
 
   Theorem prime_power_nonzero : ∀ n, p^n ≠ 0.
   Proof.
-    intros n.
+    move=> n.
     apply (pow_ne_0 ℤ_ID).
-    intros H.
-    subst.
-    contradiction zero_not_prime.
+    move: prime_p => /[swap] -> /zero_not_prime //.
   Qed.
 
   Theorem val_mul : ∀ a b, a ≠ 0 → b ≠ 0 → v p (a * b) = (v p a + v p b)%N.
   Proof.
-    intros a b H H0.
-    unfold v.
-    repeat destruct excluded_middle_informative; try tauto;
-      try (apply (integral_domains.cancellation ℤ_ID) in e; tauto).
-    repeat destruct constructive_definite_description; intuition.
-    apply naturals.le_antisymm; apply naturals.le_not_gt; intros H7;
-      rewrite -> S_lt, <-le_lt_succ, <-add_1_r in H7;
-      destruct H7 as [z H7].
-    - absurd (p^(x0+x1+1)｜a*b).
-      + intros [k H8].
-        rewrite <-(div_inv_r a (p^x0)), <-(div_inv_r b (p^x1)), ? pow_add_r,
-        pow_1_r, <-M2, (M1 _ p), (M2 (p^x0)), (M1 (p^x0)), ? M2 in H8; auto.
-        do 2 apply (cancellation_mul_r ℤ_ID) in H8;
-          auto using prime_power_nonzero.
-        assert (p｜(a / p ^ x0) * (b / p ^ x1)) as H9 by now (exists k).
-        apply Euclid's_lemma in H9 as [[d H9] | [d H9]]; auto; simpl in *;
-          [ contradict H4 | contradict H6 ]; exists d;
-            rewrite -> add_1_r, pow_succ_r, (M1 _ p), M2, <-H9, div_inv_r; auto.
-      + eapply div_trans; eauto.
-        exists (p^z).
-        rewrite <-H7, ? pow_add_r; simpl; now ring_simplify.
-    - contradict H2.
-      exists (p^z * (a/(p^x0)) * (b/(p^x1))).
-      rewrite -> (M1 _ (p^(x+1))), ? M2, <-(pow_add_r ℤ), H7, pow_add_r, <-? M2,
-      (M2 (p^x1)), (M1 (p^x1)), ? M2, div_inv_l, <-M2, div_inv_l; auto.
+    rewrite /v /sumbool_rect /sig_rect => a b H H0.
+    elim excluded_middle_informative => [H1 | H1]; try ring.
+    elim excluded_middle_informative => [/(cancellation ℤ_ID) [ | ] | H2] //.
+    repeat elim excluded_middle_informative => [_ | ?] //.
+    elim constructive_definite_description => [x [H3 H4]].
+    elim constructive_definite_description => [y [H5 H6]].
+    elim constructive_definite_description => [z [H7 H8]].
+    (apply naturals.le_antisymm; apply naturals.le_not_gt;
+     rewrite S_lt -le_lt_succ -add_1_r) => [[w H9] | [w H9]].
+    - (absurd (p^(y+z+1)｜a*b)) => [[k] | ]; last by eapply div_trans; eauto;
+                                     esplit; rewrite -H9 pow_add_r rings.M1 //.
+      rewrite -(div_inv_r a (p^y)) //
+      -(div_inv_r b (p^z)) // ? pow_add_r pow_1_r
+      -M2 /= (M1 _ p) (M2 (p^y)) (M1 (p^y)) ? M2 => /(cancellation_mul_r ℤ_ID)
+      => /(_ (prime_power_nonzero _)) /(cancellation_mul_r ℤ_ID) =>
+      /(_ (prime_power_nonzero _)) H10.
+      (have: p｜(a / p ^ y) * (b / p ^ z) by now (exists k)) =>
+      /Euclid's_lemma => /(_ prime_p) =>
+      [[[d] | [d]]]; [move: H6 | move: H8] =>
+      /[swap] /= H11 []; exists d;
+        rewrite add_1_r pow_succ_r /= (M1 _ p) M2 -H11 div_inv_r //.
+    - move: H5 H7 H4 => [k ->] [l ->] [].
+      exists (k * l * p^w); rewrite -? rings.M2 (rings.M1 _ (p^w))
+                            -pow_add_r H9 pow_add_r /=; by ring_simplify.
   Qed.
 
   Theorem val_lower_bound : ∀ x m, m ≠ 0 → p^x｜m ↔ (x ≤ v p m)%N.
   Proof.
-    split; intros H0; unfold v in *;
-      repeat destruct excluded_middle_informative; try tauto;
-        destruct constructive_definite_description; intuition.
-    - apply naturals.le_not_gt.
-      contradict H2.
-      rewrite -> S_lt, <-le_lt_succ, <-add_1_r in H2.
-      destruct H2 as [z H2].
-      clear H1; eapply div_trans; eauto.
-      exists (p^z).
-      rewrite <-H2, ? pow_add_r; simpl; now ring_simplify.
-    - destruct H0 as [z H0].
-      exists (p^z * (m/p^x0)).
-      rewrite -> M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
+    rewrite /v /sumbool_rect /sig_rect => x m H.
+    ((split; repeat elim excluded_middle_informative; try tauto) =>
+     {}H H0; elim constructive_definite_description) =>
+    [y [H1 H2] H3 | y [[d ->] H1] [c <-]].
+    - apply naturals.le_not_gt => /lt_le_succ.
+      rewrite -add_1_r => [[c H4]].
+      move: H4 H3 H2 <- => [[k ->]] [].
+      exists (k * p^c); rewrite pow_add_r /=; by ring_simplify.
+    - exists (d * p^c); rewrite pow_add_r /=; by ring_simplify.
   Qed.
 
   Theorem val_upper_bound : ∀ x m, m ≠ 0 → ¬ p^x｜m ↔ (v p m < x)%N.
   Proof.
-    split; intros H0; unfold v in *;
-      repeat destruct excluded_middle_informative; try tauto;
-        destruct constructive_definite_description; intuition.
-    - apply naturals.lt_not_ge.
-      contradict H0.
-      destruct H0 as [z H0].
-      exists (p^z * (m/p^x0)).
-      rewrite -> M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
-    - contradict H3.
-      rewrite -> S_lt, <-le_lt_succ, <-add_1_r in H0.
-      destruct H0 as [z H0].
-      exists (p^z * (m/p^x)).
-      rewrite -> M1, M2, <-(pow_add_r ℤ), H0, div_inv_l; auto.
+    rewrite /v /sumbool_rect /sig_rect => x m H.
+    ((split; repeat elim excluded_middle_informative; try tauto) =>
+     {}H H0; elim constructive_definite_description) =>
+    [y [H1 H2] H3 | y [H1 H2] /lt_le_succ [z <-]].
+    - apply naturals.lt_not_ge => [[z H4]].
+      move: H4 H1 H3 => <- [k] -> [].
+      exists (k * p^z); rewrite pow_add_r /=; by ring_simplify.
+    - move: H2 => /[swap] [[k ->]] [].
+      exists (k*p^z); rewrite pow_add_r add_1_r /=; by ring_simplify.
   Qed.
 
   Theorem val_div : ∀ m, p^(v p m)｜m.
   Proof.
-    intros m.
-    destruct (classic (m = 0)); subst; auto using div_0_r with Z.
+    move: classic => /[swap] m /(_ (m = 0)) =>
+    [[-> | H]]; auto using div_0_r with Z.
     apply val_lower_bound; auto using naturals.le_refl.
   Qed.
 
   Theorem val_ineq : ∀ a b, a ≠ 0 → b｜a → (v p b ≤ v p a)%N.
   Proof.
-    intros a b H [k H0]; simpl in *; subst.
-    apply (cancellation_ne0 ℤ) in H as [H H0]; simpl.
-    rewrite -> val_mul, add_comm; auto.
-    now (exists (v p k)).
+    move=> a b /[swap] [[k ->]] /(cancellation_ne0 ℤ) => [[H H0]].
+    rewrite val_mul 1 ? add_comm; auto using le_add.
   Qed.
 
   Theorem val_inv : ∀ a b, a ≠ 0 → b｜a → v p (a / b) = (v p a - v p b)%N.
   Proof.
-    intros a b H H0.
-    unfold div.
-    destruct excluded_middle_informative; try tauto.
-    destruct constructive_indefinite_description; simpl in *; subst.
-    apply (cancellation_ne0 ℤ) in H as [H H1]; simpl.
-    rewrite -> val_mul, sub_abba; auto.
+    rewrite /div => a b /[swap] /[dup] [[k ->]] H /(cancellation_ne0 ℤ) [H0 H1].
+    elim excluded_middle_informative => [H2 | H2] //.
+    elim constructive_indefinite_description => x =>
+    /(integral_domains.cancellation_mul_r ℤ_ID) <- //.
+    rewrite val_mul // sub_abba //.
   Qed.
 
   Theorem val_p : v p p = 1%N.
   Proof.
-    apply naturals.le_antisymm.
-    - apply le_lt_succ, val_upper_bound; intros H; subst.
-      + contradiction zero_not_prime.
-      + destruct prime_p as [H0 H1], H as [k H].
-        contradiction H0.
-        exists k.
-        apply (cancellation_mul_r ℤ_ID p).
-        * intros H2.
-          subst.
-          contradiction zero_not_prime.
-        * now rewrite <-M2, <-(pow_2_r ℤ), M3.
-    - apply val_lower_bound.
-      + intros H; subst.
-        contradiction zero_not_prime.
-      + rewrite -> pow_1_r.
-        apply div_refl.
+    have H: p ≠ 0 by move: prime_p => /[swap] -> /zero_not_prime.
+    apply naturals.le_antisymm, val_lower_bound => //.
+    - apply le_lt_succ, val_upper_bound => //.
+      move: prime_p => [] /[swap] H0 /[swap] [[k]].
+      rewrite -{1}(M3 p) pow_2_r rings.M2 /unit /rings.unit /= =>
+      /(cancellation_mul_r ℤ_ID) -> // [].
+      auto using (div_mul_l ℤ), (div_refl ℤ) with Z.
+    - rewrite pow_1_r; auto using (div_refl ℤ) with Z.
   Qed.
 
   Theorem val_1 : v p 1 = 0%N.
   Proof.
     apply naturals.le_antisymm; auto using zero_le.
-    apply le_lt_succ.
-    apply val_upper_bound; try apply zero_ne_1.
-    rewrite -> pow_1_r.
-    now destruct prime_p.
+    apply le_lt_succ, val_upper_bound; try apply zero_ne_1.
+    rewrite pow_1_r.
+    elim prime_p => //.
   Qed.
 
   Theorem val_0 : v p 0 = 0%N.
   Proof.
-    unfold v.
-    repeat destruct excluded_middle_informative; try tauto; exfalso; tauto.
+    rewrite /v /sumbool_rect /sig_rect.
+    repeat (elim excluded_middle_informative => //).
   Qed.
 
   Theorem val_pow : ∀ a k, v p (a^k) = (k * v p a)%N.
   Proof.
-    intros a.
-    destruct (classic (a = 0)) as [H | H]; subst.
-    - intros k.
-      destruct (classic (k = 0%N)) as [H | H]; subst.
-      + now rewrite -> pow_0_r, val_0, naturals.mul_0_l, <-val_1.
-      + now rewrite -> pow_0_l, val_0, naturals.mul_0_r, <-val_0.
-    - induction k using Induction.
-      + now rewrite -> pow_0_r, naturals.mul_0_l, <-val_1.
-      + rewrite -> pow_succ_r, val_mul; auto.
-        * now rewrite -> IHk, <-add_1_r, mul_distr_r, mul_1_l.
-        * now apply (pow_ne_0 ℤ_ID).
+    move: classic => /[swap] a /(_ (a = 0)) =>
+    [[-> k| /[dup] H /(pow_ne_0 ℤ_ID a) H0 k]].
+    - elim (classic (k = 0%N)) =>
+      [-> | H]; rewrite ? pow_0_r ? pow_0_l ? val_0 ? val_1 ?
+                        naturals.mul_0_l ? naturals.mul_0_r //.
+    - induction k using Induction;
+        rewrite ? pow_0_r ? val_1 ? naturals.mul_0_l // pow_succ_r val_mul //
+                -? add_1_r ? mul_distr_r ? mul_1_l ? IHk //.
   Qed.
 
   Lemma val_quotient : ∀ m, m ≠ 0 → ¬ p｜m / p ^ v p m.
   Proof.
-    intros m H.
-    rewrite <-(pow_1_r ℤ p) at 1.
+    move=> m H.
+    rewrite -{1}(pow_1_r ℤ p).
     apply val_upper_bound.
-    - contradict H.
-      apply div_spec in H; auto using val_div.
-      + now rewrite -> (mul_0_l ℤ) in *.
-      + apply (pow_ne_0 ℤ_ID).
-        intros H1.
-        subst.
-        contradiction zero_not_prime.
-    - rewrite -> val_inv, val_pow, val_p, mul_1_r, sub_diag; auto using val_div.
-      apply naturals.lt_succ.
+    - move: H => /[swap] /div_spec -> =>
+      [ | | []]; auto using val_div, (mul_0_l ℤ).
+      apply (pow_ne_0 ℤ_ID).
+      move: prime_p => /[swap] -> /zero_not_prime //.
+    - rewrite val_inv // ? val_pow ? val_p ? mul_1_r ? sub_diag /naturals.one;
+        auto using val_div, naturals.lt_succ.
   Qed.
 
   Theorem val_quot_positive : ∀ m, 0 < m → 0 < p → 0 < m / p ^ v p m.
   Proof.
-    intros m H H0.
-    rewrite <-(div_inv_l m (p^(v p m))) in H; auto using val_div.
+    move=> m.
+    rewrite -{1}(div_inv_l m (p^(v p m))); auto using val_div => H H0.
     apply (pos_div_l ℤ_order) in H; eauto using (pow_pos ℤ_order).
   Qed.
 
   Theorem quot_le_bound : ∀ m x, 0 < m → 0 < p → p ^ x｜m → m / p ^ x ≤ m.
   Proof.
-    intros m x H H0 H1.
-    apply (mul_le_l_iff ℤ_order (p^x)); simpl; fold le.
+    move=> m x H H0 /div_inv_l H1.
+    apply (mul_le_l_iff ℤ_order (p^x)) => /=.
     - now apply (pow_pos ℤ_order).
-    - rewrite -> div_inv_l, <-(M3 m) at 1; auto.
-      apply mul_le_r; auto; fold le.
-      now apply lt_0_le_1, (pow_pos ℤ_order).
+    - rewrite H1 -{1}(M3 m).
+      apply mul_le_r; auto.
+      apply /lt_0_le_1 /(pow_pos ℤ_order) => //.
   Qed.
 
   Theorem val_quot_le_bound : ∀ m, 0 < m → 0 < p → m / p ^ v p m ≤ m.
   Proof.
-    intros m H H0.
+    move=> m H H0.
     apply quot_le_bound; auto using val_div.
   Qed.
 
   Theorem val_quot_bound : ∀ m, 0 < m → 0 < p → p｜m → m / p ^ v p m < m.
   Proof.
-    intros m H H0 H1.
-    pose proof H as H2.
-    eapply val_quot_le_bound in H2 as [H2 | H2]; eauto.
-    apply (f_equal (mul (p^v p m))) in H2.
-    rewrite -> div_inv_l, <-(M3 m) in H2 at 1; auto using val_div.
-    apply (cancellation_mul_r ℤ_ID) in H2; try now apply pos_ne_0.
-    rewrite <-(rings.pow_1_r ℤ p) in H1.
-    apply val_lower_bound in H1; auto using (pos_ne_0 ℤ_order).
-    destruct prime_p as [H3 H4], H1 as [c H1].
-    contradict H3.
-    rewrite <-H1 in H2.
-    exists (p^c).
-    now rewrite -> pow_add_r, pow_1_r, M1 in H2.
+    move=> m /[dup] H /val_quot_le_bound /[swap] /[dup] H0 /[swap] /[apply]
+             [[H1 | /(f_equal (mul (p^v p m)))]]; eauto.
+    (rewrite -(M3 (p ^ v p m * (m / p ^ v p m))) div_inv_l; auto using val_div)
+    => /(cancellation_mul_r ℤ_ID).
+    move: (H) => /(pos_ne_0 ℤ_order) /[dup] H1 /[swap] /[apply] /[swap].
+    rewrite -{1}(rings.pow_1_r ℤ p) => /val_lower_bound.
+    move: H1 => /[swap] /[apply] /naturals.lt_0_le_1 /nonzero_lt /succ_0 [z ->].
+    move: prime_p => [] /[swap] _ /[swap] H1 [].
+    exists (p^z) => /=.
+    rewrite H1 pow_succ_r //.
   Qed.
 
   Theorem val_gcd : ∀ x m, m ≠ 0 → gcd (p^x) (m / p^v p m) = 1.
   Proof.
-    intros x m H.
-    apply not_exists_prime_divisor; auto using gcd_nonneg.
-    intros [q [H0 H1]].
-    destruct (classic (q ~ p)) as [H2 | H2].
-    - assert (q｜m / p ^ v p m) as H3.
-      { eapply div_trans; fold divide; eauto using gcd_r_div. }
-      apply assoc_pm in H2 as [H2 | H2]; subst; contradiction (val_quotient m).
-      now apply div_sign_l in H3.
-    - assert (q｜p^x) as H3.
-      { eapply div_trans; fold divide; eauto using gcd_l_div. }
-      apply Euclid_power in H3; auto.
-      destruct prime_p as [H4 H5].
-      apply H5 in H3 as [H3 | H3]; now destruct H0.
+    move=> x m H.
+    apply not_exists_prime_divisor; auto using gcd_nonneg => [[q [H0 H1]]].
+    elim (classic (q ~ p)) => [ | H2].
+    - (have: q｜m / p ^ v p m by eapply div_trans; rewrite -/divide;
+       eauto using gcd_r_div) => /[swap] /assoc_pm =>
+      [[-> | -> /div_sign_neg_l]] /val_quotient //.
+    - (have: q｜p^x by eapply div_trans; fold divide; eauto using gcd_l_div)
+      => /Euclid_power => /(_ H0).
+      move: H0 prime_p => [? ?] [] _ /[apply] => [[? | ?]] //.
   Qed.
 
   Theorem val_is_gcd : ∀ x m, m ≠ 0 → gcd(p^x, m / p^v p m) = 1.
   Proof.
-    intros x m H.
+    move=> x m H.
     erewrite <-val_gcd; eauto using is_gcd_gcd.
   Qed.
 
   Theorem gcd_val : ∀ m, m ≠ 0 → 0 < p → gcd (p^v p m) m = p^v p m.
   Proof.
-    intros m H H0.
-    rewrite <-(div_inv_l m (p^v p m)) at 2; auto using val_div.
-    rewrite -> gcd_mul_r, val_gcd, gcd_refl, M1, M3; auto using val_is_gcd.
-    now apply or_introl, pow_pos.
+    move=> m H H0.
+    rewrite -{2}(div_inv_l m (p^v p m)); auto using val_div.
+    rewrite gcd_mul_r ? val_gcd ? gcd_refl 1 ? M1 ? M3; auto using val_is_gcd.
+    apply /or_introl /pow_pos => //.
   Qed.
 
   Theorem val_lcm_l : ∀ m n,
       0 < m → 0 < n → 0 < p →
       (v p m ≤ v p n)%N → p^v p n * lcm (m / p^v p m) (n / p^v p n) = lcm m n.
   Proof.
-    intros m n H H0 H1 H2.
+    move=> m n /[dup] H /or_introl => /(_ (0 = m)) H0 /[dup] H1 /or_introl
+    => /(_ (0 = n)) H2 H3 H4.
     eapply (cancellation_mul_l ℤ_ID (gcd m n));
-      auto using gcd_pos, (pos_ne_0 ℤ_order); simpl.
-    rewrite <-gcd_lcm_ident, <-(div_inv_r m (p^v p m)), gcd_mul_l at 1;
-      auto using val_div; unfold le, ordered_rings.le; intuition.
-    2: { erewrite <-val_gcd, gcd_sym; eauto using is_gcd_gcd.
-         auto using (pos_ne_0 ℤ_order). }
-    rewrite <-(div_inv_r n (p^v p n)), gcd_mul_r at 1; auto using val_div.
-    2: { erewrite <-val_gcd, gcd_sym; eauto using is_gcd_gcd.
-         auto using (pos_ne_0 ℤ_order). }
-    rewrite -> ? M2, M1, ? M2, (M1 (lcm (m / p ^ v p m) (n / p ^ v p n))),
-    <-gcd_lcm_ident, (M1 (m / p^v p m)), M1, ? M2, div_inv_l, (M1 _ n), <-? M2;
-      try (apply div_nonneg; unfold le, ordered_rings.le; intuition;
-           now apply (pow_pos ℤ_order)); auto using val_div.
+      auto using gcd_pos, (pos_ne_0 ℤ_order) => /=.
+    rewrite -gcd_lcm_ident => //.
+    rewrite -1 ? {1} (div_inv_r m (p^v p m)) ? gcd_mul_l;
+      try rewrite -{1} (div_inv_r n (p^v p n)) ? gcd_mul_r;
+      try erewrite <-val_gcd, gcd_sym;
+      eauto using is_gcd_gcd, val_div, (pos_ne_0 ℤ_order).
+    rewrite ? M2 M1 ? M2 (M1 (lcm (m / p ^ v p m) (n / p ^ v p n)))
+    -gcd_lcm_ident; try apply div_nonneg; try apply (pow_pos ℤ_order); auto.
+    rewrite -> (M1 (m / p^v p m)), M1, ? M2, div_inv_l, (M1 _ n), <-? M2;
+      auto using val_div.
     f_equal.
-    rewrite -> gcd_sym, val_gcd, M3; auto using (pos_ne_0 ℤ_order).
-    rewrite <-(div_inv_r m (p^v p m)) at 4; auto using val_div.
-    apply f_equal, div_l_gcd; try now apply or_introl, (pow_pos ℤ_order).
-    apply val_lower_bound; auto; now apply (pos_ne_0 ℤ_order).
+    rewrite -gcd_sym ? val_gcd ? M3 -1 ? {4} (div_inv_r m (p^v p m));
+      auto using (pos_ne_0 ℤ_order), val_div.
+    apply /f_equal /div_l_gcd; try now apply or_introl, (pow_pos ℤ_order).
+    apply val_lower_bound; auto using (pos_ne_0 ℤ_order).
   Qed.
 
   Theorem val_lcm_r : ∀ m n,
       0 < m → 0 < n → 0 < p →
       (v p n ≤ v p m)%N → p^v p m * lcm (m / p^v p m) (n / p^v p n) = lcm m n.
   Proof.
-    intros m n H H0 H1 H2.
-    rewrite -> lcm_sym, val_lcm_l; auto using lcm_sym.
+    move=> m n H H0 H1 H2.
+    rewrite lcm_sym val_lcm_l; auto using lcm_sym.
   Qed.
 
   Theorem val_lcm_l_gcd : ∀ m n,
       0 < m → 0 < n → 0 < p →
       (v p m ≤ v p n)%N → gcd (p^v p n) (lcm (m / p^v p m) (n / p^v p n)) = 1.
   Proof.
-    intros m n H H0 H1 H2.
-    apply gcd_pow_l.
-    repeat split; auto using div_1_l with Z.
-    intros x H3 H4.
-    pose proof prime_p as [H5 H6].
-    apply H6 in H3 as [H3 | [H3 H7]]; fold divide in *; auto.
-    eapply div_trans in H4; eauto; fold divide in *.
-    assert (p｜(m / p ^ v p m) * (n / p ^ v p n)) as H8.
-    { eapply div_trans; fold divide; eauto using lcm_prod. }
-    apply Euclid's_lemma in H8 as [H8 | H8]; auto.
-    - destruct (val_is_gcd 1 m) as [_ [_ H9]]; try now apply (pos_ne_0 ℤ_order).
-      rewrite -> pow_1_r in H9.
-      eauto using div_trans with Z.
-    - destruct (val_is_gcd 1 n) as [_ [_ H9]]; try now apply (pos_ne_0 ℤ_order).
-      rewrite -> pow_1_r in H9.
-      eauto using div_trans with Z.
+    move: prime_p => [P0 P1] m n H H0 H1 H2.
+    apply gcd_pow_l, conj, conj; auto using div_1_l with Z =>
+    x /P1 [H3 | [H3 /div_trans H4 /[dup] H5 /H4 H6]] => //.
+    (have: p｜(m / p ^ v p m) * (n / p ^ v p n) by
+        eapply div_trans; rewrite -/divide; eauto using lcm_prod) =>
+    /Euclid's_lemma => /(_ prime_p) =>
+    [[H7 | H7]]; [ elim (val_is_gcd 1 m) | elim (val_is_gcd 1 n) ];
+      rewrite ? pow_1_r; auto using (pos_ne_0 ℤ_order) =>
+    ? [] ?; eauto using div_trans with Z.
   Qed.
 
   Theorem val_lcm_r_gcd : ∀ m n,
       0 < m → 0 < n → 0 < p →
       (v p n ≤ v p m)%N → gcd (p^v p m) (lcm (m / p^v p m) (n / p^v p n)) = 1.
   Proof.
-    intros m n H H0 H1 H2.
-    rewrite -> lcm_sym.
+    move=> m n H H0 H1 H2.
+    rewrite lcm_sym.
     auto using val_lcm_l_gcd.
   Qed.
 
@@ -2024,7 +1969,7 @@ Section Valuations.
       0 < m → 0 < n → 0 < p →
       (v p m ≤ v p n)%N → gcd(p^v p n, lcm (m / p^v p m) (n / p^v p n)) = 1.
   Proof.
-    intros m n H H0 H1 H2.
+    move=> m n H H0 H1 H2.
     erewrite <-val_lcm_l_gcd; eauto using is_gcd_gcd.
   Qed.
 
@@ -2032,7 +1977,7 @@ Section Valuations.
       0 < m → 0 < n → 0 < p →
       (v p n ≤ v p m)%N → gcd(p^v p m, lcm (m / p^v p m) (n / p^v p n)) = 1.
   Proof.
-    intros m n H H0 H1 H2.
+    move=> m n H H0 H1 H2.
     erewrite <-val_lcm_r_gcd; eauto using is_gcd_gcd.
   Qed.
 
@@ -2040,8 +1985,7 @@ End Valuations.
 
 Theorem inv_div_l : ∀ a b c, b｜a → b ≠ 0 → a/b｜c ↔ a｜b*c.
 Proof.
-  split; intros [k H1]; exists k.
-  - rewrite -> H1, M1, <-M2, div_inv_r; auto.
-  - apply (cancellation_mul_l ℤ_ID b); auto; simpl.
-    rewrite -> H1, (M1 b), <-M2, div_inv_r; auto.
+  split => [[k H1] | [k H1]]; exists k;
+             [ | apply (cancellation_mul_l ℤ_ID b); auto ] =>
+  /=; rewrite H1 (M1 b) -M2 div_inv_r; auto.
 Qed.
