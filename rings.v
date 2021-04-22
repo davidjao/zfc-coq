@@ -288,14 +288,14 @@ Section Ring_theorems.
 
   Theorem unit_closure : ∀ a b, unit a → unit b → unit (a * b).
   Proof.
-    intros ? ? [x H] [y H0].
+    move=> a b [x H] [y H0].
     exists (x*y).
     rewrite -(M3 _ 1) {1}H H0 -M2 (M2 _ a) (M1 _ a) ? M2 //.
   Qed.
 
   Theorem unit_square : ∀ u, unit (u * u) → unit u.
   Proof.
-    intros u [x H].
+    move=> u [x H].
     exists (x*u).
     rewrite H M2 //.
   Qed.
@@ -512,7 +512,7 @@ Section Ring_theorems.
   Theorem prod_mul : ∀ f a b c,
       a ≤ b → c^(S (b-a)) * prod f a b = prod (λ n, c * (f n)) a b.
   Proof.
-    intros f a b c [d <-].
+    move=> f a b c [d <-].
     elim/Induction: d => [ | n].
     - rewrite add_0_r sub_diag pow_1_r ? prod_0 //.
     - rewrite ? (add_comm a) ? sub_abba ? pow_succ_r add_succ_l ? prod_succ

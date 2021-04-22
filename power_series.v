@@ -22,94 +22,105 @@ Section Power_series_construction.
 
   Definition power_series := elts power_series_set.
 
+  Definition series_functionify : power_series → function.
+  Proof.
+    move=> f.
+    move: (elts_in_set f) => /Specify_classification [H H0].
+    exact (mkFunc H0).
+  Defined.
+
+  Theorem series_functionify_injective :
+    ∀ f g, series_functionify f = series_functionify g → f = g.
+  Proof.
+    rewrite /series_functionify => [[f F]] [g G].
+    (repeat destruct iffLR => /=) => H.
+    apply set_proj_injective => /=.
+    suff -> : f = graph (mkFunc i0); auto.
+    suff -> : g = graph (mkFunc i2); auto.
+    apply f_equal, func_ext => /= //.
+    congruence.
+  Qed.
+
+  Theorem series_functionify_inv :
+    ∀ f : N → R, exists ! f', series_functionify f' = functionify f.
+  Proof.
+    move=> f.
+    have H: graph (functionify f) ∈ power_series_set.
+    { apply Specify_classification, conj; auto using functionify_is_function.
+      apply Powerset_classification, functionify_graph. }
+    exists (mkSet H).
+    have H0: series_functionify (mkSet H) = functionify f.
+    { rewrite /series_functionify.
+      repeat destruct iffLR => /=.
+      apply function_record_injective => /= //.
+      rewrite functionify_range //. }
+    split; auto => x'.
+      by rewrite -{1}H0 => /series_functionify_injective.
+  Qed.
+
+  Theorem series_functionify_domain : ∀ f, domain (series_functionify f) = ω.
+  Proof.
+    move=> [f F].
+    rewrite /series_functionify.
+      by destruct iffLR.
+  Qed.
+
+  Theorem series_functionify_range : ∀ f, range (series_functionify f) = Ring.
+  Proof.
+    move=> [f F].
+    rewrite /series_functionify.
+      by destruct iffLR.
+  Qed.
+
   Definition coefficient : power_series → N → R.
   Proof.
-    intros f n.
-    pose proof elts_in_set f as H; simpl in H.
-    apply Specify_classification in H as [H H0].
-    set (F := mkFunc H0).
-    assert (F n ∈ Ring) as H1
-        by apply function_maps_domain_to_range, elts_in_set.
-    exact (mkSet H1).
+    move=> f.
+    rewrite /N -(series_functionify_domain f) -(series_functionify_range f).
+    exact (lambdaify (series_functionify f)).
   Defined.
 
   Definition seriesify : (N → R) → power_series.
   Proof.
-    intros f.
-    pose proof func_hyp (functionify f) as [H _].
-    pose proof func_hyp (functionify f) as H0.
-    rewrite -> sets.functionify_domain, sets.functionify_range in H, H0.
-    rewrite <-Powerset_classification in H.
-    assert (graph (functionify f) ∈
-                  {x in P (ω × Ring) | is_function x ω Ring})
-      as H1 by now apply Specify_classification.
-    exact (mkSet H1).
+    move=> f.
+    elim (constructive_definite_description _ (series_functionify_inv f))
+    => [x H].
+    exact x.
   Defined.
 
   Theorem seriesify_coefficient : ∀ f, seriesify (coefficient f) = f.
   Proof.
-    intros [f H].
-    unfold seriesify.
-    destruct func_hyp.
-    apply set_proj_injective.
-    simpl.
-    unfold coefficient.
-    destruct Specify_classification, a.
-    simpl in *.
-    clear s e a i.
-    unfold functionify.
-    destruct constructive_indefinite_description as [f'].
-    simpl in *.
-    replace f with
-        (graph {| domain := ω; range := Ring; graph := f; func_hyp := i1 |})
-      by auto.
-    destruct a as [H0 [H1 H2]].
-    f_equal.
-    apply func_ext; simpl; auto.
-    intros x H3.
-    assert (x ∈ ω) as H4 by congruence.
-    replace x with ((mkSet H4 : elts ω) : set) by auto.
-    now rewrite -> H2.
+    rewrite /coefficient /eq_rect /seriesify /sig_rect /functionify => f.
+    elim constructive_definite_description => x.
+    destruct series_functionify_domain, series_functionify_range.
+    elim constructive_indefinite_description => f' [H [H0 H1]] H2.
+    apply series_functionify_injective.
+    rewrite H2.
+    apply func_ext => // x' H3.
+    rewrite H in H3.
+      by rewrite (reify H3) H1.
+  Qed.
+
+  Theorem seriesify_injective : ∀ f g, seriesify f = seriesify g → f = g.
+  Proof.
+    rewrite /seriesify /sig_rect => f g.
+    elim constructive_definite_description => x H.
+    elim constructive_definite_description => x' H' H0.
+    move: H0 H H' -> => -> H.
+      by apply functionify_injective.
   Qed.
 
   Theorem coefficient_seriesify : ∀ f, coefficient (seriesify f) = f.
   Proof.
-    intros f.
-    apply functional_extensionality.
-    intros x.
-    unfold seriesify.
-    destruct func_hyp, Specify_classification.
-    unfold coefficient.
-    destruct Specify_classification, a; simpl in *.
-    - apply Specify_classification.
-      pose proof (func_hyp (functionify f)) as H.
-      pose proof (func_hyp (functionify f)) as [H0 H1].
-      now rewrite -> @sets.functionify_domain, @sets.functionify_range,
-      <-Powerset_classification in *.
-    - destruct a0.
-      apply set_proj_injective.
-      simpl.
-      rewrite <-functionify_action.
-      f_equal.
-      apply function_record_injective; simpl; try congruence.
-      now rewrite -> functionify_range.
+    move=> f.
+    apply seriesify_injective.
+      by rewrite seriesify_coefficient.
   Qed.
 
   Theorem power_series_extensionality :
     ∀ f g, (coefficient f = coefficient g) → f = g.
   Proof.
-    intros f g H.
-    apply set_proj_injective.
-    unfold coefficient in H.
-    repeat destruct Specify_classification.
-    destruct a, a0.
-    replace (elt_to_set f) with (graph (mkFunc i2)) by auto.
-    replace (elt_to_set g) with (graph (mkFunc i4)) by auto.
-    f_equal.
-    apply func_ext; simpl; auto.
-    intros n H0.
-    apply (f_equal (λ f: N → R, f (mkSet H0))) in H.
-    now inversion H.
+    move=> f g H.
+      by rewrite -(seriesify_coefficient f) -(seriesify_coefficient g) H.
   Qed.
 
   Definition add : power_series → power_series → power_series.

@@ -1030,7 +1030,7 @@ Section Function_evaluation.
 
   Theorem functionify_graph : ∀ g, graph (functionify g) ⊂ A × B.
   Proof.
-    move => g z /graph_elements_are_pairs.
+    move=> g z /graph_elements_are_pairs.
     rewrite functionify_domain functionify_range //.
   Qed.
 
@@ -1039,6 +1039,33 @@ Section Function_evaluation.
   Proof.
     rewrite /functionify => a g.
     elim constructive_indefinite_description => g' [H [H0 ->]] //.
+  Qed.
+
+  Theorem functionify_is_function :
+    ∀ g, is_function (graph (functionify g)) A B.
+  Proof.
+    move=> g.
+    repeat split; auto using functionify_graph => a H.
+    exists (g (mkSet H)).
+    (repeat split) => [ | | x' [H0 H1]].
+    - apply elts_in_set.
+    - apply function_maps_domain_to_graph.
+      + rewrite functionify_domain //.
+      + rewrite functionify_range.
+        apply elts_in_set.
+      + rewrite -functionify_action //.
+    - rewrite -functionify_action.
+      apply function_maps_domain_to_graph in H1; auto.
+      rewrite functionify_domain //.
+      rewrite functionify_range //.
+  Qed.
+
+  Theorem functionify_injective : ∀ g h, functionify g = functionify h → g = h.
+  Proof.
+    move=> g h H.
+    extensionality x.
+    apply set_proj_injective.
+    rewrite -? functionify_action H //.
   Qed.
 
 End Function_evaluation.
