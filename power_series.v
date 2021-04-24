@@ -91,7 +91,7 @@ Section Power_series_construction.
   Proof.
     rewrite /coefficient /eq_rect /seriesify /sig_rect /functionify => f.
     elim constructive_definite_description => x.
-    destruct series_functionify_domain, series_functionify_range.
+    case series_functionify_domain, series_functionify_range.
     elim constructive_indefinite_description => f' [H [H0 H1]] H2.
     apply series_functionify_injective.
     rewrite H2.

@@ -75,16 +75,14 @@ Section Integral_domain_theorems.
 
   Lemma ne0_cancellation : ∀ a b, a ≠ 0 → b ≠ 0 → a * b ≠ 0.
   Proof.
-    intros a b H H0 H1.
-    now apply cancellation in H1 as [H1 | H1].
+    move=> a b H H0 /cancellation [H1 | H1] //.
   Qed.
 
   Theorem cancellation_mul_l : ∀ a b c, a ≠ 0 → a * b = a * c → b = c.
   Proof.
-    intros a b c H H0.
-    assert (a * (b - c) = 0) as H1 by ring [H0].
-    apply cancellation in H1 as [H1 | H1]; intuition.
-    apply cancellation_0_add in H1.
+    move=> a b c H H0.
+    (have: a * (b - c) = 0 by ring [H0]) => /cancellation [ | ] //
+    => /cancellation_0_add H1.
     ring [H1].
   Qed.
 
@@ -95,29 +93,22 @@ Section Integral_domain_theorems.
 
   Theorem pow_ne_0 : ∀ a b, a ≠ 0 → a^b ≠ 0.
   Proof.
-    induction b using Induction; intros H.
+    induction b using Induction => [ H | /[dup] H /IHb].
     - rewrite pow_0_r.
       auto using (nontriviality ID).
-    - rewrite pow_succ_r.
-      intros H0.
-      contradiction (IHb H).
-      apply cancellation in H0.
-      tauto.
+    - rewrite pow_succ_r => /[swap] /cancellation [ | ] //.
   Qed.
 
   Theorem unit_nonzero : ∀ a, unit a → a ≠ 0.
   Proof.
-    intros a H H0.
-    subst.
-    destruct H as [x H].
+    move=> a /[swap] -> [x H].
     apply (nontriviality ID).
-    now ring_simplify in H.
+      by ring_simplify in H.
   Qed.
 
   Theorem minus_one_nonzero : -1 ≠ 0.
   Proof.
-    intros H.
-    apply (f_equal (neg ring)) in H.
+    move=> /(f_equal (neg ring)) H.
     ring_simplify in H.
     contradiction (nontriviality ID).
   Qed.
