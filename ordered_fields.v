@@ -103,8 +103,8 @@ Section Ordered_field_theorems.
   Theorem pow_pos : ∀ a n, 0 < a → 0 < a^n.
   Proof.
     intros a n H.
-    unfold pow, integer_powers.pow.
-    repeat destruct excluded_middle_informative;
+    unfold pow, integer_powers.pow, eq_rect_r, eq_rect, eq_sym.
+    repeat destruct excluded_middle_informative; try destruct A3;
       repeat destruct constructive_indefinite_description;
       try destruct a0.
     - rewrite -> integers.A3, e in *.
