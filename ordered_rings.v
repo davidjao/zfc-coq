@@ -171,6 +171,12 @@ Section Ordered_ring_theorems.
         eauto using mul_neg_pos, mul_pos_neg.
   Qed.
 
+  Theorem pos_mul_iff : ∀ a b, 0 < a * b ↔ (0 < a ∧ 0 < b) ∨ (a < 0 ∧ b < 0).
+  Proof.
+    (split; auto using pos_mul) =>
+    [[[] /mul_pos_pos /[apply] | [] /mul_neg_neg /[apply]]] //.
+  Qed.
+
   Theorem neg_mul : ∀ a b, a * b < 0 → (0 < a ∧ b < 0) ∨ (a < 0 ∧ 0 < b).
   Proof.
     move=> a b H.
@@ -253,6 +259,42 @@ Section Ordered_ring_theorems.
   Proof.
     move=> a b.
       by rewrite M1 => /pos_div_l /[apply].
+  Qed.
+
+  Lemma neg_div_l : ∀ a b, a < 0 → 0 < a * b → b < 0.
+  Proof.
+    move: pos_mul => /[swap] a /[swap] b /(_ a b) H H0.
+    case (T 0 a), (T 0 b); intuition.
+  Qed.
+
+  Lemma neg_div_r : ∀ a b, a < 0 → 0 < b * a → b < 0.
+  Proof.
+    move=> a b.
+      by rewrite M1 => /neg_div_l /[apply].
+  Qed.
+
+  Lemma pos_neg_div_l : ∀ a b, 0 < a → a * b < 0 → b < 0.
+  Proof.
+    move: neg_mul => /[swap] a /[swap] b /(_ a b) H H0.
+    case (T 0 a), (T 0 b); intuition.
+  Qed.
+
+  Lemma pos_neg_div_r : ∀ a b, 0 < a → b * a < 0 → b < 0.
+  Proof.
+    move=> a b.
+      by rewrite M1 => /pos_neg_div_l /[apply].
+  Qed.
+
+  Lemma neg_pos_div_l : ∀ a b, a < 0 → a * b < 0 → 0 < b.
+  Proof.
+    move: neg_mul => /[swap] a /[swap] b /(_ a b) H H0.
+    case (T 0 a), (T 0 b); intuition.
+  Qed.
+
+  Lemma neg_pos_div_r : ∀ a b, a < 0 → b * a < 0 → 0 < b.
+  Proof.
+    move=> a b.
+      by rewrite M1 => /neg_pos_div_l /[apply].
   Qed.
 
   Lemma one_lt : ∀ a, 1 < a → 0 < a.
@@ -523,6 +565,12 @@ Section Ordered_ring_theorems.
   Proof.
     rewrite /le => a b.
     case (T a b); tauto.
+  Qed.
+
+  Theorem ne0_lt_gt : ∀ a, a ≠ 0 → 0 < a ∨ a < 0.
+  Proof.
+    move=> a /neq_sym H.
+    case (T 0 a); intuition.
   Qed.
 
 End Ordered_ring_theorems.

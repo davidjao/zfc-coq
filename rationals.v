@@ -8,41 +8,31 @@ Definition rational_relation :=
 
 Theorem rational_equivalence : is_equivalence ℤ0 rational_relation.
 Proof.
-  repeat split; unfold rational_relation in *.
-  - intros a H.
-    apply Specify_classification.
-    split; try apply Product_classification; eauto.
-    apply Specify_classification in H as [H H0].
-    apply Product_classification in H as [x [y [H1 [H2 H3]]]].
-    subst; simpl.
-    rewrite proj2_eval in H0; auto.
-    exists (mkSet H1 : Z), (mkSet H2 : Z), (mkSet H1 : Z), (mkSet H2 : Z).
+  (repeat split; rewrite /rational_relation) =>
+  [a /[dup] /Specify_classification
+     [/Product_classification [x [y [H [H0 -> {a}]]]]] |
+   x y H H0 /Specify_classification
+     [H1 [a [b [c [d [/Ordered_pair_iff [H2 H3] H4]]]]]] |
+   x y z H H0 H1 /Specify_classification
+     [H2 [a [b [c [d [/Ordered_pair_iff [H3 /[dup] H4 ->] H5]]]]]]
+     /Specify_classification
+     [H6 [a' [b' [c' [d' [/Ordered_pair_iff
+                           [/Ordered_pair_iff
+                             [/set_proj_injective <-
+                               /set_proj_injective <-] H7] H8]]]]]]];
+    rewrite Specify_classification Product_classification ? proj2_eval //;
+            split; eauto.
+  - exists (mkSet H : Z), (mkSet H0 : Z), (mkSet H : Z), (mkSet H0 : Z).
     rewrite integers.M1 //.
-  - intros x y H H0 H1.
-    rewrite -> Specify_classification in *.
-    destruct H1 as [H1 [a [b [c [d [H2 H3]]]]]].
-    split; try apply Product_classification; eauto.
-    exists c, d, a ,b.
-    repeat split; auto; try ring [H3].
-    repeat rewrite -> Ordered_pair_iff in *.
-    intuition.
-  - intros x y z H H0 H1 H2 H3.
-    rewrite -> Specify_classification in *.
-    destruct H2 as [H2 [a [b [c [d [H4 H5]]]]]], H3
-        as [H3 [a' [b' [c' [d' [H8 H9]]]]]].
-    split; try apply Product_classification; eauto.
-    exists a, b, c', d'.
-    repeat split; auto; repeat rewrite -> Ordered_pair_iff in *; intuition;
-      subst; rewrite -> Ordered_pair_iff in *; intuition.
-    apply set_proj_injective in H6.
-    apply set_proj_injective in H7.
-    subst.
-    apply (cancellation_mul_l (integral_domain ℤ_order) b'); simpl.
-    + apply Specify_classification in H0 as [H0 H4].
-      rewrite -> proj2_eval in H4; unfold IZS; auto using elts_in_set.
-      contradict H4.
-      now subst.
-    + now ring_simplify [H5 H9].
+  - exists c, d, a ,b.
+    rewrite Ordered_pair_iff M1 (M1 d) //.
+  - exists a, b, c', d'.
+    rewrite H3 H7.
+    split; auto.
+    apply (cancellation_mul_l (integral_domain ℤ_order) d) => /=.
+    + move: H4 H0 -> => /Specify_classification [] H0.
+      (rewrite proj2_eval; eauto using elts_in_set) => /[swap] -> //.
+    + rewrite (M1 b) ? M2 -H8 (M1 _ b) M2 -H5 (M1 _ a) //.
 Qed.
 
 Definition Q := elts (ℤ0 / rational_relation)%set.
@@ -55,91 +45,61 @@ Delimit Scope Q_scope with Q.
 Open Scope Q_scope.
 Bind Scope Q_scope with Q.
 
-Lemma embed_zero : (0,1) ∈ ℤ0.
+Lemma embed_zero : (0, 1) ∈ ℤ0.
 Proof.
-  apply Specify_classification.
-  split.
-  - apply Product_classification.
-    exists 0, 1.
-    unfold IZS; repeat split; auto using elts_in_set.
-  - rewrite proj2_eval; eauto using elts_in_set => H.
-    contradiction zero_ne_1.
-    now apply set_proj_injective.
+  apply Specify_classification, conj;
+    rewrite ? Product_classification ? proj2_eval; eauto using elts_in_set
+  => /set_proj_injective /zero_ne_1 //.
 Qed.
 
 Lemma embed_nonzero : ∀ a b : Z, b ≠ 0 → (a, b) ∈ ℤ0.
 Proof.
-  intros a b H.
-  apply Specify_classification.
-  split.
-  + apply Product_classification; eauto using elts_in_set.
-  + rewrite -> proj2_eval; eauto using elts_in_set.
-    contradict H.
-    now apply set_proj_injective.
+  move=> a b H.
+  apply Specify_classification, conj;
+    rewrite ? Product_classification ? proj2_eval; eauto using elts_in_set
+  => /set_proj_injective /H => //.
 Qed.
 
 Definition embed : Z → Z → Q.
 Proof.
-  intros a b.
-  destruct (excluded_middle_informative (b = 0)).
-  - pose proof embed_zero as H.
-    exact (quotient_map rational_relation (mkSet H)).
-  - apply (embed_nonzero a) in n.
-    exact (quotient_map rational_relation (mkSet n)).
+  move: excluded_middle_informative => /[swap] a /[swap] b /(_ (b = 0)) [H | H].
+  - exact (quotient_map rational_relation (mkSet embed_zero)).
+  - exact (quotient_map rational_relation (mkSet (embed_nonzero a b H))).
 Defined.
 
 Infix "/" := embed : Q_scope.
 
 Theorem Qlift : ∀ q, ∃ a b, b ≠ 0 ∧ a / b = q.
 Proof.
-  intros q.
-  destruct (quotient_lift q) as [y H].
-  destruct (unique_set_element y) as [x [[H0 H1] H2]].
-  apply Specify_classification in H0 as [H0 H3].
-  apply Product_classification in H0 as [a [b [H0 [H4 H5]]]].
-  subst.
-  exists (mkSet H0 : Z), (mkSet H4 : Z).
-  assert (mkSet H4 ≠ 0) as H5.
-  { contradict H3.
-    rewrite proj2_eval; auto.
-    now rewrite <-H3. }
+  move=> q.
+  elim (quotient_lift q) => [y].
+  elim (unique_set_element y) =>
+  [x [[/[swap] -> {x} /Specify_classification
+                      [/Product_classification [a [b [H [H0 H1]]]] H2]] H3 H4]].
+  exists (mkSet H : Z), (mkSet H0 : Z).
+  have H5: mkSet H0 ≠ 0 by move: H1 proj2_eval H2 -> => -> // /[swap] <- //.
   split; auto.
-  apply set_proj_injective.
-  rewrite <-quotient_image, <-H1.
-  unfold embed; destruct excluded_middle_informative; simpl; intuition.
+  rewrite /embed -H4.
+  elim excluded_middle_informative => [ | H6] //.
+    by apply /f_equal /set_proj_injective.
 Qed.
 
 Theorem Qequiv : ∀ a b c d, b ≠ 0 → d ≠ 0 → a / b = c / d ↔ a * d = b * c.
 Proof.
-  intros [a A] [b B] [c C] [d D] H H0.
-  split; intros H1; unfold embed in *; destruct excluded_middle_informative;
-    try (now contradiction); [symmetry in H1 | symmetry];
-      destruct excluded_middle_informative; try (now contradiction);
-        [apply quotient_equiv in H1 | apply quotient_equiv];
-        auto using rational_equivalence; simpl in *.
-  - apply Specify_classification in H1 as [H1 [c' [d' [a' [b' [H2 H3]]]]]].
-    repeat rewrite -> Ordered_pair_iff in *.
-    intuition.
-    subst.
-    destruct a' as [a i], b' as [b i0], c' as [c i1], d' as [d i2].
-    simpl in *.
-    replace A with i; replace B with i0; replace C with i1;
-      replace D with i2; auto using proof_irrelevance.
-    ring [H3].
-  - apply Specify_classification.
-    split.
-    + apply Product_classification.
-      exists (c, d), (a, b).
-      cut (∀ e f (F : f ∈ ℤ), e ∈ ℤ → mkSet F ≠ 0 → (e, f) ∈ ℤ0); eauto.
-      intros e f F E H2.
-      apply Specify_classification.
-      split; try apply Product_classification; eauto.
-      rewrite proj2_eval; auto.
-      contradict H2.
-      now apply set_proj_injective.
-    + exists (mkSet C : Z), (mkSet D : Z), (mkSet A : Z), (mkSet B : Z).
-      repeat split; auto.
-      ring [H1].
+  ((split; rewrite /embed; repeat elim excluded_middle_informative => //) =>
+  {}H0 {}H; rewrite quotient_equiv; auto using rational_equivalence => /=) =>
+  [/Specify_classification
+    [H1 [a' [b' [c' [d' [/Ordered_pair_iff
+                          [/Ordered_pair_iff
+                            [/set_proj_injective -> /set_proj_injective ->]
+                            /Ordered_pair_iff
+                            [/set_proj_injective ->
+                             /set_proj_injective ->]] H3]]]]]] | H1] //.
+  rewrite Specify_classification Product_classification.
+  repeat esplit; eauto;
+    rewrite ? (Specify_classification (ℤ × ℤ)) ? Product_classification
+            ? proj2_eval; repeat split; eauto using elts_in_set
+  => /set_proj_injective //.
 Qed.
 
 Definition IZQ a := a / 1.
@@ -152,37 +112,37 @@ Notation "1" := one : Q_scope.
 
 Definition add : Q → Q → Q.
 Proof.
-  intros x y.
-  destruct (constructive_indefinite_description (Qlift x)) as [a e].
-  destruct (constructive_indefinite_description e) as [b [e0 e1]].
-  destruct (constructive_indefinite_description (Qlift y)) as [c e2].
-  destruct (constructive_indefinite_description e2) as [d [e3 e4]].
+  move=> x y.
+  elim (constructive_indefinite_description (Qlift x)) =>
+  [a /constructive_indefinite_description [b [e e0]]].
+  elim (constructive_indefinite_description (Qlift y)) =>
+  [c /constructive_indefinite_description [d [e1 e2]]].
   exact ((a * d + c * b) / (b * d)).
 Defined.
 
 Definition mul : Q → Q → Q.
 Proof.
-  intros x y.
-  destruct (constructive_indefinite_description (Qlift x)) as [a e].
-  destruct (constructive_indefinite_description e) as [b [e0 e1]].
-  destruct (constructive_indefinite_description (Qlift y)) as [c e2].
-  destruct (constructive_indefinite_description e2) as [d [e3 e4]].
+  move=> x y.
+  elim (constructive_indefinite_description (Qlift x)) =>
+  [a /constructive_indefinite_description [b [e e0]]].
+  elim (constructive_indefinite_description (Qlift y)) =>
+  [c /constructive_indefinite_description [d [e1 e2]]].
   exact ((a * c) / (b * d)).
 Defined.
 
 Definition neg : Q → Q.
 Proof.
-  intros x.
-  destruct (constructive_indefinite_description (Qlift x)) as [a e].
-  destruct (constructive_indefinite_description e) as [b [e0 e1]].
+  move=> x.
+  elim (constructive_indefinite_description (Qlift x)) =>
+  [a /constructive_indefinite_description [b [e e0]]].
   exact (-a / b).
 Defined.
 
 Definition inv : Q → Q.
 Proof.
-  intros x.
-  destruct (constructive_indefinite_description (Qlift x)) as [a e].
-  destruct (constructive_indefinite_description e) as [b [e0 e1]].
+  move=> x.
+  elim (constructive_indefinite_description (Qlift x)) =>
+  [a /constructive_indefinite_description [b [e e0]]].
   exact (b / a).
 Defined.
 
@@ -200,143 +160,114 @@ Infix "-" := sub : Q_scope.
 Theorem add_wf : ∀ a b c d : Z,
     b ≠ 0%Z → d ≠ 0%Z → (a / b) + (c / d) = (a * d + c * b) / (b * d).
 Proof.
-  intros a b c d H H0.
-  unfold add.
-  repeat destruct constructive_indefinite_description.
-  destruct a0, a1.
-  rewrite -> Qequiv in *; auto; try ring [e1 e2];
-    intros H1; apply (cancellation_0_mul ℤ_order) in H1; tauto.
+  rewrite /add /sig_rect => a b c d H H0.
+  elim constructive_indefinite_description => a' [b' [H1 H2]].
+  elim constructive_indefinite_description => b'' [H3 H4].
+  elim constructive_indefinite_description => c' [d' [H5 H6]].
+  elim constructive_indefinite_description => d'' [H7 H8].
+  move: H2 H4 H6 H8; (rewrite ? Qequiv; auto) =>
+  [H2 H4 H6 H8 | /(cancellation_0_mul ℤ_order) |
+   /(cancellation_0_mul ℤ_order)]; try tauto.
+  ring_simplify [H2 H4 H6 H8]; rewrite -? M2 -H4 H2 ? (M2 _ c) -H8 H6; ring.
 Qed.
 
 Theorem mul_wf : ∀ a b c d : Z,
     b ≠ 0%Z → d ≠ 0%Z → (a / b) * (c / d) = (a * c) / (b * d).
 Proof.
-  intros a b c d H H0.
-  unfold mul.
-  repeat destruct constructive_indefinite_description.
-  destruct a0, a1.
-  rewrite -> Qequiv in *; auto; try ring [e1 e2];
-    intros H1; apply (cancellation_0_mul ℤ_order) in H1; tauto.
+  rewrite /mul /sig_rect => a b c d H H0.
+  elim constructive_indefinite_description => a' [b' [H1 H2]].
+  elim constructive_indefinite_description => b'' [H3 H4].
+  elim constructive_indefinite_description => c' [d' [H5 H6]].
+  elim constructive_indefinite_description => d'' [H7 H8].
+  move: H2 H4 H6 H8; (rewrite ? Qequiv; auto) =>
+  [H2 H4 H6 H8 | /(cancellation_0_mul ℤ_order) |
+   /(cancellation_0_mul ℤ_order)]; try tauto.
+  ring_simplify [H2 H4 H6 H8]; rewrite -H8 H6 -? M2 -H4 H2; ring.
 Qed.
 
 Theorem neg_wf : ∀ a b : Z, b ≠ 0%Z → -(a / b) = (-a) / b.
 Proof.
-  intros a b H.
-  unfold neg.
-  repeat destruct constructive_indefinite_description.
-  destruct a0.
-  rewrite -> Qequiv in *; auto.
-  ring [e0].
+  rewrite /neg /sig_rect => a b H.
+  elim constructive_indefinite_description => [a' [b' [H0 H1]]].
+  elim constructive_indefinite_description => b'' [H2 H3].
+  move: H1 H3; (rewrite ? Qequiv; auto) => H1 H3.
+  suff -> : (-a' * b = -(a' * b))%Z; last by ring.
+  rewrite H3; ring.
 Qed.
 
 Theorem inv_wf : ∀ a b : Z, a ≠ 0%Z → b ≠ 0%Z → (a / b)^-1 = b / a.
 Proof.
-  intros a b H H0.
-  unfold inv.
-  repeat destruct constructive_indefinite_description.
-  destruct a0.
-  rewrite -> Qequiv in e0; auto.
-  rewrite -> Qequiv; auto.
-  intros H1.
-  subst.
-  replace (0*b)%Z with (0%Z) in * by ring.
-  symmetry in e0.
-  apply (cancellation_0_mul ℤ_order) in e0.
-  tauto.
+  rewrite /inv /sig_rect => a b H H0.
+  elim constructive_indefinite_description => [a' [b' [H1 H2]]].
+  elim constructive_indefinite_description => b'' [H3 H4].
+  move: (H2) (H4); rewrite ? Qequiv; auto => H5.
+  move: H5 H2 -> => /Qequiv => /(_ H1) /(_ H0).
+  rewrite (mul_0_l ℤ b : 0 * b = 0)%Z =>
+  /(@eq_sym Z) /(integral_domains.cancellation ℤ_ID); tauto.
 Qed.
 
 Theorem A3 : ∀ x, 0 + x = x.
 Proof.
-  intros [x H].
-  unfold add in *.
-  repeat destruct constructive_indefinite_description.
-  destruct a, a0.
-  rewrite <-add_wf, e1, <-e2; auto.
-  unfold zero.
-  rewrite -> add_wf, Qequiv; auto.
-  - ring.
-  - contradict n0.
-    ring [n0].
-  - apply zero_ne_1.
+  move=> x.
+  elim (Qlift x) => [a [b [H <-]]].
+  (rewrite add_wf ? Qequiv //; try ring) => [/zero_ne_1 | ] //.
+  rewrite M3 //.
 Qed.
 
 Theorem A1 : ∀ a b, a + b = b + a.
 Proof.
-  intros [a A] [b B].
-  unfold add in *.
-  repeat destruct constructive_indefinite_description.
-  destruct a0, a1.
-  rewrite -> Qequiv in *; auto;
-    try (intros Z; apply (cancellation_0_mul ℤ_order) in Z; tauto).
-  ring.
+  move=> a b.
+  elim (Qlift a) => [a1 [a2 [H <-]]].
+  elim (Qlift b) => [b1 [b2 [H0 <-]]].
+  (rewrite ? add_wf // Qequiv; try ring) =>
+  /(cancellation_0_mul ℤ_order); tauto.
 Qed.
 
 Theorem A2 : ∀ a b c, a + (b + c) = (a + b) + c.
 Proof.
-  intros [a A] [b B] [c C].
-  unfold add in *.
-  repeat destruct constructive_indefinite_description.
-  destruct a0, a1, a2, a3, a4.
-  rewrite -> Qequiv in *; auto;
-    try (intros Z; apply (cancellation_0_mul ℤ_order) in Z; tauto).
-  apply (cancellation_mul_r (integral_domain ℤ_order) x3); auto; simpl.
-  now ring_simplify [e7 e8].
+  move=> a b c.
+  elim (Qlift a) => [a1 [a2 [H <-]]].
+  elim (Qlift b) => [b1 [b2 [H0 <-]]].
+  elim (Qlift c) => [c1 [c2 [H1 <-]]].
+  (rewrite ? add_wf // ? Qequiv; try ring);
+    repeat apply (ne0_cancellation ℤ_ID) => //.
 Qed.
 
 Theorem M3 : ∀ x, 1 * x = x.
 Proof.
-  intros [x H].
-  unfold mul in *.
-  repeat destruct constructive_indefinite_description.
-  destruct a, a0.
-  rewrite <-mul_wf, e1, <-e2; auto.
-  unfold one.
-  rewrite -> mul_wf, Qequiv; auto.
-  - ring.
-  - contradict n0.
-    ring [n0].
-  - apply zero_ne_1.
+  move=> x.
+  elim (Qlift x) => [a [b [H <-]]].
+  (rewrite mul_wf ? Qequiv //; try ring) => [/zero_ne_1 | ] //.
+  rewrite M3 //.
 Qed.
 
 Theorem M1 : ∀ a b, a * b = b * a.
 Proof.
-  intros [a A] [b B].
-  unfold mul in *.
-  repeat destruct constructive_indefinite_description.
-  destruct a0, a1.
-  rewrite -> Qequiv in *; auto;
-    try (intros Z; apply (cancellation_0_mul ℤ_order) in Z; tauto).
-  ring.
+  move=> a b.
+  elim (Qlift a) => [a1 [a2 [H <-]]].
+  elim (Qlift b) => [b1 [b2 [H0 <-]]].
+  (rewrite ? mul_wf // Qequiv; try ring) =>
+  /(cancellation_0_mul ℤ_order); tauto.
 Qed.
 
 Theorem M2 : ∀ a b c, a * (b * c) = (a * b) * c.
 Proof.
-  intros [a A] [b B] [c C].
-  unfold mul in *.
-  repeat destruct constructive_indefinite_description.
-  destruct a0, a1, a2, a3, a4.
-  rewrite -> Qequiv in *; auto;
-    try (intros Z; apply (cancellation_0_mul ℤ_order) in Z; tauto).
-  apply (cancellation_mul_r (integral_domain ℤ_order) x3); auto; simpl.
-  now ring_simplify [e7 e8].
+  move=> a b c.
+  elim (Qlift a) => [a1 [a2 [H <-]]].
+  elim (Qlift b) => [b1 [b2 [H0 <-]]].
+  elim (Qlift c) => [c1 [c2 [H1 <-]]].
+  (rewrite ? mul_wf // ? Qequiv; try ring);
+    repeat apply (ne0_cancellation ℤ_ID) => //.
 Qed.
 
 Theorem D1 : ∀ a b c, (a + b) * c = a * c + b * c.
 Proof.
-  intros [a A] [b B] [c C].
-  unfold mul, add in *.
-  repeat destruct constructive_indefinite_description.
-  destruct a0, a1, a2, a3, a4, a5.
-  rewrite -> Qequiv in *; auto;
-    try (intros Z; apply (cancellation_0_mul ℤ_order) in Z; tauto).
-  apply (cancellation_mul_r (integral_domain ℤ_order) x3); auto; simpl.
-  apply (cancellation_mul_r (integral_domain ℤ_order) x1); auto; simpl.
-  ring_simplify.
-  replace (x*x5*x8*x10*x3*x1)%Z with (x*(x1*x3)*x5*x8*x10)%Z by ring.
-  replace (x8*x3*x1*x4*x6*x9)%Z with ((x9*(x3*x6)*x1*x4*x8))%Z by ring.
-  replace (x10*x3*x1*x4*x6*x7)%Z with (x7*(x1*x6)*x3*x4*x10)%Z by ring.
-  rewrite -> e7, e9, e10.
-  now ring_simplify.
+  move=> a b c.
+  elim (Qlift a) => [a1 [a2 [H <-]]].
+  elim (Qlift b) => [b1 [b2 [H0 <-]]].
+  elim (Qlift c) => [c1 [c2 [H1 <-]]].
+  (rewrite ? add_wf ? mul_wf ? add_wf // ? Qequiv; try ring);
+    repeat apply (ne0_cancellation ℤ_ID) => //.
 Qed.
 
 Theorem sub_neg : ∀ a b, a - b = a + -b.
@@ -346,22 +277,15 @@ Qed.
 
 Theorem A4 : ∀ a, a + -a = 0.
 Proof.
-  intros [a A].
-  unfold add, neg.
-  repeat destruct constructive_indefinite_description.
-  destruct a0, a1.
-  unfold zero.
-  rewrite -> Qequiv in *; eauto using zero_ne_1;
-    try (intros Z; apply (cancellation_0_mul ℤ_order) in Z; tauto).
-  ring [e2].
+  move=> a.
+  elim (Qlift a) => [a1 [a2 [H <-]]].
+  (rewrite neg_wf ? add_wf // Qequiv; try ring) =>
+  [/(ne0_cancellation ℤ_ID) | /zero_ne_1] //; tauto.
 Qed.
 
 Theorem zero_ne_1 : 1 ≠ 0.
 Proof.
-  intros H.
-  unfold zero, one, mul in *;
-    rewrite -> Qequiv, ? integers.M3 in H;
-    now eapply zero_ne_1.
+  rewrite Qequiv ? integers.M3 => /zero_ne_1 //.
 Qed.
 
 Theorem div_inv : ∀ a b, div a b = a * b^-1.
@@ -371,23 +295,11 @@ Qed.
 
 Theorem inv_l : ∀ a, a ≠ 0 → a^-1 * a = 1.
 Proof.
-  intros a H.
-  unfold inv, mul.
-  repeat destruct constructive_indefinite_description.
-  destruct a0, a1.
-  unfold one.
-  rewrite -> Qequiv in *; auto.
-  - ring [e2].
-  - intros H0.
-    subst.
-    contradict H.
-    unfold zero.
-    rewrite -> Qequiv; auto; try ring.
-    apply integers.zero_ne_1.
-  - intros H0.
-    apply (cancellation_0_mul ℤ_order) in H0.
-    tauto.
-  - apply integers.zero_ne_1.
+  move=> a.
+  elim (Qlift a) => [a1 [a2 [H <-]]] /Qequiv => /(_ H) /(_ integers.zero_ne_1).
+  rewrite integers.M1 integers.M3 (mul_0_r ℤ a2 : a2 * 0 = 0)%Z => H0.
+  (rewrite inv_wf // mul_wf // Qequiv; try ring) =>
+  [/(ne0_cancellation ℤ_ID) | /integers.zero_ne_1] //; tauto.
 Qed.
 
 Definition ℚ_ring := mkRing _ 0 1 add mul neg A3 A1 A2 M3 M1 M2 D1 A4.
@@ -400,74 +312,53 @@ Add Field rational_field :
 
 Definition positive : Q → Prop.
 Proof.
-  intros x.
-  destruct (constructive_indefinite_description (Qlift x)) as [a e].
-  destruct (constructive_indefinite_description e) as [b [e0 e1]].
+  move=> x.
+  elim (constructive_indefinite_description (Qlift x)) =>
+  [a /constructive_indefinite_description [b [e e0]]].
   exact (a * b > 0).
 Defined.
 
 Lemma pos_wf : ∀ a b, b ≠ 0%Z → positive (a / b) ↔ a * b > 0.
 Proof.
-  assert (∀ x y z w,
-             y ≠ 0 → z ≠ 0 → x * y = z * w → 0 < x → 0 < z → 0 < w * y)%Z as L.
-  { intros x y z w H H0 H1 H2 H3.
-    destruct (integers.T w 0), (integers.T y 0); intuition; subst;
-      try (now apply (mul_neg_neg ℤ_order); simpl);
-      try (now apply (mul_pos_pos ℤ_order); simpl).
-    + assert (0 < x * y) by now apply (mul_pos_pos ℤ_order).
-      assert (z * w < 0) by now apply (mul_pos_neg ℤ_order).
-      rewrite -> H1 in *.
-      exfalso; eapply (lt_antisym ℤ_order); eauto.
-    + replace (z*0)%Z with 0%Z in * by ring.
-      apply (cancellation_0_mul ℤ_order) in H1 as [H1 | H1]; subst;
-        exfalso; eauto using lt_irrefl.
-    + assert (x * y < 0) by now apply (mul_pos_neg ℤ_order).
-      assert (0 < z * w) by now apply (mul_pos_pos ℤ_order).
-      rewrite -> H1 in *.
-      exfalso; eapply (lt_antisym ℤ_order); eauto.
-    + replace (z*0)%Z with 0%Z in * by ring.
-      apply (cancellation_0_mul ℤ_order) in H1 as [H1 | H1]; subst;
-        exfalso; eauto using lt_irrefl. }
-  split; intros H0; unfold positive in *;
-    repeat destruct constructive_indefinite_description;
-    destruct a0; rewrite -> Qequiv in *; auto;
-      assert (a * x0 = b * x)%Z as e1 by ring [e0];
-      assert (-x * b = -x0 * a)%Z as e2 by ring [e0];
-      assert (-a * x0 = -b * x)%Z as e3 by ring [e0];
-      apply (pos_mul ℤ_order) in H0 as [[H0 H1] | [H0 H1]]; eauto.
-  - apply L in e2; rewrite -> lt_neg_0 in *; auto.
-    contradict n.
-    ring [n].
-  - apply L in e3; rewrite -> lt_neg_0 in *; auto.
-    contradict H.
-    ring [H].
+  rewrite /positive /sig_rect => a b H.
+  elim constructive_indefinite_description => [a' [b' [H0 H1]]].
+  elim constructive_indefinite_description => b0 [H2 H3].
+  move: H1 H3; rewrite ? Qequiv // => /[dup] H1 /[swap] /[dup] H3.
+  case (classic (a = 0%Z)) => [-> | /(cancellation_mul_r ℤ_ID a b0 b')
+                                     /[swap] /= <- /[swap] <- -> // {b0 H2 H3}].
+  { rewrite (mul_0_r ℤ b' : b' * 0 = 0)%Z (mul_0_r ℤ b0 : b0 * 0 = 0)%Z
+            (mul_0_l ℤ b : 0 * b = 0)%Z =>
+    /(integral_domains.cancellation ℤ_ID) => [[-> | ]] /= //.
+    rewrite (mul_0_l ℤ b0 : 0 * b0 = 0)%Z //. }
+  ((suff: (∀ x y z w, y ≠ 0 → w ≠ 0 → x * w = y * z → 0 < x * y → 0 < z * w)%Z
+   => [H2 | ]; first by split; apply H2; eauto; ring [H1]) =>
+  [{a b H a' b' H0 H1}
+     x y z w H /(ne0_lt_gt ℤ_order) [H0 | H0] H1
+     /(pos_mul_iff ℤ_order) [[H2 H3] | [H2 H3]]]; apply (pos_mul_iff ℤ_order);
+  try (have: 0 < x * w by apply (mul_pos_pos ℤ_order));
+  try (have: x * w < 0 by apply (mul_neg_pos ℤ_order));
+  try (have: x * w < 0 by apply (mul_pos_neg ℤ_order));
+  try (have: 0 < x * w by apply (mul_neg_neg ℤ_order)); rewrite H1) =>
+  [/(pos_div_l ℤ_order _ _ H3) | /(neg_pos_div_l ℤ_order _ _ H3) |
+   /(pos_neg_div_l ℤ_order _ _ H3) | /(neg_div_l ℤ_order _ _ H3)]; tauto.
 Qed.
 
 Theorem T_pos : ∀ x, positive x ∧ x ≠ 0 ∧ ¬ positive (-x) ∨
                      ¬ positive x ∧ x = 0 ∧ ¬ positive (-x) ∨
                      ¬ positive x ∧ x ≠ 0 ∧ positive (-x).
 Proof.
-  intros x.
-  destruct (Qlift x) as [a [b [H H0]]].
-  subst.
-  unfold zero.
-  rewrite -> neg_wf, ? pos_wf, Qequiv; auto using integers.zero_ne_1.
-  replace (-a*b)%Z with (-(a*b))%Z by ring.
-  rewrite <-(lt_neg_0 ℤ_order).
-  replace (a * 1 = b * 0)%Z with (a * b = 0)%Z.
-  - destruct (integers.T (a*b) 0); intuition.
-  - apply propositional_extensionality.
-    replace (b*0)%Z with 0%Z by ring.
-    rewrite -> (M3_r ℤ).
-    split; intros H0; subst; try ring.
-    now apply (cancellation_0_mul ℤ_order) in H0 as [H0 | H0].
+  move=> x.
+  elim (Qlift x) => [a [b [H <-]]].
+  rewrite ? neg_wf // ? pos_wf // Qequiv // ? (integers.M1 _ 1) ? integers.M3
+          ? (mul_0_r ℤ b : b * 0 = 0)%Z; auto using integers.zero_ne_1.
+  suff -> : (-a*b = -(a*b))%Z; last by ring.
+  suff -> : (a = 0 ↔ a * b = 0)%Z.
+  - rewrite -(lt_neg_0 ℤ_order : ∀ a, a < 0 ↔ 0 < -a)%Z /=.
+    case (integers.T (a*b) 0); tauto.
+  - split => [-> | /(integral_domains.cancellation ℤ_ID) H0]; try ring; tauto.
 Qed.
 
-Definition lt : Q → Q → Prop.
-Proof.
-  intros x y.
-  exact (positive (y - x)).
-Defined.
+Definition lt x y := positive (y - x).
 
 Infix "<" := lt : Q_scope.
 
@@ -475,15 +366,10 @@ Theorem T : ∀ a b, a < b ∧ a ≠ b ∧ ¬ b < a
                    ∨ ¬ a < b ∧ a = b ∧ ¬ b < a
                    ∨ ¬ a < b ∧ a ≠ b ∧ b < a.
 Proof.
-  intros a b.
-  unfold lt.
-  replace (a-b) with (-(b-a)) by ring.
-  replace (a=b) with (b-a=0); eauto using T_pos.
-  apply propositional_extensionality.
-  split; intros H; try ring [H].
-  replace b with (a+(b-a)) by ring.
-  rewrite -> H.
-  ring.
+  rewrite /lt => a b.
+  suff -> : (a-b = -(b-a)); last by ring.
+  suff -> : (a=b ↔ b-a=0); eauto using T_pos.
+  split => [-> | H]; [ | rewrite -(A3 a) -H]; ring.
 Qed.
 
 Theorem O0 : ∀ a b, 0 < a → 0 < b → 0 < a + b.
@@ -948,7 +834,7 @@ Qed.
 
 Theorem inv_zero : 0^-1 = 0.
 Proof.
-  unfold inv.
+  unfold inv, sig_rect.
   repeat destruct constructive_indefinite_description.
   destruct a.
   unfold zero in e0.

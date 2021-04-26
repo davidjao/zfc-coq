@@ -1033,7 +1033,7 @@ Proof.
     + apply (inv_lt ℚ_order) in H0.
       pose proof (rationals.T (c^-1) 0).
       tauto.
-    + unfold inv in H6.
+    + unfold inv, sig_rect in H6.
       repeat destruct constructive_indefinite_description.
       destruct a0.
       unfold rationals.zero, IZQ in H6.
