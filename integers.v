@@ -155,8 +155,7 @@ Qed.
 Theorem A1 : ∀ a b, a + b = b + a.
 Proof.
   move=> a b.
-  elim (Zlift a) => [a1 [a2 <-]].
-  elim (Zlift b) => [b1 [b2 <-]].
+  case (Zlift a) as [a1 [a2 <-]], (Zlift b) as [b1 [b2 <-]].
   rewrite ? add_wf Zequiv.
   ring.
 Qed.
@@ -164,9 +163,8 @@ Qed.
 Theorem A2 : ∀ a b c, a + (b + c) = (a + b) + c.
 Proof.
   move=> a b c.
-  elim (Zlift a) => [a1 [a2 <-]].
-  elim (Zlift b) => [b1 [b2 <-]].
-  elim (Zlift c) => [c1 [c2 <-]].
+  case (Zlift a) as [a1 [a2 <-]], (Zlift b) as
+        [b1 [b2 <-]], (Zlift c) as [c1 [c2 <-]].
   rewrite ? add_wf Zequiv.
   ring.
 Qed.
@@ -174,7 +172,7 @@ Qed.
 Theorem A3 : ∀ a, 0 + a = a.
 Proof.
   move=> a.
-  elim (Zlift a) => [a1 [a2 <-]].
+  case (Zlift a) => [a1 [a2 <-]].
   rewrite add_wf Zequiv.
   ring.
 Qed.
@@ -191,7 +189,7 @@ Qed.
 Theorem A4 : ∀ a, a + -a = 0.
 Proof.
   move=> a.
-  elim (Zlift a) => [a1 [a2 <-]].
+  case (Zlift a) => [a1 [a2 <-]].
   rewrite neg_wf add_wf Zequiv.
   ring.
 Qed.
@@ -214,8 +212,7 @@ Qed.
 Theorem M1 : ∀ a b, a * b = b * a.
 Proof.
   move=> a b.
-  elim (Zlift a) => [a1 [a2 <-]].
-  elim (Zlift b) => [b1 [b2 <-]].
+  case (Zlift a) as [a1 [a2 <-]], (Zlift b) as [b1 [b2 <-]].
   rewrite ? mul_wf Zequiv.
   ring.
 Qed.
@@ -223,9 +220,8 @@ Qed.
 Theorem M2 : ∀ a b c, a * (b * c) = (a * b) * c.
 Proof.
   move=> a b c.
-  elim (Zlift a) => [a1 [a2 <-]].
-  elim (Zlift b) => [b1 [b2 <-]].
-  elim (Zlift c) => [c1 [c2 <-]].
+  case (Zlift a) as [a1 [a2 <-]], (Zlift b) as
+        [b1 [b2 <-]], (Zlift c) as [c1 [c2 <-]].
   rewrite ? mul_wf Zequiv.
   ring.
 Qed.
@@ -233,7 +229,7 @@ Qed.
 Theorem M3 : ∀ a, 1 * a = a.
 Proof.
   move=> a.
-  elim (Zlift a) => [a1 [a2 <-]].
+  case (Zlift a) as [a1 [a2 <-]].
   rewrite ? mul_wf Zequiv.
   ring.
 Qed.
@@ -241,9 +237,8 @@ Qed.
 Theorem D1 : ∀ a b c, (a + b) * c = a * c + b * c.
 Proof.
   move=> a b c.
-  elim (Zlift a) => [a1 [a2 <-]].
-  elim (Zlift b) => [b1 [b2 <-]].
-  elim (Zlift c) => [c1 [c2 <-]].
+  case (Zlift a) as [a1 [a2 <-]], (Zlift b) as
+        [b1 [b2 <-]], (Zlift c) as [c1 [c2 <-]].
   rewrite ? mul_wf ? add_wf ? mul_wf Zequiv.
   ring.
 Qed.
@@ -292,8 +287,7 @@ Theorem T : ∀ a b, (a < b ∧ a ≠ b ∧ ¬ b < a) ∨
                    (¬ a < b ∧ a ≠ b ∧ b < a).
 Proof.
   move=> a b.
-  elim (Zlift a) => [a1 [a2 <-]].
-  elim (Zlift b) => [b1 [b2 <-]].
+  case (Zlift a) as [a1 [a2 <-]], (Zlift b) as [b1 [b2 <-]].
   rewrite ? lt_wf ? Zequiv ? (add_comm b1) ? (add_comm b2).
   auto using naturals.trichotomy.
 Qed.
@@ -301,8 +295,7 @@ Qed.
 Theorem lt_def : ∀ a b, a < b ↔ ∃ c : N, 0 ≠ c ∧ b = a + c.
 Proof.
   move=> a b.
-  elim (Zlift a) => [a1 [a2 <-]].
-  elim (Zlift b) => [b1 [b2 <-]].
+  case (Zlift a) as [a1 [a2 <-]], (Zlift b) as [b1 [b2 <-]].
   ((split; rewrite lt_wf ? lt_def) =>
    [[c [H H0]] | [c [H H0]]]; exists c; move: H0;
    rewrite add_wf Zequiv add_0_r (add_comm a2)) =>
@@ -328,8 +321,7 @@ Qed.
 Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
 Proof.
   move=> a b.
-  elim (Zlift a) => [a1 [a2 <-]].
-  elim (Zlift b) => [b1 [b2 <-]].
+  case (Zlift a) as [a1 [a2 <-]], (Zlift b) as [b1 [b2 <-]].
   rewrite mul_wf ? lt_wf ? add_0_l ? naturals.lt_def => [[x [? <-]] [y [? <-]]].
   exists (x*y)%N.
   split => [/(@eq_sym N) /naturals.cancellation_0_mul
@@ -964,8 +956,7 @@ Section IZR.
   Theorem IZR_add : ∀ a b : Z, a + b = (a + b)%Z.
   Proof.
     move=> a b.
-    elim (Zlift a) => [a1 [a2 <-]].
-    elim (Zlift b) => [b1 [b2 <-]].
+    case (Zlift a) as [a1 [a2 <-]], (Zlift b) as [b1 [b2 <-]].
     rewrite add_wf -? IZR_wf -? INR_add.
     ring.
   Qed.
@@ -973,8 +964,7 @@ Section IZR.
   Theorem IZR_mul : ∀ a b : Z, (a * b) = (a * b)%Z.
   Proof.
     move=> a b.
-    elim (Zlift a) => [a1 [a2 <-]].
-    elim (Zlift b) => [b1 [b2 <-]].
+    case (Zlift a) as [a1 [a2 <-]], (Zlift b) as [b1 [b2 <-]].
     rewrite mul_wf -? IZR_wf -? INR_mul -? INR_add -? INR_mul.
     ring.
   Qed.
@@ -982,7 +972,7 @@ Section IZR.
   Theorem IZR_neg : ∀ a : Z, -a = (-a)%Z.
   Proof.
     move=> a.
-    elim (Zlift a) => [a1 [a2 <-]].
+    case (Zlift a) => [a1 [a2 <-]].
     rewrite neg_wf -? IZR_wf.
     ring.
   Qed.
