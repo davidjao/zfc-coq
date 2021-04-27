@@ -794,25 +794,18 @@ Qed.
 
 Theorem pow_mul_r : ∀ a b c, a^(b*c) = (a^b)^c.
 Proof.
-  intros a b c.
-  destruct (classic (a = 0)) as [H | H]; subst.
-  - destruct (classic (b*c = 0)%Z) as [H0 | H0].
-    + apply (cancellation_0_mul ℤ_order) in H0 as [H0 | H0];
-        simpl in *; subst.
-      * replace (0*c)%Z with 0%Z by ring.
-        now rewrite -> pow_0_r, (pow_1_l ℚ).
-      * replace (b*0)%Z with 0%Z by ring.
-        now rewrite -> ? pow_0_r.
-    + pose proof H0 as H.
-      apply (cancellation_ne0 ℤ) in H0 as [H0 H1]; simpl in *.
-      now rewrite -> ? pow_0_l.
-  - now apply (fields.pow_mul_r ℚ).
+  move: classic => /[swap] a /[dup] /(_ (a = 0)) [-> | H] /[swap] b /[swap] c
+  => [/(_ (b*c = 0)%Z)
+       [/[dup] {2}-> /(cancellation_0_mul ℤ_order) [-> | ->] |
+        /[dup] H /(cancellation_ne0 ℤ) [H0 H1]] | _];
+       rewrite ? pow_0_r ? pow_0_l // /pow ? (pow_1_l ℚ) //.
+    by apply /(fields.pow_mul_r ℚ).
 Qed.
 
 Theorem pow_div_distr : ∀ a b c, (a*b^-1)^c = a^c * (b^c)^-1.
 Proof.
-  intros a b c.
-  now rewrite -> pow_mul_l, <-neg_pow, pow_neg.
+  move=> a b c.
+  rewrite pow_mul_l -neg_pow pow_neg //.
 Qed.
 
 Lemma a_g_pow_ineq : ∀ (x : Q) (n : Z), 0 < x → (0 < n)%Z → 1 + n*x ≤ (1 + x)^n.
@@ -940,125 +933,88 @@ Qed.
 Theorem division_signed : ∀ a b : Z,
     (0 < b)%Z → ∃ q r : Z, 0 ≤ r ≤ b / 2 ∧ b*q + (-1)^⌊2 * a / b⌋ * r = a.
 Proof.
-  intros a b H.
-  destruct (division_algorithm a b) as [q [r [H0 [H1 H2]]]]; subst; auto.
-  destruct (classic (r < b/2)) as [H0 | H0]; subst.
+  move=> a b /[dup] H /[dup] /(lt_neq ℤ_order) H0 /[dup] /IZQ_lt /[dup] H1
+           /[dup] /(inv_lt ℚ_order) /[dup] /= H2 /(lt_neq ℚ_ring_order) H3
+           /(lt_neq ℚ_ring_order) H4 /(division_algorithm a b)
+           [q [r [<- {a} [/[dup] H5 /IZQ_le H6 /[dup] H7 /[dup]
+                           /(lt_shift ℤ_order) /= H8 /IZQ_lt H9]]]].
+  (have: 0 < 2 by rewrite -IZQ_add; apply (zero_lt_2 ℚ_ring_order)) =>
+  /[dup] H10 /[dup] /IZQ_lt /[dup] H11 /(lt_neq ℤ_order) H12
+   /(lt_neq ℚ_ring_order) H13.
+  case (classic (r < b/2)) => [H14 | /[dup] H14 /(le_not_gt ℚ_ring_order) H15].
   - exists q, r.
-    repeat split; try (now apply IZQ_le || now left).
-    rewrite <-IZQ_add, <-IZQ_mul.
-    rewrite <-(M3 r) at 2.
+    repeat split; try by (apply IZQ_le || left).
+    rewrite -IZQ_add -IZQ_mul -{2}(M3 r).
     repeat f_equal.
-    replace ⌊2 * (b * q + r) / b⌋ with (2*q)%Z.
-    + rewrite -> pow_mul_r.
-      unfold pow, integers.one.
-      rewrite -> INZ_add, <-pow_wf, add_1_r.
-      unfold pow_N.
-      now rewrite -> rings.pow_2_r, rings.mul_neg_neg, M3, pow_1_l.
-    + apply (ordered_rings.le_antisymm ℤ_order); fold integers.le.
-      * apply IZQ_le, floor_upper.
-        rewrite -> inv_div, <-? IZQ_mul, <-M2; auto using (pos_ne_0 ℤ_order).
-        apply mul_le_l; try apply IZQ_lt, (ordered_rings.zero_lt_2 ℤ_order);
-          fold le.
-        apply IZQ_lt in H.
-        apply IZQ_le in H1.
-        rewrite <-IZQ_add, <-IZQ_mul, D1, M1, M2, inv_l;
-          auto using (pos_ne_0 ℚ_ring_order).
-        rewrite -> M3, <-(A3_r ℚ_ring (q:Q)) at 1; simpl.
-        apply add_le_l, mul_nonneg_nonneg; simpl; fold le; auto.
-        now apply or_introl, (inv_lt ℚ_order).
-      * apply IZQ_le, floor_lower.
-        rewrite -> inv_div, <-? IZQ_mul, <-M2; auto using (pos_ne_0 ℤ_order).
-        apply IZQ_lt in H.
-        rewrite <-? (IZQ_add _ r), <-IZQ_mul, D1, (M1 (b*q)), M2, inv_l;
-          auto using (pos_ne_0 ℚ_ring_order).
-        rewrite -> M3, (rings.D1_l ℚ_ring); simpl.
-        apply O1.
-        rewrite <-(inv_l 2), (M1 _ 2).
-        2: { intros H4.
-             now apply IZQ_eq, (zero_ne_2 ℤ_order) in H4. }
-        apply (O3 ℚ_ring_order); simpl.
-        { apply IZQ_lt, (ordered_rings.zero_lt_2 ℤ_order). }
-        rewrite <-(M3 (2^-1)), (M1 1), <-(inv_l b), (M1 _ b), M2;
-          auto using (pos_ne_0 ℚ_ring_order).
-        apply (O3_r ℚ_ring_order); simpl; try now apply (inv_lt ℚ_order).
-        rewrite -> M1, <-inv_div; auto using (zero_ne_2 ℤ_order).
+    suff -> : ⌊2 * (b * q + r) / b⌋ = (2*q)%Z.
+    { rewrite pow_mul_r /pow /integers.one INZ_add
+      -pow_wf add_1_r /pow_N pow_2_r rings.mul_neg_neg rings.M3 pow_1_l //. }
+    apply (ordered_rings.le_antisymm ℤ_order); apply IZQ_le.
+    + apply /floor_lower.
+      rewrite inv_div -? IZQ_mul -? M2 // -(IZQ_add _ r)
+      -IZQ_mul D1 (M1 (b*q)) M2 inv_l // M3
+      -[mul]/(rings.mul ℚ) D1_l /= -(inv_l (2*b^-1)) ? M2 ? (M1 2 r) -? M2;
+        auto using (ne0_cancellation (integral_domain_from_field ℚ)).
+      have -> : (2 * b^-1)^-1 = b / 2 by
+          rewrite inv_div -? IZQ_eq //; field => //.
+      apply /O1 /(O3_r ℚ_ring_order) => /= //.
+      apply /O2 => //.
+    + apply /floor_upper.
+      rewrite inv_div -? IZQ_mul -? M2 // -(IZQ_add _ r)
+      -IZQ_mul D1 (M1 b q) -M2 (M1 b) inv_l // (M1 q) M3 A1 -{1}(A3 q).
+      apply mul_le_l => //.
+      apply add_le_r, mul_nonneg_nonneg, or_introl => //.
   - exists (q+1)%Z, (b+-r)%Z.
-    repeat split.
-    { rewrite <-(A4 r), <-IZQ_add, <-IZQ_neg.
-      now apply (add_le_r ℚ_ring_order), IZQ_le, or_introl. }
-    { apply (le_not_gt ℚ_ring_order) in H0; fold le in H0.
-      rewrite <-(A3 (b/2)), (A1 0), <-(A4 r), A2, <-IZQ_add, <-IZQ_neg.
-      apply (add_le_r ℚ_ring_order); fold le.
-      rewrite <-(M3 b), M1, <-(inv_l 2), (M1 _ 2), M2, inv_div;
-        auto using (zero_ne_2 ℤ_order).
-      2: { intros H5; apply IZQ_eq in H5; auto using (zero_ne_2 ℤ_order). }
-      rewrite <-IZQ_add, (D1_l ℚ_ring), ? M3_r, D1 at 1; simpl.
-      apply add_le_l; fold le.
-      rewrite <-inv_div; auto using (zero_ne_2 ℤ_order). }
-    replace ((-1) ^ ⌊2 * (b * q + r) / b⌋) with (-1).
-    { rewrite <-? IZQ_add, <-IZQ_mul, <-IZQ_neg.
-      unfold IZQ at 3.
-      fold one.
+    repeat split; first by apply IZQ_le, or_introl.
+    { move: H15.
+      rewrite /le le_shift -{1}/le le_shift /= -/le inv_div //
+                               -? IZQ_add -IZQ_neg -[IZQ 1]/one.
+      have -> : (b * (1 + 1)^-1 + - (b + - r) =
+                 r + - (b * (1 - (1 + 1)^-1))) by ring.
+      suff -> : 1 - (1 + 1)^-1 = (1 + 1)^-1 => //.
+      apply (inv_unique ℚ) => /=.
+      rewrite M1 D1 -[neg]/(rings.neg ℚ) -(mul_neg_1_l ℚ) /=
+      -M2 inv_l ? IZQ_add // M1 -IZQ_add D1 -? (M1 1) ? M3 -A2 A4 A1 A3 //. }
+    suff -> : (-1) ^ ⌊2 * (b * q + r) / b⌋ = -1.
+    { rewrite -? IZQ_add -IZQ_neg -IZQ_mul -[IZQ 1]/one.
       ring. }
-    replace ⌊2 * (b * q + r) / b⌋ with (2*q+1)%Z.
-    { rewrite -> (pow_add_r ℚ), pow_1_r, pow_mul_r;
-        auto using (minus_one_nonzero ℚ); simpl.
-      unfold pow, integers.one.
-      rewrite -> INZ_add, <-pow_wf, add_1_r.
-      unfold pow_N.
-      now rewrite -> rings.pow_2_r, rings.mul_neg_neg, ? M3, pow_1_l, M3. }
-    apply (ordered_rings.le_antisymm ℤ_order); fold integers.le.
-    + apply IZQ_le, floor_upper.
-      rewrite -> inv_div, <-? IZQ_mul, <-M2; auto using (pos_ne_0 ℤ_order).
-      apply IZQ_lt in H.
-      rewrite <- (IZQ_add _ r), <-IZQ_mul, D1, (M1 (b*q)), M2, inv_l, M3;
-        auto using (pos_ne_0 ℚ_ring_order).
-      rewrite -> (D1_l ℚ_ring), <-IZQ_add, <-IZQ_mul; simpl.
-      apply add_le_l; fold le.
-      apply (le_not_gt ℚ_ring_order) in H0; fold le in H0.
-      unfold IZQ at 1; fold one.
-      rewrite <-(inv_l b); auto using (pos_ne_0 ℚ_ring_order).
-      rewrite -> M2, (M1 _ (b^-1)).
-      apply mul_le_l; simpl; fold le; try now apply (inv_lt ℚ_order).
-      rewrite <-(M3 b), <-(inv_l 2), (M1 _ 2), <-M2.
-      2: { intros H5; apply IZQ_eq in H5; auto using (zero_ne_2 ℤ_order). }
-      apply mul_le_l; simpl; fold le; try (apply IZQ_lt, (zero_lt_2 ℤ_order)).
-      rewrite -> M1, <-inv_div; auto using (zero_ne_2 ℤ_order).
-    + apply IZQ_le, floor_lower.
-      rewrite -> inv_div, <-? IZQ_mul, <-M2; auto using (pos_ne_0 ℤ_order).
-      apply IZQ_lt in H, H2.
-      rewrite <- (IZQ_add _ r), <-IZQ_mul, D1, (M1 (b*q)), M2, inv_l, M3;
-        auto using (pos_ne_0 ℚ_ring_order).
-      rewrite <-(IZQ_add (2*q)), <-IZQ_mul, (D1_l ℚ_ring), <-A2; simpl.
-      apply O1.
-      unfold one.
-      fold (IZQ 1).
-      rewrite -> IZQ_add.
-      rewrite <-(M3 2) at 2.
-      rewrite -> (M1 1).
-      apply (O3 ℚ_ring_order); simpl.
-      * apply IZQ_lt, (ordered_rings.zero_lt_2 ℤ_order).
-      * rewrite <-(inv_l b), (M1 _ b); auto using (pos_ne_0 ℚ_ring_order).
-        apply (mul_lt_r ℚ_ring_order); auto; now apply (inv_lt ℚ_order).
+    suff -> : ⌊2 * (b * q + r) / b⌋ = (2*q+1)%Z.
+    { rewrite /pow (pow_add_r ℚ) ? pow_1_r -/pow ? pow_mul_r ? INZ_add /pow
+              -? pow_wf /pow_N ? add_1_r ? pow_2_r ? rings.mul_neg_neg /=
+              ? M3 ? pow_1_l ? M3; auto using (minus_one_nonzero ℚ). }
+    apply (ordered_rings.le_antisymm ℤ_order); apply IZQ_le.
+    + apply floor_lower.
+      rewrite inv_div -? IZQ_mul -? M2 // -(IZQ_add _ r)
+      -IZQ_mul D1 (M1 (b*q)) M2 inv_l // M3 -(IZQ_add (2*q)) -IZQ_mul
+      -[mul]/(rings.mul ℚ) (D1_l ℚ_ring) -A2 /= -[one]/(IZQ 1) IZQ_add
+      -{4}(M3 2) (M1 1) -(inv_l b) // (M1 _ b).
+      apply O1, (O3 ℚ_ring_order) => //.
+      apply (mul_lt_r ℚ_ring_order) => //.
+    + apply floor_upper.
+      rewrite inv_div -? IZQ_mul // -M2 -(IZQ_add _ r)
+      -IZQ_mul D1 (M1 (b*q)) M2 inv_l // M3 -[mul]/(rings.mul ℚ) (D1_l ℚ_ring)
+      -IZQ_add /= -IZQ_mul -[IZQ 1]/one -(inv_l b) // M2 (M1 _ (b^-1))
+      -{2}(M3 b) -(inv_l 2) // (M1 _ 2) -M2 -(M1 b) -inv_div //.
+      apply add_le_l, mul_le_l => //.
+      apply mul_le_l => //.
 Qed.
 
 Theorem QR_epsilon_construction :
   ∀ a b : Z, (0 < a → 0 < b → 0 ≤ ⌊a / b⌋)%Z.
 Proof.
-  intros a b H H0.
-  apply IZQ_le, floor_upper.
-  rewrite -> inv_div; auto using (pos_ne_0 ℤ_order).
-  apply (mul_nonneg_nonneg ℚ_ring_order); simpl; fold le.
-  - apply IZQ_le; fold integers.le; left; simpl; auto.
-  - now apply or_introl, (inv_lt ℚ_order), IZQ_lt.
+  move=> a b /IZQ_lt H /[dup] H0 /IZQ_lt H1.
+  rewrite inv_div; auto using (pos_ne_0 ℤ_order).
+  apply IZQ_le, floor_upper, (mul_nonneg_nonneg ℚ_ring_order), or_introl.
+  - by apply or_introl.
+  - by apply (inv_lt ℚ_order).
 Qed.
 
 Definition QR_ε_exp (a b : Z) : N.
 Proof.
-  destruct (excluded_middle_informative (0 < a)%Z) as [H | H].
-  - destruct (excluded_middle_informative (0 < b)%Z) as [H0 | H0].
+  case (excluded_middle_informative (0 < a)%Z) => [H | H].
+  - case (excluded_middle_informative (0 < b)%Z) => [H0 | H0].
     + eapply QR_epsilon_construction, le_def in H0; try apply H.
-      destruct (constructive_indefinite_description H0) as [c H1].
+      elim (constructive_indefinite_description H0) => [c H1].
       exact c.
     + exact 0%N.
   - exact 0%N.
@@ -1066,21 +1022,15 @@ Defined.
 
 Theorem IZQ_pow : ∀ (a : Z) (n : N), a^n = (a^n : Z)%Z.
 Proof.
-  intros a n.
-  destruct (classic (a = 0%Z)); subst.
-  { destruct (classic (n = 0%N)); subst.
-    - unfold pow.
-      now rewrite -> rings.pow_0_r, pow_0_r.
-    - rewrite -> rings.pow_0_l, pow_0_l; auto.
-      contradict H.
-      now apply INZ_eq. }
-  induction n using Induction.
-  - now rewrite -> pow_0_r, rings.pow_0_r.
-  - unfold pow in *.
-    rewrite -> pow_succ_r, <-add_1_r, <-INZ_add, pow_add_r, pow_1_r,
-    <-IZQ_mul, <-pow_wf, <-IHn, <-pow_wf; auto.
-    contradict H.
-    now apply IZQ_eq.
+  move=> a n.
+  case (classic (a = 0%Z)) => [-> | H].
+  - case (classic (n = 0%N)) => [-> | H0].
+    + rewrite /pow rings.pow_0_r -/pow pow_0_r //.
+    + rewrite rings.pow_0_l // pow_0_l // INZ_eq //.
+  - induction n using Induction.
+    + rewrite pow_0_r rings.pow_0_r //.
+    + rewrite /pow pow_succ_r -add_1_r -INZ_add pow_add_r ? IZQ_eq // pow_1_r
+      -IZQ_mul -pow_wf -IHn pow_wf //.
 Qed.
 
 Definition QR_ε (a b : Z) := ((-1)^(QR_ε_exp a b) : Z)%Z.
@@ -1088,27 +1038,20 @@ Definition QR_ε (a b : Z) := ((-1)^(QR_ε_exp a b) : Z)%Z.
 Theorem division_QR : ∀ a b : Z,
     (0 < a → 0 < b → ∃ q r : Z, 0 ≤ r ≤ ⌊b / 2⌋ ∧ b*q + QR_ε (2*a) b * r = a)%Z.
 Proof.
-  intros a b H H0.
-  unfold QR_ε, QR_ε_exp.
-  repeat destruct excluded_middle_informative; try tauto.
-  2: { contradiction n.
-       apply (ordered_rings.mul_pos_pos ℤ_order);
-       auto; apply (ordered_rings.zero_lt_2 ℤ_order). }
-  destruct constructive_indefinite_description.
-  rewrite -> integers.A3 in e.
-  eapply division_signed in H0 as [q [r [[H0 H1] H2]]]; try apply H.
+  rewrite /QR_ε /QR_ε_exp /sig_rect => a b H /[dup] H0 /division_signed =>
+  /(_ a) [q [r [[/[dup] H1 /IZQ_le H2 /[dup] H3 /floor_upper /IZQ_le H4] H5]]].
+  (repeat elim excluded_middle_informative; try tauto) =>
+  [{}H0 H6 | []]; last by apply (mul_pos_pos ℤ_order);
+    auto; apply (zero_lt_2 ℤ_order).
+  elim constructive_indefinite_description => x H7.
   exists q, r.
-  repeat split.
-  - now apply IZQ_le.
-  - now apply IZQ_le, floor_upper.
-  - apply IZQ_eq.
-    now rewrite <-H2, e, <-IZQ_add, <-? IZQ_mul, <-IZQ_pow, <-IZQ_neg.
+  repeat split; auto.
+  rewrite -IZQ_eq -H5 H7 integers.A3 -IZQ_add -? IZQ_mul -IZQ_pow -IZQ_neg //.
 Qed.
 
 Theorem IZQ_div : ∀ a b : Z, b ≠ 0%Z → b｜a → a/b = (a/b)%Z.
 Proof.
-  intros a b H H0.
-  apply Qequiv; auto.
-  - apply integers.zero_ne_1.
-  - now rewrite -> integers.div_inv_l, integers.M1, integers.M3.
+  move=> a b H H0.
+  apply Qequiv; auto using integers.zero_ne_1.
+  rewrite integers.div_inv_l // integers.M1 integers.M3 //.
 Qed.

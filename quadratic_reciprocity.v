@@ -271,7 +271,7 @@ Section Pretty_picture_lemmas.
     rewrite <-INZ_sum, <-(sum_card 1 (# QR q) lower_triangle lower_triangle_f).
     - apply iterate_extensionality.
       intros k H.
-      unfold QR_ε_exp.
+      unfold QR_ε_exp, sig_rect.
       repeat destruct excluded_middle_informative; try contradict n;
         try (apply integers.O2); auto using odd_prime_positive.
       2: { apply lt_0_le_1, INZ_le; intuition. }

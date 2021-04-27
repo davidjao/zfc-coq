@@ -2185,7 +2185,7 @@ Section Modular_arithmetic.
       rewrite <-(rings.pow_add_r ℤ), <-sum_N_dist, (integers.M1 2), <-H.
       repeat f_equal.
       extensionality l.
-      unfold QR_ε_exp.
+      unfold QR_ε_exp, sig_rect.
       repeat destruct excluded_middle_informative;
         try (contradict n0; now apply odd_prime_positive);
         try (contradict n1; now apply odd_prime_positive).
@@ -2255,7 +2255,7 @@ Section Modular_arithmetic.
       rewrite <-(iterated_ops.sum_of_0_a_b 1 (# QR)).
       apply iterate_extensionality.
       intros k [H H0].
-      unfold QR_ε_exp.
+      unfold QR_ε_exp, sig_rect.
       repeat destruct excluded_middle_informative; auto.
       destruct constructive_indefinite_description.
       rewrite -> integers.M3, integers.A3 in e.
