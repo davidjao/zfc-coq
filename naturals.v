@@ -1,6 +1,6 @@
 Require Export sets Ring.
 
-Theorem Infinity_ω: ∃ X, ∅ ∈ X ∧ Inductive X.
+Theorem Infinity_ω : ∃ X, ∅ ∈ X ∧ Inductive X.
 Proof.
   move: Infinity => [X [[e [H H0]] H1]].
   exists X.

@@ -25,94 +25,68 @@ Section orbit_stabilizer_cardinality_theorem.
 
   Definition oschf : set → function.
   Proof.
-    intros z.
-    destruct (excluded_middle_informative (z ~ x)).
-    - destruct (constructive_indefinite_description e) as [g [H1 [H2 H3]]].
-      exact g.
+    move=> z.
+    case (excluded_middle_informative (z ~ x)) =>
+    [/constructive_indefinite_description [g [H [H0 H1]]] | H].
+    - exact g.
     - exact empty_function.
   Defined.
 
   Theorem oschf_domain : ∀ z, z ~ x → domain (oschf z) = z.
   Proof.
-    intros z H0.
-    unfold oschf.
-    destruct excluded_middle_informative; try tauto.
-    destruct constructive_indefinite_description.
-    now repeat destruct a.
+    rewrite /oschf => *.
+    (case excluded_middle_informative; try tauto) => *.
+    elim constructive_indefinite_description => ? [? [? ?]] //.
   Qed.
 
   Theorem oschf_range : ∀ z, z ~ x → range (oschf z) = x.
   Proof.
-    intros z H0.
-    unfold oschf.
-    destruct excluded_middle_informative; try tauto.
-    destruct constructive_indefinite_description.
-    now repeat destruct a.
+    rewrite /oschf => *.
+    (case excluded_middle_informative; try tauto) => *.
+    elim constructive_indefinite_description => ? [? [? ?]] //.
   Qed.
 
   Theorem oschf_bijective : ∀ z, z ~ x → bijective (oschf z).
   Proof.
-    intros z H0.
-    unfold oschf.
-    destruct excluded_middle_informative; try tauto.
-    destruct constructive_indefinite_description.
-    now repeat destruct a.
+    rewrite /oschf => *.
+    (case excluded_middle_informative; try tauto) => *.
+    elim constructive_indefinite_description => ? [? [? ?]] //.
   Qed.
 
   Theorem orbit_stabilizer_cardinality_helper : domain f ~ Y × x.
   Proof.
-    destruct (function_construction
-                (domain f) (Y × x)
-                (λ x,
-                 (f x, (oschf (inverse_image_of_element f (f x)) x))))
-      as [g [H [H0 H1]]].
-    { intros a H.
-      unfold oschf.
-      destruct excluded_middle_informative.
-      - destruct constructive_indefinite_description as [g].
-        repeat destruct a0.
-        apply Product_classification.
-        exists (f a), (g a).
-        repeat split; auto using function_maps_domain_to_image.
-        rewrite <-e1.
-        apply function_maps_domain_to_range.
-        rewrite -> e0.
-        unfold inverse_image_of_element.
-        now apply Specify_classification.
-      - contradict n.
-        auto using function_maps_domain_to_image. }
-    exists g.
-    repeat split; auto.
-    - apply Injective_classification.
-      intros u v H2 H3 H4.
-      rewrite -> H in H2, H3.
-      rewrite -> ? H1 in H4; auto.
-      apply Ordered_pair_iff in H4 as [H4 H5].
-      rewrite -> H4 in H5.
-      unfold oschf in H5.
-      destruct excluded_middle_informative;
-        try (contradict n; auto using function_maps_domain_to_image).
-      destruct constructive_indefinite_description as [h].
-      repeat destruct a.
-      destruct b.
-      rewrite -> Injective_classification in H6.
-      apply H6 in H5; auto; rewrite -> e0; unfold inverse_image_of_element;
-          now apply Specify_classification.
-    - rewrite -> Surjective_classification.
-      intros y H2.
-      rewrite -> H0 in H2.
-      apply Product_classification in H2 as [a [b [H2 [H3 H4]]]].
-      subst.
-      pose proof oschf_bijective (inverse_image_of_element f a) (Y_inv a H2)
-        as [H4 H5].
-      rewrite -> Surjective_classification in H5.
-      destruct (H5 b) as [z [H6 H7]].
-      { rewrite -> oschf_range; auto. }
-      rewrite -> oschf_domain in H6; auto.
-      apply Specify_classification in H6.
-      exists z.
-      split; intuition; try congruence.
-      rewrite -> H1; congruence.
+    elim (function_construction
+            (domain f) (Y × x)
+            (λ x, (f x, (oschf (inverse_image_of_element f (f x)) x))))
+    => [g [H [H0 H1]] | a H].
+    - exists g.
+      rewrite /bijective Injective_classification Surjective_classification.
+      (repeat split; auto) => [u v | y].
+      + rewrite ? H => H2 H3.
+        rewrite ? H1 /oschf // => /Ordered_pair_iff [/[dup] H4 ->].
+        elim excluded_middle_informative =>
+        [H5 | []]; last by auto using function_maps_domain_to_image.
+        elim constructive_indefinite_description =>
+        [h [H6 [H7 [/Injective_classification H8 H9]] /H8 ->]]
+          //; rewrite H6 Inverse_image_classification //;
+          auto using function_maps_domain_to_range.
+      + rewrite H0 => /Product_classification [a [b [H2 [H3 ->]]]].
+        move: (oschf_bijective (inverse_image_of_element f a) (Y_inv a H2))
+        => [_ /Surjective_classification /(_ b)].
+        (elim; rewrite ? oschf_range; auto) => [z].
+        (rewrite oschf_domain; auto) =>
+        [[]] /Specify_classification => [[H4 H5] H6].
+        exists z.
+        rewrite H1; intuition congruence.
+    - rewrite /oschf.
+      elim excluded_middle_informative =>
+      [H1 | []]; auto using function_maps_domain_to_image.
+      elim constructive_indefinite_description => [g [H2 [H3 H4]]].
+      apply Product_classification.
+      exists (f a), (g a).
+      repeat split; auto using function_maps_domain_to_image.
+      move: H2 H3 (function_maps_domain_to_range g a) -> => ->.
+      rewrite /inverse_image_of_element Specify_classification; auto.
   Qed.
 
 End orbit_stabilizer_cardinality_theorem.
@@ -121,7 +95,7 @@ Theorem orbit_stabilizer_cardinality : ∀ f x,
     (∀ y, y ∈ range f → inverse_image_of_element f y ~ x) →
     domain f ~ range f × x.
 Proof.
-  intros f x H.
+  move=> f x H.
   auto using orbit_stabilizer_cardinality_helper, image_subset_range.
 Qed.
 
@@ -129,7 +103,7 @@ Theorem orbit_stabilizer_cardinality_image : ∀ f x,
     (∀ y, y ∈ image f → inverse_image_of_element f y ~ x) →
     domain f ~ image f × x.
 Proof.
-  intros f x H.
+  move=> f x H.
   auto using orbit_stabilizer_cardinality_helper, Set_is_subset.
 Qed.
 
@@ -143,203 +117,160 @@ Section permutation_succ_helper_functions.
     Variable A B : set.
     Definition functionify : elts (bijection_set A B) → function.
     Proof.
-      intros [f F].
-      apply Specify_classification in F as [F F0].
-      destruct (constructive_indefinite_description F0) as [f'].
+      move=> [f /Specify_classification
+                [F /constructive_indefinite_description [f' F0]]].
       exact f'.
     Defined.
 
     Theorem functionify_domain : ∀ f, domain (functionify f) = A.
     Proof.
-      intros [f F].
-      unfold functionify.
-      destruct Specify_classification, a, constructive_indefinite_description.
-      tauto.
+      rewrite /functionify => [[f F]].
+      destruct iffLR.
+      elim constructive_indefinite_description => ? [] //.
     Qed.
 
     Theorem functionify_range : ∀ f, range (functionify f) = B.
     Proof.
-      intros [f F].
-      unfold functionify.
-      destruct Specify_classification, a, constructive_indefinite_description.
-      tauto.
+      rewrite /functionify => [[f F]].
+      destruct iffLR.
+      elim constructive_indefinite_description => ? [] ? [] //.
     Qed.
 
     Theorem functionify_graph : ∀ f, graph (functionify f) = f.
     Proof.
-      intros [f F].
-      unfold functionify.
-      destruct Specify_classification, a, constructive_indefinite_description.
-      tauto.
+      rewrite /functionify => [[f F]].
+      destruct iffLR.
+      elim constructive_indefinite_description => ? [] ? [] _ [] -> //.
     Qed.
 
     Theorem functionify_bijective : ∀ f, bijective (functionify f).
     Proof.
-      intros [f F].
-      unfold functionify.
-      destruct Specify_classification, a, constructive_indefinite_description.
-      tauto.
+      rewrite /functionify => [[f F]].
+      destruct iffLR.
+      elim constructive_indefinite_description => ? [] ? [] ? [] //.
     Qed.
 
   End functionify_construction.
 
   Definition permutation_succ_helper : set → set.
   Proof.
-    intros x.
-    destruct (excluded_middle_informative (x ∈ (bijection_set (S n) (S n)))).
-    - apply Specify_classification in i as [H H0].
-      destruct (constructive_indefinite_description H0)
-        as [f [H1 [H2 [H3 H4]]]].
-      exact (f n).
+    move=> x.
+    case (excluded_middle_informative (x ∈ (bijection_set (S n) (S n)))) =>
+    [/Specify_classification [H /constructive_indefinite_description
+                                [f [H0 [H1 [H2 H3]]]]] | H].
+    - exact (f n).
     - exact ∅.
   Defined.
 
   Lemma permutation_succ_proj_construction : ∀ a,
       a ∈ bijection_set (S n) (S n) → permutation_succ_helper a ∈ S n.
   Proof.
-    intros a H.
-    unfold permutation_succ_helper.
-    destruct excluded_middle_informative; try tauto.
-    destruct Specify_classification, a0, constructive_indefinite_description.
-    repeat destruct a1.
-    rewrite <-e1.
-    apply function_maps_domain_to_range.
-    rewrite -> e0, <-lt_is_in.
-    apply naturals.succ_lt.
+    rewrite /permutation_succ_helper => a H.
+    (case excluded_middle_informative; try tauto) => H0.
+    destruct iffLR.
+    elim constructive_indefinite_description => [x [H1 [H2 [H3 H4]]]].
+    move: H2 H1 (function_maps_domain_to_range x n) -> => -> /(_ (in_S n)) //.
   Qed.
 
   Definition permutation_succ_proj : function.
   Proof.
-    destruct (constructive_indefinite_description
-                (function_construction
-                   (bijection_set (S n) (S n)) (S n)
-                   permutation_succ_helper permutation_succ_proj_construction))
-      as [f].
+    elim (constructive_indefinite_description
+            (function_construction
+               (bijection_set (S n) (S n)) (S n)
+               permutation_succ_helper permutation_succ_proj_construction))
+    => [f H].
     exact f.
   Defined.
 
   Theorem psp_domain : domain permutation_succ_proj = bijection_set (S n) (S n).
   Proof.
-    unfold permutation_succ_proj.
-    destruct constructive_indefinite_description.
-    tauto.
+    rewrite /permutation_succ_proj /sig_rect.
+    elim constructive_indefinite_description => ? [] //.
   Qed.
 
   Theorem psp_range : range permutation_succ_proj = S n.
   Proof.
-    unfold permutation_succ_proj.
-    destruct constructive_indefinite_description.
-    tauto.
+    rewrite /permutation_succ_proj /sig_rect.
+    elim constructive_indefinite_description => ? [] ? [] //.
   Qed.
 
   Definition n_in_Sn : elts (S n).
   Proof.
-    pose proof naturals.succ_lt n.
-    rewrite -> lt_is_in in H.
-    exact (mkSet H).
+    move: (in_S n) => /mkSet //.
   Defined.
 
   Theorem psp_action :
     ∀ x :  elts (bijection_set (S n) (S n)),
       permutation_succ_proj x = ((functionify (S n) (S n) x) n).
   Proof.
-    intros x.
-    unfold permutation_succ_proj.
-    destruct constructive_indefinite_description as [f].
-    destruct a as [H [H0 H1]].
-    rewrite -> H1; auto using elts_in_set.
-    unfold permutation_succ_helper.
-    destruct excluded_middle_informative.
-    - destruct Specify_classification, a, constructive_indefinite_description
-        as [f'].
-      repeat destruct a0.
-      unfold functionify.
-      destruct x.
-      destruct Specify_classification, a0, constructive_indefinite_description
-        as [f''].
-      destruct a1 as [H2 [H3 [H4 H5]]].
-      simpl in *.
-      f_equal.
-      apply function_record_injective; congruence.
-    - contradict n0.
-      auto using elts_in_set.
+    rewrite /permutation_succ_proj /sig_rect /permutation_succ_helper
+            /functionify => x.
+    elim constructive_indefinite_description =>
+    [f [H [H0 ->]]]; try case excluded_middle_informative =>
+    [H1 | []]; auto using elts_in_set.
+    destruct iffLR, x, iffLR.
+    elim constructive_indefinite_description => [f' [H2 [H3 [/= H4 H5]]]].
+    elim constructive_indefinite_description => [f'' [H7 [H8 [H9 H10]]]].
+    f_equal.
+    apply function_record_injective; congruence.
   Qed.
 
   Definition inverse_image_incl :
     elts (inverse_image_of_element permutation_succ_proj y) →
     elts (bijection_set (S n) (S n)).
   Proof.
-    intros [f F].
-    unfold inverse_image_of_element in F.
-    apply Specify_classification in F as [F F0].
-    rewrite -> psp_domain in F.
+    rewrite /inverse_image_of_element => [[f /Specify_classification]].
+    rewrite psp_domain => [[F F0]].
     exact (mkSet F).
   Defined.
 
   Lemma inverse_image_incl_value :
     ∀ f, (inverse_image_incl f : set) = (f : set).
   Proof.
-    intros f.
-    unfold inverse_image_incl, inverse_image_of_element in *.
-    now destruct f, Specify_classification, a.
+    rewrite /inverse_image_incl /inverse_image_of_element
+            /eq_rect_r /eq_rect => f.
+    destruct f, eq_sym, iffLR => //.
   Qed.
 
-  Lemma inverse_image_classification:
+  Lemma inverse_image_classification :
     ∀ f : elts (inverse_image_of_element permutation_succ_proj y),
       ((functionify (S n) (S n) (inverse_image_incl f)) n) = y.
   Proof.
-    intros f.
-    unfold functionify, inverse_image_incl, inverse_image_of_element in *.
-    destruct f.
-    destruct Specify_classification, a, Specify_classification, a0,
-    constructive_indefinite_description as [f'].
-    destruct a1 as [H [H0 [H1 H2]]].
-    apply Specify_classification in elts_in_set as [H3 H4]; auto.
-    clear i a i1 i2 a0 e0.
-    rewrite -> psp_domain in H3.
-    set (ξ := mkSet H3 : elts (bijection_set (S n) (S n))).
-    replace elt_to_set with (ξ : set) in * by auto.
-    rewrite <-e, psp_action.
+    rewrite /functionify /inverse_image_incl /inverse_image_of_element
+            /eq_rect_r /eq_rect =>
+    [[f /[dup] /Specify_classification [H H0] F]].
+    destruct eq_sym, iffLR, iffLR.
+    elim constructive_indefinite_description => [g [H1 [H2 [H3 H4]]]].
+    move: (reify H) psp_action H0 H3 -> => -> <- H0.
     f_equal.
     apply function_record_injective;
-      now rewrite -> ? functionify_domain, ? functionify_range,
-      ? functionify_graph; congruence.
+      rewrite ? functionify_range ? functionify_graph //.
   Qed.
 
   Theorem permutation_succ_left_helper_lemma :
     ∀ f (x : elts n), ((functionify (S n) (S n) (inverse_image_incl f))
                          x ∈ S n \ {y, y}).
   Proof.
-    intros f x.
-    apply Complement_classification.
-    split.
-    - rewrite <-(functionify_range (S n) (S n) (inverse_image_incl f)).
+    move=> f x.
+    apply Complement_classification, conj.
+    - rewrite -{3}(functionify_range (S n) (S n) (inverse_image_incl f)).
       apply function_maps_domain_to_range.
-      rewrite -> functionify_domain, <-S_is_succ.
-      apply Pairwise_union_classification.
-      left.
-      auto using elts_in_set.
-    - rewrite -> Singleton_classification, <-(inverse_image_classification f).
-      intros H.
-      pose proof (functionify_bijective _ _ (inverse_image_incl f)) as [H0 H1].
-      rewrite -> Injective_classification in H0.
-      apply H0 in H.
-      + contradiction (no_quines n).
-        rewrite <-H at 1.
-        auto using elts_in_set.
-      + rewrite -> functionify_domain, <-S_is_succ.
-        apply Pairwise_union_classification.
-        left.
-        auto using elts_in_set.
-      + rewrite -> functionify_domain, <-lt_is_in.
-        apply naturals.succ_lt.
+      rewrite functionify_domain.
+      apply subset_S, elts_in_set.
+    - move: (functionify_bijective _ _ (inverse_image_incl f)) =>
+      [/Injective_classification H H0].
+      rewrite Singleton_classification -(inverse_image_classification f) => /H.
+      move: (no_quines n) => /[swap] {1}<-; auto using elts_in_set;
+                               rewrite functionify_domain.
+      + apply subset_S, elts_in_set.
+      + auto using in_S.
   Qed.
 
   Definition permutation_succ_left_helper :
     elts (inverse_image_of_element permutation_succ_proj y) →
     elts n → elts (S n \ {y, y}).
   Proof.
-    intros f x.
+    move=> f x.
     exact (mkSet (permutation_succ_left_helper_lemma f x)).
   Defined.
 
@@ -347,80 +278,51 @@ Section permutation_succ_helper_functions.
       (functionify _ _ (inverse_image_incl f)) x =
       (permutation_succ_left_helper f x).
   Proof.
-    intros f x.
-    unfold permutation_succ_left_helper.
-    now simpl.
+    rewrite /permutation_succ_left_helper => f x //.
   Qed.
 
   Theorem psl_bijective :
     ∀ f, bijective (sets.functionify (permutation_succ_left_helper f)).
   Proof.
-    intros f.
-    split.
-    - rewrite -> Injective_classification.
-      intros x1 x2 H H0 H1.
-      unfold sets.functionify in *.
-      destruct constructive_indefinite_description as [f'].
-      destruct a as [H2 [H3 H4]].
-      rewrite -> H2 in H, H0.
-      set (ξ1 := (mkSet H : elts n)).
-      set (ξ2 := (mkSet H0 : elts n)).
-      replace x1 with (ξ1 : set) in * by auto.
-      replace x2 with (ξ2 : set) in * by auto.
-      rewrite -> ? H4, ? pslh_action in H1.
-      pose proof functionify_bijective _ _ (inverse_image_incl f) as [H5 H6].
-      rewrite -> Injective_classification in H5.
-      apply H5; auto; rewrite -> functionify_domain, <-S_is_succ;
-        apply Pairwise_union_classification; left; auto using elts_in_set.
-    - apply Surjective_classification.
-      intros z H.
-      unfold sets.functionify in *.
-      destruct constructive_indefinite_description as [f'].
-      destruct a as [H0 [H1 H2]].
-      rewrite -> H1 in H.
-      apply Complement_classification in H as [H H3].
-      rewrite -> Singleton_classification in H3.
-      pose proof functionify_bijective _ _ (inverse_image_incl f) as [H4 H5].
-      rewrite -> Surjective_classification, functionify_range,
-      functionify_domain in H5.
-      pose proof H as H6.
-      apply H5 in H6 as [x [H6 H7]].
+    move=> f.
+    rewrite /bijective Injective_classification Surjective_classification
+            /sets.functionify.
+    (split; elim constructive_indefinite_description) =>
+    [f' [H [H0 H1]] x1 x2 | f' [H [H0 H1]] z].
+    - rewrite H => H2 H3.
+      rewrite (reify H2) (reify H3) ? H1 -? pslh_action.
+      move: (functionify_bijective _ _ (inverse_image_incl f)) =>
+      [] /[swap] _ /Injective_classification /[apply] ->
+      //; rewrite functionify_domain; apply subset_S, elts_in_set.
+    - rewrite H0 => /Complement_classification [/[swap] H2].
+      move: (functionify_bijective _ _ (inverse_image_incl f)) =>
+      [_] /Surjective_classification.
+      rewrite functionify_range functionify_domain H -{2}S_is_succ =>
+      /[apply] [[x [/Pairwise_union_classification H3 H4]]].
       exists x.
-      assert (x ∈ n).
-      { rewrite <-S_is_succ in H6.
-        apply Pairwise_union_classification in H6 as [H6 | H6]; auto.
-        apply Singleton_classification in H6; subst.
-        now rewrite -> inverse_image_classification in H3. }
-      split; try congruence.
-      set (ξ := (mkSet H8 : elts n)).
-      replace x with (ξ : set) by auto.
-      now rewrite -> H2, <-pslh_action.
+      suff: x ∈ n => [H5 | ].
+      + split; auto.
+        rewrite (reify H5) H1 -pslh_action //.
+      + move: H3 H4 H2 => [ | /Singleton_classification] // -> <-.
+        rewrite inverse_image_classification Singleton_classification //.
   Qed.
 
   Theorem permutation_succ_left_construction : ∀ f,
       graph (sets.functionify (permutation_succ_left_helper f))
             ∈ bijection_set n (S n \ {y, y}).
   Proof.
-    intros f.
-    unfold bijection_set.
-    apply Specify_classification.
-    split.
-    - apply Powerset_classification.
-      intros z H.
-      apply Graph_classification in H as [z1 [H H0]].
-      unfold sets.functionify in *.
-      destruct constructive_indefinite_description as [f'].
-      destruct a as [H2 [H3 H4]].
-      subst.
+    rewrite /bijection_set /sets.functionify => f.
+    rewrite Specify_classification Powerset_classification.
+    split => [z /Graph_classification | ].
+    - elim constructive_indefinite_description => [f' [H [H0 H1]]] [x [H2 ->]].
       apply Product_classification.
-      exists z1, (f' z1).
-      repeat split; try congruence.
-      rewrite <-H3.
-      now apply function_maps_domain_to_range.
+      exists x, (f' x).
+      move: H H0 <- => <-.
+      auto using function_maps_domain_to_range.
     - exists (sets.functionify (permutation_succ_left_helper f)).
-      pose proof psl_bijective f.
-      unfold sets.functionify in *.
-      destruct constructive_indefinite_description.
+      move: (psl_bijective f).
+      rewrite /sets.functionify.
+      elim constructive_indefinite_description.
       tauto.
   Qed.
 
@@ -428,171 +330,108 @@ Section permutation_succ_helper_functions.
     elts (inverse_image_of_element permutation_succ_proj y) →
     elts (bijection_set n (S n \ {y, y})).
   Proof.
-    intros f.
+    move=> f.
     exact (mkSet (permutation_succ_left_construction f)).
   Defined.
+
+  Lemma permutation_succ_right_helper_lemma :
+    ∀ (f : elts (bijection_set n (S n \ {y, y}))) (x : elts (S n)),
+      (x : set) ≠ n → ((functionify _ _ f) x ∈ S n \ {y, y}).
+  Proof.
+    move=> f x H.
+    rewrite -{2}(functionify_range _ _ f).
+    apply function_maps_domain_to_range.
+    move: (elts_in_set x).
+    rewrite functionify_domain -{2}S_is_succ =>
+    /Pairwise_union_classification [ | ] // /Singleton_classification //.
+  Qed.
 
   Definition permutation_succ_right_helper :
     elts (bijection_set n (S n \ {y, y})) → elts (S n) → elts (S n).
   Proof.
-    intros f x.
-    destruct (excluded_middle_informative ((x : set) = n)).
+    move=> f x.
+    case (excluded_middle_informative ((x : set) = n)) =>
+    [H | /(permutation_succ_right_helper_lemma f)
+          /Complement_classification [H H0]].
     - exact y.
-    - assert ((functionify _ _ f) x ∈ S n \ {y, y}).
-      { rewrite <-(functionify_range _ _ f).
-        apply function_maps_domain_to_range.
-        rewrite -> functionify_domain.
-        pose proof elts_in_set x as H.
-        simpl in *.
-        rewrite <-S_is_succ in H.
-        apply Pairwise_union_classification in H as [H | H]; auto.
-        now apply Singleton_classification in H. }
-      apply Complement_classification in H as [H H0].
-      exact (mkSet H).
+    - exact (mkSet H).
   Defined.
 
   Theorem psrh_n : ∀ f, permutation_succ_right_helper f n_in_Sn = y.
   Proof.
-    intros f.
-    unfold permutation_succ_right_helper.
-    destruct excluded_middle_informative; auto.
-    contradict n0.
-    now simpl.
+    rewrite /permutation_succ_right_helper => f.
+    case excluded_middle_informative; auto => [[]] //.
   Qed.
 
   Theorem psrh_bijective :
     ∀ f, bijective (sets.functionify (permutation_succ_right_helper f)).
   Proof.
-    intros f.
-    unfold sets.functionify.
-    destruct constructive_indefinite_description as [f'].
-    destruct a as [H [H0 H1]].
-    split.
-    - rewrite -> Injective_classification.
-      intros x1 x2 H2 H3 H4.
-      rewrite -> H in H2, H3.
-      set (ξ1 := mkSet H2 : elts (S n)).
-      set (ξ2 := mkSet H3 : elts (S n)).
-      replace x1 with (ξ1 : set) in * by auto.
-      replace x2 with (ξ2 : set) in * by auto.
-      rewrite -> ? H1 in H4.
-      unfold permutation_succ_right_helper in H4.
-      repeat destruct excluded_middle_informative; simpl in *; try congruence;
-        try (destruct Complement_classification, a;
-             simpl in *; contradict n1; now rewrite Singleton_classification).
-      repeat destruct Complement_classification.
-      destruct a, a0.
-      simpl in *.
-      pose proof (functionify_bijective _ _ f) as [H5 H6].
-      rewrite -> Injective_classification in H5.
-      clear ξ1 ξ2.
-      apply H5; auto; rewrite -> functionify_domain.
-      + rewrite <-S_is_succ in H2.
-        apply Pairwise_union_classification in H2 as [H2 | H2]; auto.
-        now rewrite -> Singleton_classification in H2.
-      + rewrite <-S_is_succ in H3.
-        apply Pairwise_union_classification in H3 as [H3 | H3]; auto.
-        now rewrite -> Singleton_classification in H3.
-    - rewrite -> Surjective_classification.
-      intros z H2.
-      rewrite -> H0 in H2.
-      set (ζ := mkSet H2 : elts (S n)).
-      replace z with (ζ : set) in * by auto.
-      destruct (classic (ζ = y)).
+    rewrite /sets.functionify => f.
+    elim constructive_indefinite_description => [f' [H [H0 H1]]].
+    rewrite /bijective Injective_classification Surjective_classification.
+    (split; rewrite ? H ? H0) => [x1 x2 H2 H3 | z H2].
+    - rewrite (reify H2) (reify H3) ? H1 /permutation_succ_right_helper.
+      (repeat elim excluded_middle_informative; try congruence) =>
+      /= H4 H5 H6; repeat destruct iffLR;
+        try by contradict n0; rewrite Singleton_classification //.
+      inversion H6 as [H7].
+      move: (functionify_bijective _ _ f) H7 =>
+      [/[swap] _ /Injective_classification] /[apply] ->
+      //; [move: H2 | move: H3]; rewrite functionify_domain -S_is_succ =>
+      /Pairwise_union_classification; rewrite ? Singleton_classification; tauto.
+    - rewrite (reify H2).
+      destruct (classic ((mkSet H2) = y)).
       + exists n.
-        split.
-        * rewrite -> H, <-S_is_succ.
-          apply Pairwise_union_classification.
-          rewrite -> Singleton_classification; tauto.
-        * replace (n : set) with (n_in_Sn : set) by auto.
-          rewrite -> H1, psrh_n.
-          congruence.
-      + pose proof (functionify_bijective _ _ f) as [H4 H5].
-        rewrite -> Surjective_classification, functionify_range,
-        functionify_domain in H5.
-        assert (z ∈ S n \ {y, y}).
-        { rewrite -> Complement_classification, Singleton_classification.
+        split; auto using in_S.
+        rewrite (reify (in_S n)) H1 psrh_n H3 //.
+      + move: (functionify_bijective _ _ f) => [_ /Surjective_classification].
+        rewrite functionify_range functionify_domain => /(_ z).
+        elim => [x [H4 H5] | ].
+        * exists x.
+          split; first by apply subset_S.
+          rewrite (reify (subset_S _ _ H4)) H1 /permutation_succ_right_helper.
+          elim excluded_middle_informative => [ | H6]; last by destruct iffLR.
+          move: (no_quines n) => /[swap] {1}<- //.
+        * rewrite Complement_classification Singleton_classification.
           split; auto.
           contradict H3.
-          now apply set_proj_injective. }
-        apply H5 in H6 as [x [H6 H7]].
-        exists x.
-        split.
-        * rewrite -> H, <-S_is_succ.
-          apply Pairwise_union_classification; tauto.
-        * assert (x ∈ S n).
-          { rewrite <-S_is_succ.
-            apply Pairwise_union_classification; tauto. }
-          set (ξ := mkSet H8 : elts (S n)).
-          replace x with (ξ : set) in * by auto.
-          rewrite -> H1.
-          unfold permutation_succ_right_helper.
-          destruct excluded_middle_informative.
-          -- rewrite -> e in H6.
-             contradiction (no_quines n).
-          -- destruct Complement_classification, a.
-             now simpl in *.
+            by apply set_proj_injective.
   Qed.
 
   Lemma permutation_succ_right_construction : ∀ f,
       graph (sets.functionify (permutation_succ_right_helper f)) ∈
             (inverse_image_of_element permutation_succ_proj y).
   Proof.
-    intros.
-    unfold inverse_image_of_element.
+    rewrite /inverse_image_of_element => f.
     apply Specify_classification.
-    assert
-        (graph (sets.functionify (permutation_succ_right_helper f))
-               ∈ bijection_set (S n) (S n)) as H.
-    { apply Specify_classification.
-      split.
-      - apply Powerset_classification.
-        intros z H.
-        apply Graph_classification in H as [z1 [H H0]].
-        subst.
-        unfold sets.functionify in *.
-        destruct constructive_indefinite_description as [f'].
-        apply Product_classification.
-        destruct a as [H0 [H1 H2]].
-        exists z1, (f' z1).
-        repeat split; try congruence.
-        rewrite <-H1.
-        apply function_maps_domain_to_range.
-        congruence.
-      - pose proof psrh_bijective f.
-        exists (sets.functionify (permutation_succ_right_helper f)).
-        unfold sets.functionify in *.
-        destruct constructive_indefinite_description.
+    have H: graph (sets.functionify (permutation_succ_right_helper f))
+                  ∈ bijection_set (S n) (S n).
+    { rewrite Specify_classification Powerset_classification /sets.functionify.
+      split => [z /Graph_classification [z' [/[swap] ->]] | ].
+      - elim constructive_indefinite_description => [f' [H0 [H1 H2]] H3].
+        rewrite Product_classification -{1}H0 -H1.
+        exists z', (f' z').
+        auto using function_maps_domain_to_range.
+      - exists (sets.functionify (permutation_succ_right_helper f)).
+        move: (psrh_bijective f).
+        rewrite /sets.functionify.
+        elim constructive_indefinite_description.
         tauto. }
     split.
-    - unfold permutation_succ_proj.
-      destruct constructive_indefinite_description.
-      destruct a as [H0 [H1 H2]].
-      rewrite -> H0; auto.
-    - set (γ := mkSet H : elts (bijection_set (S n) (S n))).
-      replace (graph (sets.functionify (permutation_succ_right_helper f)))
-        with (γ : set) in * by auto.
-      rewrite -> psp_action.
-      unfold functionify, γ.
-      destruct Specify_classification, a, constructive_indefinite_description
-        as [f'].
-      clear a e i0 γ.
-      destruct a0 as [H0 [H1 [H2 H3]]].
-      apply function_record_injective in H2.
-      + subst.
-        unfold sets.functionify.
-        destruct constructive_indefinite_description as [f''].
-        destruct a as [H4 [H5 H6]].
-        replace (n : set) with (n_in_Sn : set) by auto.
-        now rewrite -> H6, psrh_n.
-      + now rewrite -> sets.functionify_range.
+    - rewrite /permutation_succ_proj /sig_rect.
+      elim constructive_indefinite_description => [f' [-> [H1 H2]]] //.
+    - rewrite (reify H) psp_action /functionify.
+      destruct iffLR.
+      elim constructive_indefinite_description =>
+      [f' [H0 [H1 [/function_record_injective]]]] {i e}.
+      rewrite sets.functionify_range -(psrh_n f) -(functionify_action) => <- //.
   Qed.
 
   Definition permutation_succ_right :
     elts (bijection_set n (S n \ {y, y})) →
     elts (inverse_image_of_element permutation_succ_proj y).
   Proof.
-    intros f.
+    move=> f.
     exact (mkSet (permutation_succ_right_construction f)).
   Defined.
 
@@ -601,163 +440,97 @@ End permutation_succ_helper_functions.
 Theorem permutation_succ :
   ∀ n : N, bijection_set (S n) (S n) ~ (S n) × (bijection_set n n).
 Proof.
-  intros n.
-  rewrite <-psp_domain, <-psp_range.
-  apply orbit_stabilizer_cardinality.
-  intros y H.
-  rewrite -> psp_range in H.
-  replace (n : set) with (S n \ {n,n}) at 2.
-  2: { rewrite <-S_is_succ.
-       apply complement_disjoint_union, disjoint_succ. }
-  setoid_replace (S n \ {n,n}) with (S n \ {y,y}).
-  2: { apply equivalence_minus_element; auto using cardinality_refl;
-       apply lt_is_in, naturals.succ_lt. }
+  move=> n.
+  rewrite -psp_domain -psp_range.
+  apply orbit_stabilizer_cardinality => y.
+  rewrite psp_range => H.
+  (have: (n : set) = S n \ {n,n} by
+      rewrite -S_is_succ /succ complement_disjoint_union;
+   auto using disjoint_succ) => /[dup] Sn {2}->.
+  have -> : S n \ {n,n} ~ S n \ {y,y} by
+      apply equivalence_minus_element; auto using in_S, cardinality_refl.
   apply two_sided_inverse_bijective.
-  set (γ := mkSet H : elts (S n)).
-  replace y with (γ : set) in * by auto.
-  exists (permutation_succ_left _ γ), (permutation_succ_right _ γ).
-  split.
-  - intros a.
-    pose proof (elts_in_set a) as H0; simpl in H0.
-    apply set_proj_injective, (function_graph_equality (S n) (S n)); simpl in *.
-    { pose proof func_hyp (sets.functionify
-                             (permutation_succ_right_helper
-                                _ _ (permutation_succ_left _ γ a))).
-      now rewrite -> @sets.functionify_domain, @sets.functionify_range in *. }
-    { pose proof elts_in_set a.
-      simpl in *.
-      apply Inverse_image_subset in H0.
-      - rewrite -> psp_domain in H0.
-        apply Specify_classification in H0 as [H0 [f H2]].
-        pose proof func_hyp f.
-        intuition; congruence.
-      - now rewrite -> psp_range. }
-    intros z H1.
-    apply Graph_classification in H1 as [z1 [H1 H2]].
-    subst.
-    rewrite -> @sets.functionify_domain, (reify H1), functionify_action in *.
-    unfold permutation_succ_right_helper; simpl.
-    destruct excluded_middle_informative.
-    * subst.
-      apply Inverse_image_classification in H0 as H2.
-      2: { apply Specify_classification in H0; tauto. }
-      2: { now rewrite -> psp_range. }
-      apply Specify_classification in H0 as [H0 H3].
-      rewrite -> psp_domain in H0.
-      set (α := mkSet H0 : elts (bijection_set (S n) (S n))).
-      replace (a : set) with (α : set) in * by auto.
-      rewrite -> psp_action in H2.
-      simpl.
-      pose proof H0 as H4.
-      apply Specify_classification in H4 as [H4 [f' [H5 [H6 [H7 H8]]]]].
-      assert (graph f' = α) as H9 by now rewrite -> H7.
-      rewrite <-(functionify_graph (S n) (S n) α) in H9.
-      apply function_record_injective in H9; try now rewrite functionify_range.
-      rewrite <-H7, H9.
+  rewrite (reify H).
+  exists (permutation_succ_left _ (mkSet H)),
+  (permutation_succ_right _ (mkSet H)).
+  split => [a | b].
+  - move: (elts_in_set a) => /= /[dup] H0 /[dup] /Inverse_image_classification
+                                /[swap] /Inverse_image_subset.
+    rewrite psp_domain psp_range =>
+    /(_ H) /[dup] H1 /[swap] /(_ H1 H) H2 /Specify_classification
+     [H3 [f [H4 [H5 [H6 H7]]]]].
+    apply set_proj_injective, (function_graph_equality (S n) (S n)) =>
+    /= [ | | z /Graph_classification [z' [/[swap] ->]]].
+    { move: (func_hyp (sets.functionify
+                         (permutation_succ_right_helper
+                            _ _ (permutation_succ_left _ _ a)))).
+      rewrite @sets.functionify_domain @sets.functionify_range //. }
+    { rewrite -{1}H4 -H5 -H6.
+      apply func_hyp. }
+    rewrite @sets.functionify_domain => H8.
+    rewrite (reify H8) functionify_action /permutation_succ_right_helper.
+    elim excluded_middle_informative => /= [-> | H9].
+    * rewrite -H6.
       apply Graph_classification.
       exists n.
-      split; congruence.
-    * destruct Complement_classification, a0, Specify_classification,
-      a1, constructive_indefinite_description as [f'].
-      simpl.
-      clear n1 i0 i a0 e i2 i1 a1.
-      destruct a2 as [H2 [H3 [H4 H5]]].
-      assert ((z1, f' z1) ∈ graph f').
+      rewrite H4 Ordered_pair_iff /= -H2 (reify H1) psp_action.
+      repeat split; auto using in_S.
+      f_equal.
+      apply function_record_injective;
+        rewrite ? functionify_range ? functionify_graph //.
+    * (repeat destruct iffLR => /=) => {i n0 i0}.
+      elim constructive_indefinite_description => {e} f' [H10 [H11 [H12 H13]]].
+      have: (z', f' z') ∈ graph f'.
       { apply Graph_classification.
-        exists z1.
-        split; auto.
-        rewrite <-S_is_succ in H1.
-        apply Pairwise_union_classification in H1 as [H1 | H1]; try congruence.
-        now apply Singleton_classification in H1. }
-      rewrite -> H4 in H6.
-      apply Graph_classification in H6 as [z1' [H6 H7]].
-      apply Ordered_pair_iff in H7 as [H7 H8].
-      subst.
-      rewrite -> H8, @sets.functionify_domain, (reify H6),
-      functionify_action in *.
-      simpl.
-      clear H8 H5 H3 H2 H1.
-      rewrite -> Inverse_image_classification in H0.
-      2: { rewrite -> psp_domain.
-           pose proof (elts_in_set (inverse_image_incl n (mkSet H) a)).
-           simpl in *.
-           now rewrite -> inverse_image_incl_value in H1. }
-      2: { now rewrite -> psp_range. }
-      replace (a : set) with (inverse_image_incl n (mkSet H) a : set) in *.
-      2: { now rewrite -> inverse_image_incl_value. }
-      rewrite -> psp_action in H0.
-      unfold functionify in H0.
-      destruct inverse_image_incl, Specify_classification, a0,
-      constructive_indefinite_description as [f].
-      clear a0 i i0 e.
-      simpl.
-      destruct Specify_classification, a0,
-      constructive_indefinite_description, a2 as [H1 [H2 [H3 H5]]].
-      rewrite <-H3.
-      apply Graph_classification.
-      exists z1'.
-      split; auto.
-      rewrite -> H1, <-S_is_succ.
-      apply Pairwise_union_classification; tauto.
-  - intros b.
-    pose proof (elts_in_set b) as H0; simpl in H0.
-    apply set_proj_injective; simpl.
-    apply (function_graph_equality n (S n \ {y,y})); auto.
-    { pose proof (func_hyp (sets.functionify
-                              (permutation_succ_left_helper
-                                 _ _ (permutation_succ_right n γ b)))).
-      now rewrite -> @sets.functionify_domain, @sets.functionify_range in *. }
-    { apply Specify_classification in H0 as [H0 [f H2]].
-      replace (b : set) with (graph f) by intuition.
-      pose proof func_hyp f.
-      intuition; congruence. }
-    intros z H3.
-    unfold sets.functionify in H3.
-    destruct constructive_indefinite_description as [f].
-    destruct a as [H4 [H5 H6]].
-    apply Graph_classification in H3 as [z1 [H3 H7]].
-    subst.
-    rewrite -> H4 in H3.
-    set (ζ := mkSet H3 : elts n).
-    replace z1 with (ζ : set) in * by auto.
-    rewrite -> H6.
-    apply Specify_classification in H0 as [H0 [f' [H7 [H8 [H9 H10]]]]].
-    rewrite <-H9.
+        exists z'.
+        rewrite H10 Sn Complement_classification Singleton_classification //. }
+      rewrite H12 => /Graph_classification =>
+      [[z'' [/[swap] /Ordered_pair_iff [<-]]]].
+      rewrite sets.functionify_domain => /[swap] H14.
+      rewrite (reify H14) functionify_action => -> /=.
+      move: H2.
+      rewrite -(inverse_image_incl_value n (mkSet H) a) psp_action /functionify.
+      elim inverse_image_incl => [w W].
+      destruct iffLR.
+      elim constructive_indefinite_description => [f'' [H15 [H16 [H17 H18]]]].
+      rewrite /= -H17 => H19.
+      apply function_maps_domain_to_graph =>
+      //; try apply function_maps_domain_to_range; rewrite H15 //.
+  - move: (elts_in_set b) =>
+    /= /Specify_classification [H0 [g [H1 [H2 [H3 H4]]]]].
+    (apply set_proj_injective, (function_graph_equality n (S n \ {y,y})); auto)
+    => /= [ | | z].
+    { move: (func_hyp (sets.functionify
+                         (permutation_succ_left_helper
+                            _ _ (permutation_succ_right n (mkSet H) b)))).
+      rewrite @sets.functionify_domain @sets.functionify_range //. }
+    { rewrite -{2}H1 -{2}H2 -H3.
+      apply func_hyp. }
+    rewrite /sets.functionify.
+    elim constructive_indefinite_description =>
+    [f [H5 [H6 H7]]] /Graph_classification [z' [/[swap] ->]].
+    rewrite H5 => H8.
+    rewrite (reify H8) H7 -H3.
     apply Graph_classification.
-    exists ζ.
-    split; try (simpl; congruence).
-    rewrite <-(pslh_action n γ).
+    exists (mkSet H8).
+    split => [/= | ]; try congruence.
+    rewrite <-(pslh_action n (mkSet H)).
     apply Ordered_pair_iff.
-    split; auto.
-    clear f H4 H5 H6.
-    unfold functionify, inverse_image_incl, permutation_succ_right.
-    destruct Specify_classification, a, Specify_classification, a0,
-    constructive_indefinite_description.
-    clear e0 i2 i1 a0 e i0 i a.
-    destruct a1 as [H1 [H2 [H4 H5]]].
-    apply function_record_injective in H4;
-      rewrite -> ? sets.functionify_domain, ? sets.functionify_range; auto.
-    subst.
-    unfold sets.functionify.
-    destruct constructive_indefinite_description.
-    destruct a as [H4 [H6 H11]].
-    assert (z1 ∈ S n) as H12.
-    { rewrite <-S_is_succ.
-      apply Pairwise_union_classification; tauto. }
-    set (ζ' := mkSet H12 : elts (S n)).
-    replace (ζ : set) with (ζ' : set) by auto.
-    rewrite -> H11.
-    unfold permutation_succ_right_helper.
-    destruct excluded_middle_informative.
-    { simpl in e.
-      subst.
-      contradiction (no_quines n). }
-    destruct Complement_classification, a.
-    simpl.
+    split; auto => {f H5 H6 H7}.
+    rewrite /functionify /inverse_image_incl /permutation_succ_right
+            /eq_rect_r /eq_rect.
+    destruct iffLR, eq_sym, iffLR.
+    elim constructive_indefinite_description =>
+    x [H5 [H6 [/[swap] H7]]] /function_record_injective.
+    rewrite ? sets.functionify_range /sets.functionify => /(_ H6) ->.
+    elim constructive_indefinite_description => [f [H9 [H10 H11]]] /=.
+    rewrite (reify (subset_S n _ H8)) H11 /permutation_succ_right_helper.
+    case excluded_middle_informative =>
+    /= [H12 | H12]; first by move: H12 no_quines H8 -> => /[apply] //.
+    destruct iffLR => /=.
     f_equal.
     apply function_record_injective;
-      now rewrite -> ? functionify_domain, ? functionify_range,
-      ? functionify_graph.
+      rewrite ? functionify_domain ? functionify_range ? functionify_graph //.
 Qed.
 
 Theorem bijection_empty_is_singleton : bijection_set 0%N 0%N = {∅, ∅}.
