@@ -883,6 +883,85 @@ Proof.
   rewrite -add_1_r add_comm //.
 Qed.
 
+Theorem succ_le : ∀ a b, a ≤ b ↔ S a ≤ S b.
+Proof.
+  split => [[c <-] | [c H]]; exists c; [ | move: H ];
+             rewrite add_comm add_succ_r add_comm // => /PA5 //.
+Qed.
+
+Theorem le_lt_succ : ∀ n m, m ≤ n ↔ m < S n.
+Proof.
+  (split; rewrite lt_def) =>
+  [[c <-] | [c [/neq_sym /succ_0 [d ->]]]];
+    rewrite /le -? (add_succ_r m c) ? (add_succ_r m d); eauto using PA4, PA5.
+Qed.
+
+Theorem lt_le_succ : ∀ n m, m < n ↔ S m ≤ n.
+Proof.
+  (split; rewrite lt_def) =>
+  [[c [/neq_sym /succ_0 [d ->] <-]] | [c <-]]; [ exists d | exists (S c) ];
+    rewrite (add_comm (S m)) ? add_succ_r add_comm; auto using PA4.
+Qed.
+
+Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
+Proof.
+  move=> a b c [d <-] [e <-].
+  exists (d + e).
+  ring.
+Qed.
+
+Theorem le_lt_trans : ∀ a b c, a ≤ b → b < c → a < c.
+Proof.
+  move=> a b c [d <-] [[e <-] H0].
+  split.
+  - exists (d + e); ring.
+  - move: add_assoc H0 <- =>
+    /[swap] /(@eq_sym N) /cancellation_0 /cancellation_0_add [-> ->].
+    rewrite add_0_l //.
+Qed.
+
+Theorem lt_le_trans : ∀ a b c, a < b → b ≤ c → a < c.
+Proof.
+  move=> a b c [[d <-] H0] [e <-].
+  split.
+  - exists (d + e); ring.
+  - move: add_assoc H0 <- =>
+    /[swap] /(@eq_sym N) /cancellation_0 /cancellation_0_add [->].
+    rewrite add_0_r //.
+Qed.
+
+Theorem lt_cross_add : ∀ a b c d, a < b → c < d → a + c < b + d.
+Proof.
+  move=> a b c d /(O1 c) /lt_trans /[swap] /(O1 b).
+  rewrite ? (add_comm _ b) => /[swap] /[apply] //.
+Qed.
+
+Theorem le_cross_add : ∀ a b c d, a ≤ b → c ≤ d → a + c ≤ b + d.
+Proof.
+  move=> a b c d [e <-] [f <-].
+  exists (e + f); ring.
+Qed.
+
+Theorem le_lt_or_eq : ∀ a b, a ≤ b ↔ a < b ∨ a = b.
+Proof.
+  (split; rewrite /lt) =>
+  [| [[H H0] | ->]]; elim (classic (a = b)); auto using le_refl.
+Qed.
+
+Theorem le_succ : ∀ n, n ≤ S n.
+Proof.
+  rewrite /le => n.
+  rewrite -add_1_r.
+  eauto.
+Qed.
+
+Theorem one_le_succ : ∀ n, 1 ≤ S n.
+Proof.
+  rewrite /le => n.
+  rewrite -add_1_r add_comm.
+  eauto.
+Qed.
+
 Definition pred (n : N) := (mkSet (union_ω (elts_in_set n)) : N).
 
 Definition sub a b := (iterated_op (λ x _, pred x) a id b).
@@ -966,6 +1045,20 @@ Proof.
     rewrite ? sub_0_l 1? add_comm ? add_succ_r ? sub_succ 1? add_comm //.
 Qed.
 
+Theorem sub_succ_l : ∀ a b, b ≤ a → S a - b = S (a - b).
+Proof.
+  induction a using Induction => [b H | b /[dup] H /le_not_gt H0].
+  - have -> : b = 0 by auto using le_antisymm, zero_le.
+    rewrite sub_diag sub_0_r //.
+  - case (lt_trichotomy (S a) b) => [H1 | [<- | /le_lt_succ H1]]; try tauto.
+    + rewrite -add_1_r add_comm sub_abba sub_diag //.
+    + case (classic (b = 0)) => [-> | /succ_0 [m H2]].
+      * rewrite ? sub_0_r //.
+      * move: H2 H H0 H1 -> => H H0 H1.
+        rewrite ? sub_succ IHa //.
+        eauto using le_trans, le_succ.
+Qed.
+
 Definition min : N → N → N.
 Proof.
   move=> a b.
@@ -1046,45 +1139,6 @@ Proof.
   rewrite max_sym max_0_l //.
 Qed.
 
-Theorem le_trans : ∀ a b c, a ≤ b → b ≤ c → a ≤ c.
-Proof.
-  move=> a b c [d <-] [e <-].
-  exists (d + e).
-  ring.
-Qed.
-
-Theorem le_lt_trans : ∀ a b c, a ≤ b → b < c → a < c.
-Proof.
-  move=> a b c [d <-] [[e <-] H0].
-  split.
-  - exists (d + e); ring.
-  - move: add_assoc H0 <- =>
-    /[swap] /(@eq_sym N) /cancellation_0 /cancellation_0_add [-> ->].
-    rewrite add_0_l //.
-Qed.
-
-Theorem lt_le_trans : ∀ a b c, a < b → b ≤ c → a < c.
-Proof.
-  move=> a b c [[d <-] H0] [e <-].
-  split.
-  - exists (d + e); ring.
-  - move: add_assoc H0 <- =>
-    /[swap] /(@eq_sym N) /cancellation_0 /cancellation_0_add [->].
-    rewrite add_0_r //.
-Qed.
-
-Theorem lt_cross_add : ∀ a b c d, a < b → c < d → a + c < b + d.
-Proof.
-  move=> a b c d /(O1 c) /lt_trans /[swap] /(O1 b).
-  rewrite ? (add_comm _ b) => /[swap] /[apply] //.
-Qed.
-
-Theorem le_cross_add : ∀ a b c d, a ≤ b → c ≤ d → a + c ≤ b + d.
-Proof.
-  move=> a b c d [e <-] [f <-].
-  exists (e + f); ring.
-Qed.
-
 Theorem lub : ∀ P, (∃ n : N, P n) → (∃ m : N, ∀ n : N, P n → n ≤ m)
                    → ∃ s : N, P s ∧ ∀ n : N, P n → n ≤ s.
 Proof.
@@ -1118,52 +1172,12 @@ Proof.
    rewrite add_0_r ? add_0_l) => [ | ->] //.
 Qed.
 
-Theorem succ_le : ∀ a b, a ≤ b ↔ S a ≤ S b.
-Proof.
-  split => [[c <-] | [c H]]; exists c; [ | move: H ];
-             rewrite add_comm add_succ_r add_comm // => /PA5 //.
-Qed.
-
-Theorem le_lt_succ : ∀ n m, m ≤ n ↔ m < S n.
-Proof.
-  (split; rewrite lt_def) =>
-  [[c <-] | [c [/neq_sym /succ_0 [d ->]]]];
-    rewrite /le -? (add_succ_r m c) ? (add_succ_r m d); eauto using PA4, PA5.
-Qed.
-
-Theorem lt_le_succ : ∀ n m, m < n ↔ S m ≤ n.
-Proof.
-  (split; rewrite lt_def) =>
-  [[c [/neq_sym /succ_0 [d ->] <-]] | [c <-]]; [ exists d | exists (S c) ];
-    rewrite (add_comm (S m)) ? add_succ_r add_comm; auto using PA4.
-Qed.
-
 Theorem disjoint_succ : ∀ n : N, n ∩ {n,n} = ∅.
 Proof.
   move=> n.
   apply Subset_equality_iff, conj; auto using Empty_set_is_subset =>
   x /Pairwise_intersection_classification /and_comm
     [/Singleton_classification] -> /no_quines //.
-Qed.
-
-Theorem le_lt_or_eq : ∀ a b, a ≤ b ↔ a < b ∨ a = b.
-Proof.
-  (split; rewrite /lt) =>
-  [| [[H H0] | ->]]; elim (classic (a = b)); auto using le_refl.
-Qed.
-
-Theorem le_succ : ∀ n, n ≤ S n.
-Proof.
-  rewrite /le => n.
-  rewrite -add_1_r.
-  eauto.
-Qed.
-
-Theorem one_le_succ : ∀ n, 1 ≤ S n.
-Proof.
-  rewrite /le => n.
-  rewrite -add_1_r add_comm.
-  eauto.
 Qed.
 
 Theorem Strong_Induction : ∀ P : N → Prop,

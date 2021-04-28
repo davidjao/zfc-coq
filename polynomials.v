@@ -1221,7 +1221,7 @@ Section Polynomial_theorems.
       now exists c.
     - subst.
       rewrite -> sub_diag, ? rings.pow_0_r, ? (rings.M1 _ _ 1%R), ? rings.M3,
-      ? add_1_r, binomial_overflow, ? binomial_n_n, <-INR_0, mul_0_l, rings.A3;
+      ? add_1_r, binomial_overflow, ? binomial_full, <-INR_0, mul_0_l, rings.A3;
         auto using naturals.succ_lt.
     - rewrite -> ? binomial_overflow, <-INR_0; try (now ring_simplify);
         rewrite -> add_1_r, <-? S_lt;
