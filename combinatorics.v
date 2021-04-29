@@ -535,94 +535,72 @@ Qed.
 
 Theorem bijection_empty_is_singleton : bijection_set 0%N 0%N = {∅, ∅}.
 Proof.
-  apply Extensionality.
-  split; intros.
-  - apply Singleton_classification.
-    apply Specify_classification in H as [H H0].
-    rewrite -> Empty_product_left, Powerset_classification in H.
-    apply Extensionality.
-    split; intros.
-    + now apply H in H1.
-    + contradiction (Empty_set_classification z0).
-  - apply Singleton_classification in H.
-    subst.
-    apply Specify_classification.
-    split; rewrite -> ? Empty_product_left; auto using Empty_set_in_powerset.
+  apply Extensionality => z.
+  rewrite Singleton_classification.
+  split => [/Specify_classification [/Powerset_classification] | ->].
+  - rewrite Empty_product_left =>
+    /Subset_equality /(_ (Empty_set_is_subset z)) //. 
+  - rewrite Specify_classification Powerset_classification Empty_product_left.
+    split; auto using Set_is_subset.
     exists empty_function.
-    unfold empty_function, ssr_have.
-    destruct constructive_indefinite_description; repeat split; intuition;
-      rewrite ? Injective_classification ? Surjective_classification; intros.
-    + apply NNPP.
-      contradict H.
-      apply Nonempty_classification in H as [z H].
-      apply Graph_classification in H as [t [H H0]].
-      apply Nonempty_classification; eauto.
-    + contradiction (Empty_set_classification y).
-      congruence.
-    + contradiction (Empty_set_classification y).
-      congruence.
+    rewrite /empty_function /ssr_have /naturals.zero /=.
+    elim constructive_indefinite_description => f [H [H0 H1]].
+    rewrite function_empty_domain /bijective Injective_classification
+            Surjective_classification H H0.
+    (repeat split; auto) =>
+    [x y /Empty_set_classification | x /Empty_set_classification] //.
 Qed.
 
 Theorem bijections_of_empty_set : bijection_set 0%N 0%N ~ 1%N.
 Proof.
-  rewrite -> bijection_empty_is_singleton.
+  rewrite bijection_empty_is_singleton.
   apply singleton_card_1.
 Qed.
 
 Theorem bijections_of_one : bijection_set 1%N 1%N ~ 1%N.
 Proof.
-  unfold naturals.one.
-  rewrite -> permutation_succ, bijections_of_empty_set.
-  simpl.
-  unfold succ.
-  now rewrite Union_comm Union_empty singleton_products ? singleton_card_1.
+  now rewrite /naturals.one permutation_succ bijections_of_empty_set
+  -S_is_succ /succ Union_comm Union_empty singleton_products ? singleton_card_1.
 Qed.
 
 Theorem permutations_are_finite : ∀ n : N, finite (bijection_set n n).
 Proof.
-  intros n.
   induction n as [| n [m H]] using Induction.
-  { exists 1%N.
-    apply bijections_of_empty_set. }
-  exists ((S n) * m)%N.
-  symmetry.
-  now rewrite -> permutation_succ, H, <-(card_of_natural (S n)),
-  <-(card_of_natural m), <-natural_prod_card, <-card_equiv at 1;
-    auto using finite_products_are_finite, naturals_are_finite.
+  - exists 1%N.
+    apply bijections_of_empty_set.
+  - exists ((S n) * m)%N.
+    now rewrite permutation_succ H (card_equiv (S n × m))
+        ? natural_prod_card ? card_of_natural;
+      auto using finite_products_are_finite, naturals_are_finite.
 Qed.
 
 Theorem size_of_bijections_of_empty_set : size_of_bijections 0%N 0%N = 1%N.
 Proof.
-  apply natural_cardinality_uniqueness, cardinality_sym.
-  rewrite <-bijections_of_empty_set.
-  eauto using card_equiv, permutations_are_finite.
+  apply natural_cardinality_uniqueness.
+  rewrite -bijections_of_empty_set.
+  eauto using cardinality_sym, card_equiv, permutations_are_finite.
 Qed.
 
 Theorem size_of_bijections_of_one : size_of_bijections 1%N 1%N = 1%N.
 Proof.
-  unfold size_of_bijections.
-  now rewrite -> bijections_of_one, card_of_natural.
+  rewrite /size_of_bijections bijections_of_one card_of_natural //.
 Qed.
 
 Theorem number_of_permutations_n : ∀ n, n! = permutations n.
 Proof.
-  intros n.
-  induction n using Induction; unfold factorial, permutations in *.
-  - rewrite -> prod_N_neg.
-    + now rewrite -> size_of_bijections_of_empty_set.
-    + apply naturals.lt_succ.
-  - rewrite -> prod_N_succ, IHn.
-    + rewrite /size_of_bijections permutation_succ.
-      rewrite -> finite_products_card, card_of_natural, mul_comm;
-        auto using naturals_are_finite, permutations_are_finite.
-    + apply (succ_le _ n), zero_le.
+  elim/Induction => [ | n].
+  - rewrite /factorial /permutations prod_N_neg
+            ? size_of_bijections_of_empty_set //; apply naturals.lt_succ.
+  - (rewrite /factorial /permutations ? prod_N_succ ? IHn /size_of_bijections
+             ? permutation_succ ? finite_products_card ? card_of_natural 1
+             ? mul_comm; auto using one_le_succ, permutations_are_finite,
+                         naturals_are_finite) => <- //.
 Qed.
 
 Theorem number_of_permutations :
   ∀ S (n : N), S ~ n → n! = size_of_bijections S S.
 Proof.
-  intros S n H.
-  now rewrite -> H, number_of_permutations_n.
+  move: number_of_permutations_n => /[swap] S /[swap] n -> -> //.
 Qed.
 
 Theorem binomials_are_finite : ∀ n k, finite (set_of_combinations n k).
