@@ -980,6 +980,13 @@ Proof.
   rewrite -/(INS (S a)) -S_is_succ union_succ; eauto using elts_in_set.
 Qed.
 
+Theorem pred_fixpoint : ∀ a, pred a = a → a = 0.
+Proof.
+  move=> a H.
+  apply NNPP => /succ_0 [m H0].
+  move: H0 pred_succ H -> => -> /neq_succ //.
+Qed.
+
 Theorem sub_0_r : ∀ a, a - 0 = a.
 Proof.
   rewrite /sub => a.
@@ -996,6 +1003,12 @@ Qed.
 Theorem sub_succ_r : ∀ a b, a - S b = pred (a - b).
 Proof.
   elim/Induction => * ; rewrite /sub iterated_op_succ ? iterated_op_0 //.
+Qed.
+
+Theorem sub_1_r : ∀ a, a - 1 = pred a.
+Proof.
+  move=> a.
+  rewrite -{2}(sub_0_r a) -sub_succ_r //.
 Qed.
 
 Theorem sub_succ : ∀ a b, S a - S b = a - b.

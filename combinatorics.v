@@ -539,7 +539,7 @@ Proof.
   rewrite Singleton_classification.
   split => [/Specify_classification [/Powerset_classification] | ->].
   - rewrite Empty_product_left =>
-    /Subset_equality /(_ (Empty_set_is_subset z)) //. 
+    /Subset_equality /(_ (Empty_set_is_subset z)) //.
   - rewrite Specify_classification Powerset_classification Empty_product_left.
     split; auto using Set_is_subset.
     exists empty_function.
@@ -613,158 +613,98 @@ Theorem Pascal's_identity_bijection : ∀ n k,
     (1 ≤ k)%N → set_of_combinations n k ∪ set_of_combinations n (k-1) ~
                                     set_of_combinations (n+1) k.
 Proof.
-  intros n k H.
+  move=> n k H.
   symmetry.
-  destruct (function_construction
-              (set_of_combinations (n+1) k)
-              (set_of_combinations n k ∪ set_of_combinations n (k-1))
-              (λ x, If n ∈ x then x \ {n,n} else x)) as [f [H0 [H1 H2]]].
-  { intros a H0.
-    apply Specify_classification in H0 as [H0 H1].
-    apply Powerset_classification in H0.
-    destruct excluded_middle_informative;
-      apply Pairwise_union_classification.
-    - right.
-      apply Specify_classification.
-      split.
-      + rewrite -> Powerset_classification.
-        intros x H2.
-        rewrite -> Complement_classification, Singleton_classification in H2.
-        destruct H2 as [H2 H3].
-        rewrite -> add_1_r, <-S_is_succ in H0.
-        apply H0, Pairwise_union_classification in H2 as [H2 | H2]; auto.
-        now rewrite -> Singleton_classification in H2.
-      + replace a with ({n,n} ∪ (a \ {n,n})) in H1.
-        2: { rewrite <-disjoint_union_complement, <-Union_subset.
-             intros x H2.
-             rewrite -> Singleton_classification in H2; congruence. }
-        rewrite -> finite_union_cardinality, singleton_card in H1;
-          eauto using disjoint_intersection_complement, singletons_are_finite,
-          subsets_of_finites_are_finite, complement_subset, naturals_are_finite.
-        now apply sub_spec in H1.
-    - left.
-      apply Specify_classification.
-      split; auto.
-      rewrite -> Powerset_classification.
-      intros x H2.
-      rewrite -> add_1_r, <-S_is_succ in H0.
-      apply H0 in H2 as H3.
-      apply Pairwise_union_classification in H3 as [H3 | H3]; auto.
-      apply Singleton_classification in H3.
-      now subst. }
-  exists f.
-  repeat split; auto.
-  - rewrite -> Injective_classification.
-    intros x y H3 H4 H5.
-    rewrite -> ? H2 in H5; try congruence.
-    repeat destruct excluded_middle_informative; auto.
-    + apply Extensionality.
-      split; intros H6; destruct (classic (z = n)) as [H7 | H7];
-        try congruence.
-      * eapply complement_subset.
-        rewrite <-H5.
-        now rewrite -> Complement_classification, Singleton_classification.
-      * eapply complement_subset.
-        rewrite -> H5.
-        now rewrite -> Complement_classification, Singleton_classification.
-    + unfold set_of_combinations in *.
-      rewrite -> H0, Specify_classification in *.
-      destruct H3 as [H3 H6], H4 as [H4 H7].
-      rewrite -> Powerset_classification in *.
-      rewrite <-H5 in H7.
-      replace x with ({n,n} ∪ (x \ {n,n})) in H6.
-      2: { rewrite <-disjoint_union_complement, <-Union_subset.
-           intros z H8.
-           rewrite -> Singleton_classification in H8; congruence. }
-      rewrite -> finite_union_cardinality, singleton_card, H7,
-      naturals.add_comm, add_1_r in H6;
-          eauto using disjoint_intersection_complement, singletons_are_finite,
-          subsets_of_finites_are_finite, complement_subset, naturals_are_finite.
-      now contradiction (neq_succ k).
-    + unfold set_of_combinations in *.
-      rewrite -> H0, Specify_classification in *.
-      destruct H3 as [H3 H6], H4 as [H4 H7].
-      rewrite -> Powerset_classification in *.
-      rewrite -> H5 in H6.
-      replace y with ({n,n} ∪ (y \ {n,n})) in H7.
-      2: { rewrite <-disjoint_union_complement, <-Union_subset.
-           intros z H8.
-           rewrite -> Singleton_classification in H8; congruence. }
-      rewrite -> finite_union_cardinality, singleton_card, H6,
-      naturals.add_comm, add_1_r in H7;
-          eauto using disjoint_intersection_complement, singletons_are_finite,
-          subsets_of_finites_are_finite, complement_subset, naturals_are_finite.
-      now contradiction (neq_succ k).
-  - rewrite -> Surjective_classification.
-    intros y H3.
-    rewrite -> H1 in H3.
-    apply Pairwise_union_classification in H3 as [H3 | H3];
-      apply Specify_classification in H3 as [H3 H4];
-      apply Powerset_classification in H3.
-    + exists y.
-      assert (y ∈ domain f) as H5.
-      { rewrite -> H0.
-        apply Specify_classification.
-        rewrite -> Powerset_classification.
+  elim (function_construction
+          (set_of_combinations (n+1) k)
+          (set_of_combinations n k ∪ set_of_combinations n (k-1))
+          (λ x, If n ∈ x then x \ {n,n} else x)) =>
+  [f [H0 [H1 H2]] | a /Specify_classification [/Powerset_classification H0 H1]].
+  - exists f.
+    rewrite /bijective Injective_classification Surjective_classification.
+    (repeat split; auto) => [x y H3 H4 | y].
+    + rewrite ? H2 -? H0 //.
+      (repeat elim excluded_middle_informative => //) => H5 H6 H7.
+      * apply Extensionality => z.
+        destruct (classic (z = n)) as [-> | H8]; split =>
+        H9 //; eapply complement_subset; [rewrite <-H7 | rewrite -> H7];
+          rewrite Complement_classification Singleton_classification //.
+      * move: H7 H3 H4 <-.
+        (rewrite H0 /set_of_combinations ? Specify_classification
+                 complement_card ? singleton_card ? sub_1_r;
+         auto using singletons_are_finite) =>
+        [z /Singleton_classification -> |
+         [/Powerset_classification /subsets_of_finites_are_finite H7 <-]
+           [_ /pred_fixpoint /finite_empty H8]] //.
+        (move: H8 H6 ->; auto using naturals_are_finite) =>
+        /Empty_set_classification //.
+      * move: H7 H3 H4 ->.
+        (rewrite H0 /set_of_combinations ? Specify_classification
+                 complement_card ? singleton_card ? sub_1_r;
+          auto using singletons_are_finite) =>
+        [z /Singleton_classification -> |
+         [] _ <- [/Powerset_classification /subsets_of_finites_are_finite H7]
+                   /(@eq_sym N) /pred_fixpoint /finite_empty H8] //.
+        (move: H8 H5 ->; auto using naturals_are_finite) =>
+        /Empty_set_classification //.
+    + rewrite H1 => /Pairwise_union_classification
+                     [/Specify_classification [/Powerset_classification H3 H4] |
+                      /Specify_classification [/Powerset_classification H3 H4]].
+      * exists y.
+        have: y ∈ domain f.
+        { rewrite H0 /set_of_combinations Specify_classification
+                  Powerset_classification add_1_r.
+          split; auto => z /H3 /subset_S H5 //. }
         split; auto.
-        intros z H5.
-        apply H3 in H5.
-        assert (n ⊂ n+1)%N.
-        { apply le_is_subset.
-          now exists 1%N. }
-        auto. }
-      split; auto.
-      rewrite -> H2; try congruence.
-      destruct excluded_middle_informative; auto.
-      apply H3 in i.
-      contradiction (no_quines n).
-    + exists (y ∪ {n,n}).
-      assert (y ∩ {n,n} = ∅) as H5.
-      { apply Extensionality.
-        split; intros H5; try contradiction (Empty_set_classification z).
-        apply Pairwise_intersection_classification in H5 as [H5 H6].
-        rewrite -> Singleton_classification in H6.
-        subst.
-        apply H3 in H5.
-        contradiction (no_quines n). }
-      assert (y ∪ {n,n} ∈ domain f) as H6.
-      { rewrite -> H0.
-        apply Specify_classification.
-        rewrite -> Powerset_classification, add_1_r, <-S_is_succ.
-        split.
-        - intros z H6.
-          apply Pairwise_union_classification.
-          apply Pairwise_union_classification in H6 as [H6 | H6]; try tauto.
-          left.
-          auto.
-        - rewrite -> finite_union_cardinality, H4, singleton_card,
-          naturals.add_comm, sub_abab;
-            eauto using singletons_are_finite,
+        rewrite H2 -? H0 //.
+        (case excluded_middle_informative; auto) => /H3 /no_quines //.
+      * exists (y ∪ {n,n}).
+        have H5: y ∩ {n,n} = ∅.
+        { (apply Subset_equality_iff, conj; auto using Empty_set_is_subset)
+          => z /Pairwise_intersection_classification [] /H3 /[swap]
+               /Singleton_classification -> /no_quines //. }
+        have H6: (y ∪ {n,n} ∈ domain f).
+        { rewrite H0 /set_of_combinations Specify_classification
+                  Powerset_classification add_1_r.
+          split => [z /Pairwise_union_classification
+                      [/H3 /subset_S | /Singleton_classification ->] | ];
+                     auto using in_S.
+          rewrite finite_union_cardinality ? singleton_card ? H4 1 ? add_comm
+                  ? sub_abab;
+            eauto using one_le_succ, singletons_are_finite,
             subsets_of_finites_are_finite, naturals_are_finite. }
-      split; auto.
-      rewrite -> H2; try congruence.
-      destruct excluded_middle_informative.
-      * rewrite -> complement_disjoint_union; auto.
-      * contradiction n0.
-        apply Pairwise_union_classification.
-        right.
-        now apply Singleton_classification.
+        split; auto.
+        rewrite H2 -? H0 //.
+        case excluded_middle_informative;
+          rewrite ? complement_disjoint_union ? Pairwise_union_classification
+                  ? Singleton_classification; tauto.
+  - case excluded_middle_informative; move: H0;
+      rewrite add_1_r -S_is_succ Pairwise_union_classification
+                                 /set_of_combinations ? Specify_classification
+                                 ? Powerset_classification => H0 H2.
+    + apply or_intror, conj =>
+      [x /Complement_classification [/H0 /Pairwise_union_classification [? | ?]
+                                      /Singleton_classification ?] | ] //.
+      (rewrite complement_card ? singleton_card ? H1
+               //; auto using singletons_are_finite) =>
+      z /Singleton_classification -> //.
+    + apply or_introl, conj =>
+      [z /[dup] /H0 /Pairwise_union_classification
+         [H3 | /Singleton_classification ->] H4 | ] //.
 Qed.
 
 Theorem Pascal's_identity :
   ∀ n k, (1 ≤ k → binomial n k + binomial n (k-1) = binomial (n+1) k)%N.
 Proof.
-  intros n k H.
-  unfold binomial.
-  rewrite <-Pascal's_identity_bijection, finite_union_cardinality;
+  rewrite /binomial => n k H.
+  rewrite -Pascal's_identity_bijection ? finite_union_cardinality;
     auto using binomials_are_finite.
-  apply Extensionality.
-  split; intros H0; try contradiction (Empty_set_classification z).
-  apply Pairwise_intersection_classification in H0 as [H0 H1].
-  apply Specify_classification in H0 as [H0 H2].
-  apply Specify_classification in H1 as [H1 H3].
-  erewrite -> H2, <-sub_abab, (naturals.add_comm 1), add_1_r in H3 at 1; auto.
-  now contradiction (neq_succ (k-1)).
+  apply Extensionality => z.
+  split => [/Pairwise_intersection_classification
+             [/Specify_classification [H0 H1] /Specify_classification [H2 H3]]
+           | /Empty_set_classification] //.
+  move: H H1 H3 => /naturals.lt_0_le_1 /nonzero_lt /succ_0 [m ->] ->.
+  rewrite sub_succ sub_0_r => /(@eq_sym N) /neq_succ //.
 Qed.
 
 Theorem binomial_zero : ∀ n : N, binomial n 0 = 1%N.
@@ -802,22 +742,18 @@ Qed.
 
 Theorem combinations_overflow : ∀ n k, (n < k)%N → set_of_combinations n k = ∅.
 Proof.
-  intros n k H.
-  apply Extensionality; split; intros H0;
-    try now contradiction (Empty_set_classification z).
-  apply Specify_classification in H0 as [H0 H1].
-  apply Powerset_classification in H0.
-  apply finite_subsets, naturals.le_not_gt in H0;
-    eauto using naturals_are_finite, subsets_of_finites_are_finite.
-  subst.
-  now rewrite <-(card_of_natural n) in H.
+  move=> n k H.
+  apply Extensionality => z.
+  split => [/Specify_classification [/Powerset_classification /finite_subsets]
+           | /Empty_set_classification H0] // =>
+  /(_ (naturals_are_finite n)) /[swap] -> /naturals.le_not_gt.
+  rewrite card_of_natural //.
 Qed.
 
 Theorem binomial_overflow : ∀ n k, (n < k)%N → binomial n k = 0%N.
 Proof.
-  intros n k H.
-  unfold binomial.
-  rewrite -> combinations_overflow, <-card_of_natural; auto.
+  rewrite /binomial => n k H.
+  rewrite combinations_overflow ? card_empty //.
 Qed.
 
 Theorem binomial_empty_set : ∀ k, k ≠ 0%N → binomial 0 k = 0%N.
@@ -826,23 +762,18 @@ Proof.
   apply binomial_overflow, naturals.lt_succ.
 Qed.
 
-Lemma factorial_ne_0 : ∀ k, k! ≠ 0%N.
-Proof.
-  intros k H.
-  induction k using Induction; unfold factorial in *.
-  - rewrite -> prod_N_neg in H.
-    + now contradiction (PA4 0).
-    + apply naturals.succ_lt.
-  - rewrite -> prod_N_succ in H.
-    + apply naturals.cancellation_0_mul in H as [H | H]; auto.
-      now contradiction (PA4 k).
-    + apply (succ_le _ k), zero_le.
-Qed.
-
 Theorem zero_factorial : 0! = 1%N.
 Proof.
-  unfold factorial.
-  rewrite -> prod_N_neg; auto; apply naturals.succ_lt.
+  rewrite /factorial prod_N_neg; auto; apply naturals.succ_lt.
+Qed.
+
+Lemma factorial_ne_0 : ∀ k, k! ≠ 0%N.
+Proof.
+  induction k using Induction.
+  - rewrite zero_factorial.
+    eauto using neq_sym, PA4.
+  - (rewrite /factorial prod_N_succ; auto using one_le_succ) =>
+    /naturals.cancellation_0_mul => [[ | /(@eq_sym N) /PA4]] //.
 Qed.
 
 Theorem factorial_succ : ∀ n, S n! = (S n * n!)%N.
@@ -923,91 +854,49 @@ Theorem sum_card_0 : ∀ n X f,
     (∀ x, x ∈ X ↔ exists ! k : N, 0 ≤ k ≤ n ∧ x ∈ f k)%N →
     sum ℤ (λ k, # (f k) : Z) 0 n = (# X : Z).
 Proof.
-  induction n using Induction; intros X f H H0 H1.
-  - rewrite -> sum_0.
+  induction n using Induction => X f H H0 H1.
+  - rewrite sum_0.
     repeat f_equal.
-    apply Extensionality.
-    split; intros H2.
-    + apply H1.
-      exists 0%N.
-      repeat split; eauto using naturals.le_refl.
-      intros x' [[H3 H4] H5].
-      auto using naturals.le_antisymm.
-    + apply H1 in H2 as [y [[[H2 H3] H4] H5]].
-      replace 0%N with y by now apply naturals.le_antisymm.
-      auto.
-  - rewrite -> sum_succ; auto using zero_le.
-    simpl.
-    rewrite -> (IHn (X \ (f (S n))) f);
-      eauto using subsets_of_finites_are_finite, complement_subset,
-      subsets_of_finites_are_finite.
-    + rewrite -> INZ_add, <-finite_union_cardinality;
+    apply Extensionality => z.
+    rewrite H1.
+    split => [H2 | [y [[[/naturals.le_antisymm /[apply] ->]]]]] //.
+    exists 0%N.
+    (repeat split; eauto using naturals.le_refl) =>
+    x' [[/naturals.le_antisymm /[apply]]] //.
+  - (rewrite sum_succ ? (IHn (X \ (f (S n))) f) /=;
+             eauto using zero_le, subsets_of_finites_are_finite,
+     complement_subset, subsets_of_finites_are_finite) =>
+    [k [H2 H3] x /[dup] H4 /H0 H5 | | ].
+    + (have: x ∈ X by eauto using naturals.le_trans, naturals.le_succ) =>
+      /[dup] H6 /H1 [y [[[H7 H8] H9] H10]].
+      apply Complement_classification, conj => [ | H11] //.
+      have: y = S n by eauto using zero_le, naturals.le_refl.
+      have -> : y = k by eauto using naturals.le_trans, naturals.le_succ.
+      move: H3 => /[swap] -> /not_succ_le //.
+    + split => [/Complement_classification
+                 [/H1 [y [[[H2 /squeeze_upper H3] H4] H5]] H6]
+               | [y [[[H2 H3] /[dup] H4 /H0 H5] H6]]].
+      * exists y.
+        (repeat split; auto) =>
+        [| ? [[]]]; eauto using naturals.le_trans, naturals.le_succ.
+        apply NNPP => /naturals.lt_not_ge /H3.
+        move: H4 => /[swap] -> //.
+      * apply Complement_classification.
+        (have: x ∈ X by eauto using naturals.le_trans, naturals.le_succ) =>
+        /[dup] H7 /H1 [z [[[H8 H9] H10] H11]].
+        split; auto => H12.
+        have: z = S n by auto using zero_le, naturals.le_refl.
+        have -> : z = y by eauto using naturals.le_trans, naturals.le_succ.
+        move: H3 => /[swap] -> /not_succ_le //.
+    + rewrite INZ_add -finite_union_cardinality;
         eauto using subsets_of_finites_are_finite, complement_subset,
         subsets_of_finites_are_finite, zero_le, naturals.le_refl.
-      * rewrite -> Union_comm, <-disjoint_union_complement.
+      * apply NNPP =>
+        /Nonempty_classification [x /Pairwise_intersection_classification
+                                    [/Complement_classification []]] //.
+      * rewrite Union_comm -disjoint_union_complement.
         apply f_equal, f_equal, Union_subset, H0.
-        split; eauto using zero_le, naturals.le_refl.
-      * apply NNPP.
-        intros H2.
-        apply Nonempty_classification in H2 as [x H2].
-        apply Pairwise_intersection_classification in H2 as [H2 H3].
-        now apply Complement_classification in H2 as [H2 H4].
-    + intros k [H2 H3] x H4.
-      apply Complement_classification.
-      split.
-      * apply H0 in H4; auto.
-        split; auto.
-        eapply naturals.le_lt_trans; eauto using naturals.succ_lt.
-      * intros H5.
-        assert (x ∈ X).
-        { apply H0 in H4; auto.
-          split; auto.
-          eapply naturals.le_lt_trans; eauto using naturals.succ_lt. }
-        apply H1 in H6 as [y [[[H6 H7] H8] H9]].
-        assert (y = S n).
-        { apply H9.
-          repeat split; auto using zero_le, naturals.le_refl. }
-        assert (y = k).
-        { apply H9.
-          repeat split; auto.
-          eapply naturals.le_lt_trans; eauto using naturals.succ_lt. }
-        subst.
-        rewrite -> naturals.le_not_gt in H3.
-        contradict H3.
-        auto using naturals.succ_lt.
-    + split; intros H2.
-      * apply Complement_classification in H2 as [H2 H3].
-        apply H1 in H2 as [y [[[H2 H4] H5] H6]].
-        exists y.
-        repeat split; auto.
-        -- rewrite -> naturals.le_not_gt.
-           intros H7.
-           apply squeeze_upper in H4; auto.
-           now subst.
-        -- intros x' [[H7 H8] H9].
-           apply H6.
-           repeat split; auto.
-           eapply naturals.le_lt_trans; eauto using naturals.succ_lt.
-      * destruct H2 as [y [[[H2 H3] H4] H5]].
-        apply Complement_classification.
-        assert (x ∈ X).
-        { apply H0 in H4; auto.
-          split; auto.
-          eapply naturals.le_lt_trans; eauto using naturals.succ_lt. }
-        split; auto.
-        intros H7.
-        apply H1 in H6 as [z [[[H6 H8] H9] H10]].
-        assert (z = S n).
-        { apply H10.
-          repeat split; auto using zero_le, naturals.le_refl. }
-        assert (z = y).
-        { apply H10.
-          repeat split; auto.
-          eapply naturals.le_lt_trans; eauto using naturals.succ_lt. }
-        subst.
-        rewrite -> naturals.le_not_gt in H3.
-        contradict H3.
-        auto using naturals.succ_lt.
+        eauto using zero_le, naturals.le_refl.
 Qed.
 
 Theorem sum_card : ∀ a b X f,
@@ -1015,48 +904,29 @@ Theorem sum_card : ∀ a b X f,
     (∀ x, x ∈ X ↔ exists ! k : N, a ≤ k ≤ b ∧ x ∈ f k)%N →
     sum ℤ (λ k, # (f k) : Z) a b = (# X : Z).
 Proof.
-  intros a b X f H H0 H1.
-  destruct (classic (a ≤ b)%N) as [[c H2] | H2]; subst.
-  - unfold sum.
-    rewrite -> iterate_shift.
-    apply sum_card_0; auto.
-    + intros k [H2 H3].
-      apply H0.
-      split.
-      * rewrite <-(add_0_l a) at 1.
-        now apply O1_le.
-      * rewrite -> (add_comm a).
-        now apply O1_le.
-    + split; intros H2.
-      * apply H1 in H2 as [y [[[H2 H3] H4] H5]].
-        exists (y-a)%N.
-        repeat split; try apply zero_le.
-        -- eapply O1_le_iff.
-           rewrite -> (add_comm c).
-           eapply naturals.le_trans; eauto.
-           rewrite -> add_comm, sub_abab; auto using naturals.le_refl.
-        -- rewrite -> add_comm, sub_abab; auto using naturals.le_refl.
-        -- intros x' [H6 H7].
-           replace y with (x'+a)%N; try now rewrite -> sub_abba.
-           apply eq_sym, H5.
-           repeat split; auto.
-           ++ rewrite <-(add_0_l a) at 1.
-              now apply O1_le.
-           ++ rewrite -> (add_comm a).
-              now apply O1_le.
-      * destruct H2 as [y [[[H2 H3] H4] H5]].
-        apply (H0 (y+a)%N); auto.
-        repeat split; auto.
-        -- rewrite <-(add_0_l a) at 1.
-           now apply O1_le.
-        -- rewrite -> (add_comm a).
-           now apply O1_le.
-  - rewrite <-naturals.lt_not_ge, sum_neg, naturals.lt_not_ge in *; auto.
+  move=> a b X f H.
+  case (classic (a ≤ b)%N) => [[c <-] H0 H1 |
+                               /[dup] H0 /naturals.lt_not_ge H1 H2 H3].
+  - rewrite /sum iterate_shift.
+    (apply sum_card_0; auto) =>
+    [k [H2 H3] | x]; first by apply H0, conj;
+      rewrite ? (add_comm a); auto using le_add_l, O1_le.
+    split => [/H1 [y [[[H2 H3] H4] H5]] | [y [[[H2 H3] H4] H5]]].
+    + exists (y-a)%N.
+      (repeat split; try apply zero_le) => [ | | x' [[H6 H7] H8]].
+      * apply (O1_le_iff a).
+        rewrite (add_comm c) (add_comm (y-a)) sub_abab //.
+      * rewrite add_comm sub_abab; auto using naturals.le_refl.
+      * move: (H5 (x'+a))%N ->; rewrite ? sub_abba ? (add_comm a c) //.
+        eauto using le_add_l, O1_le.
+    + apply (H0 (y+a)%N); auto.
+      rewrite (add_comm a c).
+      eauto using le_add_l, O1_le.
+  - rewrite sum_neg //.
     apply INZ_eq, eq_sym.
-    replace X with ∅; auto using card_empty.
-    apply Extensionality.
-    split; intros H3; try contradiction (Empty_set_classification z).
-    apply H1 in H3 as [y [[[H3 H4] H5] H6]].
+    suff -> : X = ∅; auto using card_empty.
+    (apply Subset_equality_iff, conj; auto using Empty_set_is_subset) =>
+    z /H3 [y [[[H4 H5] H6] H7]].
     contradict H2.
     eauto using naturals.le_trans.
 Qed.
