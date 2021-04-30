@@ -478,17 +478,15 @@ Proof.
   case (reduced_form p) => [m [n [H [-> H0]]]].
   rewrite mul_wf ? Qequiv ? (integers.M1 _ 1) ? (integers.M1 _ 2) ? integers.M3;
     auto using (ne0_cancellation ℤ_ID), integers.zero_ne_1 => H1.
-  (have: 2｜m*m by rewrite H1; auto using (div_mul_r ℤ), (div_refl ℤ) with Z)
-  => /Euclid's_lemma => /(_ two_is_prime).
-  (wlog: / 2｜m; try tauto) => /[swap] _ [k /= H2].
-  move: H2 H H1 -> => H.
+  have [k /= H2]: 2｜m by (have: 2｜m*m by exists (n*n)%Z; rewrite rings.M1) =>
+  /Euclid's_lemma => /(_ two_is_prime) => [[ | ]] //.
+  move: H2 H H1 -> => {m} H.
   (have -> : (k*2*(k*2) = 2*(2*(k*k)))%Z by ring) =>
   /(cancellation_mul_l ℤ_ID) => /(_ (zero_ne_2 ℤ_order)) => H1.
-  (have: 2｜n*n by rewrite -H1; auto using (div_mul_r ℤ), (div_refl ℤ) with Z)
-  => /Euclid's_lemma => /(_ two_is_prime).
-  (wlog: / 2｜n; try tauto) => /[swap] _ H2.
+  have H2: 2｜n by (have: 2｜n*n by exists (k*k)%Z; rewrite rings.M1) =>
+  /Euclid's_lemma => /(_ two_is_prime) => [[ | ]] //.
   move: H two_is_prime => [] _ [] _ /[swap] [[]] /[swap] _ /[swap] H [].
-  apply H; auto using (div_mul_l ℤ), (div_refl ℤ) with Z.
+    by apply H; auto; exists k.
 Qed.
 
 Theorem IZQ_add : ∀ a b : Z, a + b = (a + b)%Z.

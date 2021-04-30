@@ -32,67 +32,37 @@ Section Polynomials_construction.
 
   Theorem polynomials_are_subset : polynomial_set ⊂ power_series_ring ring.
   Proof.
-    intros f H.
-    now apply Specify_classification in H as [H H0].
+    eauto using Specify_subset.
   Qed.
 
   Theorem polynomials_are_subring :
     is_subring (power_series_ring ring) polynomial_set.
   Proof.
-    repeat split.
-    - intros [a A] [b B] H H0.
-      apply Specify_classification in H as [_ H].
-      apply Specify_classification in H0 as [_ H0].
-      apply Specify_classification.
-      rewrite -> despecify in *; destruct H as [n H], H0 as [m H0].
-      simpl in *.
-      split; eauto using elts_in_set.
-      exists (naturals.max m n).
-      intros x H1; rewrite -> coefficient_add, H, H0;
-        eauto using rings.A3, naturals.le_trans,
-        naturals.max_le_l, naturals.max_le_r.
-    - intros [a A] [b B] H H0.
-      apply Specify_classification in H as [_ H].
-      apply Specify_classification in H0 as [_ H0].
-      apply Specify_classification.
-      rewrite -> despecify in *; destruct H as [n H], H0 as [m H0].
-      simpl in *.
-      split; eauto using elts_in_set.
-      exists (n + m)%N.
-      intros x H1.
-      rewrite -> coefficient_mul, <-(sum_of_0 _ x).
-      apply iterate_extensionality.
-      intros k H3.
-      destruct (classic (n ≤ k)%N).
-      + rewrite -> H; auto; now ring_simplify.
-      + rewrite -> H0, mul_0_r; auto.
-        apply NNPP.
-        intros H4.
-        rewrite <-naturals.lt_not_ge in H2, H4.
-        eapply naturals.lt_cross_add in H2; eauto.
-        rewrite -> naturals.add_comm, sub_abab, naturals.lt_not_ge,
-        naturals.add_comm in H2; intuition.
-    - intros [a A] H.
-      apply Specify_classification in H as [_ H].
-      apply Specify_classification.
-      rewrite -> despecify in *; destruct H as [n H].
-      simpl in *.
-      split; eauto using elts_in_set.
-      exists n.
-      intros x H0.
-      rewrite -> coefficient_neg, H; auto; ring.
-    - apply Specify_classification.
-      split; eauto using elts_in_set.
-      rewrite -> despecify.
-      exists 1%N.
-      intros m H.
-      simpl.
-      unfold power_series.one, power_series.IRS.
-      rewrite -> coefficient_seriesify.
-      destruct excluded_middle_informative; subst; auto.
-      apply naturals.le_not_gt in H.
-      contradict H.
-      apply naturals.succ_lt.
+    ((repeat split) =>
+     [[a A] [b B] /Specify_classification [_] /[swap]
+            /Specify_classification [_] |
+      [a A] [b B] /Specify_classification [_] /[swap]
+            /Specify_classification [_] | [a A] /Specify_classification [_] | ];
+     rewrite /polynomial_set Specify_classification ? despecify) =>
+    [[m H] [n H0] | [m H] [n H0] | [n H] | ]; split; eauto using elts_in_set.
+    - exists (naturals.max m n) => x H1.
+      rewrite coefficient_add H ? H0; eauto using rings.A3, naturals.le_trans,
+                                      naturals.max_le_l, naturals.max_le_r.
+    - exists (n + m)%N => x H1.
+      rewrite coefficient_mul -(sum_of_0 _ x).
+      apply iterate_extensionality => k [H2 H3].
+      case (classic (n ≤ k)%N) => [H4 | H4].
+      + rewrite H0 ? mul_0_l //.
+      + rewrite H ? mul_0_r; auto.
+        apply NNPP => H5.
+        move: H5 H4 H1 => /naturals.lt_not_ge /[swap] /naturals.lt_not_ge
+                           /naturals.lt_cross_add /[apply].
+        rewrite sub_abab // naturals.le_not_gt //.
+    - exists n => x H0.
+      rewrite coefficient_neg H; auto; ring.
+    - exists 1%N => m.
+      rewrite /power_series.one /power_series.IRS coefficient_seriesify.
+      case excluded_middle_informative => // -> /not_succ_le //.
   Qed.
 
   Definition polynomial_ring :=
@@ -115,39 +85,25 @@ Section Polynomials_construction.
   Theorem consts_are_polys :
     ∀ c : R, (power_series.IRS _ c) ∈ polynomial_set.
   Proof.
-    intros c.
-    apply Specify_classification.
-    split; eauto using elts_in_set.
-    unfold ISS, power_series.IRS.
-    rewrite -> despecify.
-    exists 1%N.
-    intros m H.
-    rewrite -> coefficient_seriesify.
-    destruct excluded_middle_informative; auto.
-    subst.
-    apply naturals.le_not_gt in H.
-    contradict H.
-    apply naturals.succ_lt.
+    move=> c.
+    apply Specify_classification, conj; eauto using elts_in_set.
+    rewrite /ISS /power_series.IRS despecify coefficient_seriesify.
+    exists 1%N => m.
+    case excluded_middle_informative; auto => -> /not_succ_le //.
   Qed.
 
   Notation PS := (power_series ring).
 
   Theorem x_is_poly : x ring ∈ polynomial_set.
   Proof.
-    apply Specify_classification.
-    split; eauto using elts_in_set.
-    unfold ISS, x, shift, power_series.one, power_series.IRS.
-    rewrite -> despecify.
-    exists 2%N.
-    intros m [c H].
-    rewrite -> ? coefficient_seriesify.
-    repeat destruct excluded_middle_informative; auto.
-    apply sub_0_le in e as [d H0].
-    subst.
-    rewrite <-(add_0_r 1), <-add_1_r, <-? naturals.add_assoc in H0.
-    apply naturals.cancellation_add in H0.
-    rewrite -> add_0_l, naturals.add_comm, add_1_r in H0.
-    now contradiction (PA4 (c+d)).
+    apply Specify_classification, conj; eauto using elts_in_set.
+    rewrite /ISS /x /shift /power_series.one /power_series.IRS
+            despecify ? coefficient_seriesify.
+    exists 2%N => m [c].
+    (repeat case excluded_middle_informative; auto) =>
+    /sub_0_le /[swap] /succ_0 [n ->] /naturals.le_antisymm
+     /(_ (one_le_succ n)) ->.
+    rewrite add_comm add_succ_r add_1_r => /(@eq_sym N) /PA5 /PA4 //.
   Qed.
 
 End Polynomials_construction.
@@ -240,446 +196,331 @@ Section Polynomial_theorems.
 
   Theorem IPS_eq : ∀ f g : poly, (f : series) = (g : series) ↔ f = g.
   Proof.
-    intros f g.
-    split; intros H; try congruence.
-    now apply ISR_eq in H.
+    split => [/ISR_eq | ->] //.
   Qed.
 
   Theorem IPS_add : ∀ f g : poly, ((f : series) + (g : series))%series = f + g.
   Proof.
-    intros f g.
-    now apply set_proj_injective.
+    move=> f g.
+      by apply set_proj_injective.
   Qed.
 
   Theorem IPS_neg : ∀ f : poly, (-f : series)%series = -f.
   Proof.
-    intros f.
-    now apply set_proj_injective.
+    move=> f.
+      by apply set_proj_injective.
   Qed.
 
   Theorem IPS_mul : ∀ f g : poly, ((f : series) * (g : series))%series = f * g.
   Proof.
-    intros f g.
-    now apply set_proj_injective.
+    move=> f g.
+      by apply set_proj_injective.
   Qed.
 
   Theorem IRP_eq : ∀ a b : R, (a : poly) = (b : poly) ↔ a = b.
   Proof.
-    intros a b.
-    split; intros H; try congruence.
-    inversion H.
-    apply set_proj_injective in H1.
-    now apply IRS_eq.
+    split => [H | ->] //.
+    inversion H as [H0].
+    move: H0 => /set_proj_injective /IRS_eq //.
   Qed.
 
   Theorem IRP_add : ∀ a b : R, (a : poly) + (b : poly) = (a + b)%R.
   Proof.
-    intros a b.
-    unfold IRP; apply set_proj_injective; simpl.
-    rewrite -> (IRS_add _).
-    unfold ISR, rings.IRS, ISS.
-    simpl.
-    do 2 f_equal; now apply set_proj_injective.
+    rewrite /IRP => a b.
+    apply set_proj_injective => /=.
+    rewrite (IRS_add _) /ISR /rings.IRS /ISS /=.
+    do 2 f_equal; apply set_proj_injective => //.
   Qed.
 
   Theorem IRP_mul : ∀ a b : R, (a : poly) * (b : poly) = (a * b)%R.
   Proof.
-    intros a b.
-    unfold IRP; apply set_proj_injective; simpl.
-    rewrite -> (IRS_mul _).
-    unfold ISR, rings.IRS, ISS.
-    simpl.
-    do 2 f_equal; now apply set_proj_injective.
+    rewrite /IRP => a b.
+    apply set_proj_injective => /=.
+    rewrite (IRS_mul _) /ISR /rings.IRS /ISS /=.
+    do 2 f_equal; apply set_proj_injective => //.
   Qed.
 
   Theorem IRP_neg : ∀ a : R, (-a : poly) = (-a)%R.
   Proof.
-    intros a.
-    unfold IRP; apply set_proj_injective; simpl.
-    rewrite -> (IRS_neg _).
-    unfold ISR, rings.IRS, ISS.
-    simpl.
-    do 2 f_equal; now apply set_proj_injective.
+    rewrite /IRP => a.
+    apply set_proj_injective => /=.
+    rewrite (IRS_neg _) /ISR /rings.IRS /ISS /=.
+    do 2 f_equal; apply set_proj_injective => //.
   Qed.
 
   Theorem IRP_1 : 1 = 1%R.
   Proof.
-    apply set_proj_injective.
-    simpl.
-    now destruct polynomials_are_subring, a.
+    apply set_proj_injective => /=.
+    case polynomials_are_subring => [? [? []]] //.
+  Qed.
+
+  Theorem IRP_0 : 0 = 0%R.
+  Proof.
+    apply set_proj_injective => //.
   Qed.
 
   Theorem IRP_pow : ∀ (n : N) (a : R), (a : poly)^n = (a^n)%R.
   Proof.
-    induction n using Induction; intros a;
-      now rewrite -> ? rings.pow_0_r, ? IRP_1,
-      ? rings.pow_succ_r, ? IHn, ? IRP_mul.
+    induction n using Induction =>
+    a; rewrite ? rings.pow_0_r ? IRP_1 ? rings.pow_succ_r ? IHn ? IRP_mul //.
   Qed.
 
   Theorem nonzero_coefficients : ∀ f, f ≠ 0 ↔ ∃ m, coefficient f m ≠ 0%R.
   Proof.
-    intros f.
-    split; intros H.
+    split => [H | /[swap] -> [m []]].
     - apply NNPP.
-      contradict H.
-      apply IPS_eq, power_series_extensionality.
-      simpl in *.
-      unfold IPS.
-      rewrite <-sub_zero_is_zero.
-      extensionality n.
-      simpl.
-      unfold power_series.zero, IRS, power_series.IRS.
-      rewrite -> coefficient_seriesify.
-      destruct excluded_middle_informative; apply NNPP; contradict H; eauto.
-    - intros H0.
-      subst.
-      destruct H as [m H].
-      contradict H.
-      unfold coefficient, IPS.
-      simpl.
-      rewrite <-sub_zero_is_zero.
-      simpl.
-      unfold coefficient, power_series.zero, IRS, power_series.IRS.
-      rewrite -> coefficient_seriesify.
-      destruct excluded_middle_informative; tauto.
+      move: H => /[swap] H /IPS_eq [].
+      apply power_series_extensionality => /=.
+      rewrite /IPS -sub_zero_is_zero.
+      extensionality n => /=.
+      rewrite /power_series.zero /IRS /power_series.IRS coefficient_seriesify.
+      case excluded_middle_informative; apply NNPP; contradict H; eauto.
+    - rewrite /coefficient /IPS /=
+      -sub_zero_is_zero /= /coefficient /power_series.zero /IRS
+                        /power_series.IRS coefficient_seriesify.
+      case excluded_middle_informative; tauto.
   Qed.
 
   Theorem degree_construction :
     ∀ f, f ≠ 0 →
          ∃ m, coefficient f m ≠ 0%R ∧ ∀ n, (m < n)%N → coefficient f n = 0%R.
   Proof.
-    intros f H.
-    apply nonzero_coefficients in H as [m H].
-    pose proof (elts_in_set f) as H0; simpl in *.
-    apply Specify_classification in H0 as [H0 H1].
-    rewrite -> (reify H0), despecify in *.
-    destruct H1 as [n H1].
-    destruct (lub (λ x, coefficient f x ≠ 0%R)) as [s [H2 H3]];
-      try now (exists m).
-    { exists n.
-      intros x H3.
+    move=> f /nonzero_coefficients [m H].
+    move: (elts_in_set f) => /Specify_classification [H0].
+    rewrite (reify H0) despecify => [[n H1]].
+    elim (lub (λ x, coefficient f x ≠ 0%R)) =>
+    [s [H2 H3] | | ]; try now (exists m).
+    - exists s.
+      split; auto => x [/naturals.le_antisymm H4 H5].
+      apply NNPP => /H3 /H4 //.
+    - exists n => x H3.
       apply naturals.le_not_gt.
-      contradict H3.
-      unfold coefficient.
-      rewrite <-(H1 x); try (f_equal; now apply set_proj_injective).
-      now destruct H3. }
-    exists s.
-    split; auto.
-    intros x [H4 H5].
-    apply NNPP.
-    contradict H5.
-    eauto using naturals.le_antisymm.
+      move: H3 => /[swap] [[d H3]].
+      (rewrite /coefficient -(H1 x) //) => [[]].
+      f_equal.
+      apply set_proj_injective => //.
   Qed.
 
   Definition degree : poly → N.
   Proof.
-    intros f.
-    destruct (excluded_middle_informative (f = 0)).
+    move=> f.
+    case (excluded_middle_informative (f = 0)) =>
+    [H | /degree_construction /constructive_indefinite_description [d H]].
     - exact 0%N.
-    - apply degree_construction in n.
-      destruct (constructive_indefinite_description n) as [d].
-      exact d.
+    - exact d.
   Defined.
 
   Theorem degree_zero : degree 0 = 0%N.
   Proof.
-    unfold degree.
-    destruct excluded_middle_informative; auto; exfalso; auto.
+    rewrite /degree.
+    case excluded_middle_informative => *; auto; exfalso; auto.
   Qed.
 
   Theorem degree_spec : ∀ f m,
       f ≠ 0 → degree f = m ↔ (coefficient f m ≠ 0%R ∧
                               ∀ n, (m < n)%N → coefficient f n = 0%R).
   Proof.
-    intros f m H.
-    split; intros H0; unfold degree in *;
-      destruct excluded_middle_informative; try tauto;
-        destruct constructive_indefinite_description as [y]; subst; auto.
-    destruct H0 as [H0 H1], a as [H2 H3], (lt_trichotomy y m)
-          as [H4 | [H4 | H4]]; auto; exfalso; auto.
+    ((split; rewrite /degree; case excluded_middle_informative; try tauto) =>
+     {}H; elim constructive_indefinite_description) =>
+    [y /[swap] -> [H0 H1] | y [H0 H1] [H2 H3]] //.
+    (apply naturals.le_antisymm; rewrite naturals.le_not_gt) => [/H3 | /H1] //.
   Qed.
 
   Lemma coeffs_of_x : ∀ n : N, n ≠ 1%N → coefficient x n = 0%R.
   Proof.
-    intros n H.
-    unfold IPS, x, ISR, ISS.
-    simpl in *.
-    replace 0%R with (power_series.coefficient _ (power_series.x ring) n).
-    { unfold coefficient.
+    rewrite /IPS /x /ISR /ISS => /= n H.
+    have -> : 0%R = power_series.coefficient _ (power_series.x ring) n.
+    - rewrite /power_series.x /shift /power_series.one /IRS /power_series.IRS
+              ? coefficient_seriesify sub_1_r.
+      (repeat case excluded_middle_informative; auto) => /[swap] /succ_0 [m H0].
+      move: H0 H pred_succ -> => /[swap] -> /[swap] -> //.
+    - rewrite /coefficient.
       f_equal.
-      now apply set_proj_injective. }
-    unfold power_series.x, shift, power_series.one, IRS, power_series.IRS.
-    rewrite -> ? coefficient_seriesify.
-    repeat destruct excluded_middle_informative; auto.
-    contradict H.
-    apply sub_0_le in e.
-    apply naturals.le_antisymm; eauto.
-    apply succ_0 in n0 as [c H].
-    subst.
-    exists c.
-    now rewrite <-add_1_r, naturals.add_comm.
+      now apply set_proj_injective.
   Qed.
 
   Lemma x_coeff_of_x : coefficient x 1 = 1%R.
   Proof.
-    unfold IPS, x, ISR, ISS.
-    simpl in *.
-    replace 1%R with (power_series.coefficient _ (power_series.x ring) 1).
-    { unfold coefficient.
+    rewrite /IPS /x /ISR /ISS /=.
+    have -> : 1%R = power_series.coefficient _ (power_series.x ring) 1.
+    - rewrite /power_series.x /shift /power_series.one /IRS /power_series.IRS
+              ? coefficient_seriesify sub_diag.
+      repeat case excluded_middle_informative; auto => // /(@eq_sym N) /PA4 //.
+    - rewrite /coefficient.
       f_equal.
-      now apply set_proj_injective. }
-    unfold power_series.x, shift, power_series.one, IRS, power_series.IRS.
-    rewrite -> ? coefficient_seriesify.
-    repeat destruct excluded_middle_informative; auto.
-    - now contradiction (PA4 0).
-    - now rewrite -> sub_diag in n0.
+      now apply set_proj_injective.
   Qed.
 
   Lemma IPS_pow : ∀ n (f : poly), ((f : series)^n)%series = f^n.
   Proof.
-    induction n using Induction; intros f.
-    - rewrite -> ? (rings.pow_0_r PR), ? (rings.pow_0_r SR).
+    induction n using Induction => f.
+    - rewrite ? (rings.pow_0_r PR) ? (rings.pow_0_r SR).
       apply sub_one_is_one.
-    - now rewrite -> ? (pow_succ_r PR), ? (pow_succ_r SR), <-IPS_mul, IHn in *.
+    - rewrite ? (pow_succ_r PR) ? (pow_succ_r SR) -IPS_mul IHn //.
   Qed.
 
   Lemma coeffs_of_x_ne_n : ∀ m n, m ≠ n → coefficient (x^n) m = 0%R.
   Proof.
-    intros m n H.
-    revert m H.
-    induction n using Induction; intros m H.
-    { rewrite -> rings.pow_0_r.
-      unfold coefficient, IPS; simpl.
-      rewrite <-sub_one_is_one.
-      simpl.
-      unfold power_series.one, IRS, power_series.IRS, coefficient.
-      rewrite -> coefficient_seriesify.
-      destruct excluded_middle_informative; tauto. }
-    unfold coefficient in *.
-    rewrite -> pow_succ_r, <-IPS_mul, <-IPS_pow in *.
-    simpl.
-    unfold power_series.mul.
-    rewrite -> coefficient_seriesify, <-(sum_of_0 _ m).
-    apply iterate_extensionality.
-    intros k [H0 [c H1]].
-    destruct (classic (n = k)).
-    - subst.
-      fold (coefficient x (k+c-k)).
-      rewrite -> coeffs_of_x; try now ring_simplify.
-      contradict H.
-      rewrite -> naturals.add_comm, sub_abba, <-add_1_r in *.
-      ring [H].
-    - rewrite -> IHn; auto; now ring_simplify.
+    move /[swap].
+    elim/Induction => [n H | n].
+    { rewrite rings.pow_0_r /coefficient /IPS /=
+      -sub_one_is_one /= /power_series.one /IRS /power_series.IRS
+                      /coefficient coefficient_seriesify.
+      case excluded_middle_informative; tauto. }
+    rewrite /coefficient pow_succ_r -IPS_mul -IPS_pow /= => IH m H.
+    rewrite /power_series.mul coefficient_seriesify -(sum_of_0 _ m).
+    apply iterate_extensionality => k [H0 [c H1]].
+    move: H1 H <-.
+    case (classic (n = k)) => [-> H | H H1].
+    - rewrite -/(coefficient x (k+c-k)) coeffs_of_x; try ring.
+      move: H => /[swap].
+      rewrite {1}naturals.add_comm sub_abba -add_1_r => -> //.
+    - rewrite IH; auto; ring.
   Qed.
 
   Lemma degree_bound : ∀ n f,
       ((∀ m : N, n < m → coefficient f m = 0%R) → degree f ≤ n)%N.
   Proof.
-    intros n f H.
-    unfold degree.
-    destruct excluded_middle_informative; auto using zero_le.
-    destruct constructive_indefinite_description as [d [H1 H2]].
+    rewrite /degree => n f H.
+    case excluded_middle_informative; auto using zero_le => H0.
+    elim constructive_indefinite_description => [d [H1 H2]].
     apply naturals.le_not_gt.
-    contradict H1.
-    auto.
+    move: H1 => /[swap] /H //.
   Qed.
 
   Lemma coeffs_above_degree : ∀ n f, (degree f < n)%N → coefficient f n = 0%R.
   Proof.
-    intros n f H.
-    unfold degree in H.
-    destruct excluded_middle_informative.
-    - subst.
-      unfold coefficient, IPS.
-      simpl.
-      rewrite <-sub_zero_is_zero.
-      simpl.
-      unfold power_series.zero, IRS, power_series.IRS.
-      rewrite -> coefficient_seriesify.
-      destruct excluded_middle_informative; tauto.
-    - destruct constructive_indefinite_description as [d [H0 H1]].
-      auto.
+    rewrite /degree => n f.
+    case excluded_middle_informative => [-> | H].
+    - rewrite /coefficient /IPS /=
+      -sub_zero_is_zero /= /power_series.zero /IRS /power_series.IRS
+                        coefficient_seriesify.
+      case excluded_middle_informative; tauto.
+    - elim constructive_indefinite_description => [d [H0 H1]] /H1 //.
   Qed.
 
   Lemma IPS_IRP : ∀ c : R, (c : series) = IRS c.
   Proof.
-    intros c.
-    now apply set_proj_injective.
+    move=> c.
+      by apply set_proj_injective.
   Qed.
 
   Lemma const_coeff_mul :
     ∀ n f (c : R), coefficient (c * f) n = (c * coefficient f n)%R.
   Proof.
-    intros n f c.
-    unfold coefficient.
-    now rewrite <-power_series.const_coeff_mul, <-IPS_mul, IPS_IRP.
+    rewrite /coefficient => n f c.
+    rewrite -power_series.const_coeff_mul -IPS_mul IPS_IRP //.
   Qed.
 
   Lemma coeffs_of_x_to_n : ∀ n, coefficient (x^n) n = 1%R.
   Proof.
     induction n using Induction.
-    { rewrite -> rings.pow_0_r.
-      simpl.
-      unfold coefficient, IPS; simpl.
-      rewrite <-sub_one_is_one.
-      simpl.
-      unfold power_series.one, IRS, power_series.IRS, coefficient.
-      rewrite -> coefficient_seriesify.
-      destruct excluded_middle_informative; tauto. }
-    rewrite -> pow_succ_r.
-    simpl.
-    unfold coefficient, IPS.
-    rewrite <-ISR_mul; simpl in *.
-    unfold power_series.mul, coefficient in *.
-    rewrite -> coefficient_seriesify, <-(singleton_sum _ n (S n) 1%R);
-      auto using le_succ.
-    apply iterate_extensionality.
-    intros k [H0 [c H1]].
-    destruct excluded_middle_informative.
-    - subst.
-      rewrite <-IHn, <-add_1_r, naturals.add_comm, sub_abba.
-      fold IPS (coefficient x 1).
-      now rewrite -> x_coeff_of_x; ring_simplify.
-    - fold IPS (coefficient (x^n) k).
-      rewrite -> coeffs_of_x_ne_n; auto; now ring_simplify.
+    - rewrite rings.pow_0_r /= /coefficient /IPS /=
+      -sub_one_is_one /= /power_series.one /IRS /power_series.IRS /coefficient
+                      coefficient_seriesify.
+      case excluded_middle_informative; tauto.
+    - rewrite pow_succ_r /= /coefficient /IPS
+      -ISR_mul /= /power_series.mul /coefficient coefficient_seriesify
+      -(singleton_sum _ n (S n) 1%R); auto using le_succ.
+      apply iterate_extensionality => k.
+      case excluded_middle_informative => [-> | H].
+      + rewrite -IHn -add_1_r naturals.add_comm sub_abba -/(coefficient x 1)
+                              x_coeff_of_x M3_r /coefficient //.
+      + rewrite -/IPS -/(coefficient (x^n) k) coeffs_of_x_ne_n // mul_0_l //.
   Qed.
 
   Theorem coefficient_add : ∀ n f g,
       coefficient (f + g) n = (coefficient f n + coefficient g n)%R.
   Proof.
-    intros n f g.
-    unfold coefficient.
-    now rewrite <-IPS_add, <-power_series.coefficient_add.
+    rewrite /coefficient => n f g.
+    rewrite -IPS_add -power_series.coefficient_add //.
   Qed.
 
   Theorem coefficient_neg : ∀ n f, coefficient (-f) n = (- coefficient f n)%R.
   Proof.
-    intros n f.
-    unfold coefficient.
-    now rewrite <-IPS_neg, <-power_series.coefficient_neg.
+    rewrite /coefficient => n f.
+    rewrite -IPS_neg -power_series.coefficient_neg //.
   Qed.
 
   Theorem coefficient_mul : ∀ n f g,
       coefficient (f * g) n =
       sum _ (λ k, (coefficient f k * coefficient g (n-k))%R) 0 n.
   Proof.
-    intros n f g.
-    unfold coefficient.
-    now rewrite <-IPS_mul, <-power_series.coefficient_mul.
+    rewrite /coefficient => n f g.
+    rewrite -IPS_mul -power_series.coefficient_mul //.
   Qed.
 
   Lemma minus_leading_term : ∀ f,
       (1 ≤ degree f → degree (f - (coefficient f (degree f)) *
                                   x^(degree f))%poly ≤ degree f - 1)%N.
   Proof.
-    intros f H.
-    apply degree_bound.
-    intros m H0.
-    rewrite -> (sub_is_neg (polynomial_ring _)),
-    coefficient_add, coefficient_neg, const_coeff_mul in *.
-    destruct (classic (m = degree f)) as [H1 | H1]; subst.
-    - rewrite -> coeffs_of_x_to_n; auto.
-      now ring_simplify.
-    - rewrite -> coeffs_of_x_ne_n; auto.
-      ring_simplify.
-      rewrite -> coeffs_above_degree; auto.
-      destruct H0 as [[c H0] H2], H as [d H].
-      rewrite <-H0, <-H, naturals.lt_def in *.
-      exists (c-1)%N.
-      rewrite -> (naturals.add_comm 1), <-naturals.add_assoc,
-      sub_abab, sub_abba in *.
-      + split; auto.
-        contradict H1.
-        apply eq_sym, sub_0_le in H1.
-        apply f_equal, NNPP.
-        contradict H2.
-        rewrite -> (lt_1_eq_0 c), add_0_r; repeat split; auto.
-      + apply naturals.le_not_gt.
-        contradict H2.
-        rewrite -> (lt_1_eq_0 c); auto; ring.
+    move=> f H.
+    apply degree_bound => m.
+    rewrite (sub_is_neg (polynomial_ring _)) coefficient_add
+            coefficient_neg const_coeff_mul.
+    case (classic (m = degree f)) =>
+    [-> H0 | H0 /S_lt]; first by rewrite coeffs_of_x_to_n M3_r rings.A4 //.
+    rewrite sub_1_r -naturals.le_lt_succ => H1.
+    rewrite coeffs_of_x_ne_n // mul_0_r -neg_0 A3_r coeffs_above_degree //.
+    split; auto.
+    move: H H1 pred_succ => /naturals.lt_0_le_1 /nonzero_lt /succ_0 =>
+    [[k]] -> /[swap] -> //.
   Qed.
 
   Lemma polynomial_sum_lemma : ∀ d : N, ∀ f,
         (degree f ≤ d)%N → f = sum PR (λ n, coefficient f n * x^n) 0 d.
   Proof.
-    intros d.
-    induction d using Induction.
-    { intros f [c H].
-      assert (degree f = 0%N) as H0.
-      { apply naturals.cancellation_0_add in H; tauto. }
-      rewrite -> sum_0.
-      apply IPS_eq, power_series_extensionality.
-      extensionality n.
-      fold (coefficient f n) (coefficient (coefficient f 0 * x ^ 0%N) n).
-      destruct (classic (n = 0%N)) as [H1 | H1].
-      - subst.
-        now rewrite -> const_coeff_mul, coeffs_of_x_to_n; ring_simplify.
-      - rewrite -> const_coeff_mul, coeffs_of_x_ne_n, coeffs_above_degree;
-          auto; try ring.
-        rewrite -> H0, naturals.lt_def.
-        eauto using naturals.add_0_l. }
-    intros f H.
-    destruct (classic (degree f = S d)) as [H0 | H0].
-    - rewrite -> sum_succ, <-(rings.A3 _ f), (rings.A1 _ 0),
-      <-(rings.A4 _ (coefficient f (S d) * x ^ S d)),
-      (rings.A1 _ (coefficient f (S d) * x ^ S d)),
-      rings.A2 at 1; auto using zero_le.
+    induction d using Induction => [f [c /naturals.cancellation_0_add [H H0]] |
+                                    f /le_lt_or_eq [/[dup] H [H0 H1] | H]].
+    - rewrite sum_0 -IPS_eq.
+      apply power_series_extensionality, functional_extensionality => n.
+      rewrite -/(coefficient f n) -/(coefficient (coefficient f 0 * x ^ 0%N) n).
+      case (classic (n = 0%N)) => [-> | H1].
+      + rewrite const_coeff_mul coeffs_of_x_to_n M3_r //.
+      + rewrite const_coeff_mul coeffs_of_x_ne_n // coeffs_above_degree
+                ? mul_0_r // H -nonzero_lt //.
+    - rewrite -{1}(rings.A3 _ f) rings.A1 sum_succ; auto using zero_le.
       f_equal.
-      rewrite <-sub_is_neg, (IHd (f - (coefficient f (S d) * x ^ S d))).
-      2: { replace d with (S d - 1)%N at 3.
-           - rewrite <-H0.
-             apply minus_leading_term.
-             rewrite -> H0.
-             apply (succ_le _ d), zero_le.
-           - now rewrite <-add_1_r, sub_abba. }
-      apply iterate_extensionality.
-      intros k [H1 H2].
-      rewrite -> sub_is_neg, coefficient_add, coefficient_neg.
-      replace (coefficient (coefficient f (S d) * x ^ S d) k) with 0%R.
-      + now rewrite <-neg_0, rings.A1, rings.A3.
-      + rewrite -> const_coeff_mul, coeffs_of_x_ne_n, mul_0_r; auto.
-        intros H3.
-        rewrite -> H3, naturals.le_not_gt in H2.
-        contradict H2.
-        apply naturals.succ_lt.
-    - rewrite <-(rings.A3 _ f), rings.A1, sum_succ at 1; auto using zero_le.
+      * apply IHd, le_lt_succ => //.
+      * rewrite coeffs_above_degree -? IRP_0 ? mul_0_l; repeat split; auto.
+    - rewrite sum_succ -1 ? {1}(rings.A3 _ f) ? (rings.A1 _ 0)
+                          -? (rings.A4 _ (coefficient f (S d) * x ^ S d))
+                          ? (rings.A1 _ (coefficient f (S d) * x ^ S d))
+                          ? rings.A2; auto using zero_le.
       f_equal.
-      + apply IHd, naturals.le_not_gt.
-        contradict H0.
-        eauto using squeeze_upper.
-      + rewrite -> coeffs_above_degree; repeat split; auto.
-        replace (0%R : poly) with 0 by now apply set_proj_injective.
-        ring.
+      rewrite -sub_is_neg (IHd (f - (coefficient f (S d) * x ^ S d))).
+      + rewrite -{3}(pred_succ d) -sub_1_r -H.
+        apply minus_leading_term.
+        rewrite H.
+        apply one_le_succ.
+      + apply iterate_extensionality => k [H1 H2].
+        rewrite sub_is_neg coefficient_add coefficient_neg.
+        suff -> : coefficient (coefficient f (S d) * x ^ S d) k
+                  = 0%R by rewrite -neg_0 rings.A1 rings.A3 //.
+        rewrite const_coeff_mul coeffs_of_x_ne_n ? mul_0_r //.
+        move: H2 => /[swap] -> /not_succ_le //.
   Qed.
 
   Theorem degree_of_sum : ∀ d (a : N → R),
       (degree (sum PR (λ n, a n * x^n)%poly 0 d) ≤ d)%N.
   Proof.
-    intros d a.
-    apply degree_bound; auto.
-    intros m H.
+    move=> d a.
+    apply degree_bound; auto => m H.
     induction d using Induction.
-    - rewrite -> sum_0, const_coeff_mul, coeffs_of_x_ne_n;
-        try now ring_simplify.
-      intros H0.
-      subst.
-      contradiction (naturals.lt_irrefl 0).
-    - rewrite -> sum_succ, coefficient_add, IHd, rings.A3, const_coeff_mul,
-      coeffs_of_x_ne_n; eauto using zero_le, naturals.lt_trans,
-                        naturals.succ_lt; try now ring_simplify.
-      intros H0.
-      subst.
-      contradiction (naturals.lt_irrefl (S d)).
+    - rewrite sum_0 const_coeff_mul coeffs_of_x_ne_n ? mul_0_r ? nonzero_lt //.
+    - rewrite sum_succ ? coefficient_add ? IHd ? rings.A3 ? const_coeff_mul
+              ? coeffs_of_x_ne_n ? mul_0_r;
+        eauto using zero_le, naturals.lt_trans, naturals.succ_lt.
+      move: H => /[swap] -> /naturals.lt_irrefl //.
   Qed.
 
   Theorem coefficient_sum_add : ∀ d a k,
       coefficient (sum _ (λ n, a n) 0 d) k =
       sum _ (λ n, (coefficient (a n) k)) 0 d.
   Proof.
-    intros d a k.
-    induction d using Induction.
-    - now rewrite -> ? sum_0.
-    - rewrite -> ? sum_succ, <-IHd, coefficient_add; auto using zero_le.
+    induction d using Induction
+    => a k; rewrite ? sum_0 // ? sum_succ -? IHd ? coefficient_add;
+         auto using zero_le.
   Qed.
 
   Theorem coefficient_extraction : ∀ d k (a : N → R),
