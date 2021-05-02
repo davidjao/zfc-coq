@@ -9,77 +9,62 @@ Notation "a ≡ b (mod  n )" := (eqm n a b) (at level 70) : Z_scope.
 
 Theorem eqm_refl : ∀ n a : Z, a ≡ a (mod n).
 Proof.
-  intros n a.
-  unfold eqm.
-  replace (a - a) with 0 by ring.
-  now apply div_0_r.
+  rewrite /eqm /integers.sub /divide => n a.
+  rewrite integers.A4 -[integers.zero]/(rings.zero ℤ).
+  auto using div_0_r.
 Qed.
 
 Theorem eq_eqm : ∀ a b n, a = b → a ≡ b (mod n).
 Proof.
-  intros a b n H.
-  rewrite -> H.
-  apply eqm_refl.
+  move=> a b n ->.
+  auto using eqm_refl.
 Qed.
 
 Theorem eqm_sym : ∀ n a b : Z, a ≡ b (mod n) → b ≡ a (mod n).
 Proof.
-  intros n a b H.
-  unfold eqm in *.
-  replace (a-b) with ((-1%Z)*(b-a)) by ring.
-  now apply div_mul_l.
+  rewrite /eqm => n a b /div_mul_l => /(_ (-1)).
+    by have -> : a-b = -1 * (b-a) by ring.
 Qed.
 
 Theorem eqm_gcd : ∀ n a b, a ≡ b (mod n) → gcd(a, n) = 1 → gcd(b, n) = 1.
 Proof.
-  intros n a b H H0.
-  repeat split; try apply div_1_l.
-  intros x H1 H2.
+  move=> n a b [k /= H] H0.
+  repeat split; auto using div_1_l with Z => x H1 H2.
   apply H0; auto.
-  destruct H as [k H]; simpl in *.
-  replace a with (b + (-k)*n).
-  - apply div_add, div_mul_l; auto.
-  - replace ((-k)*n) with (-(k*n)) by ring.
-    rewrite <-H.
-    ring.
+  have -> : a = (1*b + -(b-a)) by ring.
+  rewrite H /divide -[integers.add]/(rings.add ℤ) -[integers.mul]/(rings.mul ℤ)
+  -[integers.neg]/(rings.neg ℤ).
+  auto using div_add, div_mul_l, div_sign_r_neg, div_mul_l.
 Qed.
 
 Theorem n_mod_n_is_0 : ∀ n, n ≡ 0 (mod n).
 Proof.
-  intros n.
-  apply div_add.
-  - apply div_0_r.
-  - apply div_sign_r_neg, div_refl.
+  rewrite /eqm /divide /integers.sub -[integers.add]/(rings.add ℤ)
+  -[integers.neg]/(rings.neg ℤ) -[integers.zero]/(rings.zero ℤ) => n.
+  auto using div_add, div_0_r, div_sign_r_neg, div_refl.
 Qed.
 
 Theorem eqm_trans : ∀ n a b c : Z,
     a ≡ b (mod n) → b ≡ c (mod n) → a ≡ c (mod n).
 Proof.
-  intros n a b c H H0.
-  unfold eqm in *.
-  replace (c-a) with ((c-b)+(b-a)) by ring.
-  now apply div_add.
+  rewrite /eqm => n a b c H H0.
+  have -> : c-a = (c - b) + (b - a) by ring.
+    by apply div_add.
 Qed.
 
 Theorem eqn_zero : ∀ n, n ≡ 0 (mod n).
 Proof.
-  intros n.
+  move=> n.
   apply eqm_sym.
-  exists 1.
-  simpl.
+  exists 1 => /=.
   now ring_simplify.
 Qed.
 
 Theorem eqm_div_n : ∀ n a, n｜a ↔ a ≡ 0 (mod n).
 Proof.
-  intros n a.
-  split; intros H.
-  - apply eqm_sym.
-    unfold eqm.
-    now ring_simplify.
-  - apply eqm_sym in H.
-    unfold eqm in *.
-    now ring_simplify in H.
+  split => [H | /eqm_sym]; [apply eqm_sym | ];
+             rewrite /eqm /integers.sub -[integers.neg]/(rings.neg ℤ)
+             -[integers.add]/(rings.add ℤ) -neg_0 rings.A3_r //.
 Qed.
 
 Section Modular_arithmetic.
@@ -93,105 +78,95 @@ Section Modular_arithmetic.
 
   Theorem eqm_sym_iff : ∀ a b : Z, a ≡ b (mod n) ↔ b ≡ a (mod n).
   Proof.
-    split; intros H; now rewrite -> H.
+    now split => [-> | ->].
   Qed.
 
   Add Morphism integers.add
       with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_add_mod.
   Proof.
-    intros x y H x0 y0 H0.
-    unfold eqm in *.
-    replace (y+y0-(x+x0)) with ((y-x)+(y0-x0)) by ring.
-    now apply div_add.
+    rewrite /eqm => x y H x0 y0 H0.
+    have -> : y+y0-(x+x0) = (y-x)+(y0-x0) by ring.
+      by apply div_add.
   Qed.
 
   Add Morphism integers.mul
       with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_mul_mod.
   Proof.
-    intros x y H x0 y0 H0.
-    apply (eqm_trans n _ (y*x0)); unfold eqm in *.
-    - replace (y*x0-x*x0) with ((y-x)*x0) by ring.
-      now apply div_mul_r.
-    - replace (y*y0-y*x0) with (y*(y0-x0)) by ring.
-      now apply div_mul_l.
+    rewrite /eqm => x y H x0 y0 H0.
+    apply (eqm_trans n _ (y*x0)); rewrite /eqm.
+    - have -> : y*x0-x*x0 = (y-x)*x0 by ring.
+        by apply div_mul_r.
+    - have -> : y*y0-y*x0 = y*(y0-x0) by ring.
+        by apply div_mul_l.
   Qed.
 
   Add Morphism integers.neg
       with signature (eqm n) ==> (eqm n) as Z_neg_mod.
   Proof.
-    intros x y H.
-    unfold eqm in *.
-    replace (-y--x) with ((-1%Z)*(y-x)) by ring.
-    now apply div_mul_l.
+    rewrite /eqm => x y H.
+    have -> : -y--x = (-1%Z)*(y-x) by ring.
+      by apply div_mul_l.
   Qed.
 
   Add Morphism integers.sub
       with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_sub_mod.
   Proof.
-    intros x y H x0 y0 H0.
-    unfold integers.sub.
-    now rewrite -> H, H0.
+    now rewrite /integers.sub => x y /[swap] x0 /[swap] y0 -> ->.
   Qed.
 
   Add Morphism (rings.pow ℤ)
       with signature (eqm n) ==> (eq) ==> (eqm n) as Z_pow_mod.
   Proof.
-    intros x y H k.
+    move=> x y H k.
     induction k using Induction;
-      now rewrite -> ? rings.pow_0_r, ? rings.pow_succ_r, ? IHk, ? H.
+      now rewrite ? rings.pow_0_r ? rings.pow_succ_r ? IHk ? H.
   Qed.
 
   Definition modulo : Z → Z.
   Proof.
-    intros x.
-    destruct (excluded_middle_informative (0 < n)).
-    - pose proof division_algorithm x n l as H.
-      destruct (constructive_indefinite_description H) as [q H0].
-      destruct (constructive_indefinite_description H0) as [r H1].
-      exact r.
+    case (excluded_middle_informative (0 < n)) =>
+    [/[swap] x /(division_algorithm x) /constructive_indefinite_description
+      [q /constructive_indefinite_description [r H]] | H x].
+    - exact r.
     - exact 0.
   Defined.
 
-  Theorem reduce_mod_eqm : ∀ a, 0 < n → a ≡ modulo a (mod n).
+  Theorem modulo_bound : 0 < n → ∀ a, 0 ≤ modulo a < n.
   Proof.
-    intros a H.
-    unfold modulo.
-    destruct excluded_middle_informative; try tauto.
-    destruct constructive_indefinite_description as [q];
-      destruct constructive_indefinite_description as [r [H0 H1]].
-    rewrite <-H0.
-    rewrite -> n_mod_n_is_0 at 2.
-    now ring_simplify.
+    rewrite /modulo => H a.
+    case excluded_middle_informative => [{}H | ] //.
+    elim constructive_indefinite_description => [q ?].
+    elim constructive_indefinite_description => [r [? ?]] //.
+  Qed.
+
+  Theorem reduce_mod_eqm : 0 < n → ∀ a, a ≡ modulo a (mod n).
+  Proof.
+    rewrite /modulo => H a.
+    case excluded_middle_informative => [{}H | ] //.
+    elim constructive_indefinite_description => [q H0].
+    elim constructive_indefinite_description => [r [<- {}H0]].
+    now rewrite {2}(n_mod_n_is_0 n) -[integers.add]/(rings.add ℤ)
+    -[integers.mul]/(rings.mul ℤ) mul_0_l rings.A3.
   Qed.
 
   Definition relation_mod := {z of type ℤ × ℤ | π1 z ≡ π2 z (mod n)}.
 
   Theorem equivalence_mod : is_equivalence ℤ relation_mod.
   Proof.
-    repeat split.
-    - intros a H.
-      rewrite -> (reify H).
-      apply Specify_classification; split.
-      + apply Product_classification; eauto.
-      + assert ((a, a) ∈ ℤ × ℤ) as H0 by (apply Product_classification; eauto).
-        now rewrite (reify H0) despecify π1_action ? π2_action.
-    - intros a b H H0 H1.
-      apply Specify_classification; split.
-      + apply Product_classification; eauto.
-      + apply Specify_classification in H1 as [H1 H2].
-        assert ((b, a) ∈ ℤ × ℤ) as H3 by (apply Product_classification; eauto).
-        rewrite -> (reify H1), (reify H3), despecify in *.
-        rewrite π1_action // π2_action // in H2 => //.
-        now rewrite π1_action // π2_action // H2.
-    - intros a b c H H0 H1 H2 H3.
-      apply Specify_classification; split.
-      + apply Product_classification; eauto.
-      + apply Specify_classification in H2 as [? ?], H3 as [? ?].
-        assert ((a, c) ∈ ℤ × ℤ) as H6 by (apply Product_classification; eauto).
-        rewrite -> (reify H2), (reify H3), (reify H6), ? despecify in *.
-        rewrite π1_action // π2_action // in H4.
-        rewrite π1_action // π2_action // in H5.
-        rewrite π1_action // π2_action // H4 //.
+    (repeat split) => [a H | a b H H0 | a b c H H0 H1].
+    - have H0: (a, a) ∈ ℤ × ℤ by apply Product_classification; eauto.
+      rewrite (reify H) (reify H0) Specify_classification despecify
+              π1_action // π2_action //.
+      eauto 6 using eqm_refl.
+    - have H1: (b, a) ∈ ℤ × ℤ by apply Product_classification; eauto.
+      rewrite (reify H1) ? (Specify_classification (ℤ × ℤ)) => [[]] H2.
+      rewrite (reify H2) ? despecify ? π1_action // ? π2_action //.
+      eauto using eqm_sym.
+    - have H2: (a, c) ∈ ℤ × ℤ by apply Product_classification; eauto.
+      rewrite (reify H2) ? (Specify_classification (ℤ × ℤ)) =>
+      [[]] H3 /[swap] [[]] H4.
+      rewrite (reify H3) (reify H4) ? despecify ? π1_action // ? π2_action //.
+      eauto using eqm_trans.
   Qed.
 
   Declare Scope Zn_scope.
@@ -212,8 +187,8 @@ Section Modular_arithmetic.
 
   Definition Z_n_to_Z : Z_ → Z.
   Proof.
-    intros x.
-    destruct (constructive_indefinite_description (quotient_lift x)) as [z].
+    move=> x.
+    elim (constructive_indefinite_description (quotient_lift x)) => [z H].
     exact z.
   Defined.
 
@@ -234,34 +209,26 @@ Section Modular_arithmetic.
 
   Theorem IZn_eq : ∀ a b : Z, (a : Z_) = (b : Z_) ↔ a ≡ b (mod n).
   Proof.
-    intros [a A] [b B].
-    split; intros H; unfold Z_to_Z_n in *.
-    - apply quotient_equiv in H; auto using equivalence_mod.
-      simpl in *.
-      apply Specify_classification in H as [H H0].
-      rewrite -> (reify H), despecify in *.
-      rewrite π1_action // π2_action in H0 => //.
-    - apply quotient_equiv, Specify_classification; auto using equivalence_mod.
-      split.
-      + apply Product_classification; eauto using elts_in_set.
-      + simpl.
-        assert ((a, b) ∈ ℤ × ℤ) as H0 by (apply Product_classification; eauto).
-        rewrite (reify H0) despecify π1_action // π2_action //.
+    move=> [a A] [b B].
+    have H: (a, b) ∈ ℤ × ℤ by apply Product_classification; eauto.
+    split => [/quotient_equiv /= /(_ equivalence_mod)
+               /Specify_classification [] H0 | H0];
+               [ | apply quotient_equiv, Specify_classification, conj;
+                   auto using equivalence_mod ];
+               rewrite (reify H) despecify π1_action // π2_action //.
   Qed.
 
   Theorem Zproj_eq : ∀ a : Z_, a = ((a : Z) : Z_).
   Proof.
-    intros a.
-    unfold Z_n_to_Z, Z_to_Z_n.
-    destruct constructive_indefinite_description.
-    rewrite <-e.
-    now apply f_equal, set_proj_injective.
+    rewrite /Z_n_to_Z /Z_to_Z_n => a.
+    elim constructive_indefinite_description => x /[dup] {2}<- H.
+      by apply /f_equal /set_proj_injective.
   Qed.
 
   Theorem Zlift_equiv : ∀ a : Z, a ≡ (a : Z_) : Z (mod n).
   Proof.
-    intros a.
-    now rewrite <-IZn_eq, <-Zproj_eq.
+    move=> a.
+      by rewrite -IZn_eq -Zproj_eq.
   Qed.
 
   Theorem modulus_zero : (n : Z_) = 0.
@@ -271,68 +238,56 @@ Section Modular_arithmetic.
 
   Theorem A1 : ∀ a b : Z_, a + b = b + a.
   Proof.
-    intros a b.
-    unfold add.
-    now rewrite -> integers.A1.
+    rewrite /add => a b.
+      by rewrite integers.A1.
   Qed.
 
   Theorem A2 : ∀ a b c : Z_, a + (b + c) = (a + b) + c.
   Proof.
-    intros a b c.
-    unfold add.
-    now rewrite -> IZn_eq, <-? Zlift_equiv, integers.A2.
+    rewrite /add => a b c.
+    now rewrite IZn_eq -? Zlift_equiv integers.A2.
   Qed.
 
   Theorem A3 : ∀ a : Z_, 0 + a = a.
   Proof.
-    intros a.
-    unfold add.
-    now rewrite -> Zproj_eq, IZn_eq, <-Zlift_equiv, integers.A3.
+    rewrite /add => a.
+    now rewrite (Zproj_eq a) IZn_eq -? Zlift_equiv integers.A3.
   Qed.
 
   Theorem A4 : ∀ a : Z_, a + -a = 0.
   Proof.
-    intros a.
-    unfold add, neg.
-    now rewrite -> IZn_eq, <-Zlift_equiv, integers.A4.
+    rewrite /add /neg => a.
+    now rewrite IZn_eq -Zlift_equiv integers.A4.
   Qed.
 
   Theorem sub_is_neg : ∀ a b : Z_, a - b = a + -b.
   Proof.
-    intros a b.
-    apply IZn_eq.
-    unfold neg.
-    now rewrite <-Zlift_equiv.
+    move=> a b.
+    now rewrite IZn_eq /neg -Zlift_equiv.
   Qed.
 
   Theorem M1 : ∀ a b : Z_, a * b = b * a.
   Proof.
-    intros a b.
-    unfold mul.
-    now rewrite -> integers.M1.
+    rewrite /mul => a b.
+    rewrite integers.M1 //.
   Qed.
 
   Theorem M2 : ∀ a b c : Z_, a * (b * c) = (a * b) * c.
   Proof.
-    intros a b c.
-    unfold mul.
-    apply IZn_eq.
-    now rewrite <-? Zlift_equiv, integers.M2.
+    rewrite /mul => a b c.
+    now rewrite IZn_eq -? Zlift_equiv integers.M2.
   Qed.
 
   Theorem M3 : ∀ a : Z_, 1 * a = a.
   Proof.
-    intros a.
-    unfold mul.
-    now rewrite -> Zproj_eq, IZn_eq, <-Zlift_equiv, integers.M3.
+    rewrite /mul => a.
+    now rewrite (Zproj_eq a) IZn_eq -? Zlift_equiv integers.M3.
   Qed.
 
   Theorem D1 : ∀ a b c, (a + b) * c = a * c + b * c.
   Proof.
-    intros a b c.
-    unfold add, mul.
-    apply IZn_eq.
-    now rewrite <-? Zlift_equiv, integers.D1.
+    rewrite /add /mul => a b c.
+    now rewrite IZn_eq -? Zlift_equiv integers.D1.
   Qed.
 
   Definition ℤ_ :=
@@ -344,78 +299,58 @@ Section Modular_arithmetic.
   Infix "^" := (rings.pow ℤ_ : Z_ → N → Z_) : Zn_scope.
   Notation "a ^ n" := (rings.pow ℤ_ (a : Z_) (n : N) : Z_) : Zn_scope.
 
-  Lemma injective_mod_n_on_interval_left :
-    ∀ a b, 0 ≤ a < n → 0 ≤ b < n → a ≤ b → a ≡ b (mod n) → a = b.
+  Theorem IZn_neg : ∀ a : Z, (-a : Z_) = (-a)%Z.
   Proof.
-    intros a b H H0 H1 H2.
-    unfold eqm, integers.sub in H2.
-    destruct H1 as [H1 | H1]; auto; simpl in *.
-    apply (ordered_rings.lt_shift ℤ_order) in H1; simpl in *.
-    apply div_le in H2; auto.
-    contradiction (ordered_rings.lt_irrefl ℤ_order b); simpl.
-    destruct H as [H _], H0 as [_ H0].
-    apply le_def in H as [c H].
-    eapply (ordered_rings.lt_le_trans ℤ_order); eauto; fold integers.le.
-    eapply ordered_rings.le_trans; fold integers.le; eauto.
-    rewrite -> le_def.
-    exists c.
-    ring [H].
+    move=> a.
+    now rewrite IZn_eq -Zlift_equiv.
+  Qed.
+
+  Theorem IZn_mul : ∀ a b : Z, (a * b : Z_) = (a * b)%Z.
+  Proof.
+    move=> a b.
+    now rewrite IZn_eq -? Zlift_equiv.
+  Qed.
+
+  Theorem IZn_add : ∀ a b : Z, (a + b : Z_) = (a + b)%Z.
+  Proof.
+    move=> a b.
+    now rewrite IZn_eq -? Zlift_equiv.
+  Qed.
+
+  Theorem IZn_pow : ∀ (a : Z) k, (a^k) = (a^k : Z)%Z.
+  Proof.
+    move=> a.
+    induction k using Induction.
+    - rewrite ? rings.pow_0_r //.
+    - rewrite ? rings.pow_succ_r IHk -IZn_mul //.
   Qed.
 
   Theorem injective_mod_n_on_interval :
     ∀ a b, 0 ≤ a < n → 0 ≤ b < n → a ≡ b (mod n) → a = b.
   Proof.
-    intros a b H H0 H1.
-    destruct (classic (a ≤ b)); auto using injective_mod_n_on_interval_left.
-    symmetry in H1 |-*.
-    apply injective_mod_n_on_interval_left; auto.
-    now apply or_introl, lt_not_ge.
-  Qed.
-
-  Theorem IZn_neg : ∀ a : Z, (-a : Z_) = (-a)%Z.
-  Proof.
-    intros a.
-    apply IZn_eq.
-    now rewrite <-Zlift_equiv.
-  Qed.
-
-  Theorem IZn_mul : ∀ a b : Z, (a * b : Z_) = (a * b)%Z.
-  Proof.
-    intros a b.
-    apply IZn_eq.
-    now rewrite <-? Zlift_equiv.
-  Qed.
-
-  Theorem IZn_add : ∀ a b : Z, (a + b : Z_) = (a + b)%Z.
-  Proof.
-    intros a b.
-    apply IZn_eq.
-    now rewrite <-? Zlift_equiv.
-  Qed.
-
-  Theorem IZn_pow : ∀ (a : Z) k, (a^k) = (a^k : Z)%Z.
-  Proof.
-    intros a k.
-    induction k using Induction.
-    - now rewrite -> ? rings.pow_0_r.
-    - now rewrite -> ? rings.pow_succ_r, IHk, IZn_mul.
+    move=> a b.
+    wlog: a b / a ≤ b.
+    - (case (classic (a ≤ b)); auto) => /lt_not_ge /or_introl =>
+      /(_ (b = a)) /[swap] /[apply] /[apply] /[apply] /[swap] /eqm_sym
+       /[swap] /[apply] //.
+    - (rewrite /eqm /integers.sub => [[/lt_shift /= H | H]] //) =>
+      [[H0 H1]] [H2 H3] => /div_le => /(_ H) /le_not_gt /= [].
+      eapply (lt_le_trans ℤ_order); try apply O1_r; eauto.
+      rewrite -{2}(rings.A3_r ℤ n).
+        by apply add_le_l, neg_le_0.
   Qed.
 
   Theorem units_in_ℤ_ : ∀ a : Z_, @rings.unit ℤ_ a ↔ gcd(a, n) = 1.
   Proof.
-    split; intros H.
-    - destruct H as [x H].
-      apply IZn_eq in H as [y H]; fold Z Z_ in x, y; simpl in H.
-      repeat split; try apply div_1_l.
-      intros z H1 H2.
-      replace 1 with (a * (Z_n_to_Z x) + n * (-y))%Z; try now apply div_mul_add.
-      replace (n*(-y))%Z with (-(y*n))%Z by ring.
-      rewrite <-H.
+    split => [[x /IZn_eq [y /= H]] | /Euclidean_algorithm [x [y H]]].
+    - (repeat split; try apply div_1_l) => z H1 H2.
+      have -> : (1 = a * (Z_n_to_Z x) + n * (-y))%Z; try by apply div_mul_add.
+      have -> : (n*(-y) = -(y*n))%Z by ring.
+      rewrite -H.
       ring.
-    - apply Euclidean_algorithm in H as [x [y H]].
-      exists (x : Z_); simpl.
-      now rewrite -> H, <-IZn_add, <-? IZn_mul, modulus_zero, (mul_0_l ℤ_),
-      A1, A3, M1, <-Zproj_eq.
+    - exists (x : Z_) => /=.
+      rewrite H -IZn_add -? IZn_mul modulus_zero
+      -[mul]/(rings.mul ℤ_) mul_0_l /= A1 A3 M1 -Zproj_eq //.
   Qed.
 
   Section Positive_modulus.
@@ -425,53 +360,46 @@ Section Modular_arithmetic.
     Theorem surjective_mod_n_on_interval :
       ∀ a : Z_, exists ! x : Z, 0 ≤ x < n ∧ a = x.
     Proof.
-      intros a.
+      move=> a.
       exists ( modulo a).
-      unfold modulo.
-      destruct excluded_middle_informative; try tauto.
-      destruct constructive_indefinite_description
-        as [q], constructive_indefinite_description as [r], a0 as [H H0].
-      repeat split; intuition;
-        [ symmetry | apply injective_mod_n_on_interval, IZn_eq; auto; subst ];
-        now rewrite -> Zproj_eq, <-H, <-IZn_add, <-IZn_mul,
-        modulus_zero, (mul_0_l ℤ_), A3.
+      (split; try split; auto using modulo_bound) => [ | x' [H H0]].
+      - now rewrite {1}(Zproj_eq a) IZn_eq -reduce_mod_eqm.
+      - apply injective_mod_n_on_interval; auto using modulo_bound.
+        rewrite -reduce_mod_eqm // -IZn_eq -H0 -(Zproj_eq a) //.
     Qed.
 
     Definition modulus_in_N : N.
     Proof.
       apply lt_def in modulus_pos.
-      destruct (constructive_indefinite_description modulus_pos) as [k], a.
+      elim (constructive_indefinite_description modulus_pos) => [k [H H0]].
       exact k.
     Defined.
 
     Theorem modulus_in_Z : n = modulus_in_N.
     Proof.
-      unfold modulus_in_N.
-      destruct constructive_indefinite_description, a.
-      subst.
+      rewrite /modulus_in_N /sig_rect.
+      elim constructive_indefinite_description => x [H ->].
       ring.
     Qed.
 
     Definition map_to_N : elts modulus_in_N → N.
     Proof.
-      intros x.
-      pose proof (elts_in_set x) as H.
-      apply elements_of_naturals_are_naturals in H; eauto using elts_in_set.
+      move=> x.
+      move: (elts_in_set x) => /elements_of_naturals_are_naturals =>
+      /(_ (elts_in_set modulus_in_N)) H.
       exact (mkSet H).
     Defined.
 
     Theorem map_to_lt_n : ∀ x, map_to_N x < n.
     Proof.
-      intros x.
-      rewrite -> modulus_in_Z.
-      apply INZ_lt, lt_is_in.
-      simpl.
-      auto using elts_in_set.
+      move=> x.
+      rewrite modulus_in_Z.
+      apply INZ_lt, lt_is_in, (elts_in_set x).
     Qed.
 
     Theorem map_to_ge_0 : ∀ x, 0 ≤ map_to_N x.
     Proof.
-      intros x.
+      move=> x.
       apply INZ_le, zero_le.
     Qed.
 
@@ -479,35 +407,31 @@ Section Modular_arithmetic.
 
     Theorem bijective_map_to_mod_n : bijective (sets.functionify map_to_mod_n).
     Proof.
-      split; rewrite -> ? Injective_classification, ? Surjective_classification,
-             ? sets.functionify_domain, ? sets.functionify_range.
-      - intros x y H H0 H1.
-        rewrite -> (reify H), (reify H0), ? @functionify_action in *.
-        apply set_proj_injective, IZn_eq, injective_mod_n_on_interval,
-        INZ_eq in H1; auto using map_to_ge_0, map_to_lt_n.
-        inversion H1.
-        subst.
-        now replace H with H0 in H1 by now apply proof_irrelevance.
-      - intros y H.
-        rewrite -> (reify H) in *.
-        destruct (surjective_mod_n_on_interval (mkSet H))
-          as [x [[[H0 H1] H2] H3]].
-        apply le_def in H0 as [ξ H4].
-        ring_simplify in H4; subst.
+      rewrite /bijective Injective_classification Surjective_classification
+              sets.functionify_domain sets.functionify_range.
+      split => [x y H H0 | y H].
+      - rewrite (reify H) (reify H0) ? functionify_action =>
+        /set_proj_injective /IZn_eq H1.
+        apply injective_mod_n_on_interval, INZ_eq in H1;
+          auto using map_to_ge_0, map_to_lt_n.
+        inversion H1 as [H2].
+        destruct H2.
+          by have -> : H = H0 by now apply proof_irrelevance.
+      - rewrite (reify H).
+        elim (surjective_mod_n_on_interval (mkSet H)) => [x [[[/le_def [ξ ->]]]]].
+        rewrite integers.A3 => H1 H2 H3.
         exists ξ.
-        assert (ξ ∈ modulus_in_N) as H5.
-        { now rewrite <-lt_is_in, <-INZ_lt, <-modulus_in_Z. }
+        have H4: ξ ∈ modulus_in_N by rewrite -lt_is_in -INZ_lt -modulus_in_Z.
         split; auto.
-        rewrite -> (reify H5), functionify_action, H2.
-        now apply f_equal, set_proj_injective, f_equal,
-        IZn_eq, eq_eqm, f_equal, set_proj_injective.
+        rewrite (reify H4) functionify_action H2.
+          by apply f_equal, IZn_eq, eq_eqm, INZ_eq, set_proj_injective.
     Qed.
 
     Theorem bijection_of_Z_mod : (ℤ_ ~ modulus_in_N)%set.
     Proof.
       symmetry.
       exists (sets.functionify map_to_mod_n).
-      rewrite -> sets.functionify_domain, sets.functionify_range.
+      rewrite sets.functionify_domain sets.functionify_range.
       auto using bijective_map_to_mod_n.
     Qed.
 
@@ -531,154 +455,126 @@ Section Modular_arithmetic.
     Theorem Euler_Phi_unit : Euler_Phi_set = 𝐔_.
     Proof.
       apply Extensionality.
-      split; intros H; apply Specify_classification in H as [H H0];
-        apply Specify_classification; rewrite -> (reify H), despecify in *;
-          split; try apply units_in_ℤ_; eauto using eqm_gcd.
+      split => /Specify_classification [] H;
+                 rewrite Specify_classification (reify H) ? despecify;
+                 split; try apply units_in_ℤ_; eauto using eqm_gcd.
     Qed.
 
     Theorem unit_classification : ∀ a : Z_, a ∈ 𝐔_ ↔ @rings.unit ℤ_ a.
     Proof.
-      split; intros H.
-      - apply Specify_classification in H.
-        now rewrite -> despecify in *.
-      - apply Specify_classification.
-        rewrite -> despecify.
-        eauto using elts_in_set.
+      (split; rewrite ? Specify_classification despecify //) =>
+      [[] | ]; eauto using elts_in_set.
     Qed.
 
     Theorem Euler_Phi_finite : finite Euler_Phi_set.
     Proof.
-      eapply subsets_of_finites_are_finite; eauto using finite_Z_mod.
-      intros x H.
-      now apply Specify_classification in H.
+      eapply subsets_of_finites_are_finite; eauto using finite_Z_mod =>
+      x /Specify_classification [] //.
     Qed.
 
     Theorem Euler_Phi_nonzero : Euler_Phi ≠ 0%N.
     Proof.
-      unfold Euler_Phi.
-      intros H.
-      apply finite_empty in H; auto using Euler_Phi_finite.
-      contradict H.
-      rewrite -> Nonempty_classification, Euler_Phi_unit.
+      rewrite /Euler_Phi => /finite_empty => /(_ Euler_Phi_finite).
+      rewrite -/(Euler_Phi_set ≠ ∅) Nonempty_classification Euler_Phi_unit.
       exists (1 : Z_).
-      apply Specify_classification.
-      rewrite -> despecify.
+      rewrite Specify_classification despecify.
       eauto using elts_in_set, (one_unit ℤ_).
     Qed.
 
     Corollary Euler_Phi_ge_1 : (1 ≤ Euler_Phi)%N.
     Proof.
-      apply naturals.le_not_gt.
-      intros H.
-      apply le_lt_succ in H.
+      apply naturals.le_not_gt => /le_lt_succ.
       auto using Euler_Phi_nonzero, naturals.le_antisymm, zero_le.
     Qed.
 
     Theorem Euler_Phi_helper : ∀ f,
         range f = Euler_Phi_set → ∀ x, x ∈ domain f → f x ∈ ℤ_.
     Proof.
-      intros f H x H0.
-      pose proof function_maps_domain_to_range f x H0 as H1.
-      rewrite -> H in H1.
-      now apply Specify_classification in H1.
+      move: function_maps_domain_to_range =>
+      /[swap] f /(_ f) /[swap] -> /[swap] x /[apply] /Specify_subset //.
     Qed.
 
     Definition Euler_Phi_list : N → Z_.
     Proof.
-      intros x.
-      pose proof Euler_Phi_finite.
-      destruct (constructive_indefinite_description H)
-        as [m H0], (excluded_middle_informative (x < m)%N).
-      - symmetry in H0.
-        destruct (constructive_indefinite_description H0) as [f [H1 [H2 H3]]].
-        rewrite -> lt_is_in, <-H1 in l.
-        apply Euler_Phi_helper in l; auto.
-        exact (mkSet l).
+      move: Euler_Phi_finite =>
+      /constructive_indefinite_description
+       [m /cardinality_sym /constructive_indefinite_description
+          [f [H [H0 ?]]]] x.
+      case (excluded_middle_informative (x < m)%N) => [/lt_is_in | H2].
+      - rewrite -H => /(Euler_Phi_helper _ H0) H2.
+        exact (mkSet H2).
       - exact 0.
     Defined.
 
     Lemma Euler_Phi_set_classification :
       ∀ a : Z_, a ∈ Euler_Phi_set ↔ gcd(a, n) = 1.
     Proof.
-      split; intros H.
-      - apply Specify_classification in H as [H H0].
-        rewrite -> (reify H), despecify in *.
+      split => [/Specify_classification [H] | H].
+      - rewrite (reify H) despecify.
         eapply eqm_gcd; eauto.
-        apply IZn_eq, set_proj_injective.
-        now rewrite <-? Zproj_eq.
-      - apply Specify_classification.
-        rewrite -> despecify.
+        rewrite -IZn_eq -Zproj_eq (set_proj_injective _ (mkSet H) a)
+                                  // -Zproj_eq //.
+      - rewrite Specify_classification despecify.
         eauto using elts_in_set.
     Qed.
 
     Lemma Euler_Phi_list_unit :
       ∀ i, (0 ≤ i ≤ Euler_Phi - 1)%N → @rings.unit ℤ_ (Euler_Phi_list i).
     Proof.
-      intros i [H H0].
-      unfold Euler_Phi_list.
-      destruct constructive_indefinite_description, excluded_middle_informative.
-      - destruct constructive_indefinite_description as [f], a as [e0 [e1 b]].
-        rewrite -> units_in_ℤ_, <-Euler_Phi_set_classification.
-        simpl.
-        rewrite <-e1.
-        apply function_maps_domain_to_range.
-        now rewrite -> e0, <-lt_is_in.
-      - contradict n0.
-        rewrite -> le_lt_succ, <-add_1_r, add_comm, sub_abab in H0;
-          replace x with Euler_Phi;
-          eauto using equivalence_to_card, Euler_Phi_ge_1.
+      rewrite /Euler_Phi_list /eq_rect => i [H].
+      elim constructive_indefinite_description =>
+      x /[dup] /equivalence_to_card <- H0.
+      elim constructive_indefinite_description => f [H1 [H2 H3]].
+      case excluded_middle_informative => [H4 | ].
+      - destruct lt_is_in, H1.
+        rewrite units_in_ℤ_ -Euler_Phi_set_classification /= -H2.
+        auto using function_maps_domain_to_range.
+      - by rewrite le_lt_succ -add_1_r add_comm sub_abab;
+          auto using Euler_Phi_ge_1.
     Qed.
 
     Lemma Euler_Phi_list_surj :
       ∀ a : Z_, @rings.unit ℤ_ a → ∃ i,
           (0 ≤ i ≤ Euler_Phi - 1)%N ∧ a = Euler_Phi_list i.
     Proof.
-      intros a H.
-      unfold Euler_Phi_list.
-      destruct constructive_indefinite_description.
-      rewrite -> units_in_ℤ_ in H.
-      assert (a ∈ Euler_Phi_set) as H0.
-      { apply Specify_classification.
-        rewrite -> despecify.
-        eauto using elts_in_set. }
-      destruct constructive_indefinite_description as [f].
-      repeat destruct a0.
-      assert ((inverse f) a ∈ x) as H1.
-      { rewrite <-e0, <-inverse_range; auto.
-        apply function_maps_domain_to_range.
-        rewrite -> inverse_domain, e1; auto. }
-      assert ((inverse f) a ∈ ω) as H2 by
-            (eapply elements_of_naturals_are_naturals; eauto using elts_in_set).
-      set (ι := mkSet H2 : N).
-      exists ι.
-      assert (ι < x)%N as H3 by now apply lt_is_in.
-      destruct excluded_middle_informative; try tauto.
+      rewrite /Euler_Phi_list /eq_rect => a /units_in_ℤ_ H.
+      elim constructive_indefinite_description =>
+      [x /[dup] /equivalence_to_card <- H0].
+      have H1: a ∈ Euler_Phi_set by
+          rewrite Specify_classification despecify; eauto using elts_in_set.
+      destruct constructive_indefinite_description as [f [H2 [H3 H4]]].
+      have H5: (inverse f) a ∈ # Euler_Phi_set.
+      { move: H2 H3 (function_maps_domain_to_range (inverse f)).
+        rewrite inverse_range // inverse_domain // => -> -> /(_ a H1) //. }
+      have H6: (inverse f) a ∈ ω by
+          eapply elements_of_naturals_are_naturals; eauto using elts_in_set.
+      exists (mkSet H6).
+      have H7: (mkSet H6 < # Euler_Phi_set)%N by now apply lt_is_in.
+      case excluded_middle_informative => [{}H8 | H8] //.
       repeat split; auto using zero_le.
-      - apply le_lt_succ.
-        rewrite <-add_1_r, add_comm, sub_abab; auto using Euler_Phi_ge_1.
-        replace Euler_Phi with x; eauto using eq_sym, equivalence_to_card.
-      - apply set_proj_injective.
-        simpl.
-        rewrite -> right_inverse; rewrite -> ? inverse_domain, ? e1; auto.
+      - rewrite le_lt_succ -add_1_r add_comm sub_abab //; apply Euler_Phi_ge_1.
+      - destruct lt_is_in, H2.
+        apply set_proj_injective => /=.
+        rewrite right_inverse ? inverse_domain ? H3 //.
     Qed.
 
     Lemma Euler_Phi_list_inj :
       ∀ i j : N, (0 ≤ i ≤ Euler_Phi - 1)%N → (0 ≤ j ≤ Euler_Phi - 1)%N →
                  Euler_Phi_list i = Euler_Phi_list j → i = j.
     Proof.
-      intros i j [H H0] [H1 H2] H3.
-      unfold Euler_Phi_list in H3.
-      destruct constructive_indefinite_description
-        as [m], constructive_indefinite_description as [f].
-      repeat destruct a; repeat destruct excluded_middle_informative;
-        replace m with Euler_Phi in * by eauto using equivalence_to_card;
-        try now contradiction n0;
-        rewrite -> le_lt_succ, <-add_1_r, add_comm, sub_abab in *;
-        eauto using equivalence_to_card, Euler_Phi_ge_1.
-      destruct b as [H4 H5].
-      inversion H3.
-      rewrite -> Injective_classification in H4.
-      apply set_proj_injective, H4; auto; now rewrite -> e0, <-lt_is_in.
+      rewrite /Euler_Phi_list /eq_rect => i j [H H0] [H1 H2].
+      elim constructive_indefinite_description =>
+      [m /[dup] /equivalence_to_card <- H3].
+      elim constructive_indefinite_description =>
+      [f [H4 [H5 [/Injective_classification H6 _]]]].
+      (repeat case excluded_middle_informative) =>
+      [H7 H8 | [] | _ [] | []]; try move: H0 H2 =>
+      /le_lt_succ /[swap] /le_lt_succ;
+        rewrite -add_1_r add_comm sub_abab //; auto using Euler_Phi_ge_1.
+      (repeat destruct lt_is_in) => ? ?.
+      destruct H4 => H4.
+      inversion H4.
+      apply set_proj_injective, H6; auto.
     Qed.
 
     Definition Euler_Phi_product := prod ℤ_ Euler_Phi_list 0 (Euler_Phi - 1).
