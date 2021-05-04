@@ -418,7 +418,8 @@ Section Modular_arithmetic.
         destruct H2.
           by have -> : H = H0 by now apply proof_irrelevance.
       - rewrite (reify H).
-        elim (surjective_mod_n_on_interval (mkSet H)) => [x [[[/le_def [ξ ->]]]]].
+        elim (surjective_mod_n_on_interval (mkSet H)) =>
+        [x [[[/le_def [ξ ->]]]]].
         rewrite integers.A3 => H1 H2 H3.
         exists ξ.
         have H4: ξ ∈ modulus_in_N by rewrite -lt_is_in -INZ_lt -modulus_in_Z.
@@ -594,36 +595,33 @@ Section Modular_arithmetic.
 
       Lemma Euler_Phi_equal : Euler_Phi_product = Euler_Phi_product_shifted.
       Proof.
-        unfold Euler_Phi_product, Euler_Phi_product_shifted.
-        apply iterate_bijection; auto using M1, M2; intros z H.
-        - destruct (Euler_Phi_list_surj (a * Euler_Phi_list z)) as [i [H0 H1]].
-          { apply unit_closure; auto using Euler_Phi_list_unit. }
-          exists i.
-          split; auto.
-          intros y [H2 H3].
-          apply Euler_Phi_list_inj; auto; congruence.
-        - destruct unit_a as [x H0].
-          destruct (Euler_Phi_list_surj (x * Euler_Phi_list z)) as [j [H1 H2]].
-          { apply unit_closure; auto using Euler_Phi_list_unit.
-            exists a.
-            now rewrite -> H0, M1. }
-          exists j.
-          simpl in H0.
-          split; try split; auto.
-          + now rewrite <-H2, M2, (M1 a), <-H0, M3.
-          + intros y [H3 H4].
-            apply Euler_Phi_list_inj; auto.
-            now rewrite <-H2, H4, M2, <-H0, M3.
+        rewrite /Euler_Phi_product /Euler_Phi_product_shifted.
+        apply iterate_bijection; auto using M1, M2 => z H.
+        - elim (Euler_Phi_list_surj (a * Euler_Phi_list z)) => [i [H0 H1] | ].
+          + exists i.
+            split; auto => y [H2 H3].
+            apply Euler_Phi_list_inj; auto; congruence.
+          + apply unit_closure; auto using Euler_Phi_list_unit.
+        - move: unit_a => [x /= H0].
+          elim (Euler_Phi_list_surj (x * Euler_Phi_list z)) => [j [H1 H2] | ].
+          + exists j.
+            (split; try by split) => [ | y [H3 H4]].
+            * rewrite -H2 M2 (M1 a) -H0 M3 //.
+            * apply Euler_Phi_list_inj; auto.
+              rewrite -H2 H4 M2 -H0 M3 //.
+          + apply unit_closure; auto using Euler_Phi_list_unit.
+            exists a => /=.
+            rewrite H0 M1 //.
       Qed.
 
       Theorem Euler : a^Euler_Phi = (1 : Z_).
       Proof.
-        pose proof Euler_Phi_equal as H.
-        unfold Euler_Phi_product_shifted in H.
-        rewrite <-prod_mul, sub_0_r, <-(M3 Euler_Phi_product),
-        ? (M1 _ Euler_Phi_product), <-add_1_r, naturals.add_comm, sub_abab
-          in H at 1; auto using zero_le, Euler_Phi_ge_1.
-        apply (unit_cancel ℤ_) in H; auto using Euler_Phi_product_unit.
+        move: Euler_Phi_equal.
+        rewrite /Euler_Phi_product_shifted -prod_mul; auto using zero_le.
+        (rewrite -/Euler_Phi_product -add_1_r naturals.add_comm sub_0_r sub_abab
+         -1 ? {1}(M3 Euler_Phi_product) /= -? (M1 Euler_Phi_product);
+         auto using Euler_Phi_ge_1) => /(unit_cancel ℤ_) -> //.
+        auto using Euler_Phi_product_unit.
       Qed.
 
     End Euler's_Theorem.
@@ -631,74 +629,59 @@ Section Modular_arithmetic.
     Theorem order_construction : ∀ a : Z_, a ∈ 𝐔_ → ∃ m : N,
           (a^m = 1 ∧ m ≠ 0%N) ∧ (∀ k : N, (a^k = 1 ∧ k ≠ 0%N) → (m ≤ k)%N).
     Proof.
-      intros a H.
-      apply Specify_classification in H as [H H0].
-      rewrite -> despecify in H0.
-      apply naturals.WOP.
-      apply Euler in H0.
-      eauto using Euler_Phi_nonzero.
+      move=> a /Specify_classification [H].
+      rewrite despecify => /Euler.
+      eauto using naturals.WOP, Euler_Phi_nonzero.
     Qed.
 
     Definition order : Z_ → N.
     Proof.
-      intros a.
-      destruct (excluded_middle_informative (a ∈ 𝐔_)).
-      - apply order_construction in i.
-        destruct (constructive_indefinite_description i) as [m].
-        exact m.
+      move: excluded_middle_informative => /[swap] a /(_ (a ∈ 𝐔_)) =>
+      [[/order_construction /constructive_indefinite_description [m H] | H]].
+      - exact m.
       - exact 0%N.
     Defined.
 
     Theorem order_pos : ∀ a : Z_, a ∈ 𝐔_ → 0 < order a.
     Proof.
-      intros a H.
+      rewrite /order => a H.
       apply INZ_lt, nonzero_lt.
-      unfold order.
-      destruct excluded_middle_informative; try tauto.
-      destruct constructive_indefinite_description; intuition.
+      case excluded_middle_informative => [{}H | ] //.
+      elim constructive_indefinite_description; intuition.
     Qed.
 
     Theorem order_pow : ∀ a : Z_, a ∈ 𝐔_ → a^(order a) = 1.
     Proof.
-      intros a H.
-      unfold order.
-      destruct excluded_middle_informative; try tauto.
-      destruct constructive_indefinite_description; intuition.
+      rewrite /order => a H.
+      case excluded_middle_informative => [{}H | ] //.
+      elim constructive_indefinite_description; intuition.
     Qed.
 
     Theorem div_order : ∀ (a : Z_) (k : N), a ∈ 𝐔_ → order a｜k ↔ a^k = 1.
     Proof.
-      split; intros H0; simpl in *.
-      - destruct H0 as [x H0], (classic (k = 0%N)) as [H1 | H1].
-        { now rewrite -> H1, rings.pow_0_r. }
-        apply succ_0 in H1 as [m H1]; subst.
-        rewrite -> integers.M1 in H0.
-        assert (0 ≤ x) as H1.
-        { eapply pos_mul_nonneg; simpl; fold integers.le; try rewrite <-H0.
-          - now apply order_pos.
-          - apply INZ_le, zero_le. }
-        apply le_def in H1 as [c H1].
-        rewrite -> H1, integers.A3, INZ_mul, INZ_eq in H0.
-        now rewrite -> H0, rings.pow_mul_r, order_pow, rings.pow_1_l.
-      - destruct (division_algorithm k (order a)) as
-            [q [r [H1 [H2 H3]]]]; auto using order_pos; simpl in *.
-        apply le_def in H2 as [c H2].
-        rewrite -> integers.A3 in H2.
-        subst.
-        destruct (classic (c = 0)%N) as [H2 | H2]; subst.
+      split => [[x] | H0].
+      - (case (classic (k = 0%N)) => [-> | /succ_0 [m ->]]);
+          rewrite ? rings.pow_0_r 1 ? rings.M1 // => /[dup] H0.
+        have: 0 ≤ x => [ | /le_def [c ->]].
+        { eapply pos_mul_nonneg; try apply (order_pos a) => //; rewrite -H0.
+          apply INZ_le, zero_le. }
+        rewrite integers.A3 /= INZ_mul INZ_eq => ->.
+        rewrite rings.pow_mul_r order_pow // rings.pow_1_l //.
+      - move: (division_algorithm k (order a)) H0.
+        rewrite -integer_powers.pow_nonneg.
+        (elim; auto using order_pos) => [q [r [<- [/le_def [c ->]]]]].
+        rewrite integers.A3.
+        case (classic (c = 0)%N) => [-> | H0 /(lt_not_ge ℤ_order) /[swap] H1].
         + exists q.
-          now rewrite <-H1, integers.A1, integers.A3, rings.M1.
-        + apply (ordered_rings.lt_not_ge ℤ_order) in H3; fold integers.le in *.
-          contradict H3.
-          unfold order.
-          destruct excluded_middle_informative; try tauto.
-          destruct constructive_indefinite_description as [m [[H3 H4] H5]].
-          apply INZ_le, H5.
-          split; auto.
-          apply Specify_classification in H as H6.
-          rewrite -> despecify, <-pow_nonneg, <-H1, integer_powers.pow_add_r,
-          integer_powers.pow_mul_r, pow_nonneg, order_pow,
-          integer_powers.pow_1_l, rings.M3, pow_nonneg in *; intuition.
+          rewrite integers.A1 integers.A3 integers.M1 //.
+        + move: (H) H1 => /unit_classification H1.
+          rewrite /order.
+          case excluded_middle_informative => [{}H | ] //.
+          elim constructive_indefinite_description => [m [[H2 H3] H4]] H5 [].
+          apply INZ_le, H4, conj => //.
+          rewrite -H5 integer_powers.pow_add_r // integer_powers.pow_mul_r
+                      // ? integer_powers.pow_nonneg H2 integer_powers.pow_1_l
+                      rings.M3 //.
     Qed.
 
     Theorem order_one : order 1 = 1%N.
@@ -706,48 +689,43 @@ Section Modular_arithmetic.
       apply naturals.le_antisymm; apply INZ_le.
       - apply div_le, div_order; try apply zero_lt_1;
           try apply unit_classification, one_unit.
-        now rewrite -> rings.pow_1_r.
+        rewrite rings.pow_1_r //.
       - apply lt_0_le_1, order_pos, unit_classification, one_unit.
     Qed.
 
     Theorem order_upper_bound : ∀ a : Z_, a ∈ 𝐔_ → (order a ≤ Euler_Phi)%N.
     Proof.
-      intros a H.
+      move=> a H.
       apply INZ_le, div_le.
       - apply INZ_lt, nonzero_lt, Euler_Phi_nonzero.
-      - apply div_order, Euler; now rewrite <-? unit_classification.
+      - by apply div_order, Euler, unit_classification.
     Qed.
 
     Theorem mul_order : ∀ a b : Z_,
         a ∈ 𝐔_ → b ∈ 𝐔_ →
         gcd(order a, order b) = 1 → order (a * b) = (order a * order b)%N.
     Proof.
-      intros a b H H0 H1.
-      apply unit_classification in H as H2, H0 as H3.
-      apply assoc_N, conj; fold divide.
-      - apply div_order.
-        + now apply unit_classification, unit_closure.
-        + now rewrite -> rings.pow_mul_l, rings.pow_mul_r, mul_comm,
-          rings.pow_mul_r, ? order_pow, ? rings.pow_1_l, M3.
-      - rewrite <-INZ_mul.
-        apply rel_prime_mul; auto.
-        + eapply FTA; eauto.
-          rewrite -> INZ_mul.
-          apply div_order; auto.
-          rewrite <-(M3 (a^(order b * order (a * b))%N)), M1,
-          <-(rings.pow_1_l ℤ_ _ : 1^(order (a * b)) = 1), <-(order_pow b),
-          <-rings.pow_mul_r, <-(rings.pow_mul_l ℤ_ a b), mul_comm,
-          rings.pow_mul_r, order_pow, rings.pow_1_l at 1; auto.
-          now apply unit_classification, unit_closure.
-        + apply is_gcd_sym in H1.
-          eapply FTA; eauto.
-          rewrite -> INZ_mul.
-          apply div_order; auto.
-          rewrite <-(M3 (b^(order a * order (a *b))%N)), M1,
-          <-(rings.pow_1_l ℤ_ _ : 1^(order (a * b )) = 1), <-(order_pow a),
-          <-rings.pow_mul_r, <-(rings.pow_mul_l ℤ_ b a), M1, mul_comm,
-          rings.pow_mul_r, order_pow, rings.pow_1_l at 1; auto.
-          now apply unit_classification, unit_closure.
+      have L: ∀ a b : Z_,
+        a ∈ 𝐔_ → b ∈ 𝐔_ → gcd(order a, order b) = 1 → order a ｜ order (a * b)
+      => a b /[dup] ? /unit_classification ? /[dup] ? /unit_classification *.
+      - eapply FTA; eauto.
+        rewrite INZ_mul.
+        apply div_order; auto.
+        rewrite -(M3 (a^(order b * order (a * b))%N)) M1
+        -[1 : Z_]/(rings.one ℤ_) -(rings.pow_1_l ℤ_ (order (a*b))) /=
+        -(order_pow b) // -rings.pow_mul_r -[mul]/(rings.mul ℤ_)
+        -rings.pow_mul_l {1}mul_comm ? rings.pow_mul_r ? order_pow
+                         ? rings.pow_1_l //.
+          by apply unit_classification, unit_closure.
+      - apply assoc_N, conj.
+        + apply div_order.
+          * by apply unit_classification, unit_closure.
+          * rewrite rings.pow_mul_l rings.pow_mul_r mul_comm rings.pow_mul_r
+                    ? order_pow ? rings.pow_1_l ? rings.M3 //.
+        + rewrite -INZ_mul.
+          apply rel_prime_mul; auto.
+          rewrite M1.
+          auto using is_gcd_sym.
     Qed.
 
     Theorem pow_order :
