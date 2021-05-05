@@ -706,7 +706,7 @@ Section Modular_arithmetic.
         gcd(order a, order b) = 1 → order (a * b) = (order a * order b)%N.
     Proof.
       have L: ∀ a b : Z_,
-        a ∈ 𝐔_ → b ∈ 𝐔_ → gcd(order a, order b) = 1 → order a ｜ order (a * b)
+        a ∈ 𝐔_ → b ∈ 𝐔_ → gcd(order a, order b) = 1 → order a｜order (a * b)
       => a b /[dup] ? /unit_classification ? /[dup] ? /unit_classification *.
       - eapply FTA; eauto.
         rewrite INZ_mul.
@@ -731,50 +731,34 @@ Section Modular_arithmetic.
     Theorem pow_order :
       ∀ (k : N) (a : Z_), a ∈ 𝐔_ → order a / gcd k (order a) = order (a^k).
     Proof.
-      intros k a H.
-      assert (gcd k (order a) ≠ 0) as Z.
-      { rewrite -> gcd_sym.
-        apply gcd_pos.
-        intros H0.
-        apply INZ_eq in H0.
-        contradict H0.
-        now apply nonzero_lt, INZ_lt, order_pos. }
-      assert (0 ≤ order a / gcd k (order a)) as H0.
-      { apply div_nonneg.
-        - now apply or_introl, order_pos.
-        - destruct (gcd_nonneg k (order a)) as [H0 | H0]; auto.
-          rewrite -> gcd_sym in H0.
-          apply eq_sym, gcd_pos in H0; intuition.
-          apply order_pos in H.
-          rewrite -> H1 in H.
-          contradiction (lt_irrefl ℤ_order 0). }
-      apply unit_classification in H as H1.
-      assert ((a^k)%Zn ∈ 𝐔_) as H2.
-      { now apply unit_classification, (unit_prod_closure ℤ_). }
-      apply pm_pos; auto.
-      2: { now apply or_introl, order_pos. }
-      apply assoc_pm, conj; fold divide.
-      - apply inv_div_l; auto using gcd_r_div.
-        assert (0 ≤ gcd k (order a)) as H3 by now apply gcd_nonneg.
-        apply le_def in H3 as [c H3].
-        rewrite -> integers.A3 in H3.
-        rewrite -> H3, INZ_mul.
+      move: gcd_sym => /[swap] k /[swap] a -> /[dup] H /[dup] =>
+      /unit_classification H0 /order_pos /[dup] H1 /INZ_lt /nonzero_lt /[dup]
+       H2 /INZ_eq H3.
+      have NZ: gcd (order a) k ≠ 0 by move: H1 => /[swap] /gcd_pos //.
+      have: 0 ≤ order a / gcd (order a) k => [ | /[dup] H4 /le_def [c H5]].
+      { apply div_nonneg; first by left.
+        case (gcd_nonneg (order a) k) => [? | /(@eq_sym Z)] //. }
+      have H6: (a^k)%Zn ∈ 𝐔_ by
+          apply unit_classification, (unit_prod_closure ℤ_).
+      apply pm_pos; auto; last by apply or_introl, order_pos.
+      apply assoc_pm, conj.
+      - apply inv_div_l; auto using gcd_l_div.
+        have /le_def [d]: 0 ≤ gcd (order a) k by now apply gcd_nonneg.
+        elim (Euclidean_gcd (order a) k) => [x [y]] <-.
+        move: integers.A3 INZ_mul => -> /[swap] /[dup] H7 -> ->.
         apply div_order; auto.
-        destruct (Euclidean_gcd k (order a)) as [x [y H4]].
-        rewrite <-pow_nonneg, <-INZ_mul, <-H3, <-H4, integers.D1,
-        integer_powers.pow_add_r, <-integers.M2, integer_powers.pow_mul_r,
-        integers.M1, integer_powers.pow_mul_r, ? pow_nonneg, order_pow,
-        integer_powers.pow_1_l, M1, <-integers.M2, integer_powers.pow_mul_r,
-        ? pow_nonneg, order_pow, integer_powers.pow_1_l, M3 in *; auto.
-        rewrite -> pow_nonneg.
-        now apply unit_prod_closure.
-      - apply le_def in H0 as [c H3].
-        rewrite -> integers.A3 in H3.
-        rewrite -> H3.
+        rewrite -pow_nonneg -INZ_mul -H7 integers.D1 integer_powers.pow_add_r//.
+        rewrite -? integers.M2 integer_powers.pow_mul_r // (integers.M1 y)
+                integers.M2 INZ_mul ? integer_powers.pow_mul_r
+                ? pow_nonneg ? order_pow // ? rings.pow_mul_r ? order_pow //
+                ? integer_powers.pow_1_l ? rings.pow_1_l ? rings.M3 //.
+        auto using (one_unit ℤ_).
+      - move: integers.A3 H5 -> => /[dup] H5 ->.
         apply div_order; auto.
-        rewrite <-? pow_nonneg, <-H3, <-integer_powers.pow_mul_r, mul_div,
-        integers.M1, <-mul_div, integer_powers.pow_mul_r, pow_nonneg, order_pow,
-        integer_powers.pow_1_l in *; auto using gcd_r_div, gcd_l_div.
+        rewrite -? pow_nonneg -H5 -integer_powers.pow_mul_r // mul_div;
+          rewrite 1 ? integers.M1 -? mul_div ? integer_powers.pow_mul_r
+                  ? pow_nonneg ? order_pow ? integer_powers.pow_1_l;
+          auto using gcd_r_div, gcd_l_div.
     Qed.
 
     Theorem order_lcm_closed : ∀ a b : Z_,
