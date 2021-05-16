@@ -630,8 +630,9 @@ Proof.
       exists (y+-(q*x)), x; ring.
     - rewrite A3 A1 A3 /one /divide.
       exists 1, 0.
-      rewrite M1 M3 (mul_0_r ℤ : ∀ a, a * 0 = 0) A1 A3 INZ_eq.
-      apply assoc_N, conj; auto using (div_1_l ℤ), div_refl, (div_mul_r ℤ). }
+      ring_simplify.
+      apply INZ_eq, assoc_N, conj;
+        auto using (div_1_l ℤ), div_refl, (div_mul_r ℤ). }
   wlog: b / 0 < b => [H | H].
   - elim (trichotomy ℤ_order b 0) =>
     [/(lt_neg_0 ℤ_order) /H /[swap] /gcd_neg /[swap] /[apply] [[x [y]]] -> |

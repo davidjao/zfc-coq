@@ -764,73 +764,61 @@ Section Modular_arithmetic.
     Theorem order_lcm_closed : ∀ a b : Z_,
         a ∈ 𝐔_ → b ∈ 𝐔_ → ∃ c : Z_, c ∈ 𝐔_ ∧ lcm (order a) (order b) = order c.
     Proof.
-      intros a b.
+      move=> a b.
       remember ((order a) * (order b))%N as m.
       revert m a b Heqm.
-      induction m using Strong_Induction.
-      intros a b Heqm H0 H1.
-      apply (order_pos a) in H0 as H2.
-      apply lt_0_le_1 in H2 as [H2 | H2]; subst.
-      2: { exists b.
-           rewrite <-H2, lcm_l_1; auto.
-           left; now apply order_pos. }
-      apply exists_prime_divisor in H2 as [p [H2 [H3 H4]]].
+      induction m using Strong_Induction =>
+      a b Heqm /[dup] H0 /[dup] /unit_classification H1 /order_pos /[dup] H2
+        /lt_0_le_1 [/exists_prime_divisor [p [H3 [H4 H5]]] | <-] /[dup] H6
+        /[dup] /unit_classification H7 /order_pos H8;
+        last by rewrite lcm_l_1; try left; eauto.
       set (k := v p (order a)).
       set (l := v p (order b)).
-      assert (0 < order a / p^k) as H5; assert (0 < order b / p^l) as H6;
+      have H9: 0 < order a / p^k; have H10: 0 < order b / p^l;
         eauto using val_quot_positive, order_pos.
-      assert (0 < p^k) as H7; assert (0 < p^l) as H8;
-        try now apply (ordered_rings.pow_pos ℤ_order).
-      assert ((order a / p^k) * (order b / p^l) < order a * order b) as H9.
+      have H11: 0 < p^k; have H12: 0 < p^l;
+        try by apply (ordered_rings.pow_pos ℤ_order).
+      have: (order a / p^k) * (order b / p^l) < order a * order b.
       { apply (lt_le_cross_mul ℤ_order); simpl; try apply val_quot_bound;
-            try apply quot_le_bound; eauto using order_pos, val_div. }
-      apply lt_def in H5 as [x [H5 H10]], H6 as [y [H6 H11]], H7
-            as [z [H7 H12]], H8 as [w [H8 H13]].
-      rewrite -> integers.A3, H10, H11, ? INZ_mul, INZ_lt in *.
-      unfold k, l in H10, H11, H12, H13.
-      pose proof H10 as H14.
-      pose proof H11 as H15.
-      rewrite <-gcd_val in H10, H11; try apply (pos_ne_0 ℤ_order), order_pos;
-        try (rewrite -> H12, pow_order in H10;
-             rewrite -> H13, pow_order in H11); auto; apply INZ_eq in H10, H11.
-      rewrite <-H10, <-H11 in H9.
-      eapply H in H9 as [c [H9 H16]]; try reflexivity;
-        try now (rewrite -> unit_classification in *;
-                 try now apply unit_prod_closure).
-      rewrite -> H10, H11, <-H14, <-H15 in H16.
-      clear H k l.
-      wlog: a b w x y z H0 H1 H4 H5 H6 H7 H8 H10 H11 H12 H13 H14 H15 H16
-              / ((v p (order b) ≤ v p (order a)))%N.
-      - intros x0.
-        destruct (le_trichotomy (v p (order a)) (v p (order b))) as [H | H].
-        + pose proof H as H17.
-          eapply (x0 b a z y x w) in H17 as [d H17]; auto.
-          * exists d.
-            now rewrite -> lcm_sym.
-          * rewrite <-(rings.pow_1_r ℤ p), val_lower_bound in H4 |-*;
-              eauto using naturals.le_trans;
-              now apply (pos_ne_0 ℤ_order), order_pos.
-          * now rewrite -> lcm_sym.
-        + eapply (x0 a b w x y z) in H as [d H]; eauto.
-      - intros H.
-        erewrite <-val_lcm_r; eauto using order_pos.
-        assert (order (a^x) = z) as H17.
-        { rewrite <-INZ_eq, <-pow_order, <-H12, <-H14, div_l_gcd; auto.
-          - rewrite -> div_div; auto using val_div, prime_power_nonzero.
-            now apply (pos_ne_0 ℤ_order), order_pos.
-          - rewrite -> H14.
-            apply INZ_le, zero_le.
-          - exists (p^v p (order a))%Z; simpl.
-            apply eq_sym, div_inv_l; auto using val_div. }
-        assert ((a^x)%Zn ∈ 𝐔_) as H18.
-        { rewrite -> unit_classification in *.
-          now apply unit_prod_closure. }
+          try apply quot_le_bound; eauto using order_pos, val_div. }
+      move: H H9 H10 H11 H12.
+      rewrite Heqm ? lt_def => H [x H9] [y H10] [z H11] [w H12] {Heqm}.
+      move: H9 H10 H11 H12.
+      rewrite -lt_def ? integers.A3 /k /l =>
+      [[H9 /[dup] H10 /[dup] H11 ->]]
+        [H12 /[dup] H13 /[dup] H14 ->] [H15 H16] [H17 H18] H19.
+      rewrite -gcd_val in H10; rewrite -gcd_val in H13;
+        try apply (pos_ne_0 ℤ_order), order_pos; auto.
+      move: (H16) (H18) (H10) (H13) (H11) (H14) H19 => -> ->.
+      rewrite ? pow_order ? INZ_mul // => /[dup] H20 =>
+      /INZ_eq <- /[dup] H21 /INZ_eq <- H19 H22 /INZ_lt.
+      move /H /(_ (rings.pow ℤ_ a z)) /(_ (rings.pow ℤ_ b w)) =>
+      [| | | c [H23 H24]]
+        //; try by apply unit_classification, unit_prod_closure.
+      move: (H16) (H18) H19 H22 H24 <- => <- <- <- H19 {H k l}.
+      wlog: a b x y z w H0 H1 H2 H5 H6 H7 H8 H9 H10 H11 H12 H13 H14 H15 H16 H17
+              H18 H19 H20 H21 / (v p (order b) ≤ v p (order a))%N => [H | H].
+      - case (le_trichotomy (v p (order a)) (v p (order b))); eauto => H22.
+        eapply (H b a y x w z) in H22 as [d H22]; eauto =>
+        {H}; try (exists d); rewrite 1 ? lcm_sym //.
+        move: H5.
+        rewrite -(rings.pow_1_r ℤ p) ? val_lower_bound;
+          eauto using naturals.le_trans; by apply (pos_ne_0 ℤ_order), order_pos.
+      - erewrite <-val_lcm_r; eauto using order_pos.
+        have H22: order (a^x) = z.
+        { rewrite -INZ_eq -pow_order -? H16 // -H11 div_l_gcd.
+          - rewrite H11 INZ_le; auto using zero_le.
+          - exists (p^v p (order a))%Z => /=.
+            apply eq_sym, div_inv_l; auto using val_div.
+          - rewrite div_div; auto using val_div, prime_power_nonzero.
+            now apply (pos_ne_0 ℤ_order), order_pos. }
+        have H24: (a^x)%Zn ∈ 𝐔_ by apply unit_classification, unit_prod_closure.
         exists (a^x * c).
-        rewrite -> H16, H12, <-H17, mul_order, INZ_mul; auto.
-        + rewrite -> unit_classification in *.
-          split; auto; now apply unit_closure.
-        + rewrite <-H16, H17, <-H12.
+        rewrite H19 H16 -H22 mul_order // ? INZ_mul; auto.
+        + rewrite -H19 H22 -H16.
           apply val_lcm_r_rel_prime; auto using order_pos.
+        + split; auto; apply unit_classification, unit_closure;
+            by apply unit_classification.
     Qed.
 
     Definition max_order : N.
