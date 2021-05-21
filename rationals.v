@@ -326,14 +326,14 @@ Proof.
     /(integral_domains.cancellation ℤ_ID) => [[-> | ]] /= //.
     rewrite (mul_0_l ℤ b0 : 0 * b0 = 0)%Z //. }
   ((suff: (∀ x y z w, y ≠ 0 → w ≠ 0 → x * w = y * z → 0 < x * y → 0 < z * w)%Z
-   => [H2 | ]; first by split; apply H2; eauto; ring [H1]) =>
-  [{a b H a' b' H0 H1}
-     x y z w H /(ne0_lt_gt ℤ_order) [H0 | H0] H1
-     /(pos_mul_iff ℤ_order) [[H2 H3] | [H2 H3]]]; apply (pos_mul_iff ℤ_order);
-  try (have: 0 < x * w by apply (mul_pos_pos ℤ_order));
-  try (have: x * w < 0 by apply (mul_neg_pos ℤ_order));
-  try (have: x * w < 0 by apply (mul_pos_neg ℤ_order));
-  try (have: 0 < x * w by apply (mul_neg_neg ℤ_order)); rewrite H1) =>
+    => [H2 | ]; first by split; apply H2; eauto; ring [H1]) =>
+   [{a b H a' b' H0 H1}
+      x y z w H /(ne0_lt_gt ℤ_order) [H0 | H0] H1
+      /(pos_mul_iff ℤ_order) [[H2 H3] | [H2 H3]]]; apply (pos_mul_iff ℤ_order);
+   try (have: 0 < x * w by apply (mul_pos_pos ℤ_order));
+   try (have: x * w < 0 by apply (mul_neg_pos ℤ_order));
+   try (have: x * w < 0 by apply (mul_pos_neg ℤ_order));
+   try (have: 0 < x * w by apply (mul_neg_neg ℤ_order)); rewrite H1) =>
   [/(pos_div_l ℤ_order _ _ H3) | /(neg_pos_div_l ℤ_order _ _ H3) |
    /(pos_neg_div_l ℤ_order _ _ H3) | /(neg_div_l ℤ_order _ _ H3)]; tauto.
 Qed.
@@ -601,7 +601,7 @@ Proof.
     auto using integers.zero_ne_1; ring.
 Qed.
 
-Theorem Z_archimedean : ∀ x, ∃ z : Z, z ≤ x < z+1.
+Theorem Z_archimedean : ∀ x, ∃ z : Z, z ≤ x < z + 1.
 Proof.
   move: pos_denom => /[swap] x /(_ x) =>
   [[a [b [/(division_algorithm a)
@@ -668,13 +668,13 @@ Proof.
     suff -> : (z+1+-z = 1); rewrite ? IZQ_lt -? IZQ_add -? IZQ_neg //; ring.
 Qed.
 
-Theorem floor_plus_1 : ∀ x, x < ⌊x⌋+1.
+Theorem floor_plus_1 : ∀ x, x < ⌊x⌋ + 1.
 Proof.
   rewrite /floor /sig_rect => x.
   case constructive_indefinite_description => ? [] //.
 Qed.
 
-Theorem floor_add_int : ∀ x (z : Z), ⌊z+x⌋ = (z + ⌊x⌋)%Z.
+Theorem floor_add_int : ∀ x (z : Z), ⌊z + x⌋ = (z + ⌊x⌋)%Z.
 Proof.
   move=> x z.
   apply IZQ_eq, (ordered_rings.le_antisymm ℚ_ring_order); rewrite -/le.

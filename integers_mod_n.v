@@ -955,83 +955,57 @@ Section Modular_arithmetic.
 
     Theorem Prime_Euler_Phi : (Euler_Phi = p_in_N - 1)%N.
     Proof.
-      rewrite <-(singleton_card (0 : Z_)), <-Z_mod_card, <-complement_card;
-        auto using singletons_are_finite.
-      2: { intros z H.
-           apply Singleton_classification in H.
-           subst.
-           eauto using elts_in_set. }
-      apply f_equal, Extensionality.
-      split; intros H; destruct prime_modulus as [H0 H1].
-      - apply Specify_classification in H as [H H2].
-        rewrite -> (reify H), despecify, Complement_classification,
-        Singleton_classification in *.
-        split; auto.
-        intros H3.
-        apply set_proj_injective in H3.
-        destruct H2 as [_ [_ H2]].
+      (rewrite -(singleton_card (0 : Z_)) -Z_mod_card -complement_card;
+       auto using singletons_are_finite) =>
+      [z /Singleton_classification -> | ]; eauto using elts_in_set.
+      apply f_equal, Extensionality => z.
+      split => [/Specify_classification [] | /Complement_classification []] =>
+      H; elim prime_modulus => [H0 H1].
+      - rewrite (reify H) despecify Complement_classification
+                Singleton_classification => [[_ [_ H2]]].
+        (split; auto) => /set_proj_injective H3.
         contradict H0.
         apply H2; eauto using (divide_refl ℤ) with Z.
-        now rewrite -> eqm_div_n, H3, <-Zlift_equiv.
-      - apply Complement_classification in H as [H H2].
-        apply Specify_classification.
-        split; auto.
-        rewrite -> (reify H), despecify, Singleton_classification in *.
-        repeat split; try apply div_1_l.
-        intros d H3 H4.
-        apply H1 in H4 as [H4 | [H4 H5]]; fold integers.divide in *; auto.
+        now rewrite eqm_div_n H3 -Zlift_equiv.
+      - rewrite (reify H) Singleton_classification
+                Specify_classification despecify => H2.
+        (repeat split; auto; try apply div_1_l) => d ? /H1 [? | [? ?]]; auto.
         contradict H2.
         apply f_equal.
-        rewrite -> Zproj_eq, IZn_eq, <-eqm_div_n at 1.
+        rewrite (Zproj_eq (mkSet H)) IZn_eq -eqm_div_n.
         eapply div_trans; eauto.
     Qed.
 
     Theorem Prime_Euler_Phi_Z : (p - 1 = Euler_Phi)%Z.
     Proof.
-      unfold integers.one.
-      rewrite -> ( modulus_in_Z positive_prime), INZ_sub.
-      - apply INZ_eq, eq_sym, Prime_Euler_Phi.
-      - rewrite <-lt_0_le_1, <-( modulus_in_Z positive_prime); auto.
+      rewrite /integers.one ( modulus_in_Z positive_prime) INZ_sub.
+      - rewrite -lt_0_le_1 -( modulus_in_Z positive_prime); auto.
+      - apply /INZ_eq /eq_sym /Prime_Euler_Phi.
     Qed.
 
     Theorem QR_Euler_Phi : QR ⊂ Euler_Phi_set.
     Proof.
-      intros x H.
-      apply Specify_classification in H as [H H0].
-      apply Specify_classification.
-      rewrite -> (reify H), despecify in *.
-      split; eauto.
-      now apply units_in_ℤ_.
+      move=> x /Specify_classification [H].
+      rewrite ? Specify_classification (reify H) ? despecify =>
+      [[/units_in_ℤ_ H0 H1]] //.
     Qed.
 
     Theorem QNR_QR_c : QNR = Euler_Phi_set \ QR.
     Proof.
-      apply Extensionality.
-      split; intros H.
-      - apply Specify_classification in H as [H H0].
-        rewrite -> (reify H), despecify, Complement_classification in *.
-        split; try tauto.
-        apply Specify_classification.
-        rewrite -> despecify.
-        split; auto.
-        now apply units_in_ℤ_.
-      - apply Complement_classification in H as [H H0].
-        apply Specify_classification in H as [H H1].
-        apply Specify_classification.
-        rewrite -> (reify H), despecify in *.
-        repeat split; auto.
-        now apply units_in_ℤ_.
+      apply Extensionality => z.
+      (split => [/Specify_classification | /Complement_classification] [] =>
+       [H | /Specify_classification [H] /[swap] ?];
+        rewrite (reify H) ? Complement_classification Specify_classification
+                ? despecify) => [[/units_in_ℤ_] | /units_in_ℤ_] //.
     Qed.
 
     Definition unit_square_function := restriction square_function 𝐔_.
 
     Lemma domain_usf : domain unit_square_function = 𝐔_.
     Proof.
-      unfold unit_square_function, square_function.
-      rewrite -> restriction_domain, sets.functionify_domain.
-      apply Intersection_subset.
-      intros x H.
-      now apply Specify_classification in H.
+      rewrite /unit_square_function /square_function
+              restriction_domain sets.functionify_domain.
+      apply Intersection_subset => x /Specify_classification [] //.
     Qed.
 
     Lemma image_usf : image unit_square_function = QR.
