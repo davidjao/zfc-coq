@@ -823,51 +823,46 @@ Section Modular_arithmetic.
 
     Definition max_order : N.
     Proof.
-      pose proof (lub (λ x, ∃ a : Z_, a ∈ 𝐔_ ∧ order a = x)) as H.
+      move: (lub (λ x, ∃ a : Z_, a ∈ 𝐔_ ∧ order a = x)) => H.
       apply constructive_indefinite_description in H as [x [H H0]].
       - exact x.
       - exists 1%N, 1.
-        rewrite -> unit_classification.
-        split; auto using order_one; apply one_unit.
-      - exists Euler_Phi.
-        intros n0 [a [H0 H1]].
-        rewrite <-H1.
-        now apply order_upper_bound.
+        apply conj, order_one.
+        apply unit_classification, one_unit.
+      - exists Euler_Phi => n0 [a [H0 <-]].
+          by apply order_upper_bound.
     Defined.
 
     Theorem max_order_ex : ∃ a : Z_, a ∈ 𝐔_ ∧ order a = max_order.
     Proof.
-      unfold max_order.
-      destruct constructive_indefinite_description as [x [[a H] H0]].
+      rewrite /max_order.
+      elim constructive_indefinite_description => [x [[a H] H0]].
       eauto.
     Qed.
 
     Theorem max_order_bound : ∀ a : Z_, a ∈ 𝐔_ → (order a ≤ max_order)%N.
     Proof.
-      intros a H.
-      unfold max_order.
-      destruct constructive_indefinite_description as [x [[b H0] H1]].
+      rewrite /max_order => a H.
+      elim constructive_indefinite_description => [x [[b H0] H1]].
       eauto.
     Qed.
 
     Theorem max_order_div : ∀ a : Z_, a ∈ 𝐔_ → order a｜max_order.
     Proof.
-      intros a H.
-      destruct max_order_ex as [b [H0 H1]], (order_lcm_closed a b)
-          as [c [H2 H3]]; auto.
-      rewrite -> H1 in H3.
-      replace (order c) with max_order in H3.
-      - rewrite <-H3.
-        apply lcm_div_l.
+      move: max_order_ex => [b [H H0]] a H1.
+      move: (order_lcm_closed a b) => [ | | c [H2]] //.
+      move: H0 -> => /[dup] H3.
+      have -> : order c = max_order => [ | <-].
       - apply naturals.le_antisymm.
-        + rewrite <-INZ_le, <-H3.
-          now apply lcm_bound, order_pos.
         + auto using max_order_bound.
+        + rewrite -INZ_le -H3.
+          now apply lcm_bound, order_pos.
+      - apply lcm_div_l.
     Qed.
 
     Theorem max_order_pow : ∀ a : Z_, a ∈ 𝐔_ → a^max_order = 1.
     Proof.
-      intros a H.
+      move=> a H.
       apply div_order; auto using max_order_div.
     Qed.
 
@@ -882,22 +877,18 @@ Section Modular_arithmetic.
 
   Definition legendre_symbol (a : Z_) : Z.
   Proof.
-    destruct (excluded_middle_informative (a ∈ QR)).
+    case (excluded_middle_informative (a ∈ QR)) => [H | H].
     - exact 1.
-    - destruct (excluded_middle_informative (a ∈ QNR)).
+    - case (excluded_middle_informative (a ∈ QNR)) => [H0 | H0].
       + exact (-(1%Z))%Z.
       + exact 0.
   Defined.
 
   Theorem legendre_square : ∀ a, @rings.unit ℤ_ a → legendre_symbol (a * a) = 1.
   Proof.
-    intros a H.
-    unfold legendre_symbol.
-    destruct excluded_middle_informative; auto.
-    contradiction n0.
-    apply Specify_classification.
-    rewrite -> despecify.
-    unfold square.
+    rewrite /legendre_symbol => a H.
+    case excluded_middle_informative; auto => [[]].
+    rewrite Specify_classification despecify /square.
     eauto using elts_in_set, (unit_closure ℤ_).
   Qed.
 
@@ -910,72 +901,56 @@ Section Modular_arithmetic.
 
     Theorem Z_mod_prime_is_ID : is_integral_domain ℤ_.
     Proof.
-      split.
-      - intros a b H; simpl in *.
-        apply IZn_eq, eqm_div_n, Euclid's_lemma in H as [H | H]; auto;
-          [ left | right ]; apply eqm_div_n, IZn_eq in H;
-            now rewrite <-H, <-Zproj_eq.
-      - intros H; simpl in *.
-        apply IZn_eq, eqm_div_n in H.
-        now destruct prime_modulus.
+      (split => [? ? |] /IZn_eq /(iffRL (eqm_div_n _ _)) => [/Euclid's_lemma |]
+       => [/(_ prime_modulus) [/eqm_div_n /IZn_eq | /eqm_div_n /IZn_eq] |];
+          rewrite -? Zproj_eq) => [-> | -> |]; elim prime_modulus; tauto.
     Qed.
 
     Definition ℤ_ID := integral_domain_from_ring ℤ_ Z_mod_prime_is_ID.
 
     Lemma nonzero_unit : ∀ a : Z_, a ≠ 0 → @rings.unit ℤ_ a.
     Proof.
-      intros a H.
-      apply units_in_ℤ_, is_gcd_sym, prime_rel_prime; auto.
-      contradict H.
-      now rewrite -> eqm_div_n, <-IZn_eq, <-Zproj_eq in H.
+      move=> a H.
+      apply /units_in_ℤ_ /is_gcd_sym /prime_rel_prime; auto.
+      move: H => /[swap] /eqm_div_n.
+      rewrite -IZn_eq -Zproj_eq => -> //.
     Qed.
 
     Definition inv : Z_ → Z_.
     Proof.
-      intros a.
-      destruct (excluded_middle_informative (a = 0)).
+      move: excluded_middle_informative => /[swap] a /(_ (a = 0)) =>
+      [[H | /nonzero_unit /constructive_indefinite_description [x H]]].
       - exact 0.
-      - apply nonzero_unit in n0.
-        destruct (constructive_indefinite_description n0) as [x H].
-        exact x.
+      - exact x.
     Defined.
 
     Theorem inv_l : ∀ a : Z_, a ≠ 0 → inv a * a = 1.
     Proof.
-      intros a H.
-      unfold inv.
-      destruct excluded_middle_informative; try tauto.
-      now destruct constructive_indefinite_description.
+      rewrite /inv => a H.
+      (case excluded_middle_informative; try tauto) => {}H.
+        by elim constructive_indefinite_description.
     Qed.
 
     Definition 𝔽 := mkField ℤ_ inv inv_l (Logic.proj2 Z_mod_prime_is_ID).
 
     Theorem QR_QNR_0 : ∀ a : Z_, a ∉ QR → a ∉ QNR → a = 0.
     Proof.
-      intros a H H0.
+      move=> a H H0.
       apply NNPP.
-      contradict H0.
-      apply nonzero_unit in H0.
-      apply Specify_classification.
-      rewrite -> despecify.
+      move: H0 => /[swap] /nonzero_unit H0 [].
+      rewrite Specify_classification despecify.
       eauto using elts_in_set.
     Qed.
 
     Theorem Euler_Criterion_zero : ∀ a, legendre_symbol a = 0 ↔ a = 0.
     Proof.
-      split; unfold legendre_symbol; intros H.
-      destruct excluded_middle_informative.
-      - contradiction (integers.zero_ne_1).
-      - destruct excluded_middle_informative; auto using QR_QNR_0.
-        contradiction (integral_domains.minus_one_nonzero integers.ℤ_ID).
-      - subst; repeat destruct excluded_middle_informative; auto;
-          apply Specify_classification in i as [H0 H1];
-          rewrite -> (reify H0), despecify in *;
-          replace (mkSet H0 : Z_) with (0 : Z_) in *
-            by (now apply set_proj_injective);
-          destruct H1 as [[x H1] H2], Z_mod_prime_is_ID as [H3 H4];
-          contradiction H4;
-          now rewrite -> H1, mul_0_r.
+      (((split; rewrite /legendre_symbol) =>
+        [ | ->]; case excluded_middle_informative) =>
+       [_ /integers.zero_ne_1 | H | | ]
+         //; try (case excluded_middle_informative; auto using QR_QNR_0)) =>
+      [_ /(integral_domains.minus_one_nonzero integers.ℤ_ID) | | ] // =>
+      /Specify_classification; rewrite despecify =>
+      [[]] _ [] [x]; move: mul_0_r Z_mod_prime_is_ID => -> [] _ /[apply] //.
     Qed.
 
     Theorem Prime_Euler_Phi : (Euler_Phi = p_in_N - 1)%N.
