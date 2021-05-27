@@ -179,13 +179,6 @@ Section Integer_powers.
     move: pow_1_r => /[swap] a /[swap] /pow_neg -> -> //.
   Qed.
 
-  Lemma pow_add_r_pos_pos :
-    ∀ a b c, (0 ≤ b)%Z → (0 ≤ c)%Z → a^(b+c) = a^b * a^c.
-  Proof.
-    move=> a b c /le_def [x ->] /le_def [y ->].
-      by rewrite ? A3 INZ_add ? pow_nonneg pow_add_r.
-  Qed.
-
   Theorem unit_pow : ∀ a b, rings.unit a → rings.unit (a^b).
   Proof.
     rewrite /pow /eq_rect_r /eq_rect /eq_sym => a b H.
@@ -214,31 +207,27 @@ Section Integer_powers.
       rewrite pow_neg -? pow_mul_l ? inv_r ? pow_1_l; auto using unit_inv.
   Qed.
 
-  Theorem pow_mul_r_pos : ∀ a b c, rings.unit a → (0 ≤ c)%Z → a^(b*c) = (a^b)^c.
-  Proof.
-    move=> a b c H H0.
-    rewrite {2}/pow.
-    case excluded_middle_informative => [{}H0 | H1]; last by contradict H1.
-    elim constructive_indefinite_description => x ->.
-    case (classic (0 ≤ b)) =>
-    [/le_def [d] | /lt_not_ge /lt_neg_0 /lt_def [d [H1 /=]]].
-    - rewrite ? A3 => ->.
-      rewrite INZ_mul ? pow_nonneg pow_mul_r //.
-    - rewrite ? A3 -{2 3}(neg_neg ℤ b: --b = b)%Z
-                         (mul_neg_l ℤ (-b)%Z (x:Z) : --b*x = -(-b*x))%Z => ->.
-      rewrite ? pow_neg ? INZ_mul ? pow_nonneg ? pow_mul_r //.
-  Qed.
-
   Theorem pow_mul_r : ∀ a b c, rings.unit a → a^(b*c) = (a^b)^c.
   Proof.
     move=> a b c H.
-    case (classic (0 ≤ c)) => [H0 | /lt_not_ge /lt_neg_0 /lt_def [d [H0 /=]]].
-    - by rewrite pow_mul_r_pos.
-    - rewrite A3 -{2 3}(neg_neg ℤ c: --c = c)%Z => ->.
-      suff -> : (b*-d = -(b*d))%Z; last by ring.
-      rewrite ? pow_neg ? pow_mul_r_pos ? pow_neg -? neg_pow ? pow_neg;
-              auto using unit_inv, unit_pow.
-      apply /INZ_le /zero_le.
+    wlog: a c H / (0 ≤ c)%Z => [pow_mul_r_pos | H0].
+    - case (classic (0 ≤ c)) => [H0 | /lt_not_ge /lt_neg_0 /lt_def [d [H0 /=]]].
+      + by rewrite pow_mul_r_pos.
+      + rewrite A3 -{2 3}(neg_neg ℤ c: --c = c)%Z => ->.
+        suff -> : (b*-d = -(b*d))%Z; last by ring.
+        rewrite ? pow_neg ? pow_mul_r_pos ? pow_neg -? neg_pow ? pow_neg;
+          auto using unit_inv, unit_pow.
+        apply /INZ_le /zero_le.
+    - rewrite {2}/pow.
+      case excluded_middle_informative => [{}H0 | H1]; last by contradict H1.
+      elim constructive_indefinite_description => x ->.
+      case (classic (0 ≤ b)) =>
+      [/le_def [d] | /lt_not_ge /lt_neg_0 /lt_def [d [H1 /=]]].
+      + rewrite ? A3 => ->.
+        rewrite INZ_mul ? pow_nonneg pow_mul_r //.
+      + rewrite ? A3 -{2 3}(neg_neg ℤ b: --b = b)%Z
+                           (mul_neg_l ℤ (-b)%Z (x:Z) : --b*x = -(-b*x))%Z => ->.
+        rewrite ? pow_neg ? INZ_mul ? pow_nonneg ? pow_mul_r //.
   Qed.
 
   Theorem pow_div_distr : ∀ a b c,
@@ -255,42 +244,37 @@ Section Integer_powers.
       auto using unit_pow, unit_inv.
   Qed.
 
-  Lemma pow_add_r_pos_neg :
-    ∀ a b c, rings.unit a → (0 ≤ b)%Z → (c ≤ 0)%Z → a^(b+c) = a^b * a^c.
-  Proof.
-    move=> a b c H /le_def [x ->] /(le_neg_0 ℤ_order) /le_def /= [y].
-    rewrite -(rings.M3 _ (a^(0+x+c)))
-    -(pow_add_r_opp a c) // -? rings.M2 rings.M1 ? pow_nonneg ? A3
-    -{3 4 5}(neg_neg ℤ c: --c = c)%Z => ->; f_equal.
-    case (classic (0 ≤ x+-y)) =>
-    [/le_def [z] | /lt_not_ge /lt_neg_0 /lt_def [z [H2 /=]]].
-    - rewrite A3 => /[dup] H0 ->.
-      rewrite ? pow_nonneg -pow_add_r.
-      apply f_equal, INZ_eq.
-      rewrite -INZ_add -H0; ring.
-    - suff {2}-> : (x + - y = --(x+-y))%Z; last by ring.
-      rewrite A3 => /[dup] H0 ->.
-      rewrite pow_neg // -(M3_r _ (a^x)) -(pow_1_l z) -(inv_r a) //.
-      rewrite pow_div_distr // rings.M2 -neg_pow ? pow_neg ? pow_nonneg //.
-      suff -> : (y = x + z)%N; first by rewrite pow_add_r.
-      rewrite -INZ_eq -INZ_add -H0; ring.
-  Qed.
-
   Theorem pow_add_r : ∀ a b c, rings.unit a → a^(b+c) = a^b * a^c.
   Proof.
     move=> a b c H.
-    case (classic (0 ≤ b)), (classic (0 ≤ c)); auto using pow_add_r_pos_pos.
-    - apply pow_add_r_pos_neg; auto.
-      move: H1 => /lt_not_ge /or_introl => /(_ (c = 0%Z)) //.
-    - rewrite A1 rings.M1.
-      apply pow_add_r_pos_neg; auto.
-      move: H0 => /lt_not_ge /or_introl => /(_ (b = 0%Z)) //.
-    - rewrite -1 ? (neg_neg ℤ b: --b = b)%Z -1 ? (neg_neg ℤ c: --c = c)%Z.
-      suff -> : (--b + --c = -(-b + -c))%Z; last by ring.
-      rewrite ? (pow_neg a); auto.
-      apply pow_add_r_pos_pos.
-      + move: H0 => /lt_not_ge /lt_neg_0 /or_introl => /(_ (0 = -b))%Z //.
-      + move: H1 => /lt_not_ge /lt_neg_0 /or_introl => /(_ (0 = -c))%Z //.
+    wlog: a b c H / 0 ≤ b => [pow_add_r_pos | ].
+    - case (classic (0 ≤ b)), (classic (0 ≤ c)); auto.
+      + rewrite A1 rings.M1.
+        apply pow_add_r_pos; auto.
+      + rewrite -1 ? (neg_neg ℤ b: --b = b)%Z -1 ? (neg_neg ℤ c: --c = c)%Z.
+        suff -> : (--b + --c = -(-b + -c))%Z; last by ring.
+        rewrite ? (pow_neg a); auto.
+        apply pow_add_r_pos; auto using unit_inv.
+        move: H0 => /lt_not_ge /lt_neg_0 /or_introl => /(_ (0 = -b))%Z //.
+    - case (le_sym ℤ_order 0%Z c).
+      + move => /le_def [y ->] /le_def [x ->].
+          by rewrite ? A3 INZ_add ? pow_nonneg pow_add_r.
+      + move=> /[swap] /le_def [x ->] /(le_neg_0 ℤ_order) /le_def /= [y].
+        rewrite -(rings.M3 _ (a^(0+x+c)))
+        -(pow_add_r_opp a c) // -? rings.M2 rings.M1 ? pow_nonneg ? A3
+        -{3 4 5}(neg_neg ℤ c: --c = c)%Z => ->; f_equal.
+        case (classic (0 ≤ x+-y)) =>
+        [/le_def [z] | /lt_not_ge /lt_neg_0 /lt_def [z [H2 /=]]].
+        * rewrite A3 => /[dup] H0 ->.
+          rewrite ? pow_nonneg -pow_add_r.
+          apply f_equal, INZ_eq.
+          rewrite -INZ_add -H0; ring.
+        * suff {2}-> : (x + - y = --(x+-y))%Z; last by ring.
+          rewrite A3 => /[dup] H0 ->.
+          rewrite pow_neg // -(M3_r _ (a^x)) -(pow_1_l z) -(inv_r a) //.
+          rewrite pow_div_distr // rings.M2 -neg_pow ? pow_neg ? pow_nonneg //.
+          suff -> : (y = x + z)%N; first by rewrite pow_add_r.
+          rewrite -INZ_eq -INZ_add -H0; ring.
   Qed.
 
 End Integer_powers.
