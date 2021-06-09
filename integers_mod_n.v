@@ -770,39 +770,36 @@ Section Modular_arithmetic.
       induction m using Strong_Induction =>
       a b Heqm /[dup] H0 /[dup] /unit_classification H1 /order_pos /[dup] H2
         /lt_0_le_1 [/exists_prime_divisor [p [H3 [H4 H5]]] | <-] /[dup] H6
-        /[dup] /unit_classification H7 /order_pos H8;
+        /[dup] /unit_classification H7 /order_pos H8; subst;
         last by rewrite lcm_l_1; try left; eauto.
       set (k := v p (order a)).
       set (l := v p (order b)).
-      have H9: 0 < order a / p^k; have H10: 0 < order b / p^l;
-        eauto using val_quot_positive, order_pos.
-      have H11: 0 < p^k; have H12: 0 < p^l;
-        try by apply (ordered_rings.pow_pos ℤ_order).
+      (have /lt_def [x]: 0 < order a / p^k; have /lt_def [y]: 0 < order b / p^l)
+      => [ | _ | | ]; eauto using val_quot_positive, order_pos.
+      (have /lt_def [z]: 0 < p^k; have /lt_def [w]: 0 < p^l) =>
+      [ | _ | | ]; try by apply (ordered_rings.pow_pos ℤ_order).
       have: (order a / p^k) * (order b / p^l) < order a * order b.
-      { apply (lt_le_cross_mul ℤ_order); simpl; try apply val_quot_bound;
-          try apply quot_le_bound; eauto using order_pos, val_div. }
-      move: H H9 H10 H11 H12.
-      rewrite Heqm ? lt_def => H [x H9] [y H10] [z H11] [w H12] {Heqm}.
-      move: H9 H10 H11 H12.
-      rewrite -lt_def ? integers.A3 /k /l =>
-      [[H9 /[dup] H10 /[dup] H11 ->]]
-        [H12 /[dup] H13 /[dup] H14 ->] [H15 H16] [H17 H18] H19.
-      rewrite -gcd_val in H10; rewrite -gcd_val in H13;
-        try apply (pos_ne_0 ℤ_order), order_pos; auto.
+      { apply (lt_le_cross_mul ℤ_order) =>
+        /=; try apply val_quot_bound; try apply quot_le_bound;
+          eauto using order_pos, val_div, val_quot_positive, order_pos. }
+      rewrite ? integers.A3 /k /l =>
+      /[swap] [[H17 H18]] /[swap] [[H15 H16]] /[swap]
+       [[H12 /[dup] H13 ->]] /[swap] [[H9 /[dup] H10 ->]] H19.
+      move: H10 H13 => /[dup] H11 /[swap] /[dup] H14.
+      (rewrite -(gcd_val p H4 (order a)) // -1 ? (gcd_val p H4 (order b)) //);
+        try apply (pos_ne_0 ℤ_order), order_pos; auto => H10 H13.
       move: (H16) (H18) (H10) (H13) (H11) (H14) H19 => -> ->.
       rewrite ? pow_order ? INZ_mul // => /[dup] H20 =>
-      /INZ_eq <- /[dup] H21 /INZ_eq <- H19 H22 /INZ_lt.
-      move /H /(_ (rings.pow ℤ_ a z)) /(_ (rings.pow ℤ_ b w)) =>
-      [| | | c [H23 H24]]
-        //; try by apply unit_classification, unit_prod_closure.
+      /INZ_eq <- /[dup] H21 /INZ_eq <- H19 H22 /INZ_lt /H /(_(rings.pow ℤ_ a z))
+       /(_ (rings.pow ℤ_ b w)) => [[ | | | c [H23 H24]]] =>
+      //; try by apply unit_classification, unit_prod_closure.
       move: (H16) (H18) H19 H22 H24 <- => <- <- <- H19 {H k l}.
       wlog: a b x y z w H0 H1 H2 H5 H6 H7 H8 H9 H10 H11 H12 H13 H14 H15 H16 H17
               H18 H19 H20 H21 / (v p (order b) ≤ v p (order a))%N => [H | H].
       - case (le_trichotomy (v p (order a)) (v p (order b))); eauto => H22.
         eapply (H b a y x w z) in H22 as [d H22]; eauto =>
         {H}; try (exists d); rewrite 1 ? lcm_sym //.
-        move: H5.
-        rewrite -(rings.pow_1_r ℤ p) ? val_lower_bound;
+        move: H5; rewrite -(rings.pow_1_r ℤ p) ? val_lower_bound;
           eauto using naturals.le_trans; by apply (pos_ne_0 ℤ_order), order_pos.
       - erewrite <-val_lcm_r; eauto using order_pos.
         have H22: order (a^x) = z.
