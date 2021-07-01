@@ -978,9 +978,8 @@ Section Polynomial_theorems.
     { exists 0, 0.
       split; try apply zero_ring_degeneracy;
         rewrite ? IRP_1 ? IRP_0 ? H ? degree_const //. }
-    revert n a H2.
-    induction n using Induction => [a /naturals.le_lt_trans /(_ H1) |
-                                    a /le_lt_or_eq [/le_lt_succ /IHn // | H2]].
+    elim/Induction: n a H2 => [a /naturals.le_lt_trans /(_ H1) |
+                               n IHn a /le_lt_or_eq [/le_lt_succ /IHn // | H2]].
     { exists 0, a.
       split; rewrite ? mul_0_r ? rings.A3 //. }
     case (classic (degree a < degree b)%N) => [H3 | /naturals.le_not_gt [c H3]].
@@ -1086,13 +1085,13 @@ Section Polynomial_theorems.
         have: coefficient (a * b) (degree a + degree b) ≠ 0%R
           by rewrite -leading_term_prod => /C [ | ] //.
         rewrite H coeffs_of_0 //.
-      - rewrite /has_nontriviality IRP_1 IRP_0 IRP_eq //.
+      - rewrite /is_nontrivial IRP_1 IRP_0 IRP_eq //.
     Qed.
 
     Theorem monic_nonzero : ∀ f, monic f → f ≠ 0.
     Proof.
       move: is_ID => [_].
-      rewrite /monic /has_nontriviality => N f /[swap] ->.
+      rewrite /monic /is_nontrivial => N f /[swap] ->.
       rewrite coeffs_of_0 // => /(@eq_sym (elts ring)) //.
     Qed.
 
@@ -1140,8 +1139,7 @@ Section Polynomial_theorems.
     Proof.
       move=> f H.
       remember (degree f) as d.
-      revert f H Heqd.
-      induction d using Strong_Induction => f H0 Heqd.
+      elim/Strong_Induction: d f H Heqd => d H f H0 Heqd.
       case (classic (roots f = ∅)) =>
       [-> | /Nonempty_classification [a /[dup] /roots_in_R H1]];
         auto using (naturals_are_finite 0).
@@ -1157,15 +1155,14 @@ Section Polynomial_theorems.
 
     Theorem root_degree_bound : ∀ f, f ≠ 0 → (# roots f ≤ degree f)%N.
     Proof.
-      move: is_ID => [C N] f H.
+      move: is_ID => [C NT] f H.
       remember (degree f) as d.
-      revert f H Heqd.
-      induction d using Strong_Induction => f H0 Heqd.
+      elim/Strong_Induction: d f H Heqd => d IHd f H Heqd.
       case (classic (roots f = ∅)) =>
       [-> | /Nonempty_classification [a /[dup] /roots_in_R H1]];
         rewrite ? card_empty; auto using zero_le.
       rewrite (reify H1) => /root_classification => [[g H2]].
-      move: H2 H0 prod_root Heqd H -> => /cancellation_ne0 [H0 H2] -> ->.
+      move: H2 H prod_root Heqd IHd -> => /cancellation_ne0 [H0 H2] -> ->.
       rewrite nonzero_prod_degree // monic_linear_degree {1}add_1_r => H.
       eapply naturals.le_trans; eauto using finite_union_card_bound.
       apply naturals.le_cross_add; auto using naturals.succ_lt.

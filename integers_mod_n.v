@@ -451,7 +451,7 @@ Section Modular_arithmetic.
 
     Definition Euler_Phi := # Euler_Phi_set.
 
-    Definition 𝐔_ := {x of type ℤ_ | @rings.unit ℤ_ x}.
+    Definition 𝐔_ := {x of type ℤ_ | rings.unit x}.
 
     Theorem Euler_Phi_unit : Euler_Phi_set = 𝐔_.
     Proof.
@@ -766,9 +766,8 @@ Section Modular_arithmetic.
     Proof.
       move=> a b.
       remember ((order a) * (order b))%N as m.
-      revert m a b Heqm.
-      induction m using Strong_Induction =>
-      a b Heqm /[dup] H0 /[dup] /unit_classification H1 /order_pos /[dup] H2
+      elim/Strong_Induction: m a b Heqm =>
+      m H a b Heqm /[dup] H0 /[dup] /unit_classification H1 /order_pos /[dup] H2
         /lt_0_le_1 [/exists_prime_divisor [p [H3 [H4 H5]]] | <-] /[dup] H6
         /[dup] /unit_classification H7 /order_pos H8; subst;
         last by rewrite lcm_l_1; try left; eauto.
@@ -849,12 +848,10 @@ Section Modular_arithmetic.
       move: max_order_ex => [b [H H0]] a H1.
       move: (order_lcm_closed a b) => [ | | c [H2]] //.
       move: H0 -> => /[dup] H3.
-      have -> : order c = max_order => [ | <-].
-      - apply naturals.le_antisymm.
-        + auto using max_order_bound.
-        + rewrite -INZ_le -H3.
-          now apply lcm_bound, order_pos.
-      - apply lcm_div_l.
+      have -> : order c = max_order => [ | <-]; auto using lcm_div_l.
+      apply naturals.le_antisymm; auto using max_order_bound.
+      rewrite -INZ_le -H3.
+      now apply lcm_bound, order_pos.
     Qed.
 
     Theorem max_order_pow : ∀ a : Z_, a ∈ 𝐔_ → a^max_order = 1.
@@ -869,8 +866,8 @@ Section Modular_arithmetic.
 
   Definition square_function := sets.functionify square.
 
-  Definition QR := {x of type ℤ_ | @rings.unit ℤ_ x ∧ ∃ a, square a = x}.
-  Definition QNR := {x of type ℤ_ | @rings.unit ℤ_ x ∧ (x : Z_) ∉ QR}.
+  Definition QR := {x of type ℤ_ | rings.unit x ∧ ∃ a, square a = x}.
+  Definition QNR := {x of type ℤ_ | rings.unit x ∧ (x : Z_) ∉ QR}.
 
   Definition legendre_symbol (a : Z_) : Z.
   Proof.
@@ -1555,7 +1552,7 @@ Section Modular_arithmetic.
     Qed.
 
     Theorem modified_division_algorithm :
-      ∀ l : N, (a*l = QR_b l * p + QR_ε l * QR_r l)%Z.
+      ∀ l : N, (a * l = QR_b l * p + QR_ε l * QR_r l)%Z.
     Proof.
       intros l.
       unfold QR_b, QR_ε, QR_r.

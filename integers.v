@@ -798,8 +798,7 @@ Theorem WOP : ∀ S : Z → Prop,
 Proof.
   move=> S H [s [H0 H1]].
   apply NNPP => H2.
-  revert H0 H1.
-  induction s as [s IHs] using strong_induction => H0 H1.
+  elim/strong_induction: s H0 H1 => s IHs H0 H1.
   move: H2 => [].
   (repeat esplit; eauto) => t /[dup] /H /[dup] H2 /[swap] /IHs /[apply].
   rewrite /le le_not_gt => /[swap] H3 => [[]] //.
@@ -1140,9 +1139,8 @@ Proof.
      [d | d | d /is_gcd_sym | d]; eauto; rewrite -gcd_neg;
      eauto using is_gcd_sym) => /is_gcd_sym.
     rewrite -gcd_neg; eauto using is_gcd_sym.
-  - revert b.
-    induction a using strong_induction =>
-    b [/[dup] H0 /(division_algorithm b) [q [r [H1 [H2 H3]]]] H4].
+  - elim/strong_induction: a b =>
+    a H b [/[dup] H0 /(division_algorithm b) [q [r [H1 [H2 H3]]]] H4].
     move: H1 H H4 H2 <- => H H4 [H2 | <-].
     + elim (H r (conj H2 H3) a) => [d [H5 [H6 H7]] | ]; auto.
       exists d.

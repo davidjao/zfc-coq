@@ -31,8 +31,8 @@ Section Integral_domain_construction.
   Add Ring R_ring : (ringify ring).
 
   Definition has_cancellation := ∀ a b, a * b = 0 → a = 0 ∨ b = 0.
-  Definition has_nontriviality := 1 ≠ 0.
-  Definition is_integral_domain := has_cancellation ∧ has_nontriviality.
+  Definition is_nontrivial := 1 ≠ 0.
+  Definition is_integral_domain := has_cancellation ∧ is_nontrivial.
 
   Hypothesis is_ID : is_integral_domain.
 
@@ -58,7 +58,7 @@ Section Integral_domain_theorems.
 
   Add Ring R_ring : (ringify ring).
 
-  Lemma has_nontriviality_ID : has_nontriviality ring.
+  Lemma is_nontrivial_ID : is_nontrivial ring.
   Proof.
     exact (nontriviality ID).
   Qed.
@@ -70,7 +70,7 @@ Section Integral_domain_theorems.
 
   Lemma is_integral_domain_ID : is_integral_domain ring.
   Proof.
-    split; try apply has_nontriviality_ID; apply has_cancellation_ID.
+    split; try apply is_nontrivial_ID; apply has_cancellation_ID.
   Qed.
 
   Lemma ne0_cancellation : ∀ a b, a ≠ 0 → b ≠ 0 → a * b ≠ 0.
