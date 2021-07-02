@@ -608,33 +608,29 @@ Definition ordered_pair x y := {{x,x},{x,y}}.
 
 Notation " ( x , y ) " := (ordered_pair x y) : set_scope.
 
-Lemma Ordered_pair_iff_left : ∀ a b c d, (a,b) = (c,d) → a = c.
-Proof.
-  move=> a b c d.
-  rewrite /ordered_pair => H.
-  have: {a,a} ∈ {{c,c}, {c,d}}.
-  { move: H <-; apply /Pairing_classification /or_introl => //. }
-  move => /Pairing_classification =>
-  [[H0 | H0]]; symmetry; apply /Singleton_classification;
-    rewrite H0; apply /Pairing_classification; auto.
-Qed.
-
 Theorem Ordered_pair_iff : ∀ a b c d, (a, b) = (c, d) ↔ (a = c ∧ b = d).
 Proof.
-  move=> a b c d.
-  rewrite /ordered_pair.
-  split => [/[dup] /Ordered_pair_iff_left -> H | [-> ->]] //.
-  have: {c,b} ∈ {{c,c}, {c,d}}.
-  { move: H <-; apply /Pairing_classification /or_intror => //. }
-  move => /Pairing_classification =>
-  [[/Subset_equality_iff [/(_ b) H0 _] |
-    /Subset_equality_iff [/(_ b) H0 /(_ d) H1]]].
-  - have: {c,d} ∈ {{c,c}, {c,b}}.
-    { move: H ->; apply /Pairing_classification /or_intror => //. }
+  rewrite /ordered_pair => a b c d.
+  split => [ | [-> ->]] //.
+  wlog: a b c d / a = c => [H /[dup] H0 /(H a) H1 | -> H].
+  - apply H1.
+    have: {a,a} ∈ {{c,c}, {c,d}}.
+    { move: H0 <-; apply /Pairing_classification /or_introl => //. }
     move => /Pairing_classification =>
-    [[/Subset_equality_iff [/(_ d) H1 _] | /Subset_equality_iff [/(_ d) H1 _]]];
-      rewrite -> ? Pairing_classification in *; intuition congruence.
-  - rewrite -> ? Pairing_classification in *; intuition congruence.
+    [[H2 | H2]]; symmetry; apply /Singleton_classification;
+      rewrite H2; apply /Pairing_classification; auto.
+  - have: {c,b} ∈ {{c,c}, {c,d}}.
+    { move: H <-; apply /Pairing_classification /or_intror => //. }
+    move => /Pairing_classification =>
+    [[/Subset_equality_iff [/(_ b) H0 _] |
+      /Subset_equality_iff [/(_ b) H0 /(_ d) H1]]].
+    + have: {c,d} ∈ {{c,c}, {c,b}}.
+      { move: H ->; apply /Pairing_classification /or_intror => //. }
+      move => /Pairing_classification =>
+      [[/Subset_equality_iff [/(_ d) H1 _] |
+        /Subset_equality_iff [/(_ d) H1 _]]];
+        rewrite -> ? Pairing_classification in *; intuition congruence.
+    + rewrite -> ? Pairing_classification in *; intuition congruence.
 Qed.
 
 Definition product A B :=
