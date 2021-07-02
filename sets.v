@@ -1190,47 +1190,24 @@ Section inverse_functions.
     - apply Injective_classification => x y /H2 /[swap] /H2 {2}<- {2}<- -> //.
   Qed.
 
-  Theorem right_inverse_iff_surjective_nonempty :
-    surjective f ↔ ∃ g, domain g = range f ∧ range g = domain f ∧
-                        ∀ y, y ∈ range f → f (g y) = y.
-  Proof.
-    split => [/Surjective_classification H0 | [g [H0 [H1 H2]]]].
-    - elim (function_construction B A partial_left_inverse) =>
-      [g [H1 [H2 H3]] | g].
-      + exists g.
-        repeat split; auto => y /[dup] /H3 /[swap] /H0 [x [H4 H5]].
-        rewrite /partial_left_inverse.
-        elim excluded_middle_informative => [H6 | H6].
-        * (repeat elim constructive_indefinite_description => ? /= //) =>
-          [[H7]] {3}<- _ -> //.
-        * contradict H6; eauto.
-      + rewrite /partial_left_inverse; elim excluded_middle_informative =>
-        H1 H2; repeat elim constructive_indefinite_description => /=; tauto.
-    - apply Surjective_classification => y /[dup] /[swap] /H2 {2}<- H3.
-      eapply ex_intro, conj; last by reflexivity.
-      move: function_maps_domain_to_range H0 H1 H3 =>
-      /(_ g y) /[swap] -> /[swap] -> //.
-  Qed.
-
 End inverse_functions.
 
 Theorem right_inverse_iff_surjective :
   ∀ f, surjective f ↔ ∃ g, domain g = range f ∧ range g = domain f ∧
                            ∀ y, y ∈ range f → f (g y) = y.
 Proof.
-  move=> f.
-  elim (classic (graph f ≠ ∅)) =>
-  [H | /NNPP /function_empty_domain /[dup] H ->];
-    eauto using right_inverse_iff_surjective_nonempty.
-  split => [/Surjective_classification H0 | [g [H0 [H1 H2]]] [y H3]].
-  - suff -> : range f = ∅.
-    + elim (function_construction ∅ ∅ id) => [g [H1 [H2 H3]] | x] //.
-      eapply ex_intro, conj, conj; eauto => y /Empty_set_classification //.
-    + apply NNPP => /Nonempty_classification [y /H0 [x [H1 H2]]].
-      move: H H1 -> => /Empty_set_classification //.
-  - contradiction (Empty_set_classification (g y)).
-    move: function_maps_domain_to_range H0 H1 H3 =>
-    /(_ g y) /[swap] -> /[swap] -> //.
+  split => [H | [g [H [H0 H1]]]].
+  - exists
+      (functionify
+         (λ y, let (x, _) := constructive_indefinite_description (H y) in x)).
+    rewrite functionify_domain functionify_range.
+    (repeat split; auto) => y H0.
+    rewrite (reify H0) functionify_action.
+    elim constructive_indefinite_description => [[x X] <-] //.
+  - rewrite /surjective => [[y /[dup] /H1 H2 /[dup]]].
+    move: H H0 => {1}<- /[swap] /function_maps_domain_to_range /[swap] -> H Y.
+    exists (mkSet H).
+    eauto using set_proj_injective.
 Qed.
 
 Definition image (f : function) := {y in range f | ∃ x, x ∈ domain f ∧ f x = y}.
