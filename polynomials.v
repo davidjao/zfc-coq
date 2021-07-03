@@ -549,11 +549,10 @@ Section Polynomial_theorems.
   Theorem add_degree :
     ∀ f g, (degree (f + g)%poly ≤ naturals.max (degree f) (degree g))%N.
   Proof.
-    rewrite /naturals.max /sumbool_rect => f g.
-    case excluded_middle_informative =>
-    [H | /naturals.le_not_gt H]; apply degree_bound =>
-    m H0; rewrite coefficient_add ? coeffs_above_degree ? rings.A3 //;
-                  eauto using naturals.lt_trans, naturals.le_lt_trans.
+    move=> f g.
+    apply degree_bound => m H.
+    rewrite coefficient_add ? coeffs_above_degree ? rings.A3;
+      eauto using naturals.le_lt_trans, naturals.max_le_l, naturals.max_le_r.
   Qed.
 
   Theorem mul_degree : ∀ f g, (degree (f * g)%poly ≤ degree f + degree g)%N.

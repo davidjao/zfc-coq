@@ -362,8 +362,7 @@ Infix "+" := add : N_scope.
 
 Theorem add_0_r : ∀ x, x + 0 = x.
 Proof.
-  move=> x.
-  apply iterated_op_0.
+  eauto using iterated_op_0.
 Qed.
 
 Theorem add_succ_r : ∀ x y, x + S y = S (x + y).
@@ -378,8 +377,7 @@ Infix "*" := mul : N_scope.
 
 Theorem mul_0_r : ∀ x, x * 0 = 0.
 Proof.
-  move=> x.
-  apply iterated_op_0.
+  eauto using iterated_op_0.
 Qed.
 
 Theorem mul_succ_r : ∀ x y, x * (S y) = x * y + x.
@@ -495,8 +493,7 @@ Infix "^" := pow : N_scope.
 
 Theorem pow_0_r : ∀ x, x^0 = 1.
 Proof.
-  move=> x.
-  apply iterated_op_0.
+  eauto using iterated_op_0.
 Qed.
 
 Theorem pow_succ_r : ∀ x y, x^(S y) = x^y * x.
@@ -1072,78 +1069,75 @@ Proof.
         eauto using le_trans, le_succ.
 Qed.
 
-Definition min : N → N → N.
+Theorem min_construction : ∀ a b : N, a ∩ b ∈ ω.
 Proof.
-  move=> a b.
-  elim (excluded_middle_informative (a < b)) => *.
-  - exact a.
-  - exact b.
-Defined.
+  move=> [a A] [b B]; case (ω_trichotomy a b) =>
+  // /Intersection_subset; rewrite ? (Intersection_comm b) => -> //.
+Qed.
+
+Theorem max_construction : ∀ a b : N, a ∪ b ∈ ω.
+Proof.
+  move=> [a A] [b B]; case (ω_trichotomy a b) =>
+  // /Union_subset; rewrite ? (Union_comm b) => -> //.
+Qed.
+
+Definition min (a b : N) := mkSet (min_construction a b) : N.
+Definition max (a b : N) := mkSet (max_construction a b) : N.
 
 Theorem min_le_l : ∀ a b, min a b ≤ a.
 Proof.
   rewrite /min => a b.
-  elim excluded_middle_informative => * /=.
-  - apply /le_refl.
-  - apply /le_not_gt => //.
+  rewrite le_is_subset /=.
+  auto using Intersection_left.
 Qed.
 
 Theorem min_le_r : ∀ a b, min a b ≤ b.
 Proof.
   rewrite /min => a b.
-  elim excluded_middle_informative => [[*] | *] /= //.
-  apply /le_refl.
+  rewrite le_is_subset /=.
+  auto using Intersection_right.
 Qed.
 
 Theorem min_eq : ∀ a b, min a b = a ∨ min a b = b.
 Proof.
-  rewrite /min => a b.
-  elim excluded_middle_informative; auto.
+  rewrite /min => [[a A]] [b B]; case (ω_trichotomy a b) =>
+  // /Intersection_subset; rewrite ? (Intersection_comm b); [right | left];
+    apply set_proj_injective => //.
 Qed.
-
-Definition max : N → N → N.
-Proof.
-  move=> a b.
-  elim (excluded_middle_informative (a < b)) => *.
-  - exact b.
-  - exact a.
-Defined.
 
 Theorem max_le_l : ∀ a b, a ≤ max a b.
 Proof.
   rewrite /max => a b.
-  elim excluded_middle_informative => [[*] | *] /= //.
-  apply /le_refl.
+  rewrite le_is_subset /=.
+  auto using Union_left.
 Qed.
 
 Theorem max_le_r : ∀ a b, b ≤ max a b.
 Proof.
   rewrite /max => a b.
-  elim excluded_middle_informative => * /=.
-  - apply /le_refl.
-  - apply /le_not_gt => //.
+  rewrite le_is_subset /=.
+  auto using Union_right.
 Qed.
 
 Theorem max_eq : ∀ a b, max a b = a ∨ max a b = b.
 Proof.
- rewrite /max => a b.
- elim excluded_middle_informative; auto.
+  rewrite /max => [[a A]] [b B]; case (ω_trichotomy a b) =>
+  // /Union_subset; rewrite ? (Union_comm b); [left | right];
+    apply set_proj_injective => //.
 Qed.
 
 Theorem max_sym : ∀ a b, max a b = max b a.
 Proof.
   rewrite /max => a b.
-  (repeat elim excluded_middle_informative => /=; auto) =>
-  [/lt_antisym | /le_not_gt /[swap] /le_not_gt /le_antisymm /[apply]] //.
+  apply set_proj_injective => /=.
+  apply Union_comm.
 Qed.
 
 Theorem max_0_l : ∀ a, max 0 a = a.
 Proof.
   rewrite /max => a.
-  elim excluded_middle_informative; auto => H /=.
-  apply NNPP.
-  move: H => /[swap] /neq_sym /succ_0 [m] ->.
-  auto using lt_succ.
+  apply set_proj_injective => /=.
+  rewrite Union_comm Union_empty //.
 Qed.
 
 Theorem max_0_r : ∀ a, max a 0 = a.
