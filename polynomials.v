@@ -201,27 +201,24 @@ Section Polynomial_theorems.
 
   Theorem IPS_add : ∀ f g : poly, ((f : series) + (g : series))%series = f + g.
   Proof.
-    move=> f g.
-      by apply set_proj_injective.
+    eauto using set_proj_injective.
   Qed.
 
   Theorem IPS_neg : ∀ f : poly, (-f : series)%series = -f.
   Proof.
-    move=> f.
-      by apply set_proj_injective.
+    eauto using set_proj_injective.
   Qed.
 
   Theorem IPS_mul : ∀ f g : poly, ((f : series) * (g : series))%series = f * g.
   Proof.
-    move=> f g.
-      by apply set_proj_injective.
+    eauto using set_proj_injective.
   Qed.
 
   Theorem IRP_eq : ∀ a b : R, (a : poly) = (b : poly) ↔ a = b.
   Proof.
     split => [H | ->] //.
     inversion H as [H0].
-    move: H0 => /set_proj_injective /IRS_eq //.
+    eauto using set_proj_injective, IRS_eq.
   Qed.
 
   Theorem IRP_add : ∀ a b : R, (a : poly) + (b : poly) = (a + b)%R.
@@ -229,7 +226,7 @@ Section Polynomial_theorems.
     rewrite /IRP => a b.
     apply set_proj_injective => /=.
     rewrite (IRS_add _) /ISR /rings.IRS /ISS /=.
-    do 2 f_equal; apply set_proj_injective => //.
+    do 2 f_equal; eauto using set_proj_injective.
   Qed.
 
   Theorem IRP_mul : ∀ a b : R, (a : poly) * (b : poly) = (a * b)%R.
@@ -237,7 +234,7 @@ Section Polynomial_theorems.
     rewrite /IRP => a b.
     apply set_proj_injective => /=.
     rewrite (IRS_mul _) /ISR /rings.IRS /ISS /=.
-    do 2 f_equal; apply set_proj_injective => //.
+    do 2 f_equal; eauto using set_proj_injective.
   Qed.
 
   Theorem IRP_neg : ∀ a : R, (-a : poly) = (-a)%R.
@@ -245,7 +242,7 @@ Section Polynomial_theorems.
     rewrite /IRP => a.
     apply set_proj_injective => /=.
     rewrite (IRS_neg _) /ISR /rings.IRS /ISS /=.
-    do 2 f_equal; apply set_proj_injective => //.
+    do 2 f_equal; eauto using set_proj_injective.
   Qed.
 
   Theorem IRP_1 : 1 = 1%R.
@@ -256,7 +253,7 @@ Section Polynomial_theorems.
 
   Theorem IRP_0 : 0 = 0%R.
   Proof.
-    apply set_proj_injective => //.
+    eauto using set_proj_injective.
   Qed.
 
   Theorem IRP_pow : ∀ (n : N) (a : R), (a : poly)^n = (a^n)%R.
@@ -298,7 +295,7 @@ Section Polynomial_theorems.
       move: H3 => /[swap] [[d H3]].
       (rewrite /coefficient -(H1 x) //) => [[]].
       f_equal.
-      apply set_proj_injective => //.
+      eauto using set_proj_injective.
   Qed.
 
   Definition degree : poly → N.
@@ -336,7 +333,7 @@ Section Polynomial_theorems.
       move: H0 H pred_succ -> => /[swap] -> /[swap] -> //.
     - rewrite /coefficient.
       f_equal.
-      now apply set_proj_injective.
+      eauto using set_proj_injective.
   Qed.
 
   Lemma x_coeff_of_x : coefficient x 1 = 1%R.
@@ -348,7 +345,7 @@ Section Polynomial_theorems.
       repeat case excluded_middle_informative; auto => // /(@eq_sym N) /PA4 //.
     - rewrite /coefficient.
       f_equal.
-      now apply set_proj_injective.
+      eauto using set_proj_injective.
   Qed.
 
   Lemma IPS_pow : ∀ n (f : poly), ((f : series)^n)%series = f^n.
@@ -401,8 +398,7 @@ Section Polynomial_theorems.
 
   Lemma IPS_IRP : ∀ c : R, (c : series) = IRS c.
   Proof.
-    move=> c.
-      by apply set_proj_injective.
+    eauto using set_proj_injective.
   Qed.
 
   Lemma const_coeff_mul :
@@ -492,7 +488,7 @@ Section Polynomial_theorems.
       + rewrite -{3}(pred_succ d) -sub_1_r -H.
         apply minus_leading_term.
         rewrite H.
-        apply one_le_succ.
+        eauto using one_le_succ.
       + apply iterate_extensionality => k [H1 H2].
         rewrite sub_is_neg coefficient_add coefficient_neg.
         suff -> : coefficient (coefficient f (S d) * x ^ S d) k
