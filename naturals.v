@@ -250,24 +250,14 @@ Definition PA3 := Induction.
 Theorem Strong_Induction_ω : ∀ P : N → Prop,
     (∀ n : N, (∀ k : N, k ∈ n → P k) → P n) → ∀ n : N, P n.
 Proof.
-  move=> P H n.
-  have: {x of type ω | ¬ P x} ⊂ ω by move=> x /Specify_classification [H0] //.
-  elim (classic ({x of type ω | ¬ P x} = ∅)) =>
-  [H0 H1 | /[swap] /ω_WOP /[apply] [[x [/Specify_classification [H0]]]]].
-  - apply NNPP.
-    move: H0 => /[swap] H0.
-    eapply Nonempty_classification, ex_intro, Specify_classification.
-    erewrite despecify.
-    eauto using elts_in_set.
-  - rewrite (reify H0) despecify => H1 H2.
-    contradict H1.
-    apply /H => k H1.
-    apply NNPP => H3.
-    contradiction (no_quines_ω k); eauto using elts_in_set.
-    apply /H2; eauto.
-    apply Specify_classification.
-    erewrite despecify.
-    eauto using elts_in_set.
+  move=> P H.
+  have H0: (∀ n, P n ∧ (∀ k : N, k ∈ n → P k)) =>
+  [ | n]; last by move: (H0 n); tauto.
+  (induction n using Induction; split; try apply H) =>
+  [k /Empty_set_classification | k /Empty_set_classification | k | k]
+    //; (case (classic (k = n)) => [-> | ]; try tauto) =>
+  H0 /in_S_succ /Pairwise_union_classification
+     [H1 | /Singleton_classification /set_proj_injective H1] //; intuition.
 Qed.
 
 Theorem PA4 : ∀ n, 0 ≠ S n.
@@ -1103,6 +1093,26 @@ Proof.
   rewrite /min => [[a A]] [b B]; case (ω_trichotomy a b) =>
   // /Intersection_subset; rewrite ? (Intersection_comm b); [right | left];
     apply set_proj_injective => //.
+Qed.
+
+Theorem min_sym : ∀ a b, min a b = min b a.
+Proof.
+  rewrite /min => a b.
+  apply set_proj_injective => /=.
+  apply Intersection_comm.
+Qed.
+
+Theorem min_0_l : ∀ a, min 0 a = 0.
+Proof.
+  rewrite /min => a.
+  apply set_proj_injective => /=.
+  rewrite Intersection_comm Intersection_empty //.
+Qed.
+
+Theorem min_0_r : ∀ a, min a 0 = 0.
+Proof.
+  move=> a.
+  rewrite min_sym min_0_l //.
 Qed.
 
 Theorem max_le_l : ∀ a b, a ≤ max a b.

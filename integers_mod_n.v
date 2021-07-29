@@ -782,17 +782,17 @@ Section Modular_arithmetic.
         /=; try apply val_quot_bound; try apply quot_le_bound;
           eauto using order_pos, val_div, val_quot_positive, order_pos. }
       rewrite ? integers.A3 /k /l =>
-      /[swap] [[H17 H18]] /[swap] [[H15 H16]] /[swap]
-       [[H12 /[dup] H13 ->]] /[swap] [[H9 /[dup] H10 ->]] H19.
-      move: H10 H13 => /[dup] H11 /[swap] /[dup] H14.
+      /[swap] [[H9 H10]] /[swap] [[H11 H12]] /[swap]
+       [[H13 /[dup] H14 ->]] /[swap] [[H15 /[dup] H16 ->]] H17.
+      move: H14 H16 => /[dup] H14 /[swap] /[dup] H16.
       (rewrite -(gcd_val p H4 (order a)) // -1 ? (gcd_val p H4 (order b)) //);
-        try apply (pos_ne_0 ℤ_order), order_pos; auto => H10 H13.
-      move: (H16) (H18) (H10) (H13) (H11) (H14) H19 => -> ->.
+        try apply (pos_ne_0 ℤ_order), order_pos; auto => H18 H19.
+      move: (H10) (H12) (H18) (H19) (H14) (H16) H17 => -> ->.
       rewrite ? pow_order ? INZ_mul // => /[dup] H20 =>
-      /INZ_eq <- /[dup] H21 /INZ_eq <- H19 H22 /INZ_lt /H /(_(rings.pow ℤ_ a z))
+      /INZ_eq <- /[dup] H21 /INZ_eq <- H17 H22 /INZ_lt /H /(_(rings.pow ℤ_ a z))
        /(_ (rings.pow ℤ_ b w)) => [[ | | | c [H23 H24]]] =>
       //; try by apply unit_classification, unit_prod_closure.
-      move: (H16) (H18) H19 H22 H24 <- => <- <- <- H19 {H k l}.
+      move: (H10) (H12) H17 H22 H24 <- => <- <- <- H17 {H k l}.
       wlog: a b x y z w H0 H1 H2 H5 H6 H7 H8 H9 H10 H11 H12 H13 H14 H15 H16 H17
               H18 H19 H20 H21 / (v p (order b) ≤ v p (order a))%N => [H | H].
       - case (le_trichotomy (v p (order a)) (v p (order b))); eauto => H22.
@@ -802,16 +802,16 @@ Section Modular_arithmetic.
           eauto using naturals.le_trans; by apply (pos_ne_0 ℤ_order), order_pos.
       - erewrite <-val_lcm_r; eauto using order_pos.
         have H22: order (a^x) = z.
-        { rewrite -INZ_eq -pow_order -? H16 // -H11 div_l_gcd.
-          - rewrite H11 INZ_le; auto using zero_le.
+        { rewrite -INZ_eq -pow_order -? H13 // -H16 div_l_gcd.
+          - rewrite H16 INZ_le; auto using zero_le.
           - exists (p^v p (order a))%Z => /=.
             apply eq_sym, div_inv_l; auto using val_div.
           - rewrite div_div; auto using val_div, prime_power_nonzero.
             now apply (pos_ne_0 ℤ_order), order_pos. }
         have H24: (a^x)%Zn ∈ 𝐔_ by apply unit_classification, unit_prod_closure.
         exists (a^x * c).
-        rewrite H19 H16 -H22 mul_order // ? INZ_mul; auto.
-        + rewrite -H19 H22 -H16.
+        rewrite H17 H12 -H22 mul_order // ? INZ_mul; auto.
+        + rewrite -H17 H22 -H12.
           apply val_lcm_r_rel_prime; auto using order_pos.
         + split; auto; apply unit_classification, unit_closure;
             by apply unit_classification.
