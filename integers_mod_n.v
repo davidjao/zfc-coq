@@ -1006,25 +1006,23 @@ Section Modular_arithmetic.
     Proof.
       rewrite /unit_square_function /square_function.
       apply Extensionality => z.
-      split => [/Specify_classification [] /[swap] [[x]] |
-                /Specify_classification [H]].
-      - rewrite restriction_domain sets.functionify_domain =>
-        [] [/Pairwise_intersection_classification [/[dup] H /[swap] H0]].
-        rewrite (reify H0) => /unit_classification H1.
-        rewrite -restriction_action
-                   ? restriction_range ? Pairwise_intersection_classification
-                   ? sets.functionify_domain // ? sets.functionify_range => <-.
-        rewrite Specify_classification functionify_action despecify /square.
+      ((split => [/Specify_classification [] /[swap] [[x]] |
+                /Specify_classification [H]];
+                 rewrite ? restriction_domain ? sets.functionify_domain) =>
+       [[] /[dup] H /Pairwise_intersection_classification [H0 H1] | ];
+       rewrite ? Specify_classification ? restriction_range
+               ? sets.functionify_range -? restriction_action
+               ? sets.functionify_domain ? (reify H1) ? (reify H)
+               // ? functionify_action /square ? despecify) =>
+      [<- | [[x H0] [a H1]]].
+      - rewrite despecify.
         repeat split; eauto using elts_in_set.
-        apply unit_closure; auto using unit_classification.
-      - rewrite Specify_classification restriction_domain restriction_range
-                sets.functionify_domain sets.functionify_range (reify H)
-                despecify /square => [[[x H0] [a H1]]].
-        split; eauto.
+          by apply unit_closure; apply unit_classification.
+      - split; eauto.
         exists a.
         suff: a ∈ 𝐔_ ∩ ℤ_ => [H2 | ].
-        + by rewrite -restriction_action ? functionify_action ? H1
-                                         ? sets.functionify_domain.
+        + rewrite restriction_domain -restriction_action;
+            rewrite sets.functionify_domain // functionify_action H1 //.
         + repeat (rewrite ? Pairwise_intersection_classification
                           ? Specify_classification ? despecify;
                   split; eauto using elts_in_set).
