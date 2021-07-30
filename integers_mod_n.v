@@ -1004,39 +1004,32 @@ Section Modular_arithmetic.
 
     Lemma image_usf : image unit_square_function = QR.
     Proof.
-      unfold unit_square_function, square_function.
-      apply Extensionality.
-      split; intros H.
-      - apply Specify_classification in H as [H [x [H0 H1]]].
-        rewrite -> restriction_domain, restriction_range, <-restriction_action,
-        @sets.functionify_domain, @sets.functionify_range in *;
-          try now rewrite -> sets.functionify_domain in *.
-        apply Pairwise_intersection_classification in H0 as [H0 H2].
-        apply Specify_classification.
-        rewrite -> (reify H), (reify H2), @functionify_action, despecify in *.
-        apply set_proj_injective in H1.
-        repeat split; eauto.
-        apply Specify_classification in H0 as [H0 H3].
-        rewrite -> despecify, <-H1 in *.
-        now apply unit_closure.
-      - apply Specify_classification.
-        rewrite -> restriction_domain, restriction_range,
-        sets.functionify_domain, sets.functionify_range.
-        apply Specify_classification in H as [H H0].
-        rewrite -> (reify H), despecify in *.
-        destruct H0 as [[x H0] [a H1]].
+      rewrite /unit_square_function /square_function.
+      apply Extensionality => z.
+      split => [/Specify_classification [] /[swap] [[x]] |
+                /Specify_classification [H]].
+      - rewrite restriction_domain sets.functionify_domain =>
+        [] [/Pairwise_intersection_classification [/[dup] H /[swap] H0]].
+        rewrite (reify H0) => /unit_classification H1.
+        rewrite -restriction_action
+                   ? restriction_range ? Pairwise_intersection_classification
+                   ? sets.functionify_domain // ? sets.functionify_range => <-.
+        rewrite Specify_classification functionify_action despecify /square.
+        repeat split; eauto using elts_in_set.
+        apply unit_closure; auto using unit_classification.
+      - rewrite Specify_classification restriction_domain restriction_range
+                sets.functionify_domain sets.functionify_range (reify H)
+                despecify /square => [[[x H0] [a H1]]].
         split; eauto.
         exists a.
-        enough (a ∈ 𝐔_ ∩ ℤ_).
-        { now rewrite <-restriction_action, @functionify_action, H1;
-            try now rewrite -> sets.functionify_domain. }
-        rewrite -> Pairwise_intersection_classification.
-        split; eauto using elts_in_set.
-        apply Specify_classification.
-        split; eauto using elts_in_set.
-        rewrite -> despecify, <-H1 in *.
-        exists (x * a).
-        now rewrite -> H0, <-M2.
+        suff: a ∈ 𝐔_ ∩ ℤ_ => [H2 | ].
+        + by rewrite -restriction_action ? functionify_action ? H1
+                                         ? sets.functionify_domain.
+        + repeat (rewrite ? Pairwise_intersection_classification
+                          ? Specify_classification ? despecify;
+                  split; eauto using elts_in_set).
+          exists (x * a).
+            by rewrite H0 /= -M2 H1.
     Qed.
 
     Theorem inverse_image_usf :
