@@ -1014,56 +1014,49 @@ Section Modular_arithmetic.
                ? sets.functionify_range -? restriction_action
                ? sets.functionify_domain ? (reify H1) ? (reify H)
                // ? functionify_action /square ? despecify) =>
-      [<- | [[x H0] [a H1]]].
-      - rewrite despecify.
-        repeat split; eauto using elts_in_set.
-          by apply unit_closure; apply unit_classification.
-      - split; eauto.
-        exists a.
-        suff: a ∈ 𝐔_ ∩ ℤ_ => [H2 | ].
-        + rewrite restriction_domain -restriction_action;
-            rewrite sets.functionify_domain // functionify_action H1 //.
-        + repeat (rewrite ? Pairwise_intersection_classification
-                          ? Specify_classification ? despecify;
-                  split; eauto using elts_in_set).
-          exists (x * a).
-            by rewrite H0 /= -M2 H1.
+      [<- | [[x H0] [a H1]]]; rewrite ? despecify;
+        repeat split; eauto using elts_in_set; first by
+            apply unit_closure; apply unit_classification.
+      exists a.
+      suff: a ∈ 𝐔_ ∩ ℤ_ => [H2 | ].
+      - rewrite restriction_domain -restriction_action;
+          rewrite sets.functionify_domain // functionify_action H1 //.
+      - repeat (rewrite ? Pairwise_intersection_classification
+                        ? Specify_classification ? despecify;
+                split; eauto using elts_in_set).
+        exists (x * a).
+          by rewrite H0 /= -M2 H1.
     Qed.
 
     Theorem inverse_image_usf :
       ∀ x, x ∈ QR → inverse_image_of_element square_function x =
                     inverse_image_of_element unit_square_function x.
     Proof.
-      intros x H.
-      pose proof H as H0.
-      rewrite <-image_usf in H0.
-      assert (image unit_square_function ⊂ range square_function) as H1.
-      { unfold unit_square_function.
-        erewrite <-restriction_range; eauto using image_subset_range. }
-      apply Extensionality.
-      split; intros H2.
-      - assert (z ∈ domain square_function) as H3
-            by eauto using Inverse_image_classification_domain.
-        pose proof H3 as H4.
-        unfold square_function, square in *.
-        rewrite -> sets.functionify_domain in H4.
-        assert (z ∈ 𝐔_) as H5.
-        { apply Specify_classification.
-          split; auto.
-          apply Specify_classification in H as [H H5].
-          rewrite -> (reify H4), (reify H), despecify in *.
-          destruct H5 as [[y H5] [a H6]].
-          apply Inverse_image_classification in H2; auto.
-          rewrite -> sets.functionify_action in H2.
-          apply set_proj_injective in H2.
-          rewrite <-H2 in H5.
-          exists (y * (mkSet H4)).
-          now rewrite -> H5, M2. }
-        rewrite -> Inverse_image_classification in *; eauto;
-          unfold unit_square_function; rewrite <-? restriction_action; auto;
-            now apply Pairwise_intersection_classification.
-      - apply Specify_classification in H2 as [H2 H3].
-        unfold unit_square_function in *.
+      move=> x /[dup] /Specify_classification [H H0].
+      rewrite -image_usf => H1.
+      have: image unit_square_function ⊂ range square_function by
+          erewrite <-restriction_range; eauto using image_subset_range.
+      rewrite /square_function /square => H2.
+      apply Extensionality => z.
+      split => [H3 | /Specify_classification [H3 H4]].
+      - have: z ∈ domain square_function by
+            eauto using Inverse_image_classification_domain.
+        rewrite /square_function /square => /[dup] H4.
+        rewrite sets.functionify_domain => H5.
+        have H6: z ∈ 𝐔_.
+        + apply Specify_classification, conj; auto.
+          move: H0 H3.
+          rewrite (reify H5) (reify H) ? despecify => [[[y H6] [a H7]]] =>
+          /Inverse_image_classification.
+          rewrite sets.functionify_action sets.functionify_range => H3.
+          apply set_proj_injective in H3 => //.
+          exists (y * (mkSet H5)).
+          rewrite H6 -H3 /= M2 //.
+        + move: H3.
+          rewrite ? Inverse_image_classification /unit_square_function
+                  ? restriction_domain -? restriction_action
+                  ? Pairwise_intersection_classification; eauto.
+      - unfold unit_square_function in *.
         rewrite -> restriction_domain, <-restriction_action,
         Pairwise_intersection_classification in *; auto.
         now apply Inverse_image_classification; auto.
@@ -1071,15 +1064,14 @@ Section Modular_arithmetic.
 
     Theorem finite_QR : finite QR.
     Proof.
-      apply (subsets_of_finites_are_finite _ ℤ_); auto using finite_Z_mod.
-      intros x H.
-      now apply Specify_classification in H.
+      now eapply subsets_of_finites_are_finite; eauto using finite_Z_mod
+      => ? /Specify_classification.
     Qed.
 
     Theorem Fpow_wf : ∀ (a : Z_) k, rings.pow ℤ_ a k = (fields.pow 𝔽 a k).
     Proof.
-      intros a k.
-      now rewrite <-pow_wf.
+      move=> a k.
+      rewrite -pow_wf //.
     Qed.
 
     Notation ℤ_p_x := (polynomial_ring ℤ_).
