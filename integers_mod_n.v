@@ -1092,59 +1092,39 @@ Section Modular_arithmetic.
 
     Theorem max_order_full : (max_order positive_prime) = Euler_Phi.
     Proof.
-      set (d := max_order positive_prime).
-      assert (1 ≤ d)%N as O.
-      { destruct (max_order_ex positive_prime) as [x [H H0]]; unfold d.
-        rewrite <-H0.
-        now apply INZ_le, lt_0_le_1, order_pos. }
-      apply naturals.le_antisymm.
-      - destruct (max_order_ex positive_prime) as [x [H H0]]; unfold d.
-        rewrite <-H0.
-        now apply order_upper_bound.
-      - rewrite <-(cyclotomic_degree ℤ_ Z_mod_prime_is_ID d (1 : Z_)); auto.
-        eapply naturals.le_trans; try apply root_degree_bound;
-          auto using Z_mod_prime_is_ID.
-        2: { apply monic_nonzero, cyclotomic_monic;
-             auto using Z_mod_prime_is_ID. }
-        unfold Euler_Phi.
-        rewrite -> Euler_Phi_unit.
-        apply INZ_le, or_intror, INZ_eq, f_equal, Extensionality.
-        split; intros H.
-        + assert (z ∈ ℤ_) as H0.
-          { now apply Specify_classification in H. }
-          set (ζ := mkSet H0 : Z_).
-          replace z with (ζ : set) in * by auto.
-          apply unit_classification in H as H1.
-          apply Specify_classification.
-          split; eauto using elts_in_set.
-          rewrite -> despecify.
-          unfold rings.sub.
-          rewrite -> eval_add, eval_neg, eval_const, eval_x_to_n; simpl.
-          replace (ζ^d) with (1 : Z_); auto using A4.
-          now apply eq_sym, max_order_pow.
-        + apply Specify_classification in H as [H H0].
-          assert (z ∈ ℤ_) as H1 by easy.
-          set (ζ := mkSet H1 : Z_).
-          replace z with (ζ : set) in * by auto.
-          rewrite -> despecify in H0.
-          unfold rings.sub in H0.
-          rewrite -> eval_add, eval_neg, eval_const, eval_x_to_n in H0;
-            simpl in H0.
-          apply unit_classification.
-          exists (ζ^(d-1)%N).
-          rewrite <-(rings.pow_1_r ℤ_ ζ) at 2.
-          rewrite <-(rings.pow_add_r ℤ_), add_comm, sub_abab,
-          <-(rings.A3_r ℤ_ (ζ^d)); simpl; auto.
-          now rewrite <-(A4 1), (A1 1), A2, H0, A3.
+      set d := max_order positive_prime.
+      move: (max_order_ex positive_prime) =>
+      [x [/[dup] H /[dup] /(order_upper_bound positive_prime) H0
+           /(order_pos positive_prime) /lt_0_le_1 /INZ_le /[swap]
+           /[dup] H1 -> O]].
+      apply naturals.le_antisymm; first by rewrite /d -? H1 //.
+      rewrite -(cyclotomic_degree ℤ_ Z_mod_prime_is_ID d (1 : Z_)); auto.
+      eapply naturals.le_trans; try apply root_degree_bound;
+        auto using Z_mod_prime_is_ID.
+      2: { apply monic_nonzero, cyclotomic_monic;
+           auto using Z_mod_prime_is_ID. }
+      rewrite /Euler_Phi Euler_Phi_unit.
+      apply INZ_le, or_intror, INZ_eq, f_equal, Extensionality => z.
+      split => [/[dup] /Specify_classification [H2 _] |
+                /Specify_classification [H2]].
+      - rewrite (reify H2) => /[dup] H3 /unit_classification H4.
+        apply Specify_classification, conj; eauto using elts_in_set.
+        rewrite despecify /rings.sub eval_add eval_neg eval_const
+                eval_x_to_n /= max_order_pow // A4 //.
+      - rewrite (reify H2) despecify /rings.sub eval_add eval_neg eval_const
+                eval_x_to_n (unit_classification (mkSet H2)) /= => H3.
+        exists ((mkSet H2)^(d - 1)%N).
+        rewrite /= -{2} (rings.pow_1_r ℤ_ (mkSet H2)) -[mul]/(rings.mul ℤ_)
+        -(rings.pow_add_r ℤ_ (mkSet H2)) add_comm sub_abab //
+        -(rings.A3_r ℤ_ ((mkSet H2)^d)) /= -(A4 1) (A1 1) A2 H3 A3 //.
     Qed.
 
     Theorem Gauss_primroot :
       ∃ c : Z_, c ∈ 𝐔_ ∧ (p - 1)%Z = order positive_prime c.
     Proof.
-      destruct (max_order_ex positive_prime) as [x [H H0]].
-      exists x.
-      split; auto.
-      now rewrite -> H0, max_order_full, Prime_Euler_Phi_Z.
+      move: (max_order_ex positive_prime) => [x [H H0]].
+      eapply ex_intro, conj; eauto.
+      rewrite H0 max_order_full Prime_Euler_Phi_Z //.
     Qed.
 
   End Prime_modulus.
