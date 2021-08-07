@@ -1142,75 +1142,59 @@ Section Modular_arithmetic.
 
     Theorem one_ne_minus_one : (1 : Z_) ≠ ((-1%Z)%Z : Z_).
     Proof.
-      intros H.
-      apply IZn_eq, eqm_sym in H.
-      unfold eqm in H.
-      replace (1--1%Z)%Z with (2%Z) in H by ring.
-      now apply div_le, le_not_gt in H; try apply (zero_lt_2 ℤ_order).
+      move=> /IZn_eq /eqm_sym.
+      rewrite /eqm.
+      (have ->: (1 - -1 = 2)%Z by ring) => /div_le /le_not_gt [] //.
+      apply (zero_lt_2 ℤ_order).
     Qed.
 
     Theorem two_nonzero : (2 : Z_) ≠ 0.
     Proof.
-      intros H.
-      rewrite <-(A4 1), <-IZn_add, IZn_neg in H.
-      apply (rings.cancellation_add ℤ_) in H.
-      contradiction one_ne_minus_one.
+      rewrite -(A4 1) -IZn_add IZn_neg =>
+      /(rings.cancellation_add ℤ_) /one_ne_minus_one //.
     Qed.
 
     Theorem number_of_square_roots : ∀ x : Z_,
         x ∈ QR → (inverse_image_of_element square_function x ~ 2%N)%set.
     Proof.
-      intros x H.
-      apply Specify_classification in H as [H H0].
-      rewrite -> despecify in *.
-      destruct H0 as [H0 [a H1]].
-      replace (inverse_image_of_element square_function x) with {a, -a}.
-      { apply pairing_card.
-        intros H2.
-        destruct (surjective_mod_n_on_interval odd_prime_positive a)
-          as [a' [[[H3 H4] H5] H6]].
-        subst.
-        apply set_proj_injective, eq_sym in H2.
-        rewrite -> Zproj_eq, (Zproj_eq a'), IZn_neg in H2 at 1.
-        apply IZn_eq in H2.
-        rewrite <-? Zlift_equiv in H2.
-        unfold eqm, integers.sub in H2.
-        replace (--a')%Z with (a') in * by now ring_simplify.
-        rewrite <-(integers.M3 a'), <-integers.D1 in H2.
-        apply Euclid's_lemma in H2 as [H2 | H2]; auto.
-        - now apply div_le, le_not_gt in H2; try apply (zero_lt_2 ℤ_order).
-        - apply (integral_domains.unit_nonzero (ℤ_ID prime_modulus)) in H0.
-          contradict H0; simpl.
-          unfold square.
-          now rewrite -> eqm_div_n, <-IZn_eq, H2, (mul_0_r ℤ_) in *. }
-      apply Extensionality.
-      unfold square_function.
-      assert ({a,-a} ⊂ ℤ_) as H2.
-      { intros z H2.
-        apply Pairing_classification in H2 as [H2 | H2];
-          subst; eauto using elts_in_set. }
-      split; intros H3; unfold square in *.
-      - rewrite -> Inverse_image_classification in *;
-          rewrite -> ? sets.functionify_domain, ? sets.functionify_range; auto.
-        apply Pairing_classification in H3 as [H3 | H3]; subst;
-          rewrite @functionify_action; auto;
-            now rewrite -> (rings.mul_neg_neg ℤ_).
-      - apply Inverse_image_subset in H3 as H4;
-          rewrite -> ? @sets.functionify_range, ? @sets.functionify_domain in *;
-          auto; rewrite -> Inverse_image_classification, (reify H4),
-                @functionify_action in *; rewrite -> ? sets.functionify_domain,
-                                         ? sets.functionify_range; auto.
-        subst.
-        apply set_proj_injective in H3.
-        pose proof difference_of_squares ℤ_ (mkSet H4) a as H1; simpl in H1.
-        rewrite <-H3, A4 in H1.
-        apply Pairing_classification.
-        apply eq_sym, (integral_domains.cancellation (ℤ_ID prime_modulus)) in H1
-          as [H1 | H1]; simpl in H1.
+      move=> x /Specify_classification.
+      rewrite despecify /square => [[H [] /[swap]] [a <-] H0].
+      suff ->: inverse_image_of_element square_function (square a) = {a, -a}.
+      { move: (surjective_mod_n_on_interval odd_prime_positive a) H0 =>
+        [a' [[[H0 H1] ->] H2]] H3.
+        apply pairing_card => /@set_proj_injective.
+        rewrite (@Zproj_eq a') IZn_neg => /IZn_eq /eqm_sym.
+        rewrite -(Zlift_equiv a') /eqm /integers.sub.
+        have ->: (- - a' = a')%Z by ring.
+        rewrite -(integers.M3 a') -integers.D1 => /Euclid's_lemma =>
+        /(_ prime_modulus) [/div_le /le_not_gt [] // | /eqm_div_n H4];
+          auto using (zero_lt_2 ℤ_order : 0 < 2).
+        move: H3 H4 => /(integral_domains.unit_nonzero (ℤ_ID prime_modulus)).
+        rewrite IZn_eq -Zlift_equiv => /[swap] ->.
+        now (have ->: (0 * 0 = 0)%Z by ring) => [[]]. }
+      apply Extensionality => z.
+      rewrite /square_function /square.
+      have H1: ({a,-a} ⊂ ℤ_) => [y /Pairing_classification [-> | ->] | ];
+                                  eauto using elts_in_set.
+      split => [/[dup] /Inverse_image_subset | H2].
+      - rewrite sets.functionify_range sets.functionify_domain =>
+        /(_ (@elts_in_set ℤ_ (a*a))) H2.
+        rewrite (reify H2) Inverse_image_classification ? functionify_action
+                ? sets.functionify_domain ? sets.functionify_range;
+          eauto using elts_in_set => /set_proj_injective.
+        move: (difference_of_squares ℤ_ (mkSet H2) a) => /= => /[swap] <-.
+        (rewrite A4 Pairing_classification => /IZn_eq /eqm_sym /IZn_eq =>
+         /(integral_domains.cancellation (ℤ_ID prime_modulus)); simpl) =>
+        [[H3 | H3]].
         + left; unfold IZnS; f_equal.
-          now rewrite <-(A3 a), <-H1, <-A2, (A1 _ a), A4, A1, A3.
-        + right.
-          now rewrite <-(A3 (-a)), <-H1, <-A2, A4, A1, A3.
+          rewrite -(A3 a) -H3 -A2 (A1 _ a) A4 A1 A3 //.
+        + right; suff: z = -a => //.
+          rewrite -(A3 (-a)) -H3 -A2 A4 A1 A3 //.
+      - rewrite Inverse_image_classification ? sets.functionify_domain
+                ? sets.functionify_range ? functionify_action;
+          eauto using elts_in_set; move: H2 =>
+        /Pairing_classification [-> | ->]; rewrite functionify_action =>
+        //; by have ->: (-a * -a = a * a) by apply (rings.mul_neg_neg ℤ_).
     Qed.
 
     Theorem size_of_QR_in_Z : (p - 1 = 2 * # QR)%Z.
