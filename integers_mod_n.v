@@ -1171,7 +1171,7 @@ Section Modular_arithmetic.
           auto using (zero_lt_2 ℤ_order : 0 < 2).
         move: H3 H4 => /(integral_domains.unit_nonzero (ℤ_ID prime_modulus)).
         rewrite IZn_eq -Zlift_equiv => /[swap] ->.
-        now (have ->: (0 * 0 = 0)%Z by ring) => [[]]. }
+        now rewrite (mul_0_r ℤ _ : 0 * 0 = 0)%Z => [[]]. }
       apply Extensionality => z.
       rewrite /square_function /square.
       have H1: ({a,-a} ⊂ ℤ_) => [y /Pairing_classification [-> | ->] | ];
@@ -1199,53 +1199,44 @@ Section Modular_arithmetic.
 
     Theorem size_of_QR_in_Z : (p - 1 = 2 * # QR)%Z.
     Proof.
-      unfold integers.one at 2 3.
-      rewrite -> (Prime_Euler_Phi_Z prime_modulus odd_prime_positive), INZ_add,
-      INZ_mul; auto using odd_prime_positive.
-      apply INZ_eq, equivalence_to_card.
-      rewrite -> add_1_r, <-(card_of_natural 2), mul_comm,
-      <-finite_products_card, <-card_equiv, Euler_Phi_unit, <-domain_usf,
-      <-image_usf; auto using finite_products_are_finite, naturals_are_finite,
+      rewrite {2 3}/integers.one Prime_Euler_Phi_Z ? INZ_add ? INZ_mul
+              ? INZ_eq //; auto using odd_prime_positive.
+      apply equivalence_to_card.
+      rewrite add_1_r -(card_of_natural 2) mul_comm
+      -finite_products_card -? card_equiv ? Euler_Phi_unit;
+        auto using finite_products_are_finite, naturals_are_finite,
         finite_QR, odd_prime_positive.
-      apply orbit_stabilizer_cardinality_image.
-      intros y H0.
-      rewrite -> image_usf, <-inverse_image_usf in *; auto.
-      pose proof H0 as H1.
-      apply Specify_classification in H1 as [H1 _].
-      rewrite -> (reify H1).
+      rewrite -domain_usf -image_usf.
+      apply orbit_stabilizer_cardinality_image => y /[dup] H0.
+      rewrite image_usf => /[dup] H1 /Specify_classification [H2 _].
+      rewrite -inverse_image_usf // (reify H2).
       auto using number_of_square_roots.
     Qed.
 
     Theorem size_of_QR : Euler_Phi = (2 * # QR)%N.
     Proof.
-      apply INZ_eq.
-      rewrite <-INZ_mul, <-add_1_r, <-INZ_add, <-Prime_Euler_Phi_Z;
+      rewrite -INZ_eq -INZ_mul -add_1_r -INZ_add -Prime_Euler_Phi_Z;
         auto using odd_prime_positive, size_of_QR_in_Z.
     Qed.
 
     Theorem size_QR_ge_1 : (1 ≤ # QR)%N.
     Proof.
-      destruct (classic (# QR = 0%N)) as [H | H].
-      - pose proof size_of_QR.
-        rewrite -> H in H0.
-        contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
-        now rewrite -> H0, naturals.mul_0_r.
-      - apply succ_0 in H as [m H].
-        rewrite -> H.
-        auto using one_le_succ.
+      case (classic (#QR = 0%N)) => [ | /succ_0 [m ->]]; auto using one_le_succ.
+      move: size_of_QR => /[swap] -> H.
+      contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
+        by rewrite H naturals.mul_0_r.
     Qed.
 
     Theorem size_QR_QNR : # QR = # QNR.
     Proof.
-      rewrite -> QNR_QR_c, complement_card;
+      rewrite QNR_QR_c complement_card -/Euler_Phi;
         eauto using finite_QR, odd_prime_positive, QR_Euler_Phi.
-      fold Euler_Phi.
-      now rewrite -> size_of_QR, <-add_1_r, mul_distr_r, mul_1_l, sub_abba.
+        by rewrite size_of_QR -add_1_r mul_distr_r mul_1_l sub_abba.
     Qed.
 
     Theorem size_of_QNR : Euler_Phi = (2 * # QNR)%N.
     Proof.
-      now rewrite -> size_of_QR, size_QR_QNR.
+        by rewrite size_of_QR size_QR_QNR.
     Qed.
 
     Notation ℤ_p_x := (polynomial_ring ℤ_).
