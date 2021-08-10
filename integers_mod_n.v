@@ -1265,58 +1265,42 @@ Section Modular_arithmetic.
 
     Theorem Euler_Criterion_QR : ∀ a : Z_, a ∈ QR → a^(# QR) = (1 : Z_).
     Proof.
-      intros a H.
-      apply Specify_classification in H as [H H0].
-      rewrite -> despecify in H0.
-      destruct H0 as [H0 [x H1]].
-      subst.
-      unfold square.
-      rewrite <-(rings.pow_2_r ℤ_), <-(rings.pow_mul_r ℤ_), <-size_of_QR.
-      auto using Euler, unit_square, odd_prime_positive.
+      move=> a /Specify_classification [H].
+      rewrite despecify /square => [[]] /[swap] [[x <-]] H0.
+      rewrite -[mul]/(rings.mul ℤ_) -rings.pow_2_r -rings.pow_mul_r
+      -size_of_QR; auto using Euler, unit_square, odd_prime_positive.
     Qed.
 
     Theorem roots_QR : roots _ (x^(# QR) - 1)%poly = QR.
     Proof.
-      assert (QR ⊂ roots ℤ_ (x ^ (# QR) + -1%poly)%poly) as S.
-      { intros x H.
-        apply Specify_classification.
-        pose proof H as H0.
-        apply Specify_classification in H0 as [H0 H1].
-        rewrite -> (reify H0), despecify in *.
-        destruct H1 as [H1 [a H2]].
-        split; auto.
-        rewrite -> eval_add, eval_neg, IRP_1, eval_const, eval_x_to_n,
-        Euler_Criterion_QR, A4; auto. }
-      assert ((x ^ (# QR) + -1%poly)%poly ≠ 0%poly) as N.
+      have: QR ⊂ roots ℤ_ (x ^ (# QR) + -1%poly)%poly =>
+      [y /[dup] H | /[dup] S /finite_subsets S'].
+      { rewrite ? Specify_classification => [[H0]].
+        rewrite (reify H0) ? despecify eval_add eval_neg IRP_1 eval_const
+                eval_x_to_n Euler_Criterion_QR ? rings.A4 //. }
+      have N: (x ^ (# QR) + -1%poly)%poly ≠ 0%poly.
       { apply nonzero_coefficients.
         exists 0%N.
-        rewrite -> coefficient_add, coefficient_neg, coeffs_of_x_ne_n, IRP_1,
-        coeff_const, rings.A3, rings.neg_0; intros H.
-        - rewrite <-(neg_0 ℤ_) in H;
-            contradiction (integral_domains.minus_one_nonzero
-                             (ℤ_ID prime_modulus)).
-        - contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
-          rewrite -> size_of_QR, <-H.
-          ring. }
-      assert (degree _ (x^(# QR) + -1%poly)%poly = # QR) as D.
+        rewrite coefficient_add coefficient_neg coeffs_of_x_ne_n ? IRP_1
+                ? coeff_const ? rings.A3 1 ? rings.neg_0 -? (neg_0 ℤ_) =>
+        [H | /(integral_domains.minus_one_nonzero (ℤ_ID prime_modulus))] //.
+        contradiction Euler_Phi_nonzero; auto using odd_prime_positive.
+          by rewrite size_of_QR -H naturals.mul_0_r. }
+      have D: degree _ (x^(# QR) + -1%poly)%poly = # QR.
       { apply naturals.le_antisymm.
-        - rewrite <-max_0_r.
+        - rewrite -{2}(max_0_r (# QR)).
           eapply naturals.le_trans; eauto using (add_degree ℤ_).
-          exists 0%N.
-          rewrite -> add_0_r.
-          f_equal.
-          + apply degree_x_to_n; now destruct Z_mod_prime_is_ID.
-          + apply const_classification.
-            exists (-1%Zn).
-            now rewrite -> IRP_1, IRP_neg.
-        - apply finite_subsets in S;
-            eauto using finite_roots, Z_mod_prime_is_ID,
-            naturals.le_trans, root_degree_bound. }
-      rewrite -> rings.sub_is_neg.
+          exists 0%N; rewrite add_0_r; f_equal.
+          + apply degree_x_to_n; by elim Z_mod_prime_is_ID.
+          + rewrite IRP_1 IRP_neg /= -/(const ℤ_ (- (1))%Zn)
+                    const_classification; eauto.
+        - eapply naturals.le_trans; try apply S';
+            eauto using finite_roots, Z_mod_prime_is_ID, root_degree_bound. }
+      rewrite rings.sub_is_neg.
       apply eq_sym, finite_subsets_bijective, finite_cardinality_equinumerous,
       naturals.le_antisymm; auto using finite_subsets, finite_roots,
                             finite_QR, odd_prime_positive, Z_mod_prime_is_ID.
-      rewrite <-D at 2; auto using root_degree_bound, Z_mod_prime_is_ID.
+      rewrite -{2}D; auto using root_degree_bound, Z_mod_prime_is_ID.
     Qed.
 
     Theorem roots_QNR : roots _ (x^(# QR) + 1)%poly = QNR.
