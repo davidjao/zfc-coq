@@ -904,7 +904,7 @@ Proof.
   move=> f x.
   elim (excluded_middle_informative (x ∈ domain f)) => [ | H].
   - move: (func_hyp f) => [] _ /[apply] /constructive_indefinite_description =>
-    [[y] [[H0 H1] H2]].
+    [[y] [[H H0] H1]].
     exact y.
   - exact (outsider (range f)).
 Defined.
@@ -1034,17 +1034,13 @@ Section Function_evaluation.
     move=> g.
     repeat split; auto using functionify_graph => a H.
     exists (g (mkSet H)).
-    (repeat split) => [ | | x' [H0 H1]].
-    - apply elts_in_set.
-    - apply function_maps_domain_to_graph.
-      + rewrite functionify_domain //.
-      + rewrite functionify_range.
-        apply elts_in_set.
-      + rewrite -functionify_action //.
+    (repeat split) => [ | | x' [H0 H1]]; eauto using elts_in_set.
+    - apply function_maps_domain_to_graph;
+        rewrite ? functionify_domain // ? functionify_range;
+        eauto using elts_in_set; rewrite -functionify_action //.
     - rewrite -functionify_action.
-      apply function_maps_domain_to_graph in H1; auto.
-      rewrite functionify_domain //.
-      rewrite functionify_range //.
+      apply function_maps_domain_to_graph in H1;
+      rewrite ? functionify_domain // ? functionify_range //.
   Qed.
 
   Theorem functionify_injective : ∀ g h, functionify g = functionify h → g = h.
