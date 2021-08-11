@@ -899,37 +899,25 @@ Proof.
     auto; move=> /[dup] /Specify_classification => [[_ H0] H1] //.
 Qed.
 
-Definition eval_rel : set → set → set → set → set.
+Definition eval : function → set → set.
 Proof.
-  move=> f A B x.
-  elim (excluded_middle_informative (x ∈ A)) => H.
-  - elim (excluded_middle_informative (is_function f A B)) =>
-    [[H0 /(_ x H) /constructive_indefinite_description [y] H1] | H0].
-    + exact y.
-    + exact (outsider B).
-  - exact (outsider B).
+  move=> f x.
+  elim (excluded_middle_informative (x ∈ domain f)) => [ | H].
+  - move: (func_hyp f) => [] _ /[apply] /constructive_indefinite_description =>
+    [[y] [[H0 H1] H2]].
+    exact y.
+  - exact (outsider (range f)).
 Defined.
 
-Definition eval f x := eval_rel (graph f) (domain f) (range f) x.
-
 Coercion eval : function >-> Funclass.
-
-Theorem Function_classification : ∀ {f A B a},
-    a ∈ A → is_function f A B →
-    unique (λ b : set, b ∈ B ∧ (a, b) ∈ f) (eval_rel f A B a).
-Proof.
-  rewrite /eval_rel => f A B a H /[dup] H0 [H1 H2].
-  elim excluded_middle_informative => [[*] | *] /= //.
-  elim excluded_middle_informative => [* | *] /= //.
-  elim constructive_indefinite_description.
-  repeat split; intuition.
-Qed.
 
 Theorem function_maps_domain_to_range :
   ∀ f x, x ∈ domain f → f x ∈ range f.
 Proof.
-  move: func_hyp =>
-  /[swap] f /(_ f) /[swap] x /Function_classification /[apply] [[[H _]]] //.
+  rewrite /eval /sumbool_rect => f x H.
+  case excluded_middle_informative => [{}H | ] //.
+  destruct func_hyp.
+  elim constructive_indefinite_description => y [[H0 H1] H2] //.
 Qed.
 
 Theorem function_construction : ∀ A B p,
@@ -946,9 +934,12 @@ Proof.
     (repeat split; try congruence; eauto) =>
     [| y [H1]]; rewrite Specify_classification ? proj1_eval ? proj2_eval
                         ? Product_classification; intuition; exists x; eauto. }
-  exists (mkFunc H0); repeat split; auto =>
-  a /[dup] H1 /Function_classification /(_ H0) [[H2 H3] /(_ (p a)) <-] //.
-  rewrite Specify_classification proj1_eval ? proj2_eval; auto.
+  exists (mkFunc H0); repeat split; auto => a H1.
+  rewrite /eval /sumbool_rect.
+  case excluded_middle_informative => /= {}H1 //.
+  destruct H0.
+  elim constructive_indefinite_description => y [[H2 /Specify_classification]].
+  rewrite proj2_eval // proj1_eval // => [[]] //.
 Qed.
 
 Theorem functionify_construction : ∀ {A B} (p : elts A → elts B),
@@ -969,22 +960,22 @@ Proof.
       exists (mkSet H0 : elts A) => //.
     - move: H3 H4 H0 H1 => -> -> H0 H1.
       apply /f_equal /f_equal /set_proj_injective => //. }
-  exists (mkFunc H0).
-  repeat split; auto => a.
-  move: (Function_classification (elts_in_set a) H0) =>
-  [[H1 H2] /(_ (p a)) <-] //.
-  rewrite Specify_classification Product_classification;
-    repeat split; eauto using elts_in_set.
+  exists (mkFunc H0); repeat split; auto => a.
+  rewrite /eval /sumbool_rect.
+  case excluded_middle_informative => /= [H1 | []]; eauto using elts_in_set.
+  destruct H0.
+  elim constructive_indefinite_description => y [[H2 /Specify_classification]]
+  => [[]] _ [a0] /Ordered_pair_iff [] /set_proj_injective -> //.
 Qed.
 
 Theorem function_maps_domain_to_graph :
   ∀ f x y, x ∈ domain f → y ∈ range f → (x,y) ∈ graph f ↔ f x = y.
 Proof.
-  rewrite /eval /eval_rel => f x y H H0.
-  elim excluded_middle_informative => [[H1 H2] | H1]; try by move: (func_hyp f).
-  elim excluded_middle_informative => H3 /= //.
-  elim constructive_indefinite_description => w [[_ H4] H5].
-  split; move: H4; auto => /[swap] -> //.
+  rewrite /eval /sumbool_rect => f x y H H0.
+  case excluded_middle_informative => // {}H.
+  destruct func_hyp.
+  elim constructive_indefinite_description => z [[H1 H2] H3].
+  split; eauto; congruence.
 Qed.
 
 Theorem graph_elements_are_pairs : ∀ f z, z ∈ graph f → z ∈ domain f × range f.
@@ -1375,11 +1366,12 @@ Proof.
   - move: H (func_hyp f) => /[dup] /[swap] H /[swap] /[dup] H0 [H1 H2] /H1
                              /Product_classification [a [b [H3 [H4 H5]]]].
     eapply ex_intro, conj; eauto; subst.
-    move: H2 (H3) (@Function_classification) (H3) H0 =>
-    /[apply] [[z [[H5 H6] H7]]] /[apply] /[apply] [[[H0 H2] H8]].
-    rewrite -(H7 b) -1 ? (H7 (f a)); auto.
-  - move: (@Function_classification) H (func_hyp f) =>
-    /[apply] /[apply] [[[H H1] H2]] //.
+    move: (H2) (H3) => /[apply] => [[y]] [[H5 H6] H7].
+    have ->: b = y by apply eq_sym, H7.
+      by have ->: y = f a by apply H7; rewrite ? function_maps_domain_to_graph;
+        eauto using function_maps_domain_to_range.
+  - rewrite ? function_maps_domain_to_graph;
+      eauto using function_maps_domain_to_range.
 Qed.
 
 Theorem function_graph_uniqueness : ∀ f x a b, x ∈ domain f →
@@ -1767,9 +1759,8 @@ Proof.
   split; auto.
   apply NNPP => H3.
   move: (func_hyp g) H2 => H2.
-  rewrite {2}/eval /eval_rel.
-  elim excluded_middle_informative => [{}H2 | b H4] //.
-  elim excluded_middle_informative => [H4 | {}H3 /= H4] //.
+  rewrite {2}/eval /sumbool_rect.
+  case excluded_middle_informative => // {}H3 H4.
   contradiction (outsider_not_in (range g)).
   move: H H4 function_maps_domain_to_range <- => <- /(_ _ _ H1) //.
 Qed.
