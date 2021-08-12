@@ -1053,6 +1053,33 @@ Section Function_evaluation.
 
 End Function_evaluation.
 
+Definition universal_choice_function : set → set.
+Proof.
+  move=> x.
+  case (excluded_middle_informative (x = ∅)) =>
+  [H | /Nonempty_classification /constructive_indefinite_description [y H]].
+  - exact ∅.
+  - exact y.
+Defined.
+
+Lemma Universal_choice_classification :
+  ∀ x, x ≠ ∅ → universal_choice_function x ∈ x.
+Proof.
+  rewrite /universal_choice_function /sumbool_rect => *.
+  case excluded_middle_informative => * //.
+    by elim constructive_indefinite_description.
+Qed.
+
+(* Axiom of choice is a theorem since we assume indefinite description. *)
+Theorem Choice : ∀ X,
+    ∅ ∉ X → ∃ f, domain f = X ∧ range f = ⋃ X ∧ ∀ x, x ∈ X → f x ∈ x.
+Proof.
+  move=> X ?.
+  (elim (function_construction X (⋃ X) (λ x, universal_choice_function x)) =>
+   [f [? [? H]] | x ?]; rewrite ? Union_classification; repeat esplit; eauto) =>
+  [x ? | ]; rewrite ? H //; apply Universal_choice_classification; congruence.
+Qed.
+
 Definition power X Y := {f in P (Y × X) | is_function f Y X}.
 
 Infix "^" := power : set_scope.
@@ -1075,42 +1102,6 @@ Definition injective f := ∀ x y, (lambdaify f) x = (lambdaify f) y → x = y.
 Definition surjective f := ∀ y, ∃ x, (lambdaify f) x = y.
 
 Definition bijective f := injective f ∧ surjective f.
-
-Section Choice.
-
-  (* Axiom of choice is a theorem since we assume indefinite description. *)
-  Variable X : set.
-  Hypothesis H : ∅ ∉ X.
-
-  Definition choice_function : set → set.
-  Proof.
-    move=> x.
-    elim (excluded_middle_informative (x ∈ X)) => H0.
-    - (have: x ≠ ∅ by congruence) =>
-      /Nonempty_classification /constructive_indefinite_description => [[y H1]].
-      exact y.
-    - exact (outsider X).
-  Defined.
-
-  Lemma choice_function_classification : ∀ x, x ∈ X → choice_function x ∈ x.
-  Proof.
-    rewrite /choice_function => x H0.
-    elim excluded_middle_informative => {}H0 /= //.
-    rewrite /ssr_have.
-    elim constructive_indefinite_description => //.
-  Qed.
-
-  Theorem Choice : ∃ f, domain f = X ∧ range f = ⋃ X  ∧ ∀ x, x ∈ X → f x ∈ x.
-  Proof.
-    move: (function_construction X (⋃ X) choice_function) => H0.
-    elim H0 => [f [H1 [H2 H3]] | x H1]; rewrite ? Union_classification;
-                 eauto using choice_function_classification.
-    exists f.
-    (repeat split; auto) => x H4.
-    rewrite H3; auto using choice_function_classification.
-  Qed.
-
-End Choice.
 
 Theorem function_empty_domain : ∀ f, graph f = ∅ ↔ domain f = ∅.
 Proof.
@@ -1161,14 +1152,13 @@ Section inverse_functions.
     split => [/Injective_classification H0 | [g [H0 [H1 H2]]]].
     - elim (function_construction B A partial_left_inverse) =>
       [g [H1 [H2 H3]] | a H1].
-      + exists g.
-        (repeat split; auto) => x /[dup] H4 /function_maps_domain_to_range /H3.
+      + repeat esplit; eauto => x /[dup] H4 /function_maps_domain_to_range /H3.
         rewrite /partial_left_inverse.
-        elim excluded_middle_informative => [H5 | H5].
+        case excluded_middle_informative => [H5 | H5].
         * (repeat elim constructive_indefinite_description => ? /= //)
           => [[H6]] /H0 -> //.
         * contradict H5; eauto.
-      + rewrite /partial_left_inverse; elim excluded_middle_informative =>
+      + rewrite /partial_left_inverse; case excluded_middle_informative =>
         x; repeat elim constructive_indefinite_description => /= //; tauto.
     - apply Injective_classification => x y /H2 /[swap] /H2 {2}<- {2}<- -> //.
   Qed.
@@ -1184,13 +1174,13 @@ Proof.
       (functionify
          (λ y, let (x, _) := constructive_indefinite_description (H y) in x)).
     rewrite functionify_domain functionify_range.
-    (repeat split; auto) => y H0.
+    repeat split; auto => y H0.
     rewrite (reify H0) functionify_action.
     elim constructive_indefinite_description => [[x X] <-] //.
   - rewrite /surjective => [[y /[dup] /H1 H2 /[dup]]].
     move: H H0 => {1}<- /[swap] /function_maps_domain_to_range /[swap] -> H Y.
     exists (mkSet H).
-    eauto using set_proj_injective.
+    exact: set_proj_injective.
 Qed.
 
 Definition image (f : function) := {y in range f | ∃ x, x ∈ domain f ∧ f x = y}.
@@ -1207,7 +1197,7 @@ Theorem push_forward_image: ∀ f S, push_forward f S ⊂ image f.
 Proof.
   move=> f S x /Specify_classification
            [H [z [/Pairwise_intersection_classification [H0 H1] H2]]].
-  eapply Specify_classification, conj, ex_intro; repeat split; eauto.
+  eapply Specify_classification; repeat esplit; eauto.
 Qed.
 
 Theorem push_forward_domain : ∀ f, push_forward f (domain f) = image f.
@@ -1254,7 +1244,7 @@ Theorem left_inverse :
   ∀ f, bijective f → ∀ x, x ∈ domain f → inverse f (f x) = x.
 Proof.
   rewrite /inverse => f H x H0.
-  elim excluded_middle_informative => /= // =>
+  case excluded_middle_informative => /= // =>
   [[/Injective_classification H1 H2]].
   elim constructive_indefinite_description => [g [H3 [H4 H5]]].
   move: function_maps_domain_to_range (H0) (H0) H4 H1 =>
@@ -1266,7 +1256,7 @@ Qed.
 Theorem inverse_domain : ∀ f, bijective f → domain (inverse f) = range f.
 Proof.
   rewrite /inverse => f H.
-  elim excluded_middle_informative => /= // => [[H1 H2]].
+  case excluded_middle_informative => /= // => [[H1 H2]].
   elim constructive_indefinite_description => [g [H3 [H4 H5]]] //.
 Qed.
 
@@ -1274,7 +1264,7 @@ Theorem right_inverse :
   ∀ f, bijective f → ∀ x, x ∈ domain (inverse f) → f (inverse f x) = x.
 Proof.
   rewrite {2}/inverse => f H x H0.
-  elim excluded_middle_informative => /= // => [[H1 H2]].
+  case excluded_middle_informative => /= // => [[H1 H2]].
   elim constructive_indefinite_description => [g [H3 [H4 H5]]].
   move: inverse_domain H0 H5 -> => // /[swap] /[apply] //.
 Qed.
@@ -1282,7 +1272,7 @@ Qed.
 Theorem inverse_range : ∀ f, bijective f → range (inverse f) = domain f.
 Proof.
   rewrite /inverse => f H.
-  elim excluded_middle_informative => /= // => [[H1 H2]].
+  case excluded_middle_informative => /= // => [[H1 H2]].
   elim constructive_indefinite_description => [g [H3 [H4 H5]]] //.
 Qed.
 
@@ -1311,7 +1301,7 @@ Qed.
 Definition composition : function → function → function.
 Proof.
   move=> f g.
-  elim (excluded_middle_informative (domain f = range g)) => [H | H].
+  case (excluded_middle_informative (domain f = range g)) => [H | H].
   - have: ∀ x, x ∈ domain g → (λ x, f (g x)) x ∈ range f by
         move: H => /[swap] x /[swap] /function_maps_domain_to_range /[swap]
                    <- /function_maps_domain_to_range //.
@@ -1327,9 +1317,8 @@ Theorem Composition_classification :
          domain (f ∘ g) = domain g ∧ range (f ∘ g) = range f ∧
          ∀ x, x ∈ domain g → (f ∘ g) x = f (g x).
 Proof.
-  rewrite /composition => f g H.
-  elim excluded_middle_informative => // => {}H.
-  rewrite /ssr_have /=.
+  rewrite /composition /ssr_have => f g H.
+  case excluded_middle_informative => // => {}H /=.
   elim constructive_indefinite_description => //.
 Qed.
 
@@ -1691,9 +1680,8 @@ Proof.
   => [[H1 H2] [H3 H4]] H5.
   apply Subset_equality_iff, conj; auto =>
   [z /Graph_classification [z1 [H6 ->]]].
-  eapply Graph_classification, ex_intro, conj, f_equal,
-  function_graph_uniqueness; eauto =>
-  /=; [ | apply /H5 ];
+  (eapply Graph_classification, ex_intro, conj, f_equal,
+   function_graph_uniqueness; eauto => /=; [ | apply /H5 ]);
     rewrite -1? [g1]/(graph (mkFunc H))
     -1? [g2]/(graph (mkFunc H0)) function_maps_domain_to_graph
       /= -1 ?[B]/(range (mkFunc H)) -1 ?[B]/(range (mkFunc H0)); auto;
@@ -1705,10 +1693,8 @@ Proof.
   move=> x y.
   apply Extensionality => z.
   rewrite Singleton_classification Product_classification.
-  split => [[a [b [/Singleton_classification ->
-                   [/Singleton_classification -> ->]]]] | H] //.
-  exists x, y.
-  rewrite ? Singleton_classification //.
+  ((repeat esplit; eauto) => [[a [b]] | | ]; rewrite ? Singleton_classification)
+  => [[] -> [] -> | | ] //.
 Qed.
 
 Theorem singleton_functions :
@@ -1718,8 +1704,7 @@ Proof.
   apply (function_graph_equality {x,x} {y,y}); try congruence.
   - split => [| a /Singleton_classification ->]; rewrite ? singleton_products.
     + apply Set_is_subset.
-    + exists y.
-      repeat split; rewrite ? Singleton_classification //
+    + repeat esplit; eauto; rewrite ? Singleton_classification //
       => x' [/Singleton_classification -> H5] //.
   - move: H2 H3 singleton_products H0 => -> -> -> //.
 Qed.
@@ -1731,8 +1716,7 @@ Proof.
   apply Extensionality => z.
   wlog: f A1 A2 B H H0 H1 H2 / z ∈ A1.
   - split => H3; [ apply (x f A1 A2 B) | apply (x f A2 A1 B) ]; auto.
-  - (split => H4; try tauto) => {H4}.
-    move: H0 H3 =>
+  - (split => H4; try tauto) => {H4}; move: H0 H3 =>
     /[apply] [[y [[_ /H1 /Specify_classification
                      [_ [a [b [_ [_ /Ordered_pair_iff [-> ->]]]]]]]]]] //.
 Qed.
@@ -1776,11 +1760,11 @@ Proof.
   apply func_ext; rewrite ? inverse_domain ? inverse_range ? inverse_domain;
     auto using inverse_bijective => x H3.
   apply /H1; rewrite -? inverse_range ? left_inverse ? right_inverse; auto.
-  * apply function_maps_domain_to_range.
+  - apply function_maps_domain_to_range.
     rewrite inverse_domain ? inverse_range; auto.
-  * rewrite inverse_range ? inverse_domain; auto.
+  - rewrite inverse_range ? inverse_domain; auto.
     apply function_maps_domain_to_range => //.
-  * rewrite inverse_domain ? inverse_range; auto.
+  - rewrite inverse_domain ? inverse_range; auto.
 Qed.
 
 Lemma Euler_Phi_lemma :
