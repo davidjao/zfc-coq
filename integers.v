@@ -620,29 +620,27 @@ Qed.
 Theorem Euclidean_algorithm :
   ∀ a b, gcd(a, b) = 1 → ∃ x y, 1 = a * x + b * y.
 Proof.
-  have EA_pos: ∀ a b, 0 < a → 0 < b → gcd(a, b) = 1 → ∃ x y, 1 = a * x + b * y
-  => [a /[swap] H | a b].
-  { induction a as [a IHa] using strong_induction => b H0 [H1 [H2]].
-    elim (division_algorithm b a) => [q [r [<- [[H3 | <-] ]]] | ] //
-    => [H4 H5 | /lt_def [c [_] ->]].
-    - elim (IHa r (conj H3 H4) H3 a) =>
-      [x [y ->] | | ] //; repeat split; auto using (div_mul_r ℤ) with Z.
-      exists (y+-(q*x)), x; ring.
-    - rewrite A3 A1 A3 /one /divide.
-      exists 1, 0.
-      ring_simplify.
-      apply INZ_eq, assoc_N, conj;
-        auto using (div_1_l ℤ), div_refl, (div_mul_r ℤ). }
+  move=> a b.
   wlog: b / 0 < b => [H | H].
-  - elim (trichotomy ℤ_order b 0) =>
+  { elim (trichotomy ℤ_order b 0) =>
     [/(lt_neg_0 ℤ_order) /H /[swap] /gcd_neg /[swap] /[apply] [[x [y]]] -> |
      [-> /gcd_0_r [[x]] -> | /H /[apply]]]
-      /= //; [exists x, (-y) | exists x, 0]; ring.
-  - elim (trichotomy ℤ_order a 0) =>
-    [/(lt_neg_0 ℤ_order) /[swap] /is_gcd_sym /gcd_neg /EA_pos
-      /[apply] /(_ H) [x [y]] -> |
-     [-> /gcd_0_l [[x]] -> | /[swap] /EA_pos /[apply] /(_ H)]]
-      /= //; [exists (-y), x | exists 0, x]; ring.
+      /= //; [exists x, (-y) | exists x, 0]; ring. }
+  wlog: a / 0 < a => [H0 | H0].
+  { elim (trichotomy ℤ_order a 0) =>
+    [/(lt_neg_0 ℤ_order) /[swap] /is_gcd_sym /gcd_neg /is_gcd_sym /H0 /[apply]
+      [[x [y]]] -> | [-> /gcd_0_l [[x]] /= -> _ | /[swap] /H0 /[apply]]]
+      //; [exists (-x), y | exists 0, x]; ring. }
+  revert b H.
+  induction a as [a IHa] using strong_induction => b H [H1 [H2]].
+  elim (division_algorithm b a) => [q [r [<- [[H3 | <-] ]]] | ] //
+  => [H4 H5 | /lt_def [c [_] ->]].
+  - elim (IHa r (conj H3 H4) H3 a) =>
+    [x [y ->] | | ] //; repeat split; auto using (div_mul_r ℤ) with Z.
+    exists (y + - (q * x)), x; ring.
+  - rewrite A3 A1 A3 /one /divide.
+    exists 1, 0; ring_simplify; apply INZ_eq, assoc_N, conj;
+      auto using (div_1_l ℤ), div_refl, (div_mul_r ℤ).
 Qed.
 
 Theorem FTA : ∀ a b c, gcd(a, b) = 1 → a｜b * c → a｜c.
@@ -650,7 +648,7 @@ Proof.
   move=> a b c H [d] /= H0.
   elim (Euclidean_algorithm a b H) => [x [y H1]].
   exists (c*x + d*y) => /=.
-  rewrite -{1}(M3 c) H1 ? D1 ? (M1 _ a) ? M2 ? (M1 a) -H0; now ring_simplify.
+  rewrite -{1}(M3 c) H1 ? D1 ? (M1 _ a) ? M2 ? (M1 a) -H0; by ring_simplify.
 Qed.
 
 Definition prime p := ¬ unit p ∧ ∀ d : Z, d｜p → unit d ∨ d ~ p.
@@ -724,8 +722,8 @@ Proof.
                                    [[L [H2 ?]]]] | | /lt_0_1 /[apply]] //.
   - exists (p::L).
     rewrite /prime_factorization /= -H2 M1 H1.
-    apply conj => // => ? [<- | ]; auto.
-  - now (exists nil).
+    split => // => ? [<- | ]; auto.
+  - by (exists nil).
 Qed.
 
 Lemma prime_rel_prime : ∀ p a, prime p → ¬ p｜a → gcd(p,a) = 1.
@@ -812,7 +810,7 @@ Proof.
     last by (exists b; repeat split; auto; exists 0, 1; ring).
   have: ∀ a b x y,
       (∀ t : Z, 0 < t ∧ (∃ x y : Z, t = a*x + b*y) → a*x + b*y ≤ t) →
-      0 < a → 0 < b → 0 < a*x + b*y → (a*x + b*y)｜a =>
+      0 < a → 0 < b → 0 < a*x + b*y → a*x + b*y｜a =>
   [{b x y H H0 H1 H2} a b x y H H0 H1 H2 | H3].
   - elim (division_algorithm a (a*x+b*y)) =>
     [q [r [/[swap] [[[H3 | <- _ {2}<-] ]]]] | ]; auto;
@@ -1972,7 +1970,7 @@ Section Valuations.
 
 End Valuations.
 
-Theorem inv_div_l : ∀ a b c, b｜a → b ≠ 0 → a/b｜c ↔ a｜b*c.
+Theorem inv_div_l : ∀ a b c, b｜a → b ≠ 0 → a / b｜c ↔ a｜b * c.
 Proof.
   split => [[k H1] | [k H1]]; exists k;
              [ | apply (cancellation_mul_l ℤ_ID b); auto ] =>
