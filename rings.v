@@ -339,6 +339,12 @@ Section Ring_theorems.
     rewrite -(A3 _ b) -(A4 _ a) (A1 _ a) -A2 H A2 A4_l A3 //.
   Qed.
 
+  Theorem cancellation_add_r : ∀ a b c, b + a = c + a → b = c.
+  Proof.
+    move=> a b c.
+    rewrite -? (A1 _ a) => /cancellation_add //.
+  Qed.
+
   Lemma cancellation_ne0 : ∀ a b, a * b ≠ 0 → a ≠ 0 ∧ b ≠ 0.
   Proof.
     split; move: H => /[swap] ->; rewrite ? mul_0_l ? mul_0_r //.

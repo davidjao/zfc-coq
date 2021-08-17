@@ -1305,61 +1305,44 @@ Section Modular_arithmetic.
 
     Theorem roots_QNR : roots _ (x^(# QR) + 1)%poly = QNR.
     Proof.
-      pose proof (eq_refl Euler_Phi_set) as E.
-      replace Euler_Phi_set with (QR ∪ QNR) in E at 1.
-      2: { apply Extensionality.
-           split; intros H.
-           - apply Pairwise_union_classification in H as [H | H];
-             apply Specify_classification in H as [H H0];
-             apply Specify_classification; rewrite -> (reify H), despecify in *;
-             split; auto; now rewrite <-units_in_ℤ_.
-           - apply Specify_classification in H as [H H0].
-             apply Pairwise_union_classification.
-             destruct (classic (z ∈ QR)); auto.
-             apply or_intror, Specify_classification.
-             now rewrite -> (reify H), despecify, units_in_ℤ_ in *. }
-      replace Euler_Phi_set with
-          ((roots _ (x^(# QR) - 1)%poly) ∪ (roots _ (x^(# QR) + 1)%poly)) in E.
-      2: { rewrite <-prod_root, <-difference_of_squares, <-rings.pow_mul_l,
-           <-rings.pow_2_r, <-rings.pow_mul_r, <-size_of_QR, rings.M3,
-           rings.sub_is_neg; auto using Z_mod_prime_is_ID.
-           apply Extensionality.
-           split; intros H.
-           - apply Specify_classification in H as [H H0]; simpl Rset in H.
-             apply Specify_classification.
-             rewrite -> (reify H), despecify, <-units_in_ℤ_ in *.
-             split; auto.
-             rewrite -> eval_add, eval_neg, IRP_1, eval_const, eval_x_to_n,
-             <-(rings.A4 ℤ_ (1:Z_)), ? (rings.A1 ℤ_ _ (-(1:Z_))) in H0;
-               simpl in *.
-             apply (cancellation_add ℤ_) in H0.
-             eapply unit_pow_closure; try rewrite -> H0; try apply one_unit.
-             pose proof Euler_Phi_nonzero odd_prime_positive.
-             apply succ_0 in H1 as [m H1].
-             rewrite -> H1.
-             apply naturals.lt_succ.
-           - apply Specify_classification in H as [H H0].
-             apply Specify_classification; simpl Rset.
-             rewrite -> (reify H), despecify, <-units_in_ℤ_, eval_add, eval_neg,
-             IRP_1, eval_const, eval_x_to_n, Euler, A4 in *; repeat split;
-               auto using odd_prime_positive. }
-      apply Euler_Phi_lemma in E; auto using roots_QR.
-      { apply NNPP.
-        intros H.
-        apply Nonempty_classification in H as [x H].
-        apply Pairwise_intersection_classification in H as [H H0].
-        apply Specify_classification in H0 as [H0 H1].
-        now rewrite -> (reify H0), despecify in *. }
-      apply NNPP.
-      intros H.
-      apply Nonempty_classification in H as [z H].
-      apply Pairwise_intersection_classification in H as [H H0].
-      apply Specify_classification in H as [H H1], H0 as [H0 H2].
-      rewrite -> (reify H), despecify, <-H2, rings.sub_is_neg,
-      ? eval_add, ? eval_neg, ? IRP_1, ? eval_const, ? eval_x_to_n in *.
-      apply (rings.cancellation_add ℤ_) in H1; simpl in H1.
-      contradiction one_ne_minus_one.
-      now rewrite <-H1, IZn_neg.
+      have: QR ∪ QNR = Euler_Phi_set.
+      { apply Extensionality => z.
+        (split; rewrite Pairwise_union_classification ? Specify_classification)
+        => [[[] | []] | []] H; try (rewrite (reify H) ? despecify units_in_ℤ_
+                                    => [[]]; split; auto).
+        case (classic (z ∈ QR));
+          rewrite (reify H) ? despecify ? Specify_classification
+                  ? despecify units_in_ℤ_; auto. }
+      have <-: ((roots _ (x^(# QR) - 1)%poly) ∪ (roots _ (x^(# QR) + 1)%poly))
+      = Euler_Phi_set => [ | E].
+      { rewrite -prod_root -? difference_of_squares -? rings.pow_mul_l;
+          rewrite -? rings.pow_2_r -? rings.pow_mul_r -? size_of_QR ? rings.M3
+                  ? rings.sub_is_neg; auto using Z_mod_prime_is_ID.
+        apply Extensionality => z.
+        (split => /Specify_classification [H]; simpl Rset in H;
+                  rewrite (reify H) Specify_classification ? despecify
+                  -units_in_ℤ_) => [ | H0].
+        - rewrite eval_add eval_neg IRP_1 eval_x_to_n -(rings.A4 ℤ_ (1:Z_))
+          -[rings.add ℤ_]/add -[rings.neg ℤ_]/neg -[rings.one ℤ_]/(1:Z_);
+            rewrite rings.pow_2_r eval_mul eval_const rings.M3
+          => /(cancellation_add_r ℤ_) H0.
+          split; auto.
+          eapply unit_pow_closure; try rewrite -> H0; try apply one_unit.
+          move: (Euler_Phi_nonzero odd_prime_positive) => /succ_0 [m ->].
+          apply naturals.lt_succ.
+        - rewrite eval_add eval_neg IRP_1 eval_x_to_n Euler ? rings.pow_2_r
+                  ? eval_mul ? eval_const ? rings.M3 ? rings.A4;
+            eauto using odd_prime_positive. }
+      (apply Euler_Phi_lemma in E; auto using roots_QR; apply NNPP) =>
+      /Nonempty_classification [z /Pairwise_intersection_classification] =>
+      [[H /Specify_classification [H0]] |
+       [/Specify_classification [H] /[swap] /Specify_classification [H0]]].
+      - by rewrite (reify H0) despecify => [[]] _ [].
+      - rewrite (reify H) ? despecify => <-.
+        rewrite rings.sub_is_neg ? eval_add ? eval_neg ? IRP_1
+                ? eval_const ? eval_x_to_n => /(rings.cancellation_add ℤ_) /=.
+        move: one_ne_minus_one => /[swap] <- [].
+          by rewrite IZn_neg.
     Qed.
 
     Theorem Euler_Criterion_QNR :
