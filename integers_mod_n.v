@@ -1371,50 +1371,44 @@ Section Modular_arithmetic.
 
     Lemma trinary_legendre : ∀ a, trinary_value (legendre_symbol a).
     Proof.
-      intros a.
-      unfold legendre_symbol, trinary_value.
+      rewrite /legendre_symbol /trinary_value => a.
       repeat destruct excluded_middle_informative; tauto.
     Qed.
 
     Lemma trinary_mul :
       ∀ a b, trinary_value a → trinary_value b → trinary_value (a*b).
     Proof.
-      unfold trinary_value.
-      intros a b [H | [H | H]] [H0 | [H0 | H0]]; subst;
-        rewrite -> ? (mul_0_l ℤ), ? (mul_0_r ℤ), ? integers.M3,
-        ? (rings.mul_neg_neg ℤ), ? (M3_r ℤ); auto.
+      rewrite /trinary_value => a b [H | [H | H]] [H0 | [H0 | H0]]; subst;
+                                  repeat (try (left; ring); right); ring.
     Qed.
 
     Theorem trinary_IZn_eq : ∀ a b,
         trinary_value a → trinary_value b → (a : Z_) = (b : Z_) ↔ a = b.
     Proof.
-      unfold trinary_value.
-      intros a b [H | [H | H]] [H0 | [H0 | H0]]; subst; split; intros H1;
-        try tauto; try now contradiction integers.zero_ne_1;
-          try now contradiction one_ne_minus_one;
-          try now contradiction (integral_domains.nontriviality
-                                   (ℤ_ID prime_modulus));
-          try now contradiction (integral_domains.minus_one_nonzero
-                                   (integers.ℤ_ID));
-          try (now contradiction (ordered_rings.one_ne_minus_one ℤ_order));
-          try (rewrite <-IZn_neg in H1;
-               now contradiction (integral_domains.minus_one_nonzero
-                                    (ℤ_ID prime_modulus))).
+      move: (integral_domains.nontriviality (ℤ_ID prime_modulus))
+              (integral_domains.minus_one_nonzero (integers.ℤ_ID))
+              (integral_domains.nontriviality (integers.ℤ_ID))
+              (integral_domains.minus_one_nonzero (ℤ_ID prime_modulus))
+              (ordered_rings.one_ne_minus_one ℤ_order) => ? ? ? ? ?.
+      rewrite /trinary_value /= =>
+      ? ? [? | [? | ?]] [? | [? | ?]]; subst; rewrite -? IZn_neg; split =>
+      /[dup] ?; auto; try (move=> /(@eq_sym Z_); contradiction);
+        try (move=> /(@eq_sym Z); contradiction); rewrite IZn_neg =>
+      ?; contradiction one_ne_minus_one; intuition.
     Qed.
 
     Theorem trinary_pow_neg_1_l : ∀ k, trinary_value ((-1)^k)%Z.
     Proof.
-      intros k.
-      unfold trinary_value.
-      destruct (pow_neg_1_l ℤ k) as [H | H]; simpl in *; rewrite H; intuition.
+      rewrite /trinary_value => k.
+      case (pow_neg_1_l ℤ k) => /= [H | H]; rewrite H; tauto.
     Qed.
 
     Theorem legendre_mult : ∀ a b : Z_,
         legendre_symbol (a * b) = (legendre_symbol a * legendre_symbol b)%Z.
     Proof.
-      intros a b.
+      move=> a b.
       apply trinary_IZn_eq; auto using trinary_legendre, trinary_mul.
-      now rewrite <-IZn_mul, <-? Euler's_Criterion, rings.pow_mul_l.
+        by rewrite -IZn_mul -? Euler's_Criterion rings.pow_mul_l.
     Qed.
 
     Variable a : N.
