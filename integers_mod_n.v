@@ -1416,22 +1416,20 @@ Section Modular_arithmetic.
 
     Definition QR_b (l : N) : Z.
     Proof.
-      destruct (excluded_middle_informative (0 < a * l)%Z) as [H | H].
-      - apply (division_QR (a*l)%Z p) in H.
-        + destruct (constructive_indefinite_description H) as [q H0].
-          exact q.
-        + apply odd_prime_positive.
+      case (excluded_middle_informative (0 < a * l)%Z) =>
+      [/(division_QR (a*l)%Z p) /(_ odd_prime_positive)
+        /constructive_indefinite_description [q H] | H].
+      - exact q.
       - exact 0.
     Defined.
 
     Definition QR_r (l : N) : Z.
     Proof.
-      destruct (excluded_middle_informative (0 < a * l)%Z) as [H | H].
-      - apply (division_QR (a*l)%Z p) in H.
-        + destruct (constructive_indefinite_description H) as [q H0].
-          destruct (constructive_indefinite_description H0) as [r H1].
-          exact r.
-        + apply odd_prime_positive.
+      case (excluded_middle_informative (0 < a * l)%Z) =>
+      [/(division_QR (a*l)%Z p) /(_ odd_prime_positive)
+        /constructive_indefinite_description [q]
+        /constructive_indefinite_description [r H] | H].
+      - exact r.
       - exact 0.
     Defined.
 
@@ -1439,71 +1437,64 @@ Section Modular_arithmetic.
 
     Theorem QR_ε_values : ∀ l, QR_ε l = ± 1.
     Proof.
-      intros l.
-      unfold QR_ε, rationals.QR_ε.
+      rewrite /QR_ε /rationals.QR_ε => l.
       apply (pow_neg_1_l ℤ).
     Qed.
 
     Theorem QR_ε_trinary : ∀ l, trinary_value (QR_ε l).
     Proof.
-      intros l.
-      destruct (QR_ε_values l) as [H | H]; right; intuition.
+      move: QR_ε_values => /[swap] l /(_ l) [H | H]; right; intuition.
     Qed.
 
     Theorem modified_division_algorithm :
       ∀ l : N, (a * l = QR_b l * p + QR_ε l * QR_r l)%Z.
     Proof.
-      intros l.
-      unfold QR_b, QR_ε, QR_r.
-      destruct excluded_middle_informative.
-      - repeat destruct constructive_indefinite_description.
-        now rewrite -> (integers.M1 x p), <-integers.M2.
-      - unfold integers.zero in n0.
-        rewrite -> INZ_mul, INZ_lt, <-naturals.le_not_gt,
-        ? (mul_0_l ℤ), ? (mul_0_r ℤ), integers.A3 in *.
-        apply INZ_eq, naturals.le_antisymm; auto using zero_le.
+      rewrite /QR_b /QR_ε /QR_r => l.
+      case excluded_middle_informative => [H | ].
+      - repeat elim constructive_indefinite_description => ? [*].
+          by rewrite (integers.M1 _ p) -integers.M2.
+      - rewrite /integers.zero INZ_mul INZ_lt (mul_0_l ℤ : ∀ a, 0 * a = 0)%Z
+                (mul_0_r ℤ : ∀ a, a * 0 = 0)%Z integers.A3 INZ_eq
+        -naturals.le_not_gt => /naturals.le_antisymm /(_ (zero_le (a*l))) //.
     Qed.
 
     Theorem QR_r_bound : ∀ l, (0 ≤ QR_r l ≤ # QR)%Z.
     Proof.
-      intros l.
-      unfold QR_r.
-      destruct excluded_middle_informative.
-      - repeat destruct constructive_indefinite_description.
-        destruct a0 as [[H H0] H1].
-        split; auto.
-        eapply ordered_rings.le_trans; eauto; fold integers.le.
-        apply IZQ_le, floor_lower.
-        unfold rationals.one; fold (IZQ 1).
-        rewrite -> inv_div, IZQ_add; auto using (zero_ne_2 ℤ_order).
-        apply (mul_denom_l ℚ_order); try apply IZQ_lt, (zero_lt_2 ℤ_order).
-        rewrite -> IZQ_mul.
-        apply IZQ_lt.
-        unfold integers.one.
-        rewrite -> (D1_l ℤ), ? INZ_add, ? INZ_mul, add_1_r, <-size_of_QR,
-        <-Prime_Euler_Phi_Z, <-add_1_r, <-INZ_mul, <-INZ_add;
-          auto using odd_prime_positive.
-        fold integers.one; apply (ordered_rings.lt_shift ℤ_order); simpl.
-        replace (p - 1 + 2 * 1 + - p)%Z with 1%Z by ring.
-        auto using integers.zero_lt_1.
-      - split; apply INZ_le; eauto using naturals.le_refl, zero_le.
+      rewrite /QR_r => l.
+      case excluded_middle_informative =>
+      [H | ]; last (split; apply INZ_le; eauto using naturals.le_refl, zero_le).
+      repeat elim constructive_indefinite_description => ? [[*]].
+      split; auto.
+      eapply ordered_rings.le_trans; eauto.
+      rewrite -[ordered_rings.le ℤ_order]/integers.le.
+      apply IZQ_le, floor_lower.
+      rewrite /rationals.one -[(1 / 1)%Q]/(1%Z : Q) inv_div ? IZQ_add;
+        auto using (zero_ne_2 ℤ_order).
+      apply (mul_denom_l ℚ_order); try apply IZQ_lt, (zero_lt_2 ℤ_order).
+      rewrite -[rings.mul ℚ_order]/rationals.mul IZQ_mul
+      -[ordered_fields.lt ℚ_order]/rationals.lt -IZQ_lt /integers.one;
+        rewrite (D1_l ℤ : ∀ a b c, a * (b+c) = a*b + a*c)%Z
+                INZ_add INZ_mul add_1_r -size_of_QR -Prime_Euler_Phi_Z;
+        rewrite -? add_1_r -? INZ_mul -? INZ_add -? [1%N:Z]/integers.one;
+        auto using odd_prime_positive.
+      apply (ordered_rings.lt_shift ℤ_order) => /=.
+      have -> : (p - 1 + 2 * 1 + - p = 1)%Z by ring.
+      auto using integers.zero_lt_1.
     Qed.
 
     Definition QR_r_N : N → N.
     Proof.
-      intros l.
-      destruct (QR_r_bound l) as [H H0].
-      apply le_def in H.
-      destruct (constructive_indefinite_description H) as [r H1].
+      move: QR_r_bound =>
+      /[swap] l /(_ l) [/le_def /constructive_indefinite_description [r H] H0].
       exact r.
     Defined.
 
     Lemma QR_r_N_action : ∀ l, QR_r l = QR_r_N l.
     Proof.
-      intros l.
-      unfold QR_r_N.
-      destruct QR_r_bound, constructive_indefinite_description.
-      now rewrite -> integers.A3 in e.
+      rewrite /QR_r_N => l.
+      destruct QR_r_bound.
+      elim constructive_indefinite_description => ?.
+        by rewrite integers.A3.
     Qed.
 
     Definition QR_r_function := sets.functionify QR_r_N.
@@ -1513,62 +1504,52 @@ Section Modular_arithmetic.
       apply lt_not_ge, lt_def.
       exists ((# QR) + 1)%N.
       split.
-      + rewrite -> add_1_r.
-        intros H4.
-        now apply INZ_eq, PA4 in H4.
-      + rewrite -> INZ_add, add_assoc, <-mul_2_r, mul_comm, <-size_of_QR,
-        (Prime_Euler_Phi prime_modulus odd_prime_positive), <-INZ_add,
-        <-INZ_sub; rewrite <-modulus_in_Z; try ring.
+      + rewrite add_1_r => /INZ_eq /PA4 H4 //.
+      + rewrite INZ_add add_assoc -mul_2_r mul_comm
+        -size_of_QR (Prime_Euler_Phi prime_modulus odd_prime_positive)
+        -INZ_add -INZ_sub -? modulus_in_Z; try ring.
         apply lt_0_le_1, odd_prime_positive.
     Qed.
 
     Theorem QR_r_nonzero : ∀ l, (1 ≤ l ≤ # QR)%N → 1 ≤ QR_r l.
     Proof.
-      intros l [H H0].
-      destruct (QR_r_bound l) as [[H1 | H1] H2]; try now apply lt_0_le_1.
-      assert (p｜a*l) as H3.
-      { rewrite -> modified_division_algorithm, <-H1.
-        apply div_add; fold divide; apply div_mul_l;
-          auto using div_refl, (div_0_r ℤ). }
-      apply Euclid's_lemma in H3 as [H3 | H3]; try now intuition.
-      apply INZ_le in H, H0.
-      apply div_le in H3.
+      move: QR_r_bound =>
+      /[swap] l /(_ l) [[H | H] H0] [/INZ_le /lt_0_le_1 H1 /INZ_le H2];
+        first by apply lt_0_le_1.
+      have /(Euclid's_lemma _ _ _ prime_modulus) [? | /(div_le _ _ H1) ?] :
+        p｜a*l; try by intuition.
+      - rewrite modified_division_algorithm -H.
+        apply div_add; rewrite -[rings.divide ℤ]/divide; apply div_mul_l;
+          auto using div_refl, (div_0_r ℤ).
       - contradiction QR_lt_p.
         eapply (ordered_rings.le_trans ℤ_order); eauto.
-      - now apply lt_0_le_1.
     Qed.
 
     Theorem QR_r_restriction_construction :
       (image (restriction QR_r_function {x of type ω | 1 ≤ x ≤ # QR}) ⊂
              {x of type ω | 1 ≤ x ≤ # QR})%N.
     Proof.
-      intros z H.
-      apply Specify_classification in H as [H [x [H0 H1]]].
-      rewrite -> restriction_domain, restriction_range, <-restriction_action,
-      Pairwise_intersection_classification in *; auto.
-      destruct H0 as [H0 H2].
-      apply Specify_classification in H0 as [H0 H3].
-      rewrite -> (reify H0), despecify in *.
-      unfold QR_r_function, QR_r_N in *.
-      rewrite -> @sets.functionify_domain, @sets.functionify_range,
-      ? @functionify_action in *.
-      destruct QR_r_bound, constructive_indefinite_description as [z'].
-      rewrite -> integers.A3 in e.
-      subst.
-      apply Specify_classification.
-      rewrite -> despecify.
-      repeat split; try apply INZ_le; destruct e; auto using QR_r_nonzero.
+      move=> z /Specify_classification [/[swap] [[x]]].
+      rewrite restriction_domain restriction_range
+              Pairwise_intersection_classification =>
+      [[[]]] /[dup] H /Specify_classification [] H0 /[swap] H1.
+      rewrite -restriction_action ? Pairwise_intersection_classification //
+                                  (reify H0) despecify /QR_r_function /QR_r_N
+                                  sets.functionify_range functionify_action.
+      destruct QR_r_bound.
+      elim constructive_indefinite_description => z'.
+      rewrite integers.A3 Specify_classification => H2 H3 <- H4.
+      rewrite despecify -? INZ_le -H2.
+      auto using QR_r_nonzero.
     Qed.
 
     Definition QR_r_res := restriction_Y QR_r_restriction_construction.
 
     Theorem QR_r_res_domain : domain QR_r_res = {x of type ω | 1 ≤ x ≤ # QR}%N.
     Proof.
-      unfold QR_r_res, QR_r_function.
-      rewrite restriction_Y_domain restriction_domain sets.functionify_domain.
-      apply Intersection_subset.
-      intros x H.
-      now apply Specify_classification in H.
+      rewrite /QR_r_res /QR_r_function restriction_Y_domain restriction_domain
+              sets.functionify_domain.
+      apply Intersection_subset => x /Specify_classification [] //.
     Qed.
 
     Theorem QR_r_res_action : ∀ i, (1 ≤ i ≤ # QR)%N → QR_r_res i = QR_r_N i.
