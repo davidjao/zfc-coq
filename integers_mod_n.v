@@ -1616,9 +1616,6 @@ Section Modular_arithmetic.
       Q /set_proj_injective H1 H2 H3.
       repeat destruct QR_r_bound, constructive_indefinite_description.
       rewrite -> integers.A3 in e, e0.
-      have NZ : Z_to_Z_n (INZ a) ≠ 0.
-      { move=> /IZn_eq /eqm_sym.
-        rewrite /eqm => NZ0; by ring_simplify in NZ0. }
       have [/(cancellation_mul_l (ℤ_ID prime_modulus)) /range_constraint H4 | ]:
         (a * (mkSet H : N) : Z_) = (a * (mkSet H0 : N) : Z_) ∨
         (a * (mkSet H : N) : Z_) = -(a * (mkSet H0 : N) : Z_).
@@ -1629,11 +1626,11 @@ Section Modular_arithmetic.
         ->; try (left; congruence); right; subst; rewrite IZn_neg IZn_eq;
           now ring_simplify. }
       - apply f_equal, INZ_eq.
-        rewrite H4 ? INZ_le //.
+        rewrite H4 ? INZ_le // IZn_eq -eqm_div_n //.
       - rewrite -(mul_neg_1_r ℤ_ : ∀ a, a * -(1) = -a) -M2 =>
-        /(cancellation_mul_l (ℤ_ID prime_modulus)) => /(_ NZ).
-        rewrite (mul_neg_1_r ℤ_ : ∀ a, a * -(1) = -a) =>
-        /range_constraint_neg; rewrite ? INZ_le; intuition.
+        /(cancellation_mul_l (ℤ_ID prime_modulus)).
+        rewrite IZn_eq -eqm_div_n (mul_neg_1_r ℤ_ : ∀ a, a * -(1) = -a)
+        => /(_ p_ndiv_a) /range_constraint_neg; rewrite ? INZ_le; intuition.
     Qed.
 
     Lemma Gauss_Lemma_helper :
