@@ -1719,104 +1719,74 @@ Section Modular_arithmetic.
 
     Theorem p_odd : odd p.
     Proof.
-      intros H.
-      clear p_ndiv_a.
-      apply prime_modulus in H as [H | H].
-      - apply unit_pm_1 in H as [H | H].
-        + rewrite <-(integers.A3 1) in H at 3.
-          rewrite -> (integers.A1 0) in H.
-          apply (cancellation_add ℤ) in H.
-          now contradiction integers.zero_ne_1.
-        + rewrite <-(integers.A3 (-1%Z)), (integers.A1 0), <-(integers.A3 2),
-          <-(integers.A4 1%Z), (integers.A1 1), <-integers.A2 in H at 1.
-          apply (cancellation_add ℤ), eq_sym in H.
-          contradiction (lt_irrefl ℤ_order (1+2))%Z.
-          rewrite <-H at 1.
-          apply (ordered_rings.O0 ℤ_order); simpl; auto using zero_lt_1.
-          apply (zero_lt_2 ℤ_order).
-      - apply assoc_pm, pm_sym in H as [H | H]; subst.
-        + contradiction (lt_irrefl ℤ_order 2).
-        + apply (lt_not_ge ℤ_order) in odd_prime.
-          contradict odd_prime.
-          left; simpl.
-          rewrite -> (lt_shift ℤ_order); simpl.
-          replace (--(2))%Z with 2 by ring.
-          apply (ordered_rings.O0 ℤ_order); apply zero_lt_2.
+      move: (prime_modulus) =>
+      [] _ /[apply] [[/unit_pm_1 [ | ] | /assoc_pm /pm_sym [ | ]]].
+      - rewrite -{3}(integers.A3 1) (integers.A1 0) =>
+        /(cancellation_add ℤ) /integers.zero_ne_1 //.
+      - rewrite -(integers.A3 (-1%Z)) (integers.A1 0) -(integers.A3 2)
+        -{1}(integers.A4 1%Z) (integers.A1 1) -integers.A2 =>
+        /(cancellation_add ℤ) /(@eq_sym Z).
+        move: (lt_irrefl ℤ_order (1+2))%Z => /[swap] {1}<- [].
+        apply (ordered_rings.O0 ℤ_order) =>
+        /=; auto using zero_lt_1, (zero_lt_2 ℤ_order : 0 < 2).
+      - move: (lt_irrefl ℤ_order 2) => /[swap] {2}<- [] //.
+      - move: odd_prime => /(lt_not_ge ℤ_order) /[swap] -> [].
+        apply or_introl, (ordered_rings.lt_trans ℤ_order _ 0);
+          rewrite -? neg_lt_0; try apply zero_lt_2.
     Qed.
 
     Lemma modified_Gauss_Lemma_helper :
       legendre_symbol (2*a)%Z =
       ((-1)^sum_N id 1 (#QR)*(-1)^sum_N (λ l, QR_ε_exp (a*l) p) 1 (#QR))%Z.
     Proof.
-      eapply odd_add in a_odd as [k H]; try apply p_odd; simpl in *.
-      rewrite <-IZn_mul, <-(A3 (2*a)), A1, <-(mul_0_r ℤ_ (2 : Z_) : (2*0 = 0)),
-      <-modulus_zero, ? IZn_mul, IZn_add, <-(rings.D1_l ℤ), (integers.A1 _ p),
-      H, (integers.M1 k), integers.M2, <-IZn_mul, legendre_mult, <-IZn_mul,
-      legendre_square, integers.M3; auto.
-      2: { apply nonzero_unit; auto using prime_modulus, two_nonzero. }
-      assert (0 ≤ k) as H0.
-      { rewrite -> (le_not_gt ℤ_order); simpl.
-        intros H0.
-        apply (O3 ℤ_order 2) in H0; simpl in *;
-          try now apply (ordered_rings.zero_lt_2 ℤ_order).
-        rewrite -> integers.M1, <-H, (lt_not_ge ℤ_order), (mul_0_r ℤ) in H0;
-          fold integers.le in *; simpl in *.
-        contradict H0.
-        apply (add_nonneg_nonneg ℤ_order); fold integers.le; simpl.
-        - left; now apply odd_prime_positive.
-        - apply INZ_le, zero_le. }
-      apply le_def in H0 as [k' H0].
-      rewrite -> integers.A3 in H0.
-      subst.
-      rewrite -> Gauss's_Lemma; auto.
-      2: { intros H0.
-           contradict p_ndiv_a.
-           apply (f_equal (λ x : Z, (x : Z_))), IZn_eq in H.
-           rewrite -> eqm_div_n, H0 in *.
-           rewrite -> eqn_zero in H at 2.
-           now rewrite -> integers.A3, (mul_0_l ℤ) in H. }
+      move: a_odd => /odd_add /(_ p_odd) [k /= H].
+      rewrite -IZn_mul -(A3 (2*a)) A1 -(mul_0_r ℤ_ (2 : Z_) : 2*0 = 0)
+      -modulus_zero ? IZn_mul IZn_add
+      -(rings.D1_l ℤ : ∀ a b c, a * (b + c) = a*b + a*c)%Z H
+      -(integers.M1 _ k) integers.M2 -IZn_mul legendre_mult //
+      -IZn_mul legendre_square 1 ? integers.M3; first by
+          apply nonzero_unit; auto using prime_modulus, two_nonzero.
+      have /le_def [k']: 0 ≤ k.
+      { rewrite -[integers.le]/(ordered_rings.le ℤ_order) (le_not_gt ℤ_order)
+        => /(O3 ℤ_order 2) /= /(_ (ordered_rings.zero_lt_2 ℤ_order)).
+        rewrite integers.M1 -H (mul_0_r ℤ 2 : 2*0 = 0)%Z
+        -[integers.lt]/(ordered_rings.lt ℤ_order) (lt_not_ge ℤ_order) => [[]].
+        apply (add_nonneg_nonneg ℤ_order).
+        - apply INZ_le, zero_le.
+        - by apply or_introl, odd_prime_positive. }
+      rewrite integers.A3.
+      move: H => /[swap] -> H.
+      (rewrite Gauss's_Lemma; auto) => [H0 | ].
+      { contradict p_ndiv_a.
+        move: H H0 => /(f_equal (λ x : Z, (x : Z_))) /IZn_eq.
+        rewrite eqm_div_n => /[swap] ->.
+        rewrite {2}(eqn_zero p) integers.A1 integers.A3
+                (mul_0_l ℤ 2 : 0*2 = 0)%Z => /(eqm_div_n p a) //. }
       rewrite <-(rings.pow_add_r ℤ), <-sum_N_dist, (integers.M1 2), <-H.
       repeat f_equal.
       extensionality l.
-      unfold QR_ε_exp, sig_rect.
-      repeat destruct excluded_middle_informative;
-        try (contradict n0; now apply odd_prime_positive);
-        try (contradict n1; now apply odd_prime_positive).
-      - repeat destruct constructive_indefinite_description.
-        rewrite -> integers.A3 in e, e0.
-        apply INZ_eq.
-        rewrite <-INZ_add, <-e, <-e0, <-floor_add_int.
+      rewrite /QR_ε_exp /sig_rect.
+      move: (odd_prime_positive odd_prime).
+      (repeat case excluded_middle_informative => //) =>
+      [H0 H1 H2 | H0 H1 H2 | H1 H2 H0 | H2 H1 H0];
+        try (contradict H0; apply integers.O2;
+             try apply (ordered_rings.O0 ℤ_order); auto;
+             case (classic (l = 0%N)) => [H3 | /succ_0 [m H3]]; subst);
+        try (by rewrite (mul_0_r ℤ : ∀ a, a * 0 = 0)%Z in H2);
+        try (by apply INZ_lt, naturals.lt_succ).
+      - (repeat elim constructive_indefinite_description) => x /[swap] y.
+        rewrite ? integers.A3 -INZ_eq -INZ_add => <- /[swap] _ <-.
+        rewrite -floor_add_int.
         f_equal.
-        assert (p ≠ 0) as H0.
-        { intros H0.
-          contradiction (ordered_rings.lt_irrefl ℤ_order 0).
-          rewrite <-H0 at 2.
-          now apply odd_prime_positive. }
-        rewrite -> inv_div, <-IZQ_mul, <-IZQ_add, ? rationals.D1,
-        (rationals.M1 p), <-rationals.M2, (inv_r ℚ), rationals.M1, rationals.M3,
-        inv_div, IZQ_mul; auto.
-        contradict H0.
-        now apply IZQ_eq.
-      - contradict n0.
-        apply integers.O2; auto.
-        destruct (classic (l = 0%N)) as [H0 | H0];
-          try apply succ_0 in H0 as [m H0]; subst.
-        + rewrite -> (mul_0_r ℤ) in l0.
-          contradiction (lt_irrefl ℤ_order 0).
-        + apply INZ_lt, naturals.lt_succ.
-      - contradict n0.
-        apply integers.O2.
-        + apply (ordered_rings.O0 ℤ_order); auto.
-        + destruct (classic (l = 0%N)) as [H0 | H0];
-            try apply succ_0 in H0 as [m H0]; subst.
-          * rewrite -> (mul_0_r ℤ) in l0.
-            contradiction (lt_irrefl ℤ_order 0).
-          * apply INZ_lt, naturals.lt_succ.
-      - destruct (classic (l = 0%N)) as [H0 | H0];
-          try apply succ_0 in H0 as [m H0]; subst; try ring.
-        contradict n1.
-        apply integers.O2; auto.
-        apply INZ_lt, naturals.lt_succ.
+        have H3: p ≠ 0 by move: H1 =>
+        /[swap] -> /(ordered_rings.lt_irrefl ℤ_order) //.
+        rewrite inv_div // -IZQ_mul
+        -IZQ_add ? rationals.D1 (rationals.M1 p) -? rationals.M2
+                 (inv_r ℚ : ∀ a, a ≠ 0 → a * a^-1 = 1)%Q ? IZQ_eq //
+                 (rationals.M1 l 1) rationals.M3 inv_div //
+        -IZQ_mul rationals.M2 rationals.A1 //.
+      - case (classic (l = 0%N)) => [H3 | /succ_0 [m H3]]; subst; try ring.
+        contradict H2; by apply integers.O2, INZ_lt, naturals.lt_succ.
     Qed.
 
   End Gauss_Lemma_helper.
