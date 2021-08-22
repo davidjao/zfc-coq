@@ -1636,117 +1636,73 @@ Section Modular_arithmetic.
     Lemma Gauss_Lemma_helper :
       prod ℤ_ (λ n, n : Z_) 1 (# QR) = prod ℤ_ (λ n, (QR_r n) : Z_) 1 (# QR).
     Proof.
-      apply iterate_bijection; auto using M1, M2.
-      - intros j H.
-        exists (QR_r_N j).
-        apply QR_r_nonzero in H.
-        pose proof (QR_r_bound j) as [H0 H1].
-        repeat split; try apply INZ_le; rewrite <-? QR_r_N_action; auto.
-        intros x' [[H2 H3] H4].
-        rewrite <-INZ_eq, <-QR_r_N_action.
-        apply IZn_eq, injective_mod_n_on_interval in H4; repeat split; auto;
-          try (now apply or_introl, lt_0_le_1, INZ_le);
-          [ apply INZ_le in H3 | ]; eapply (ordered_rings.le_lt_trans ℤ_order);
-            eauto; apply lt_not_ge, QR_lt_p.
-      - intros i H.
-        assert ((inverse QR_r_res) i ∈ ω).
-        { assert ((range (inverse QR_r_res)) ⊂ ω) as H0.
-          { rewrite -> inverse_range; auto using QR_r_res_bijective.
-            unfold QR_r_res, QR_r_function.
-            rewrite -> restriction_Y_domain, restriction_domain.
-            intros x H0.
-            apply Pairwise_intersection_classification in H0 as [H0 H1].
-            now apply Specify_classification in H0. }
+      (apply iterate_bijection; auto using M1, M2) => [i /QR_r_nonzero H | i H].
+      - exists (QR_r_N i).
+        move: (QR_r_bound i) => [H0 H1].
+        repeat split; try apply INZ_le; rewrite -? QR_r_N_action; auto =>
+        x' [[H2 /INZ_le H3] /IZn_eq /injective_mod_n_on_interval H4].
+        rewrite -INZ_eq -QR_r_N_action H4; repeat split; auto;
+          try (by apply or_introl, lt_0_le_1, INZ_le);
+          eapply (le_lt_trans ℤ_order); eauto; apply lt_not_ge, QR_lt_p.
+      - have H0: (inverse QR_r_res) i ∈ ω.
+        { have H0: range (inverse QR_r_res) ⊂ ω.
+          { rewrite inverse_range /QR_r_res; auto using QR_r_res_bijective
+            => x /Pairwise_intersection_classification
+              [/Specify_classification [H0]] //. }
           apply H0, function_maps_domain_to_range.
-          unfold QR_r_res.
-          rewrite -> inverse_domain, restriction_Y_range;
-            auto using QR_r_res_bijective.
-          apply Specify_classification.
-          rewrite -> despecify.
-          eauto using elts_in_set. }
-        set (η := mkSet H0 : N).
-        exists η.
-        split.
-        + assert (1 ≤ η ≤ # QR)%N as H1.
-          { assert (η ∈ range (inverse QR_r_res)) as H1.
-            { unfold η.
-              simpl.
-              apply function_maps_domain_to_range.
-              rewrite -> inverse_domain; auto using QR_r_res_bijective.
-              unfold QR_r_res.
-              rewrite -> restriction_Y_range.
-              apply Specify_classification.
-              rewrite -> despecify.
-              eauto using elts_in_set. }
-            unfold QR_r_res in H1.
-            rewrite -> inverse_range, restriction_Y_domain in H1;
-              auto using QR_r_res_bijective.
-            apply Pairwise_intersection_classification in H1 as [H1 H2].
-            apply Specify_classification in H1.
-            now rewrite -> despecify in H1. }
+          rewrite /QR_r_res inverse_domain ? Specify_classification ? despecify;
+            eauto using QR_r_res_bijective, elts_in_set. }
+        exists (mkSet H0).
+        split => [ | x' [H1 /range_constraint]].
+        + have H1: (1 ≤ (mkSet H0) ≤ # QR)%N.
+          { have: (mkSet H0 : N) ∈ range (inverse QR_r_res).
+            { apply function_maps_domain_to_range.
+              rewrite inverse_domain /QR_r_res ? Specify_classification ?
+                      despecify; eauto using QR_r_res_bijective, elts_in_set. }
+            now rewrite /QR_r_res inverse_range
+            ? Pairwise_intersection_classification ? Specify_classification
+            ? despecify; auto using QR_r_res_bijective. }
           split; auto.
-          rewrite -> QR_r_N_action.
+          rewrite QR_r_N_action.
           apply f_equal, f_equal, set_proj_injective.
-          rewrite <-QR_r_res_action; auto.
-          simpl.
-          rewrite -> right_inverse;
-            try rewrite -> inverse_domain, ? restriction_Y_range;
+          rewrite -[elt_to_set]/INS -QR_r_res_action // right_inverse;
+            rewrite ? inverse_domain ? Specify_classification ? despecify;
+            eauto using QR_r_res_bijective, elts_in_set.
+        + rewrite {3}QR_r_N_action INZ_eq => H2.
+          apply set_proj_injective => /=.
+          move: (QR_r_bound x') => [H3 H4].
+          rewrite H2; repeat split; auto using QR_r_nonzero;
+            try (apply INZ_le; intuition).
+          rewrite -QR_r_res_action // left_inverse;
             auto using QR_r_res_bijective.
-          apply Specify_classification.
-          rewrite -> despecify.
-          eauto using elts_in_set.
-        + intros x' [H1 H2].
-          apply range_constraint in H2.
-          2: { split; apply INZ_le; intuition. }
-          2: { split; auto using QR_r_nonzero.
-               now destruct (QR_r_bound x'). }
-          rewrite -> QR_r_N_action in H2.
-          apply INZ_eq, (f_equal INS) in H2.
-          apply set_proj_injective.
-          simpl.
-          rewrite -> H2, <-QR_r_res_action, left_inverse;
-            auto using QR_r_res_bijective.
-          unfold QR_r_res, QR_r_function.
-          rewrite -> restriction_Y_domain.
-          apply Pairwise_intersection_classification.
-          split.
-          * apply Specify_classification.
-            rewrite -> despecify.
-            eauto using elts_in_set.
-          * rewrite -> sets.functionify_domain.
-            eauto using elts_in_set.
+          rewrite /QR_r_res /QR_r_function Pairwise_intersection_classification
+                  ? Specify_classification ? despecify
+                  ? sets.functionify_domain; eauto using elts_in_set.
     Qed.
 
     Theorem Gauss's_Lemma :
       legendre_symbol a = ((-1%Z)^sum_N (λ l, QR_ε_exp (2*a*l)%Z p) 1 (# QR))%Z.
     Proof.
       apply trinary_IZn_eq; auto using trinary_legendre, trinary_pow_neg_1_l.
-      rewrite <-IZn_pow, <-IZn_neg.
+      rewrite -IZn_pow -IZn_neg.
       apply (cancellation_mul_r (ℤ_ID prime_modulus)
                                 (prod ℤ_ (λ n : N, QR_r n : Z_) 1 (# QR)));
-        rewrite <-Gauss_Lemma_helper at 1; simpl.
+        rewrite -{1}Gauss_Lemma_helper /=.
       - apply (integral_domains.unit_nonzero (ℤ_ID prime_modulus)),
-        unit_prod_closure.
-        intros i [H H0].
-        apply nonzero_unit; auto.
-        intros H1.
-        apply IZn_eq, eqm_sym in H1.
-        unfold eqm in H1.
-        ring_simplify in H1.
-        apply div_le in H1; try now apply lt_0_le_1, INZ_le.
-        apply INZ_le in H0.
+        unit_prod_closure => i [H /INZ_le H0].
+        apply nonzero_unit; auto => /IZn_eq /(eqm_div_n p i) /div_le.
+        rewrite lt_0_le_1 INZ_le => /(_ H) H1.
         eapply QR_lt_p, (ordered_rings.le_trans ℤ_order); eauto.
-      - rewrite <-Euler's_Criterion, <-(sub_abab 1 (# QR)), add_comm, add_1_r,
-        (prod_mul ℤ_) at 1; auto using size_QR_ge_1; simpl.
-        replace (λ n : N, a * n) with (λ l : N, (QR_ε l * QR_r l)).
-        + unfold QR_ε, rationals.QR_ε.
-          rewrite -> prod_dist, <-? Gauss_Lemma_helper, <-prod_sum; simpl.
-          repeat f_equal.
-          extensionality k.
-          now rewrite <-IZn_pow, <-IZn_neg.
+      - rewrite -Euler's_Criterion -{1}(sub_abab 1 (# QR)) 1 ? add_comm;
+          rewrite ? add_1_r -? [mul]/(rings.mul ℤ_) ? {1}(prod_mul ℤ_);
+          auto using size_QR_ge_1; simpl.
+        have -> : (λ n : N, a * n) = λ l : N, (QR_ε l * QR_r l).
         + extensionality l.
-          now rewrite -> ? IZn_mul, modified_division_algorithm, <-? IZn_add,
-          <-? IZn_mul, modulus_zero, (mul_0_r ℤ_), A3.
+          rewrite ? IZn_mul modified_division_algorithm -? IZn_add -? IZn_mul
+                  modulus_zero -[mul]/(rings.mul ℤ_) (mul_0_r ℤ_) A3 //.
+        + rewrite /QR_ε /rationals.QR_ε prod_dist -? Gauss_Lemma_helper
+          -prod_sum /=; repeat f_equal; extensionality k;
+            by rewrite -IZn_pow -IZn_neg.
     Qed.
 
   End Odd_prime_modulus.
