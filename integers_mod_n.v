@@ -1803,54 +1803,45 @@ Section Modular_arithmetic.
 
     Theorem Gauss's_Lemma_2 : (legendre_symbol 2 = (-1)^sum_N id 1 (#QR))%Z.
     Proof.
-      rewrite <-(integers.M3 2), <-integers.M1.
-      unfold integers.one at 3.
-      rewrite -> modified_Gauss_Lemma_helper; auto using integers.zero_lt_1.
-      2: { apply odd_classification.
-           exists 0.
-           now rewrite -> (mul_0_r ℤ), integers.A3. }
-      2: { destruct prime_modulus as [H H0].
-           now contradict H. }
-      rewrite <-(integers.M3 ((- 1) ^ sum_N id 1 (# QR)))%Z at 2.
-      rewrite -> (integers.M1 1).
-      replace 1 with ((-1)^0)%Z at 4 by now rewrite -> (rings.pow_0_r ℤ).
+      rewrite -(integers.M3 2) integers.M1 {3}/integers.one;
+        rewrite modified_Gauss_Lemma_helper; auto using zero_lt_1;
+      try apply prime_modulus.
+      { apply odd_classification.
+        exists 0.
+          by rewrite (mul_0_r ℤ 2 : 2 * 0 = 0)%Z integers.A3. }
+      rewrite -{2}(integers.M3 ((- 1) ^ sum_N id 1 (# QR)))%Z (integers.M1 1).
+      have {4}-> : 1 = ((-1)^0)%Z by rewrite (rings.pow_0_r ℤ).
       repeat f_equal.
-      rewrite <-(iterated_ops.sum_of_0_a_b 1 (# QR)).
-      apply iterate_extensionality.
-      intros k [H H0].
-      unfold QR_ε_exp, sig_rect.
-      repeat destruct excluded_middle_informative; auto.
-      destruct constructive_indefinite_description.
-      rewrite -> integers.M3, integers.A3 in e.
-      apply INZ_eq.
-      rewrite <-e.
-      apply INZ_le in H, H0.
-      apply (ordered_rings.le_antisymm ℤ_order); fold integers.le.
+      rewrite -(iterated_ops.sum_of_0_a_b 1 (# QR)) /QR_ε_exp /sig_rect.
+      apply iterate_extensionality => k [/INZ_le H /INZ_le H0].
+      repeat case excluded_middle_informative; auto => H1 H2.
+      elim constructive_indefinite_description => x.
+      rewrite integers.M3 integers.A3 -INZ_eq => <-.
+      apply (ordered_rings.le_antisymm ℤ_order).
       - apply IZQ_le, floor_lower.
-        rewrite -> rationals.A3, inv_div; auto using (pos_ne_0 ℤ_order).
-        apply (mul_denom_l ℚ_order); simpl.
-        + now apply IZQ_lt.
-        + rewrite -> rationals.M1, rationals.M3.
+        rewrite rationals.A3 inv_div; auto using (pos_ne_0 ℤ_order).
+        apply (mul_denom_l ℚ_order).
+        + by apply IZQ_lt.
+        + rewrite /= rationals.M1 rationals.M3.
           apply IZQ_lt.
-          eapply (ordered_rings.le_lt_trans ℤ_order); eauto; simpl.
-          now apply (lt_not_ge ℤ_order), (QR_lt_p).
+          eapply (ordered_rings.le_lt_trans ℤ_order); eauto.
+            by apply (lt_not_ge ℤ_order), (QR_lt_p).
       - apply IZQ_le, floor_upper.
-        rewrite -> inv_div; auto using (pos_ne_0 ℤ_order).
-        apply or_introl, ordered_rings.O2; simpl.
-        + now apply IZQ_lt, lt_0_le_1.
-        + now apply (ordered_fields.inv_lt ℚ_order), IZQ_lt.
+        rewrite inv_div; auto using (pos_ne_0 ℤ_order).
+        apply or_introl, ordered_rings.O2.
+        + by apply IZQ_lt, lt_0_le_1.
+        + by apply (ordered_fields.inv_lt ℚ_order), IZQ_lt.
     Qed.
 
     Theorem Gauss's_Lemma_a :
       (legendre_symbol a = (-1)^sum_N (λ l, QR_ε_exp (a*l) p) 1 (#QR))%Z.
     Proof.
       apply modified_Gauss_Lemma_helper in a_positive as H; auto.
-      rewrite <-IZn_mul, legendre_mult, Gauss's_Lemma_2 in H; auto.
+      rewrite -IZn_mul legendre_mult // Gauss's_Lemma_2 in H.
       apply (integral_domains.cancellation_mul_l integers.ℤ_ID) in H; auto.
-      destruct (pow_neg_1_l ℤ (sum_N id 1 (# QR))) as [H0 | H0]; simpl in H0;
-        rewrite -> H0.
-      - apply (integral_domains.nontriviality integers.ℤ_ID).
-      - apply (integral_domains.minus_one_nonzero integers.ℤ_ID).
+      case (pow_neg_1_l ℤ (sum_N id 1 (# QR))) =>
+      /= ->; auto using (integral_domains.nontriviality integers.ℤ_ID),
+      (integral_domains.minus_one_nonzero integers.ℤ_ID).
     Qed.
 
   End Modified_Gauss's_Lemma.
@@ -1870,19 +1861,15 @@ Arguments Gauss's_Lemma {n}.
 
 Theorem mod_0_r : ∀ a, modulo 0 a = 0.
 Proof.
-  intros a.
-  unfold modulo.
-  destruct excluded_middle_informative; auto.
-  exfalso.
-  contradiction (ordered_rings.lt_irrefl ℤ_order 0).
+  rewrite /modulo => a.
+  (case excluded_middle_informative; auto) =>
+  /[dup] /(ordered_rings.lt_irrefl ℤ_order) //.
 Qed.
 
 Theorem mod_1_r : ∀ a, modulo 1 a = 0.
 Proof.
-  intros a.
-  unfold modulo.
-  destruct excluded_middle_informative; auto.
-  repeat destruct constructive_indefinite_description.
-  destruct a0 as [H [[H0 | H0] H1]]; auto.
-  contradiction (lt_0_1 x0).
+  rewrite /modulo => a.
+  case excluded_middle_informative; auto => H.
+  elim constructive_indefinite_description => *.
+  elim constructive_indefinite_description => r [? [[? /(lt_0_1 r) | ]]] //.
 Qed.
