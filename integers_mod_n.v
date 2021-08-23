@@ -1033,12 +1033,12 @@ Section Modular_arithmetic.
                     inverse_image_of_element unit_square_function x.
     Proof.
       move=> x /[dup] /Specify_classification [H H0].
-      rewrite -image_usf => H1.
+      rewrite -image_usf /unit_square_function => H1.
       have: image unit_square_function ⊂ range square_function by
           erewrite <-restriction_range; eauto using image_subset_range.
-      rewrite /square_function /square => H2.
+      rewrite /square_function /square /unit_square_function => H2.
       apply Extensionality => z.
-      split => [H3 | /Specify_classification [H3 H4]].
+      split => [H3 | /Specify_classification []].
       - have: z ∈ domain square_function by
             eauto using Inverse_image_classification_domain.
         rewrite /square_function /square => /[dup] H4.
@@ -1056,9 +1056,8 @@ Section Modular_arithmetic.
           rewrite ? Inverse_image_classification /unit_square_function
                   ? restriction_domain -? restriction_action
                   ? Pairwise_intersection_classification; eauto.
-      - unfold unit_square_function in *.
-        rewrite -> restriction_domain, <-restriction_action,
-        Pairwise_intersection_classification in *; auto.
+      - rewrite restriction_domain Pairwise_intersection_classification => H3.
+        rewrite -restriction_action ? Pairwise_intersection_classification //.
         now apply Inverse_image_classification; auto.
     Qed.
 
@@ -1186,8 +1185,7 @@ Section Modular_arithmetic.
         (rewrite A4 Pairing_classification => /IZn_eq /eqm_sym /IZn_eq =>
          /(integral_domains.cancellation (ℤ_ID prime_modulus)); simpl) =>
         [[H3 | H3]].
-        + left; unfold IZnS; f_equal.
-          rewrite -(A3 a) -H3 -A2 (A1 _ a) A4 A1 A3 //.
+        + left; rewrite /IZnS -(A3 a) -H3 -A2 (A1 _ a) A4 A1 A3 //.
         + right; suff: z = -a => //.
           rewrite -(A3 (-a)) -H3 -A2 A4 A1 A3 //.
       - rewrite Inverse_image_classification ? sets.functionify_domain
