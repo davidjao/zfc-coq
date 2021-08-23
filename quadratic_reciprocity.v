@@ -13,123 +13,94 @@ Section Pretty_picture_lemmas.
   Lemma pp_helper_1 : ∀ x y k : N,
       (y < x)%N → ⌊p * k / q⌋ = x → (1 ≤ k ≤ # QR q)%N → (y + 1 ≤ # QR p)%N.
   Proof.
-    intros x y k H H0 [H1 H2].
-    rewrite -> add_1_r.
-    apply lt_le_succ, INZ_le in H.
-    eapply INZ_le, (ordered_rings.le_trans ℤ_order); eauto.
-    rewrite <-H0.
-    apply IZQ_le, floor_lower.
-    rewrite -> inv_div; try now apply (pos_ne_0 ℤ_order), odd_prime_positive.
-    apply (mul_denom_l ℚ_order); simpl.
-    { now apply IZQ_lt, odd_prime_positive. }
-    apply INZ_le, (mul_le_l ℤ_order (p : Z)), IZQ_le in H2; simpl in *;
-      fold integers.le in *; auto using odd_prime_positive.
+    move=> x y k /lt_le_succ /INZ_le /[swap] <- H.
+    rewrite add_1_r => [[H0 H1]].
+    eapply INZ_le, (ordered_rings.le_trans ℤ_order), IZQ_le, floor_lower; eauto.
+    rewrite inv_div; try now apply (pos_ne_0 ℤ_order), odd_prime_positive.
+    apply (mul_denom_l ℚ_order); first by apply IZQ_lt, odd_prime_positive.
+    apply INZ_le, (mul_le_l ℤ_order (p : Z)), IZQ_le in H1 =>
+    /=; auto using odd_prime_positive.
     eapply (le_lt_trans ℚ_ring_order); eauto; simpl.
-    replace 1%Q with (1%Z : Q) by auto.
-    rewrite -> IZQ_add, IZQ_mul.
-    apply IZQ_lt, (O3_iff ℤ_order 2); simpl;
-      try now apply (ordered_rings.zero_lt_2 ℤ_order).
-    replace (2 * (p * (# QR q))) with (p * (2 * # QR q)) by ring.
-    replace (2 * (q * (# QR p + 1))) with (q * (2 * (# QR p) + 2)) by ring.
-    rewrite <-? size_of_QR_in_Z; auto.
-    replace (p * (q - 1)) with (p * q + -p) by ring.
-    replace (q * (p - 1 + 2)) with (p * q + q) by ring.
+    rewrite -[1%Q]/(1%Z : Q) IZQ_add IZQ_mul -IZQ_lt.
+    apply (O3_iff ℤ_order 2) =>
+    /=; eauto using (ordered_rings.zero_lt_2 ℤ_order : 0 < 2).
+    have -> : 2 * (p * (# QR q)) = p * (2 * # QR q) by ring.
+    have -> : 2 * (q * (# QR p + 1)) = q * (2 * (# QR p) + 2) by ring.
+    rewrite -? size_of_QR_in_Z; auto.
+    have -> : p * (q - 1) = p * q + -p by ring.
+    have -> : q * (p - 1 + 2) = p * q + q by ring.
     apply integers.O1, (integers.lt_trans _ 0); auto using odd_prime_positive.
-    rewrite -> (ordered_rings.lt_shift ℤ_order), (neg_neg ℤ), integers.A3;
+    rewrite -[integers.lt]/(ordered_rings.lt ℤ_order).
+    rewrite (ordered_rings.lt_shift ℤ_order) (neg_neg ℤ) /= integers.A3;
       now apply odd_prime_positive.
   Qed.
 
   Lemma rectangle_slice_equiv : ∀ n : N, ({x of type ℤ | 1 ≤ x ≤ n} ~ n)%set.
   Proof.
-    intros n.
+    move=> n.
     set (f := sets.functionify (λ x : N, x + 1)).
-    assert (n ⊂ domain f) as H.
-    { unfold f.
-      rewrite -> sets.functionify_domain.
-      intros x H.
+    have /injection_restriction ->: n ⊂ domain f.
+    { rewrite /f sets.functionify_domain => x H.
       eauto using elements_of_naturals_are_naturals, elts_in_set. }
-    apply injection_restriction in H.
-    2: { apply Injective_classification.
-         intros x y H0 H1 H2.
-         unfold f in *.
-         rewrite -> @sets.functionify_domain, (reify H0), (reify H1),
-         ? @functionify_action in *.
-         rewrite -> ? (integers.A1 _ 1) in H2.
-         apply set_proj_injective, (cancellation_add ℤ), INZ_eq in H2.
-         now f_equal. }
-    rewrite -> H.
-    apply cardinality_eq, Extensionality.
-    split; intros H0.
-    - apply Specify_classification in H0 as [H0 H1].
-      rewrite -> (reify H0), despecify in *.
-      destruct H1 as [H1 H2].
-      apply Specify_classification.
-      split; unfold f.
-      { now rewrite -> sets.functionify_range. }
-      apply le_def in H1 as [c H1].
-      unfold integers.one in H1.
-      rewrite -> H1, integers.A1, INZ_add, add_1_r in *.
-      apply INZ_le, lt_le_succ, lt_is_in in H2.
-      exists c.
-      rewrite -> Pairwise_intersection_classification.
-      repeat split; auto.
-      + rewrite -> sets.functionify_domain.
+    - apply cardinality_eq, Extensionality => z.
+      split => [/Specify_classification [H0] |
+                /Specify_classification
+                 [H0 [c [/Pairwise_intersection_classification [H1 H2]]]]].
+      + rewrite (reify H0) despecify Specify_classification /integers.one =>
+        [[/le_def [c H1] H2]].
+        split; rewrite /f ? sets.functionify_range // H1 integers.A1
+                       INZ_add add_1_r in H2 |-*.
+        apply INZ_le, lt_le_succ, lt_is_in in H2.
+        exists c.
+        rewrite Pairwise_intersection_classification sets.functionify_domain
+                functionify_action -add_1_r -INZ_add.
         eauto using elts_in_set.
-      + now rewrite -> @functionify_action, <-add_1_r, <-INZ_add.
-    - apply Specify_classification in H0 as [H0 [c [H1 H2]]].
-      apply Pairwise_intersection_classification in H1 as [H1 H3].
-      unfold f in *.
-      rewrite -> @sets.functionify_domain, @sets.functionify_range in *.
-      apply Specify_classification.
-      rewrite -> (reify H3), @functionify_action, <-H2, despecify in *.
-      repeat split; auto; unfold integers.one; rewrite -> INZ_add, add_1_r;
-        apply INZ_le.
-      + apply one_le_succ.
-      + now rewrite <-lt_le_succ, lt_is_in.
+      + rewrite /f sets.functionify_domain sets.functionify_range
+                Specify_classification in H0 H2 |-* => H2 H3.
+        rewrite (reify H3) functionify_action => <-.
+        repeat split; auto; rewrite ? despecify /integers.one INZ_add add_1_r
+                                    ? INZ_le -? lt_le_succ ? (lt_is_in _ n);
+        eauto using elts_in_set, naturals.lt_succ.
+    - rewrite Injective_classification /f @sets.functionify_domain =>
+      x y H0 H1.
+      rewrite (reify H0) (reify H1) ? functionify_action ? (integers.A1 _ 1)
+      => /set_proj_injective /(cancellation_add ℤ) /INZ_eq -> //.
   Qed.
 
   Lemma rectangle_slice_finite : ∀ n : N, finite {x of type ℤ | 1 ≤ x ≤ n}.
   Proof.
-    intros n.
-    exists n.
-    auto using rectangle_slice_equiv.
+    eexists; eauto using rectangle_slice_equiv.
   Qed.
 
   Lemma rectangle_slice_card : ∀ n : N, # {x of type ℤ | 1 ≤ x ≤ n} = n.
   Proof.
-    intros n.
-    auto using equivalence_to_card, rectangle_slice_equiv.
+    eauto using equivalence_to_card, rectangle_slice_equiv.
   Qed.
 
   Lemma triangle_duality : ∀ x y : Z, (p * x / q < y → x < q * y / p)%Q.
   Proof.
-    intros x y H.
-    apply (lt_not_ge ℚ_ring_order); fold rationals.le.
-    intros H0.
-    rewrite -> ? inv_div in H, H0;
+    move=> x y H.
+    apply (lt_not_ge ℚ_ring_order) => H0.
+    rewrite ? inv_div /= in H, H0;
       try now apply (pos_ne_0 ℤ_order), odd_prime_positive.
-    apply (O3 ℚ_ring_order (q : Q)), (O3_r ℚ_ring_order (p^-1 : Q)) in H;
-      simpl in *; try (now apply IZQ_lt, odd_prime_positive);
-        try now apply (inv_lt ℚ_order), IZQ_lt, odd_prime_positive.
-    rewrite <-IZQ_mul in *.
-    replace (q * (p * x * q^-1) * p^-1)%Q with (x : Q) in H.
-    2: { field_simplify_eq; repeat split; auto;
-         intros H1; apply IZQ_eq, (pos_ne_0 ℤ_order) in H1; auto;
-         now apply odd_prime_positive. }
+    move: H (odd_prime_positive _ odd_p) (odd_prime_positive _ (odd_q)) =>
+    /(O3 ℚ_ring_order (q : Q)) /(O3_r ℚ_ring_order (p^-1 : Q)) /=.
+    rewrite ? IZQ_lt => /[swap] /(inv_lt ℚ_order) /[swap] /[apply] /[apply].
+    rewrite -IZQ_mul (IZQ_mul q y).
+    have -> : (q * (p * x * q^-1) * p^-1)%Q = (x : Q) => [ | ?].
+    { field_simplify_eq; repeat split; auto;
+        intros H1; apply IZQ_eq, (pos_ne_0 ℤ_order) in H1; auto;
+          by apply odd_prime_positive. }
     eapply (lt_irrefl ℚ_ring_order (x : Q)), (lt_le_trans ℚ_ring_order); eauto.
   Qed.
 
   Lemma q_ndiv_p : ¬ q｜p.
   Proof.
-    intros H.
-    destruct prime_p as [H0 H1], prime_q as [H2 H3].
-    apply H1 in H as [H | H]; try contradiction.
-    apply assoc_pm in H as [H | H]; try now apply distinct, INZ_eq.
+    move: prime_p prime_q => [H H0] [H1 H2] /H0 [H3 | /assoc_pm [H3 | H3]];
+                               try contradiction; try by apply distinct, INZ_eq.
     contradiction (ordered_rings.lt_antisym ℤ_order 0 (p : Z));
-      try now apply odd_prime_positive.
-    rewrite -> (ordered_rings.lt_shift ℤ_order); simpl.
-    rewrite <-H, integers.A3.
-    auto using odd_prime_positive.
+      rewrite ? (ordered_rings.lt_shift ℤ_order (p : Z)) /= -? H3 ? integers.A3;
+      auto using odd_prime_positive.
   Qed.
 
   Lemma empty_diagonal : ∀ x y : Z, 1 ≤ x ≤ # QR q → ¬ (p * x / q = y)%Q.
