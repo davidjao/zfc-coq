@@ -117,16 +117,14 @@ Section Ordered_ring_theorems.
 
   Theorem neg_lt_0 : ∀ a, 0 < a ↔ -a < 0.
   Proof.
-    split => [/lt_shift | /lt_shift].
-    - (suff -> : a+-0 = 0+--a; last by ring) => /(iffRL (lt_shift _ _)) //.
-    - suff -> : 0+--a = a => //; ring.
+    move: lt_shift => /[swap] a /(_ (-a)) ->.
+      by have ->: 0 + --a = a by ring.
   Qed.
 
   Theorem lt_neg_0 : ∀ a, a < 0 ↔ 0 < -a.
   Proof.
-    move=> a.
-    rewrite neg_lt_0.
-    suff -> : --a = a => //; ring.
+    move: lt_shift => /[swap] a /(_ a) ->.
+      by have ->: 0 + -a = -a by ring.
   Qed.
 
   Theorem neg_le_0 : ∀ a, 0 ≤ a ↔ -a ≤ 0.
