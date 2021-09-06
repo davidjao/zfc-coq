@@ -1,9 +1,9 @@
 Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Export rationals.
 
-Definition 𝐑 := {α in P ℚ | α ≠ ∅ ∧ α ≠ ℚ ∧
-                            (∀ p q : Q, p ∈ α → q < p → q ∈ α) ∧
-                            ∀ p : Q, p ∈ α → ∃ r : Q, p < r ∧ r ∈ α}.
+Definition 𝐑 :=
+  {α in P ℚ | α ≠ ∅ ∧ α ≠ ℚ ∧ (∀ p q : Q, p ∈ α → q < p → q ∈ α) ∧
+              ∀ p : Q, p ∈ α → ∃ r : Q, p < r ∧ r ∈ α}.
 
 Definition R := elts 𝐑.
 
@@ -12,64 +12,45 @@ Coercion IRS : R >-> set.
 
 Lemma Dedekind_cut_0 : ∀ (α : R) (p : set), p ∈ α → p ∈ ℚ.
 Proof.
-  intros α p H.
-  pose proof elts_in_set α as H0.
-  apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
-  apply Powerset_classification in H0.
-  eauto.
+  move=> [α /[dup] /Specify_classification
+            [/Powerset_classification H _] ?] ? /H //.
 Qed.
 
 Lemma Dedekind_cut_1 : ∀ α : R, ∅ ≠ α.
 Proof.
-  intros α H.
-  pose proof elts_in_set α as H0.
-  apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
-  now contradict H1.
+  move=> [α /[dup] /Specify_classification [?]]
+           [] /[swap] _ /[swap] ? /[swap] -> //.
 Qed.
 
 Lemma Dedekind_cut_2 : ∀ (α : R) (p q : Q), p ∈ α → q < p → q ∈ α.
 Proof.
-  intros α.
-  pose proof elts_in_set α as H1.
-  now apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
+  move=> [α /[dup] /Specify_classification [? [? [? []]]]] //.
 Qed.
 
 Lemma Dedekind_cut_3 : ∀ (α : R) (p : Q), p ∈ α → ∃ r : Q, p < r ∧ r ∈ α.
 Proof.
-  intros α.
-  pose proof elts_in_set α as H0.
-  now apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
+  move=> [α /[dup] /Specify_classification [? [? [? []]]]] //.
 Qed.
 
 Lemma Dedekind_cut_4 : ∀ α : R, ∀ p q : Q, p ∈ α → q ∉ α → p < q.
 Proof.
-  intros α p q H H0.
-  pose proof elts_in_set α as H1.
-  apply Specify_classification in H1 as [H1 [H2 [H3 [H4 H5]]]].
-  destruct (T p q) as [[H6 _] | [[_ [H6 _]] | [_ [_ H6]]]]; subst; try tauto.
-  exfalso; eauto.
+  move=> [α /[dup] /Specify_classification [? [? [? [? ?]]]]] *.
+  apply (ordered_rings.lt_not_ge ℚ_ring_order) => [[/= ? | ?]]; subst; eauto.
 Qed.
 
 Lemma Dedekind_cut_5 : ∀ α : R, ∀ r s : Q, r ∉ α → r < s → s ∉ α.
 Proof.
-  intros α r s H H0 H1.
-  pose proof elts_in_set α as H2.
-  apply Specify_classification in H2 as [H2 [H3 [H4 [H5 H6]]]].
-  eauto.
+  move=> [α /[dup] /Specify_classification
+            [? [? [? [H ?]]]] ?] ? ? ? /H /[apply] //.
 Qed.
 
 Lemma Dedekind_cut_6 : ∀ a : R, ∃ q : Q, q ∉ a.
 Proof.
-  intros α.
-  pose proof elts_in_set α as H.
-  apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
-  apply Powerset_classification in H.
-  assert ((α : set) ≠ ℚ) as H4 by (now contradict H1).
-  apply neq_sym, not_proper_subset_inhab in H4 as [z [H4 H5]].
-  - exists (mkSet H4 : Q); auto.
-  - contradict H4.
-    destruct H4 as [H4 H5].
-    now apply Subset_equality_iff.
+  move=> [α /[dup] /Specify_classification
+            [/Powerset_classification H
+              [? [/[dup] ? /neq_sym /not_proper_subset_inhab]]]]
+           [[] /Subset_equality /(_ H) // | ? [H0 ?] _ ?].
+    by exists (mkSet H0 : Q).
 Qed.
 
 Declare Scope R_scope.
