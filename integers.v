@@ -792,14 +792,14 @@ Proof.
 Qed.
 
 Theorem WOP : ∀ S : Z → Prop,
-    (∀ x, S x → 0 < x) → (∃ x, 0 < x ∧ S x) → ∃ s, S s ∧ ∀ t, S t → s ≤ t.
+    (∀ x, S x → 0 < x) → (∃ x, S x) → ∃ s, S s ∧ ∀ t, S t → s ≤ t.
 Proof.
-  move=> S H [s [H0 H1]].
+  move=> S H [s H0].
   apply NNPP => H2.
-  elim/strong_induction: s H0 H1 => s IHs H0 H1.
+  elim/strong_induction: s H0 => s IHs H0.
   move: H2 => [].
-  (repeat esplit; eauto) => t /[dup] /H /[dup] H2 /[swap] /IHs /[apply].
-  rewrite /le le_not_gt => /[swap] H3 => [[]] //.
+  (repeat esplit; eauto) => t /[dup] /H /[dup] H1 /[swap] /IHs.
+  rewrite /le le_not_gt; intuition.
 Qed.
 
 Theorem common_factor_N : ∀ a b, 0 < a → 0 < b → ∃ d, 0 < d ∧ gcd(a,b) = d.

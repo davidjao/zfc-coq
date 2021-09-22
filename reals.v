@@ -544,23 +544,10 @@ Proof.
     set (ζ := mkSet H8 : Q).
     destruct (Q_archimedean ζ b) as [m [H10 H11]]; auto.
     exists (m - k + 1)%Z.
-    split.
-    + replace (m-k+1)%Z with (m+1+-k)%Z by ring.
-      rewrite <-(ordered_rings.lt_shift ℤ_order); simpl.
-      destruct (integers.T k (m+1)) as [H12 | [H12 | H12]]; intuition;
-        contradict H9; replace z with (ζ : set); try apply (H3 ξ); auto.
-      * rewrite -> H12, <-IZQ_add in H6.
-        destruct H6 as [H6 | H6]; eauto using rationals.lt_trans.
-        now rewrite <-H6.
-      * apply IZQ_lt, (O3 ℚ_ring_order b) in H15; auto.
-        rewrite -> ? (M1 b), <-IZQ_add in H15.
-        assert (ζ < k * b)%Q as H9 by eauto using rationals.lt_trans.
-        destruct H6 as [H6 | H6]; eauto using rationals.lt_trans.
-        now rewrite <-H6.
-    + replace (k+(m-k+1))%Z with (m+1)%Z by ring.
-      eapply Dedekind_cut_5.
-      * replace z with (ζ : set) in *; eauto.
-      * now rewrite <-IZQ_add.
+    replace (k+(m-k+1))%Z with (m+1)%Z by ring.
+    eapply Dedekind_cut_5.
+    + replace z with (ζ : set) in *; eauto.
+    + now rewrite <-IZQ_add.
   - exists (k+(n+-1))%Z.
     rewrite -> ? IZQ_add.
     split.
@@ -1201,11 +1188,8 @@ Proof.
       apply (lt_cross_mul ℚ_ring_order); auto; try now apply (pow_pos ℚ_order).
       now apply (pow_lt_1 ℚ_order).
   - exists (n+-m)%Z.
-    split.
-    + rewrite <-(ordered_rings.lt_shift ℤ_order); simpl.
-      eauto using integers.lt_trans.
-    + replace (m+(n+-m))%Z with n%Z by ring.
-      eauto using Dedekind_cut_5.
+    replace (m+(n+-m))%Z with n%Z by ring.
+    eauto using Dedekind_cut_5.
   - exists (m+(x+-1))%Z.
     split.
     + apply NNPP.
