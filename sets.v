@@ -270,10 +270,8 @@ Definition succ w := w ∪ {w, w}.
 
 Definition Inductive X := ∀ y, y ∈ X → succ y ∈ X.
 
-Lemma neq_sym : ∀ A (a b : A), a ≠ b ↔ b ≠ a.
-Proof.
-  split => H; now contradict H.
-Qed.
+Definition neq_sym A (a b : A) :=
+  conj (@not_eq_sym A a b) (@not_eq_sym A b a) : a ≠ b ↔ b ≠ a.
 
 Theorem Specify_classification : ∀ A P x, x ∈ {x in A | P x} ↔ x ∈ A ∧ P x.
 Proof.
