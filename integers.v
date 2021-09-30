@@ -798,8 +798,8 @@ Proof.
   apply NNPP => H2.
   elim/strong_induction: s H0 => s IHs H0.
   move: H2 => [].
-  (repeat esplit; eauto) => t /[dup] /H /[dup] H1 /[swap] /IHs.
-  rewrite /le le_not_gt; intuition.
+  (repeat esplit; eauto) => t /[dup] /H /[dup] H1 /[swap] /IHs =>
+  /Decidable.not_and_iff /[apply] /(le_not_gt ℤ_order) //.
 Qed.
 
 Theorem common_factor_N : ∀ a b, 0 < a → 0 < b → ∃ d, 0 < d ∧ gcd(a,b) = d.

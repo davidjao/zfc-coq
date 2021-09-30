@@ -1202,7 +1202,7 @@ Theorem Strong_Induction : ∀ P : N → Prop,
 Proof.
   move=> P H n.
   apply Strong_Induction_ω => n0 H0.
-  apply /H => k /lt_is_in /H0 //.
+  apply H => k /lt_is_in /H0 //.
 Qed.
 
 Theorem not_succ_le : ∀ n, ¬ S n ≤ n.
@@ -1214,19 +1214,12 @@ Qed.
 Theorem WOP : ∀ P, (∃ n : N, P n) → ∃ m : N, P m ∧ (∀ k : N, P k → m ≤ k).
 Proof.
   move=> P [n H].
-  elim (ω_WOP {x of type ω | P x}) =>
-  [x [/Specify_classification [H0]] | | x /Specify_classification []] //.
-  - rewrite (reify H0) despecify.
-    exists (mkSet H0 : N).
-    split; auto => k H1.
-    apply /le_is_subset /b0 /Specify_classification.
-    rewrite despecify.
-    eauto using elts_in_set.
-  - apply Nonempty_classification.
-    exists n.
-    apply Specify_classification.
-    rewrite despecify.
-    eauto using elts_in_set.
+  apply NNPP.
+  contradict H.
+  elim/Strong_Induction: n => n H0.
+  contradict H.
+  exists n.
+  split; auto => k /H0 => /(le_not_gt n k) //.
 Qed.
 
 Theorem lt_0_le_1 : ∀ n, 0 < n ↔ 1 ≤ n.
