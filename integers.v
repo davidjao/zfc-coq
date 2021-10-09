@@ -648,7 +648,7 @@ Proof.
   move=> a b c H [d] /= H0.
   elim (Euclidean_algorithm a b H) => [x [y H1]].
   exists (c*x + d*y) => /=.
-  rewrite -{1}(M3 c) H1 ? D1 ? (M1 _ a) ? M2 ? (M1 a) -H0; by ring_simplify.
+  rewrite -{1}(M3 c) H1 D1 (M1 b) -? M2 H0; by ring_simplify.
 Qed.
 
 Definition prime p := ¬ unit p ∧ ∀ d : Z, d｜p → unit d ∨ d ~ p.
