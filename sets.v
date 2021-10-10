@@ -1530,14 +1530,9 @@ Qed.
 Theorem no_loops : ∀ x y, ¬ (x ∈ y ∧ y ∈ x).
 Proof.
   move: Regularity => /[swap] x /[swap] y /(_ {x,y}) H [H0 H1].
-  elim H => [z [/Pairing_classification H2 H3] {H} | ].
-  - contradict H3.
-    wlog: x y H0 H1 H2 / z = x => [ x0 | -> ].
-    + elim H2; [ | rewrite Pairing_comm ]; auto.
-    + exists y.
-      rewrite Pairing_classification; tauto.
-  - exists x.
-    rewrite Pairing_classification; tauto.
+  elim H => [z [/Pairing_classification [H2 | H2] H3] {H} | ];
+              try contradict H3; subst; [exists y | exists x | exists x];
+                rewrite Pairing_classification; auto.
 Qed.
 
 Lemma disjoint_succ : ∀ s, s ∩ {s,s} = ∅.

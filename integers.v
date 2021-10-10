@@ -633,7 +633,7 @@ Proof.
       //; [exists (-x), y | exists 0, x]; ring. }
   revert b H.
   induction a as [a IHa] using strong_induction => b H [H1 [H2]].
-  elim (division_algorithm b a) => [q [r [<- [[H3 | <-] ]]] | ] //
+  elim (division_algorithm b a) => [q [r [<- [[/= H3 | <-] ]]] | ] //
   => [H4 H5 | /lt_def [c [_] ->]].
   - elim (IHa r (conj H3 H4) H3 a) =>
     [x [y ->] | | ] //; repeat split; auto using (div_mul_r ℤ) with Z.
