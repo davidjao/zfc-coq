@@ -72,40 +72,29 @@ Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level)
 
 Theorem le_is_subset : ∀ a b, a ≤ b ↔ a ⊂ b.
 Proof.
-  intros a b.
-  split; unfold le, lt, proper_subset; intros H.
-  - destruct H as [[H H0] | H]; subst; auto using Set_is_subset.
-  - destruct (classic (a = b)); auto.
-    left; split; eauto using set_proj_injective.
+  rewrite /le /lt /proper_subset => a b.
+  split => [[[H H0] | H] | H]; subst; auto using Set_is_subset.
+  case (classic (a = b)); intuition eauto using set_proj_injective.
 Qed.
 
 Theorem lt_trans : ∀ a b c : R, a < b → b < c → a < c.
 Proof.
-  intros a b c [H H0] [H1 H2].
-  split.
-  - intros z H3.
-    eauto.
-  - contradict H0.
-    destruct H0.
-    now apply Subset_equality_iff.
+  move=> a b c [H H0] [H1 H2].
+  split => [z H3 | ]; eauto.
+  move: H1 => /[swap] <- /Subset_equality /(_ H) /(@eq_sym set) //.
 Qed.
 
 Theorem lt_trichotomy : ∀ a b : R, a < b ∨ a = b ∨ b < a.
 Proof.
-  intros a b.
-  destruct (classic (a < b)), (classic (a = b)); try tauto.
-  right; right.
-  assert (∃ p, p ∈ a ∧ p ∉ b) as [p [H1 H2]]
+  move=> a b.
+  (case (classic (a < b)); case (classic (a = b)); auto) => H H0.
+  have [p [/[dup] /Dedekind_cut_0 H1 H2 H3]]: ∃ p, p ∈ a ∧ p ∉ b
       by eauto using not_proper_subset_inhab, set_proj_injective.
-  apply Dedekind_cut_0 in H1 as H3.
-  split.
-  - intros q H4.
-    apply Dedekind_cut_0 in H4 as H5.
-    replace q with ((mkSet H5 : Q) : set) in * by auto.
-    replace p with ((mkSet H3 : Q) : set) in * by auto.
-    eauto using Dedekind_cut_2, Dedekind_cut_4.
-  - contradict H0.
-    now apply set_proj_injective.
+  (apply or_intror, or_intror, conj) =>
+  [q /[dup] /Dedekind_cut_0 H4 H5 | ]; eauto using set_proj_injective.
+  move: H2 H3 H5.
+  rewrite (reify H1) (reify H4).
+  eauto using Dedekind_cut_2, Dedekind_cut_4.
 Qed.
 
 Theorem T : ∀ a b : R, a < b ∧ a ≠ b ∧ ¬ b < a
