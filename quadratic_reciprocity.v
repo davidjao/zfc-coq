@@ -56,8 +56,8 @@ Section Pretty_picture_lemmas.
                 functionify_action -add_1_r -INZ_add.
         eauto using elts_in_set.
       + rewrite /f sets.functionify_domain sets.functionify_range
-                Specify_classification in H0 H2 |-* => H2 H3.
-        rewrite (reify H3) functionify_action => <-.
+                Specify_classification in H0 H2 |-*.
+        rewrite (reify H2) functionify_action => <-.
         repeat split; auto; rewrite ? despecify /integers.one INZ_add add_1_r
                                     ? INZ_le -? lt_le_succ ? (lt_is_in _ n);
         eauto using elts_in_set, naturals.lt_succ.
@@ -278,8 +278,9 @@ Section Pretty_picture_lemmas.
                                                H12]]]]]]]].
       + rewrite Specify_classification /f sets.functionify_domain
                 sets.functionify_range => H5.
-        rewrite (reify H5) -[elt_to_set]/INS -? lt_is_in functionify_action
-          in H4 |-* => /[dup] H4 /INZ_lt H6.
+        move: H4.
+        rewrite (reify H5) -[elt_to_set]/INS -? lt_is_in functionify_action =>
+                  /[dup] H4 /INZ_lt H6.
         repeat (split; auto using elts_in_set;
                 try apply Specify_classification); exists k, ((mkSet H5:N) + 1);
           repeat split; auto; try (apply INZ_le; intuition);

@@ -19,7 +19,7 @@ Proof.
     rewrite add_comm //.
   - have H4: (x, z) ∈ (ω × ω) × (ω × ω) by apply Product_classification; eauto.
     rewrite Specify_classification (reify H3) ? (reify H2) (reify H4)
-            ? despecify ? π1_action ? π2_action //.
+            ? despecify ? π1_action ? π2_action // => H5 H6.
     split; auto.
     apply (naturals.cancellation_add (π2 (mkSet H0))).
     ring_simplify [H5 H6].
@@ -363,9 +363,9 @@ Qed.
 Theorem INZ_lt : ∀ a b : N, a < b ↔ (a < b)%N.
 Proof.
   split => [/lt_def [c [H]] | /naturals.lt_def [c [H]]];
-             rewrite ? lt_def ? naturals.lt_def; exists c; split;
-               [ contradict H | | contradict H | ];
-               rewrite -? H -? INZ_eq -? H0 -? INZ_add //.
+           rewrite ? lt_def ? naturals.lt_def =>
+          H0; exists c; split; [ contradict H | | contradict H | ];
+          rewrite -? H -? INZ_eq -? H0 -? INZ_add //.
 Qed.
 
 Theorem INZ_le : ∀ a b : N, a ≤ b ↔ (a ≤ b)%N.

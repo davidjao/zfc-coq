@@ -531,7 +531,7 @@ Lemma canonical_form_uniq : ∀ a b c d,
     gcd(a, b) = 1 → gcd(c, d) = 1 → a ~ c ∧ b ~ d.
 Proof.
   move=> a b c d /[swap] H /[swap] H0.
-  rewrite Qequiv //.
+  rewrite Qequiv // => H1 H2 H3.
   repeat split; eapply FTA; eauto using is_gcd_sym;
     [ rewrite -? H1 | rewrite 1 ? integers.M1 ? H1 |
       rewrite ? H1 | rewrite 1 ? integers.M1 -? H1 ];
