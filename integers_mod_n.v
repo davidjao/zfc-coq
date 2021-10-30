@@ -84,28 +84,25 @@ Section Modular_arithmetic.
   Add Morphism integers.add
       with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_add_mod.
   Proof.
-    rewrite /eqm => x y H x0 y0 H0.
-    have -> : y+y0-(x+x0) = (y-x)+(y0-x0) by ring.
-      by apply div_add.
+    rewrite /eqm => x y [z /= /(@eq_sym Z) H] x0 y0 [z0 /= /(@eq_sym Z) H0].
+    exists (z+z0) => /=.
+    by ring_simplify [H H0].
   Qed.
 
   Add Morphism integers.mul
       with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_mul_mod.
   Proof.
-    rewrite /eqm => x y H x0 y0 H0.
-    apply (eqm_trans n _ (y*x0)); rewrite /eqm.
-    - have -> : y*x0-x*x0 = (y-x)*x0 by ring.
-        by apply div_mul_r.
-    - have -> : y*y0-y*x0 = y*(y0-x0) by ring.
-        by apply div_mul_l.
+    rewrite /eqm => x y [z /= /(@eq_sym Z) H] x0 y0 [z0 /= /(@eq_sym Z) H0].
+    apply (eqm_trans n _ (y*x0)); [exists (z*x0) | exists (z0*y)] => /=;
+            by ring_simplify [H H0].
   Qed.
 
   Add Morphism integers.neg
       with signature (eqm n) ==> (eqm n) as Z_neg_mod.
   Proof.
-    rewrite /eqm => x y H.
-    have -> : -y--x = (-1%Z)*(y-x) by ring.
-      by apply div_mul_l.
+    rewrite /eqm => x y [z /= /(@eq_sym Z) H].
+    exists (-z) => /=.
+    by ring_simplify [H].
   Qed.
 
   Add Morphism integers.sub
