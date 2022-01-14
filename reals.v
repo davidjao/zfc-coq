@@ -101,110 +101,59 @@ Theorem T : ∀ a b : R, a < b ∧ a ≠ b ∧ ¬ b < a
                        ∨ ¬ a < b ∧ a = b ∧ ¬ b < a
                        ∨ ¬ a < b ∧ a ≠ b ∧ b < a.
 Proof.
-  intros a b.
-  destruct (lt_trichotomy a b) as [H | [H | H]].
-  - left.
-    destruct H as [H H0].
-    repeat split; auto; contradict H0; try congruence.
-    destruct H0 as [H0 H1].
-    now apply Subset_equality_iff.
-  - right; left.
-    repeat split; auto; intros [H0 H1]; congruence.
-  - right; right.
-    destruct H as [H H0].
-    repeat split; auto; contradict H0; try congruence.
-    destruct H0 as [H0 H1].
-    now apply Subset_equality_iff.
+  (move: lt_trichotomy => /[swap] a /[swap] b /(_ a b) [[H H0] | [-> | [H H0]]];
+                          [left | right; left | right; right]); repeat split;
+  auto; try (contradict H0; subst; auto; move: H0 =>
+               [] /Subset_equality /(_ H) -> //); move=> [H0 []] //.
 Qed.
 
 Theorem lub : ∀ A, A ⊂ 𝐑 → A ≠ ∅ → (∃ β : R, ∀ α : R, α ∈ A → α ≤ β) →
                    ∃ γ : R, (∀ α : R, α ∈ A → α ≤ γ) ∧
                             ∀ δ : R, (∀ α : R, α ∈ A → α ≤ δ) → γ ≤ δ.
 Proof.
-  intros A H H0 [β H1].
-  set (g := ⋃ A).
-  assert (g ∈ 𝐑) as H2.
+  move=> A H /Nonempty_classification [z /[dup] H0 /H H1]
+           [[b /[dup] /Specify_classification [H2 [H3 [H4 [H5 H6]]]] B] H7].
+  have H8: ⋃ A ∈ 𝐑.
   { apply Specify_classification.
-    repeat split.
-    - apply Powerset_classification.
-      intros z H2.
-      apply Union_classification in H2 as [a [H2 H3]].
-      now apply (Dedekind_cut_0 (mkSet (H _ H2))).
-    - apply Nonempty_classification in H0 as [z H0].
-      set (ζ := (mkSet (H _ H0)) : R).
-      pose proof Dedekind_cut_1 ζ as H2.
-      rewrite -> neq_sym in H2.
-      apply Nonempty_classification in H2 as [x H2].
-      apply Nonempty_classification.
+    (repeat split) =>
+      [ | | H8 | p q /Union_classification
+                   [x [/[dup] H8 /H /Specify_classification
+                        [H9 [H10 [H11 [H12 H13]]]] H14]] /H12 ? |
+        p /Union_classification
+          [x [/[dup] H8 /H /Specify_classification
+               [H9 [H10 [H11 [H12 H13]]]] /H13 [r [H14 H15]]]]].
+    - apply Powerset_classification => x /Union_classification [a [/H H8]].
+      by apply (Dedekind_cut_0 (mkSet H8)).
+    - rewrite (reify H1) in H0.
+      move: (Dedekind_cut_1 (mkSet H1)) => /neq_sym.
+      rewrite ? Nonempty_classification => [[x H8]].
       exists x.
       apply Union_classification; eauto.
-    - intros H2.
-      destruct β as [b B].
-      pose proof B as H3.
-      apply Specify_classification in H3 as [H3 [H4 [H5 [H6 H7]]]].
-      contradict H5.
-      apply Subset_equality_iff.
-      split.
-      + now rewrite -> Powerset_classification in H3.
-      + rewrite <-H2.
-        intros z H8.
-        apply Union_classification in H8 as [x [H8 H9]].
-        destruct (H1 (mkSet (H _ H8)) H8) as [H10 | H10].
-        * now apply H10.
-        * inversion H10.
-          congruence.
-    - intros p q H2 H3.
-      apply Union_classification in H2 as [x [H2 H4]].
-      apply H in H2 as H5.
-      apply Specify_classification in H5 as [H5 [H6 [H7 [H8 H9]]]].
-      apply H8 in H3; auto.
-      apply Union_classification.
-      now (exists x).
-    - intros p H2.
-      apply Union_classification in H2 as [x [H2 H3]].
-      apply H in H2 as H4.
-      apply Specify_classification in H4 as [H4 [H5 [H6 [H7 H8]]]].
-      apply H8 in H3 as [r [H3 H9]].
-      exists r.
-      split; auto.
-      apply Union_classification.
-      now (exists x). }
-  set (γ := mkSet H2 : R).
-  exists γ.
-  split.
-  - intros α H3.
-    unfold le.
-    destruct (classic (α = γ)); auto.
-    left.
-    split.
-    + intros z H5.
-      simpl.
-      apply Union_classification.
-      now (exists α).
-    + contradict H4.
-      now apply set_proj_injective.
-  - intros δ H3.
-    unfold le.
-    destruct (T γ δ) as [H4 | [H4 | [H4 [H5 H6]]]]; try tauto.
-    assert (∃ s, s ∈ γ ∧ s ∉ δ) as [s [H7 H8]]
-        by eauto using not_proper_subset_inhab, set_proj_injective.
-    simpl in *.
-    apply Union_classification in H7 as [a [H7 H9]].
-    set (α := mkSet (H _ H7) : R).
-    apply (H3 α) in H7 as H10.
-    unfold le in H10.
-    assert (¬ δ < α) as H12 by (pose proof (T α δ); tauto).
-    contradict H12.
-    split.
-    + intros z H12.
-      apply (Dedekind_cut_0 α) in H9 as H13.
-      apply Dedekind_cut_0 in H12 as H17.
-      replace s with ((mkSet H13 : Q) : set) in * by auto.
-      replace z with ((mkSet H17 : Q) : set) in * by auto.
-      eapply Dedekind_cut_2; eauto using Dedekind_cut_4.
-    + intros H12.
-      rewrite -> H12 in H8.
-      contradiction.
+    - move: H2 H4 => /Powerset_classification /Subset_equality -> //.
+      rewrite -H8 => x /Union_classification [y [/[dup] H9 /H H10]].
+      move: (H7 (mkSet H10) H9) => [[] /[swap] _ /[apply] | [] ->] //.
+    - apply Union_classification; eauto.
+    - exists r.
+      rewrite Union_classification; eauto. }
+  exists (mkSet H8).
+  split => [α H9 | δ H9]; rewrite /le.
+  - case (classic (α = (mkSet H8))); auto; left; split => [x H11 | ] /=.
+    + apply Union_classification; eauto.
+    + contradict H10.
+      by apply set_proj_injective.
+  - case (T (mkSet H8) δ) => [H10 | [H10 | [H10 [H11 H12]]]]; try tauto.
+    have /= [s [/Union_classification [a /[swap] H13 [/[dup] /H H14]]]]:
+      (∃ s, s ∈ (mkSet H8) ∧ s ∉ δ)
+      by eauto using not_proper_subset_inhab, set_proj_injective.
+    rewrite (reify H14) => /H9.
+    rewrite /le => H16 H17.
+    have []: ¬ δ < (mkSet H14) by (move: (T (mkSet H14) δ); tauto).
+    split => [x H18 | ].
+    + move: (H17) (H18) => /[dup] /(Dedekind_cut_0 (mkSet H14))
+                            H19 /[swap] /Dedekind_cut_0 H20.
+      rewrite (reify H19) (reify H20) => ?.
+      eauto using Dedekind_cut_2, Dedekind_cut_4.
+    + move: H13 => /[swap] -> [] //.
 Qed.
 
 Definition iqr_set (q : Q) := {x of type ℚ | (x < q)%Q}.
