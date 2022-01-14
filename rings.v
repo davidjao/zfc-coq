@@ -37,7 +37,7 @@ Section Ring_theorems.
 
   Definition IRS (a : R) := elt_to_set a : set.
 
-  Coercion IRS : R >-> set.
+  Global Coercion IRS : R >-> set.
 
   Definition sub (a b : R) := a + (-b) : R.
 
@@ -534,7 +534,7 @@ Section Ring_theorems.
   Qed.
 
   Definition INR (n : N) := sum (λ n, 1) 1 n.
-  Coercion INR : N >-> R.
+  Global Coercion INR : N >-> R.
 
   Theorem INR_zero : 0 = 0%N.
   Proof.
@@ -579,7 +579,7 @@ Section Ring_theorems.
       exact (mkSet H).
     Defined.
 
-    Coercion ISR : sub_R >-> R.
+    Global Coercion ISR : sub_R >-> R.
 
     Definition sub_add : sub_R → sub_R → sub_R.
     Proof.

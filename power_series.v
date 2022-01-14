@@ -162,8 +162,8 @@ Section Power_series_construction.
 
   Notation "0" := zero : Series_scope.
   Notation "1" := one : Series_scope.
-  Coercion ISS : power_series >-> set.
-  Coercion IRS : R >-> power_series.
+  Global Coercion ISS : power_series >-> set.
+  Global Coercion IRS : R >-> power_series.
 
   Theorem zero_series_const : 0 = seriesify (λ n, 0%ring).
   Proof.

@@ -71,48 +71,48 @@ Section Modular_arithmetic.
 
   Variable n : Z.
 
-  Add Parametric Relation : Z (eqm n)
-      reflexivity proved by (eqm_refl n)
-      symmetry proved by (eqm_sym n)
-      transitivity proved by (eqm_trans n) as Z_mod_n.
+  Global Add Parametric Relation : Z (eqm n)
+         reflexivity proved by (eqm_refl n)
+         symmetry proved by (eqm_sym n)
+         transitivity proved by (eqm_trans n) as Z_mod_n.
 
   Theorem eqm_sym_iff : ∀ a b : Z, a ≡ b (mod n) ↔ b ≡ a (mod n).
   Proof.
     now split => [-> | ->].
   Qed.
 
-  Add Morphism integers.add
-      with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_add_mod.
+  Global Add Morphism integers.add
+         with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_add_mod.
   Proof.
     rewrite /eqm => x y [z /= /(@eq_sym Z) H] x0 y0 [z0 /= /(@eq_sym Z) H0].
     exists (z+z0) => /=.
     by ring_simplify [H H0].
   Qed.
 
-  Add Morphism integers.mul
-      with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_mul_mod.
+  Global Add Morphism integers.mul
+         with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_mul_mod.
   Proof.
     rewrite /eqm => x y [z /= /(@eq_sym Z) H] x0 y0 [z0 /= /(@eq_sym Z) H0].
     apply (eqm_trans n _ (y*x0)); [exists (z*x0) | exists (z0*y)] => /=;
             by ring_simplify [H H0].
   Qed.
 
-  Add Morphism integers.neg
-      with signature (eqm n) ==> (eqm n) as Z_neg_mod.
+  Global Add Morphism integers.neg
+         with signature (eqm n) ==> (eqm n) as Z_neg_mod.
   Proof.
     rewrite /eqm => x y [z /= /(@eq_sym Z) H].
     exists (-z) => /=.
     by ring_simplify [H].
   Qed.
 
-  Add Morphism integers.sub
-      with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_sub_mod.
+  Global Add Morphism integers.sub
+         with signature (eqm n) ==> (eqm n) ==> (eqm n) as Z_sub_mod.
   Proof.
     now rewrite /integers.sub => x y /[swap] x0 /[swap] y0 -> ->.
   Qed.
 
-  Add Morphism (rings.pow ℤ)
-      with signature (eqm n) ==> (eq) ==> (eqm n) as Z_pow_mod.
+  Global Add Morphism (rings.pow ℤ)
+         with signature (eqm n) ==> (eq) ==> (eqm n) as Z_pow_mod.
   Proof.
     move=> x y H k.
     induction k using Induction;
@@ -175,12 +175,12 @@ Section Modular_arithmetic.
   Bind Scope Zn_scope with Z_.
 
   Definition IZnS := elt_to_set : Z_ → set.
-  Coercion IZnS : Z_ >-> set.
+  Global Coercion IZnS : Z_ >-> set.
 
   Definition Z_to_Z_n (x : Z) :=
     quotient_map relation_mod (mkSet (elts_in_set x)) : Z_.
 
-  Coercion Z_to_Z_n : Z >-> Z_.
+  Global Coercion Z_to_Z_n : Z >-> Z_.
 
   Definition Z_n_to_Z : Z_ → Z.
   Proof.
@@ -189,7 +189,7 @@ Section Modular_arithmetic.
     exact z.
   Defined.
 
-  Coercion Z_n_to_Z : Z_ >-> Z.
+  Global Coercion Z_n_to_Z : Z_ >-> Z.
 
   Definition add (a b : Z_) := a + b : Z_.
 
@@ -1251,7 +1251,7 @@ Section Modular_arithmetic.
     Notation "- a" := (rings.neg ℤ_p_x a) : poly_scope.
     Notation "- 1" := (rings.neg ℤ_p_x 1) : poly_scope.
     Definition IRP := (IRP ℤ_ : Z_ → Z_p_x).
-    Coercion IRP : Z_ >-> Z_p_x.
+    Global Coercion IRP : Z_ >-> Z_p_x.
 
     Declare Scope F_scope.
     Delimit Scope F_scope with F.
@@ -1843,7 +1843,7 @@ Section Modular_arithmetic.
 
 End Modular_arithmetic.
 
-Notation "a 'mod' p" := (Z_to_Z_n p a) (at level 45) : Z_scope.
+Notation "a 'mod' p" := (Z_to_Z_n p a) (at level 35) : Z_scope.
 Arguments Gauss's_Lemma_a {n}.
 Arguments trinary_legendre {n}.
 Arguments Euler {n}.
@@ -1867,4 +1867,24 @@ Proof.
   case excluded_middle_informative; auto => H.
   elim constructive_indefinite_description => *.
   elim constructive_indefinite_description => r [? [[? /(lt_0_1 r) | ]]] //.
+Qed.
+
+Theorem chinese_remainder_theorem : ∀ n m a b,
+    gcd(n, m) = 1 → exists ! c : Z_ (n * m), c ≡ a (mod m) ∧ c ≡ b (mod n).
+Proof.
+  move=> n m a b /[dup] G /Euclidean_algorithm [x [y H]].
+  exists ((a * n * x + b * m * y) mod (n * m)).
+  move: (Zlift_equiv (n * m) (a * n * x + b * m * y)) => [k] /= H0.
+  (repeat split; rewrite /(eqm m _ a) /(eqm n _ b);
+   [rewrite -{1}(integers.M3 a) H | rewrite -{1}(integers.M3 b) H | ];
+   try (have ->: Z_n_to_Z (n * m) ((a * n * x + b * m * y) mod (n * m)) =
+          k * (n * m) + (a * n * x + b * m * y) by (rewrite -H0; ring));
+   [exists (y * a - y * b - n * k) | exists (x * b - x * a - m * k) | ] =>
+     /=; try by ring_simplify) => z [H1 H2].
+  rewrite (Zproj_eq (n*m) z) IZn_eq /eqm.
+  apply rel_prime_mul; auto; rewrite -/(eqm n _ z) -/(eqm m _ z);
+    rewrite ? H1 ? H2 ? {2} (eqn_zero n) ? {2} (eqn_zero m); ring_simplify;
+    rewrite -1 ? {2}(integers.M3 b) -1 ? {2}(integers.M3 a) H;
+    [rewrite {2}(eqn_zero n) | rewrite {2} (eqn_zero m)];
+    now ring_simplify.
 Qed.

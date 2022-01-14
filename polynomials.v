@@ -121,8 +121,8 @@ Section Polynomial_theorems.
         (polynomials_are_subset _) : poly → series.
   Definition IRS := (power_series.IRS _) : R → series.
   Definition IRs := rings.IRS ring : R → set.
-  Coercion IPS : poly >-> series.
-  Coercion IRs : R >-> set.
+  Global Coercion IPS : poly >-> series.
+  Global Coercion IRs : R >-> set.
 
   Declare Scope R_scope.
   Delimit Scope R_scope with R.
@@ -189,7 +189,7 @@ Section Polynomial_theorems.
   Add Ring poly_ring_raw : (ringify PR).
 
   Definition IRP (c : R) := (mkSet (consts_are_polys _ c)) : poly.
-  Coercion IRP : R >-> poly.
+  Global Coercion IRP : R >-> poly.
 
   Definition coefficient (f : poly) n := coefficient _ (f : series) n : R.
   Definition x := (mkSet (x_is_poly _)) : poly.
@@ -581,7 +581,7 @@ Section Polynomial_theorems.
 
   Definition eval f a := (sum _ (λ n, (coefficient f n) * a^n)%R 0 (degree f)).
 
-  Coercion eval : poly >-> Funclass.
+  Global Coercion eval : poly >-> Funclass.
 
   Definition roots (f : poly) := {r of type ring | f r = 0%R}.
 
