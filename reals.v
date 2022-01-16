@@ -160,43 +160,26 @@ Definition iqr_set (q : Q) := {x of type ℚ | (x < q)%Q}.
 
 Theorem iqr_in : ∀ q, iqr_set q ∈ 𝐑.
 Proof.
-  intros q.
-  apply Specify_classification.
-  repeat split.
-  - apply Powerset_classification.
-    intros z H.
-    now apply Specify_classification in H as [H H0].
-  - apply Nonempty_classification.
-    exists (q-1).
-    apply Specify_classification.
-    rewrite -> despecify, (ordered_rings.lt_shift ℚ_ring_order); simpl.
-    split; unfold IQS; auto using elts_in_set.
-    replace (q+-(q-1)) with 1 by field.
-    apply (ordered_rings.zero_lt_1 ℚ_ring_order).
-  - intros H.
-    assert (q+1 ∈ ℚ) as H1 by (unfold IQS; auto using elts_in_set).
-    rewrite <-H in H1.
-    unfold iqr_set in *.
-    apply Specify_classification in H1 as [H1 H2].
-    rewrite -> despecify in H2.
-    contradiction (lt_antisym ℚ_ring_order q (q+1)).
-    apply (lt_succ ℚ_ring_order).
-  - intros p x H H0.
-    apply Specify_classification in H as [H H1].
-    rewrite -> despecify in *.
-    apply Specify_classification.
-    split; unfold IQS; auto using elts_in_set.
-    rewrite -> despecify.
-    eauto using rationals.lt_trans.
-  - intros p H.
-    apply Specify_classification in H as [H H0].
-    rewrite -> despecify in *.
-    destruct (lt_dense p q) as [r H2]; auto.
-    exists r.
-    split; try tauto.
-    apply Specify_classification.
-    split; unfold IQS; auto using elts_in_set.
-    now rewrite -> despecify in *.
+  move=> q.
+  rewrite Specify_classification Powerset_classification
+          Nonempty_classification.
+  have G: (q + 1 ∈ ℚ) by eauto using elts_in_set.
+  (((repeat split) => [z /Specify_classification [] | | H |
+                        p x /[swap] H /Specify_classification [H0] |
+                        p /Specify_classification [H]] //);
+   first exists (q - 1); rewrite -? H ? Specify_classification ? despecify)
+  => [ | | | /lt_dense [r []]]; eauto using elts_in_set, rationals.lt_trans.
+  - rewrite -[rationals.lt]/(ordered_rings.lt ℚ_ring_order)
+                           (ordered_rings.lt_shift ℚ_ring_order) /=.
+    replace (q + -(q - 1)) with 1 by field.
+    eauto using elts_in_set, (ordered_rings.zero_lt_1 ℚ_ring_order : 0 < 1)%Q.
+  - move: G.
+    rewrite -H Specify_classification despecify =>
+              [[]] _ /(lt_antisym ℚ_ring_order) [].
+    eauto using (lt_succ ℚ_ring_order).
+  - exists r.
+    rewrite Specify_classification despecify.
+    eauto using elts_in_set.
 Qed.
 
 Definition IQR (q : Q) := (mkSet (iqr_in q)) : R.
@@ -210,98 +193,59 @@ Definition add_set (α β : R) := {x in ℚ | ∃ r s, x = r + s ∧ r ∈ α �
 
 Lemma not_Q_subset : ∀ α : R, ¬ ℚ ⊊ α.
 Proof.
-  intros α [H H0].
-  contradict H0.
-  apply Subset_equality_iff; split; auto.
-  intros z H0.
-  eauto using Dedekind_cut_0.
+  move: Dedekind_cut_0 => /[swap] α /(_ α) H [/Subset_equality] /(_ H) //.
 Qed.
 
 Lemma not_Q_eq : ∀ α : R, (α : set) ≠ ℚ.
 Proof.
-  intros α H.
-  pose proof elts_in_set α as H0.
-  apply Specify_classification in H0 as [H0 [H1 [H2 H3]]].
-  now contradict H2.
+  move=> [α /[dup] /Specify_classification [_ [_ [_]]]] //.
 Qed.
 
 Theorem add_in : ∀ α β, add_set α β ∈ 𝐑.
 Proof.
-  intros α β.
-  apply Specify_classification.
-  repeat split; unfold add_set.
-  - apply Powerset_classification.
-    intros z H.
-    now apply Specify_classification in H as [H H0].
-  - apply Nonempty_classification.
-    pose proof (Dedekind_cut_1 α) as H.
-    pose proof (Dedekind_cut_1 β) as H0.
-    apply neq_sym, Nonempty_classification in H as [x H].
-    apply neq_sym, Nonempty_classification in H0 as [y H0].
-    apply Dedekind_cut_0 in H as H1.
-    apply Dedekind_cut_0 in H0 as H2.
-    exists (mkSet H1 + mkSet H2).
+  move=> α β.
+  (rewrite Specify_classification Powerset_classification
+           Nonempty_classification); (repeat split) =>
+    [z /Specify_classification [] | | |
+      p q /Specify_classification [H [r [s [/set_proj_injective -> [H0 H1]]]]]
+        /(O1 (-s)) H2 | p /Specify_classification
+                          [H [r [s [/set_proj_injective ->
+                                    [/Dedekind_cut_3 [t [H0 H1]] H2]]]]]] //.
+  - move: (Dedekind_cut_1 α) (Dedekind_cut_1 β) => /neq_sym =>
+          /Nonempty_classification [x /[dup] /Dedekind_cut_0 H H0]
+           /neq_sym /Nonempty_classification [y /[dup] /Dedekind_cut_0 H1 H2].
+    exists (mkSet H + mkSet H1).
     apply Specify_classification.
     split; eauto using elts_in_set.
-  - destruct (not_proper_subset_inhab ℚ α)
-      as [r' [H H0]], (not_proper_subset_inhab ℚ β) as [s' [H1 H2]];
-    auto using not_Q_subset, not_Q_eq.
-    intros H3.
-    apply Subset_equality_iff in H3 as [H3 H4].
-    set (ρ := mkSet H : Q).
-    set (σ := mkSet H1 : Q).
-    pose proof (elts_in_set (ρ + σ)) as H5.
-    apply H4, Specify_classification in H5 as [H5 [r [s [H6 [H7 H8]]]]].
-    assert (r + s < ρ + σ)%Q.
-    { apply (lt_cross_add ℚ_ring_order); simpl;
-        eauto using Dedekind_cut_4. }
-    replace (ρ+σ)%Q with (r+s)%Q in *; eauto using set_proj_injective.
-    contradiction (lt_irrefl ℚ_ring_order (r+s)).
-  - intros p q H H0.
-    apply Specify_classification in H as [H [r [s [H1 [H2 H3]]]]].
-    apply set_proj_injective in H1.
-    subst.
-    apply Specify_classification.
-    split; unfold IQS; auto using elts_in_set.
-    exists (q+-s), s.
-    repeat split; auto.
-    + f_equal.
-      ring.
-    + eapply Dedekind_cut_2; eauto.
-      rewrite -> (ordered_rings.lt_shift ℚ_ring_order) in *; simpl in *.
-      now replace (r+-(q+-s)) with (r+s+-q) by ring.
-  - intros p H.
-    apply Specify_classification in H as [H [r [s [H0 [H1 H2]]]]].
-    apply set_proj_injective in H0.
-    subst.
-    apply Dedekind_cut_3 in H1 as [t [H1 H3]].
-    exists (t+s).
-    split.
-    + rewrite -> ? (rationals.A1 _ s).
-      now apply O1.
-    + apply Specify_classification.
-      split; eauto using elts_in_set.
+  - move: (not_proper_subset_inhab ℚ α) (not_proper_subset_inhab ℚ β) =>
+          [ | | r' [H H0] [ | | s' [H1 H2]]]; auto using not_Q_subset, not_Q_eq
+          => /Subset_equality_iff [H3 H4].
+    move: (elts_in_set ((mkSet H) + (mkSet H1))) => /H4 =>
+          /Specify_classification [H5 [r [s [/set_proj_injective H6 [H7 H8]]]]].
+    contradiction (lt_irrefl ℚ_ring_order (r + s)).
+    rewrite -{2}H6.
+    apply (lt_cross_add ℚ_ring_order) => /=; eauto using Dedekind_cut_4.
+  - apply Specify_classification.
+    split; eauto using elts_in_set.
+    exists (-s + q), s.
+    ring_simplify in H2.
+    intuition (eauto using Dedekind_cut_2 || f_equal; ring).
+  - exists (t+s).
+    rewrite Specify_classification {1}(rationals.A1 t s) (rationals.A1 r).
+    intuition eauto using elts_in_set, O1.
 Qed.
 
-Definition add : R → R → R.
-Proof.
-  intros a b.
-  exact (mkSet (add_in a b)).
-Defined.
+Definition add (a b : R) := mkSet (add_in a b) : R.
 
 Infix "+" := add : R_scope.
 
 Theorem A1 : ∀ a b, a + b = b + a.
 Proof.
-  intros a b.
-  unfold add.
-  apply set_proj_injective.
-  simpl.
-  unfold add_set.
-  apply Extensionality.
-  split; intros H; rewrite -> Specify_classification in *;
-    destruct H as [H [r [s [H0 [H1 H2]]]]]; split; auto; exists s, r;
-      repeat split; auto; now rewrite -> rationals.A1.
+  rewrite /add => a b.
+  apply set_proj_injective, Extensionality => /= z.
+  rewrite ? Specify_classification.
+  split => [[H [r [s [H0 [H1 H2]]]]] | [H [r [s [H0 [H1 H2]]]]]];
+  repeat split; auto; exists s, r; rewrite A1; repeat split; auto.
 Qed.
 
 Theorem A2 : ∀ a b c, a + (b + c) = (a + b) + c.
