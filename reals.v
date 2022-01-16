@@ -867,8 +867,7 @@ Proof.
 Qed.
 
 Definition inv_pos_set (α : R) :=
-  {p in ℚ | ∃ ρ r : Q,
-     p = ρ ∧ (1 < r)%Q ∧ ((ρ ≤ 0)%Q ∨ ((0 < ρ)%Q ∧ (ρ*r)^-1 ∉ α))}.
+  {p of type ℚ | ∃ r : Q, 1 < r ∧ (p ≤ 0 ∨ (0 < p ∧ (p * r)^-1 ∉ α))}%Q.
 
 Theorem inv_pos_in : ∀ a, 0 < a → inv_pos_set a ∈ 𝐑.
 Proof.
@@ -881,29 +880,27 @@ Proof.
     tauto.
   - apply Nonempty_classification.
     exists 0%Q.
-    apply Specify_classification.
+    rewrite Specify_classification despecify.
     split; unfold IQS; auto using elts_in_set.
-    exists 0%Q, 2.
+    exists 2.
     repeat split; eauto using zero_lt_1, one_lt_2, rationals.lt_trans.
     now left; right.
   - pose proof H as H0.
     apply pos_nonempty in H0 as [c [H0 H1]].
     intros H2.
     assert (c^-1 ∈ ℚ) by (unfold IQS; auto using elts_in_set).
-    rewrite <-H2 in H3.
-    apply Specify_classification in H3
-      as [H3 [p [r [H4 [H5 [[H6 | H6] | [H6 H7]]]]]]];
-      apply set_proj_injective in H4; subst.
+    rewrite -H2 Specify_classification despecify in H3.
+    destruct H3 as [H3 [r [H4 [[H5 | H5] | [H6 H7]]]]].
     + apply (inv_lt ℚ_order) in H0.
       pose proof (rationals.T (c^-1) 0).
       tauto.
-    + unfold inv, sig_rect in H6.
+    + unfold inv, sig_rect in H5.
       repeat destruct constructive_indefinite_description.
       destruct a0.
-      unfold rationals.zero, IZQ in H6.
-      apply Qequiv in H6; eauto using integers.zero_ne_1.
+      unfold rationals.zero, IZQ in H5.
+      apply Qequiv in H5; eauto using integers.zero_ne_1.
       * replace (x*0)%Z with 0%Z in * by ring.
-        rewrite -> (M3_r ℤ) in H6.
+        rewrite -> (M3_r ℤ) in H5.
         contradiction.
       * intros H7.
         subst.
@@ -911,7 +908,7 @@ Proof.
         contradiction (ordered_rings.lt_irrefl ℚ_ring_order 0%Q).
     + contradict H7.
       eapply Dedekind_cut_2; eauto.
-      rename H6 into H4.
+      rename H6 into H5.
       assert (0 < r)%Q as H6.
       { eapply (rationals.lt_trans _ 1); auto.
         apply IZQ_lt, integers.zero_lt_1. }
@@ -922,16 +919,16 @@ Proof.
       apply (O3 ℚ_ring_order); try now apply (inv_lt ℚ_order), O2.
       rewrite -> M1, M2, (M1 c), inv_l, M3; auto using (lt_neq ℚ_ring_order).
   - intros p q H0 H1.
-    apply Specify_classification in H0 as [H0 [ρ [r [H2 [H3 [H4 | [H4 H5]]]]]]];
-      apply set_proj_injective in H2; subst; apply Specify_classification;
-        split; unfold IQS; auto using elts_in_set; exists q, r;
-          repeat split; auto.
+    rewrite Specify_classification despecify in H0.
+    destruct H0 as [H0 [r [H2 [H3 | [H3 H4]]]]];
+      rewrite Specify_classification despecify; split; eauto using elts_in_set;
+      exists r; repeat split; auto.
     + left.
-      destruct H4 as [H4 | H4]; left; simpl in *;
+      destruct H3 as [H3 | H3]; left; simpl in *;
         eauto using rationals.lt_trans.
       congruence.
-    + destruct (classic (q ≤ 0)%Q) as [H2 | H2]; try tauto; right.
-      rewrite <-(lt_not_ge ℚ_ring_order) in H2; simpl in *.
+    + destruct (classic (q ≤ 0)%Q) as [H5 | H5]; try tauto; right.
+      rewrite <-(lt_not_ge ℚ_ring_order) in H5; simpl in *.
       assert (0 < r)%Q as H6.
       { eapply (rationals.lt_trans _ 1); eauto.
         apply IZQ_lt, integers.zero_lt_1. }
@@ -941,32 +938,32 @@ Proof.
         try apply (ordered_rings.O3 ℚ_ring_order);
         eauto using O3, O2, rationals.lt_trans.
   - intros p H0.
-    apply Specify_classification in H0
-      as [H0 [ρ [r [H1 [H2 [[H3 | H3] | [H3 H4]]]]]]];
-      apply set_proj_injective in H1; subst.
+    rewrite Specify_classification despecify in H0.
+    destruct H0 as [H0 [r [H1 [[H2 | H2] | [H2 H3]]]]].
     + exists 0%Q.
       split; auto.
-      apply Specify_classification.
+      rewrite Specify_classification despecify.
       split; unfold IQS; auto using elts_in_set.
-      exists 0%Q, 2%Q.
+      exists 2%Q.
       repeat split; auto using one_lt_2.
       now left; right.
-    + destruct (Dedekind_cut_6 a) as [c H1].
+    + subst.
+      destruct (Dedekind_cut_6 a) as [c H2].
       exists (c^-1 * r^-1 * r^-1)%Q.
-      assert (0 < r)%Q as H4.
+      assert (0 < r)%Q as H3.
       { eapply (rationals.lt_trans _ 1); eauto.
         apply IZQ_lt, integers.zero_lt_1. }
-      assert (0 < c)%Q as H3.
+      assert (0 < c)%Q as H4.
       { eapply Dedekind_cut_4; eauto.
-        apply pos_nonempty in H as [d [H H3]].
+        apply pos_nonempty in H as [d [H H4]].
         eauto using Dedekind_cut_2. }
-      assert (c ≠ 0%Q) as H5 by eauto using (lt_neq ℚ_ring_order).
-      assert (r ≠ 0%Q) as H6 by eauto using (lt_neq ℚ_ring_order).
+      assert (c ≠ 0%Q) by eauto using (lt_neq ℚ_ring_order).
+      assert (r ≠ 0%Q) by eauto using (lt_neq ℚ_ring_order).
       split.
       * repeat apply O2; now apply (inv_lt ℚ_order).
-      * apply Specify_classification.
-        split; unfold IQS; auto using elts_in_set.
-        exists (c^-1 * r^-1 * r^-1)%Q, r.
+      * rewrite Specify_classification despecify.
+        split; eauto using elts_in_set.
+        exists r.
         repeat split; auto.
         right.
         split.
@@ -974,18 +971,18 @@ Proof.
         -- eapply Dedekind_cut_5; eauto.
            rewrite <-M2, inv_l, (M1 _ 1), M3, inv_mul, inv_inv,
            <-(M3 c), ? (M1 _ c) at 1; try apply (O3 ℚ_ring_order); auto.
-    + apply lt_dense in H2 as [c [H2 H5]].
-      exists (ρ * r * c^-1)%Q.
-      assert (0 < c)%Q as H6.
+    + apply lt_dense in H1 as [c [H1 H4]].
+      exists (p * r * c^-1)%Q.
+      assert (0 < c)%Q as H5.
       { apply (rationals.lt_trans _ 1); auto.
         apply IZQ_lt, integers.zero_lt_1. }
       split.
-      * apply (lt_div ℚ_order) in H5; auto; simpl in *.
-        apply (O3 ℚ_ring_order ρ) in H5; auto.
-        now rewrite -> M1, M3, M2 in H5.
-      * apply Specify_classification.
-        split; unfold IQS; auto using elts_in_set.
-        exists (ρ * r * c^-1)%Q, c.
+      * apply (lt_div ℚ_order) in H4; auto; simpl in *.
+        apply (O3 ℚ_ring_order p) in H4; auto.
+        now rewrite -> M1, M3, M2 in H4.
+      * rewrite Specify_classification despecify.
+        split; eauto using elts_in_set.
+        exists c.
         repeat split; auto.
         right.
         rewrite <-? M2, inv_l, (M1 _ 1), M3; auto using (lt_neq ℚ_ring_order).
@@ -1028,7 +1025,7 @@ Proof.
     split; auto.
     rewrite -> (reify H0), despecify in *.
     set (ξ := mkSet H0 : Q) in *.
-    exists ξ, 2%Q.
+    exists 2%Q.
     repeat split; auto using one_lt_2.
     now left; left.
   - pose proof H as H0.
@@ -1049,9 +1046,9 @@ Proof.
     rewrite -> H2.
     unfold inv_pos, inv_pos_set.
     destruct excluded_middle_informative; try tauto.
-    apply Specify_classification.
-    split; unfold IQS; auto using elts_in_set.
-    exists (x^-1 * 2^-1)%Q, 2%Q.
+    rewrite Specify_classification despecify.
+    split; eauto using elts_in_set.
+    exists 2%Q.
     repeat split; auto using one_lt_2.
     right.
     split; auto using O2.
@@ -1112,25 +1109,25 @@ Proof.
     unfold inv_pos, inv_pos_set, IQR in H1 |- *.
     repeat destruct excluded_middle_informative; try tauto.
     simpl in *.
-    apply Specify_classification in H1
-      as [H6 [p [q [H7 [H8 [H9 | [H9 H10]]]]]]];
-      apply set_proj_injective in H7; subst.
-    + destruct H9 as [H9 | H9].
-      * contradiction (ordered_rings.lt_antisym ℚ_ring_order 0%Q p).
+    rewrite Specify_classification despecify in H1.
+    destruct H1 as [H6 [q [H7 [H8 | [H8 H9]]]]].
+    + destruct H8 as [H8 | H8].
+      * contradiction (ordered_rings.lt_antisym ℚ_ring_order 0%Q r).
       * subst.
         contradiction (ordered_rings.lt_irrefl ℚ_ring_order 0%Q).
     + assert (0 < q)%Q as H1 by
             eauto using rationals.lt_trans,
             (ordered_rings.zero_lt_1 ℚ_ring_order : 0 < 1)%Q.
-      apply (inv_lt_1 ℚ_order) in H8; simpl in *; auto.
-      eapply Dedekind_cut_4 in H10; eauto.
-      rewrite <-inv_mul in H10.
-      apply (O3 ℚ_ring_order (p^-1)%Q) in H8;
+      apply (inv_lt_1 ℚ_order) in H7; simpl in *; auto.
+      eapply Dedekind_cut_4 in H9; eauto.
+      rewrite <-inv_mul in H9.
+      apply (O3 ℚ_ring_order (r^-1)%Q) in H7;
         try now apply (ordered_fields.inv_lt ℚ_order).
-      rewrite -> (rationals.M1 _ 1), rationals.M3 in H8.
-      assert (s < p^-1)%Q as H11 by eauto using rationals.lt_trans.
-      apply (O3 ℚ_ring_order p) in H11; auto.
-      rewrite -> (M1 _ (p^-1)), inv_l in H11; auto using (lt_neq ℚ_ring_order).
+      rewrite -> (rationals.M1 _ 1), rationals.M3 in H7.
+      simpl in H7.
+      assert (s < r^-1)%Q as H10 by eauto using rationals.lt_trans.
+      apply (O3 ℚ_ring_order r) in H10; auto.
+      rewrite -> (M1 _ (r^-1)), inv_l in H10; auto using (lt_neq ℚ_ring_order).
       apply Specify_classification.
       rewrite (reify H0) despecify.
       split; auto.
@@ -1192,9 +1189,9 @@ Proof.
     repeat split; auto; try now apply (pow_pos ℚ_order).
     + unfold inv_pos.
       destruct excluded_middle_informative; try tauto.
-      apply Specify_classification.
+      rewrite Specify_classification despecify.
       split; eauto using elts_in_set.
-      exists (r^(-(n+2))), r.
+      exists r.
       repeat split; auto.
       right.
       split.
