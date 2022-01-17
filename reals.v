@@ -287,131 +287,90 @@ Definition neg_set (α : R) :=
 
 Theorem neg_in : ∀ a, neg_set a ∈ 𝐑.
 Proof.
-  intros α.
-  apply Specify_classification.
-  repeat split.
-  - apply Powerset_classification.
-    intros z H.
-    now apply Specify_classification in H.
-  - apply Nonempty_classification.
-    pose proof elts_in_set α as H; simpl in *.
-    apply Specify_classification in H as [H [H0 [H1 [H2 H3]]]].
-    apply Powerset_classification in H.
-    destruct (not_proper_subset_inhab ℚ α) as [s [H4 H5]]; auto.
-    { intros [H4 H5].
-      contradict H1.
-      now apply Subset_equality_iff. }
+  move=> α.
+  rewrite Specify_classification Powerset_classification
+          Nonempty_classification.
+  (repeat split) => [z /Specify_classification [] | | | p q | p ] //.
+  - move: (elts_in_set α) => /Specify_classification =>
+          [[/Powerset_classification H [H0 [/neq_sym H1 [H2 H3]]]]].
+    elim (not_proper_subset_inhab ℚ α) =>
+           [s [H4 H5] | [] /Subset_equality /(_ H) | ] //.
     set (σ := mkSet H4 : Q).
-    exists (-σ-1).
-    apply Specify_classification.
-    rewrite despecify.
-    split; unfold IQS; auto using elts_in_set.
+    exists (-σ - 1 : Q).
+    rewrite Specify_classification despecify.
+    split; eauto using elts_in_set.
     exists 1.
-    repeat split; try apply (ordered_rings.zero_lt_1 ℚ_ring_order).
-    now replace (-(-σ-1)-1)%Q with σ by ring.
-  - pose proof Dedekind_cut_1 α as H.
-    apply neq_sym in H.
-    apply Nonempty_classification in H as [s H].
-    apply Dedekind_cut_0 in H as H0.
-    set (σ := (mkSet H0) : Q).
-    intros H1.
+    repeat split; auto using (ordered_rings.zero_lt_1 ℚ_ring_order : 0 < 1)%Q.
+    by have ->: (-(-σ - 1) - 1)%Q = σ by ring.
+  - move: (Dedekind_cut_1 α) => /neq_sym /Nonempty_classification
+                                 [s /[dup] /Dedekind_cut_0 H H0].
+    set (σ := (mkSet H) : Q) => H1.
     move: (elts_in_set (-σ)) => /[dup]; simpl in *.
     rewrite -{2 4}H1 => H2.
     rewrite Specify_classification despecify => [[H3 [r [H4 []]]]].
     apply (Dedekind_cut_2 _ σ); auto.
     rewrite -[rationals.lt]/(ordered_rings.lt ℚ_ring_order)
                            (ordered_rings.lt_shift ℚ_ring_order) /=.
-    now replace (σ+-(--σ-r))%Q with r by ring.
-  - move=> p q.
-    rewrite ? Specify_classification ? despecify => [[H [r [H1 H2]]]] H3.
+    by have ->: (σ + -(--σ - r))%Q = r by ring.
+  - rewrite ? Specify_classification ? despecify => [[H [r [H1 H2]]]] H3.
     split; eauto using elts_in_set.
     exists r.
     repeat split; auto.
     contradict H2.
-    apply (Dedekind_cut_2 _ (-q-r)); auto.
-    rewrite -> (ordered_rings.lt_shift ℚ_ring_order) in *; simpl in *.
-    now replace (-q-r+-(-p-r))%Q with (p+-q)%Q by ring.
-  - move=> p.
-    rewrite ? Specify_classification ? despecify => [[H [r [H0 H1]]]].
-    assert (p+0 < p+r)%Q as H2 by now apply O1.
-    ring_simplify in H2.
-    apply lt_dense in H2 as [t [H2 H3]].
+    apply (Dedekind_cut_2 _ (-q - r)); auto.
+    rewrite /sub ? (rationals.A1 _ (-r)).
+    by apply O1, (neg_neg_lt ℚ_ring_order).
+  - rewrite ? Specify_classification ? despecify =>
+              [[H [r [/[dup] H0 /(O1 p) /[swap] H1]]]].
+    rewrite rationals.A1 rationals.A3 => /lt_dense [t [H2 H3]].
     exists t.
-    split; auto.
     rewrite Specify_classification despecify.
-    split; eauto using elts_in_set.
-    exists (p+r-t).
+    repeat split; eauto using elts_in_set.
+    exists (p + r - t).
     repeat split; auto.
-    + apply (O1 (-t)) in H3.
-      now rewrite -> ? (rationals.A1 (-t)), rationals.A4 in H3.
-    + now replace (-t-(p+r-t)) with (-p-r) by ring.
+    + by apply (ordered_rings.lt_shift ℚ_ring_order) in H3.
+    + by have ->: (-t - (p + r - t) = -p - r) by ring.
 Qed.
 
-Definition neg : R → R.
-Proof.
-  intros a.
-  exact (mkSet (neg_in a)).
-Defined.
+Definition neg (a : R) := mkSet (neg_in a) : R.
 
 Notation "- a" := (neg a) : R_scope.
 
 Theorem cut_archimedean : ∀ (α : R) (b : Q),
     (0 < b)%Q → ∃ n : Z, n * b ∈ α ∧ (n + 1) * b ∉ α.
 Proof.
-  intros α b H.
-  pose proof (elts_in_set α) as H0; simpl in *.
-  apply Specify_classification in H0 as [H0 [H1 [H2 [H3 H4]]]].
-  apply Nonempty_classification in H1 as [x H1].
-  apply Powerset_classification in H0.
-  assert (x ∈ ℚ) as H5 by eauto.
-  set (ξ := mkSet H5 : Q).
-  destruct (Q_archimedean ξ b) as [k [H6 H7]]; auto.
-  destruct (WOP (λ m, (k + m)%Z * b ∉ α)) as [n [H8 H9]].
-  - intros m H8.
-    apply NNPP.
+  move=> α b H.
+  move: (elts_in_set α) => /Specify_classification =>
+        [[/Powerset_classification H0 [/Nonempty_classification
+                                        [x /[dup] /Dedekind_cut_0 H1]]]].
+  rewrite ? (reify H1) => [H2 [H3 [H4 H5]]].
+  elim (Q_archimedean (mkSet H1) b) => [k [H6 H7] | ] //.
+  elim (WOP (λ m, (k + m)%Z * b ∉ α)) => [n [H8 H9] | m H8 | ].
+  - exists (k + (n + -1))%Z.
+    rewrite ? IZQ_add.
+    split; last by have ->: (k + (n + -1) + 1 = k + n)%Z by ring.
+    apply NNPP => /[dup] H10 /H9 /(le_not_gt ℤ_order) [].
+    rewrite (ordered_rings.lt_shift ℤ_order) /=.
+    have ->: (n + -(n + -1) = 1)%Z by ring.
+    auto using integers.zero_lt_1.
+  - apply NNPP.
     contradict H8.
-    apply (le_not_gt ℤ_order) in H8 as [H8 | H8]; simpl in *.
-    + apply (H3 ξ); auto.
-      destruct H6 as [H6 | H6]; rewrite <-IZQ_add; ring_simplify.
-      * apply (rationals.lt_trans _ (k*b)); auto.
-        rewrite -> (ordered_rings.lt_shift ℚ_ring_order); simpl.
-        replace (k*b+-(k*b+m*b))%Q with (-m*b)%Q by field.
-        apply O2; auto.
-        now rewrite -> IZQ_lt, (lt_neg_0 ℚ_ring_order) in H8.
-      * rewrite <-H6, (ordered_rings.lt_shift ℚ_ring_order); simpl.
-        replace (k*b+-(k*b+m*b))%Q with (-m*b)%Q by field.
-        apply O2; auto.
-        now rewrite -> IZQ_lt, (lt_neg_0 ℚ_ring_order) in H8.
-    + subst.
-      rewrite -> (A3_r ℤ).
-      destruct H6 as [H6 | H6].
-      * apply (H3 ξ); auto.
-      * rewrite -> H6; auto.
-  - destruct (not_proper_subset_inhab ℚ α) as [z [H8 H9]]; auto.
-    { intros [H8 H9].
-      contradict H9.
-      now apply Subset_equality_iff. }
-    set (ζ := mkSet H8 : Q).
-    destruct (Q_archimedean ζ b) as [m [H10 H11]]; auto.
+    move: H8 => /(le_not_gt ℤ_order) => [[H8 | ->]].
+    + apply (H4 (mkSet H1)); auto; (case: H6 => [H6 | H6]);
+        rewrite -IZQ_add -[rationals.lt]/(ordered_rings.lt ℚ_ring_order);
+        ring_simplify; [apply (ordered_rings.lt_trans ℚ_ring_order _ (k*b)) | ];
+        auto; (rewrite -? H6 (ordered_rings.lt_shift ℚ_ring_order) /=);
+        (have ->: (k * b + -(k * b + m * b) = -m * b)%Q by field);
+        apply O2; auto; by rewrite (lt_neg_0 ℤ_order) /= IZQ_lt -IZQ_neg in H8.
+    + rewrite -> (A3_r ℤ).
+      case: H6 => [H6 | ->]; eauto.
+  - elim: (not_proper_subset_inhab ℚ α) =>
+          [z [H8 H9] | [/Subset_equality /(_ H0) H8 H9] | ]; auto.
+    elim: (Q_archimedean (mkSet H8) b) => [m [H10 H11] | ] //.
     exists (m - k + 1)%Z.
-    replace (k+(m-k+1))%Z with (m+1)%Z by ring.
-    eapply Dedekind_cut_5.
-    + replace z with (ζ : set) in *; eauto.
-    + now rewrite <-IZQ_add.
-  - exists (k+(n+-1))%Z.
-    rewrite -> ? IZQ_add.
-    split.
-    + apply NNPP.
-      intros H10.
-      pose proof (H9 _ H10) as H11.
-      rewrite -> (le_not_gt ℤ_order) in H11; simpl in *.
-      contradict H11.
-      rewrite -> (ordered_rings.lt_shift ℤ_order); simpl.
-      replace (n+-(n+-1))%Z with 1%Z by ring.
-      apply integers.zero_lt_1.
-    + replace 1 with (IZQ 1) by auto.
-      now rewrite -> IZQ_add, <-? integers.A2, (integers.A1 _ 1), integers.A4,
-      (A3_r ℤ).
+    have ->: (k + (m - k + 1) = m + 1)%Z by ring.
+    apply (Dedekind_cut_5 α (mkSet H8)); auto.
+    by rewrite -IZQ_add.
 Qed.
 
 Theorem A4 : ∀ a, a + -a = 0.
