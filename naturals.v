@@ -25,7 +25,7 @@ Proof.
   rewrite /ω.
   elim constructive_indefinite_description => X [H H0] /=.
   rewrite Intersection_classification ? Specify_classification
-          ? Union_classification => [_ /Specify_classification [_ []] | ] //.
+          ? Union_classification => [ | _ /Specify_classification [_ []]] //.
   eapply Nonempty_classification, ex_intro, Specify_classification.
   eauto using Set_in_powerset.
 Qed.

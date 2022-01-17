@@ -42,6 +42,10 @@ Section Pretty_picture_lemmas.
     have /injection_restriction ->: n ⊂ domain f.
     { rewrite /f sets.functionify_domain => x H.
       eauto using elements_of_naturals_are_naturals, elts_in_set. }
+    - rewrite Injective_classification /f @sets.functionify_domain =>
+      x y H0 H1.
+      rewrite (reify H0) (reify H1) ? functionify_action ? (integers.A1 _ 1)
+      => /set_proj_injective /(cancellation_add ℤ) /INZ_eq -> //.
     - apply cardinality_eq, Extensionality => z.
       split => [/Specify_classification [H0] |
                 /Specify_classification
@@ -61,10 +65,6 @@ Section Pretty_picture_lemmas.
         repeat split; auto; rewrite ? despecify /integers.one INZ_add add_1_r
                                     ? INZ_le -? lt_le_succ ? (lt_is_in _ n);
         eauto using elts_in_set, naturals.lt_succ.
-    - rewrite Injective_classification /f @sets.functionify_domain =>
-      x y H0 H1.
-      rewrite (reify H0) (reify H1) ? functionify_action ? (integers.A1 _ 1)
-      => /set_proj_injective /(cancellation_add ℤ) /INZ_eq -> //.
   Qed.
 
   Lemma rectangle_slice_finite : ∀ n : N, finite {x of type ℤ | 1 ≤ x ≤ n}.
@@ -319,7 +319,12 @@ Section Quadratic_reciprocity.
     have ->: lower_triangle q p =
     domain (restriction (swap_function ℤ ℤ) (lower_triangle q p)) by
         rewrite restriction_domain swap_domain.
-    rewrite injective_into_image ? Injective_classification => [ | x y].
+    rewrite injective_into_image ? Injective_classification => [x y | ].
+    - rewrite ? restriction_domain ? swap_domain -? H =>
+      /[dup] ? /Specify_classification ? /[dup] ? /Specify_classification ?.
+      rewrite -? restriction_action ? swap_domain -? H //.
+      move: (swap_bijective ℤ ℤ) => [/Injective_classification].
+      rewrite swap_domain; intuition.
     - apply cardinality_eq, Extensionality => z.
       split => [/Specify_classification |
                 /Specify_classification
@@ -341,11 +346,6 @@ Section Quadratic_reciprocity.
           [ rewrite Specify_classification Product_classification |
             rewrite -restriction_action ? swap_action ? swap_domain -? H];
           repeat split; eauto 8 using elts_in_set.
-    - rewrite ? restriction_domain ? swap_domain -? H =>
-      /[dup] ? /Specify_classification ? /[dup] ? /Specify_classification ?.
-      rewrite -? restriction_action ? swap_domain -? H //.
-      move: (swap_bijective ℤ ℤ) => [/Injective_classification].
-      rewrite swap_domain; intuition.
   Qed.
 
   Theorem sum_upper_triangle :

@@ -166,8 +166,8 @@ Proof.
   elim constructive_indefinite_description => c' [d' [H5 H6]].
   elim constructive_indefinite_description => d'' [H7 H8].
   move: H2 H4 H6 H8; (rewrite ? Qequiv; auto) =>
-  [H2 H4 H6 H8 | /(cancellation_0_mul ℤ_order) |
-   /(cancellation_0_mul ℤ_order)]; try tauto.
+        [/(cancellation_0_mul ℤ_order) | /(cancellation_0_mul ℤ_order) |
+          H2 H4 H6 H8]; try tauto.
   ring_simplify [H2 H4 H6 H8]; rewrite -? M2 -H4 H2 ? (M2 _ c) -H8 H6; ring.
 Qed.
 
@@ -180,8 +180,8 @@ Proof.
   elim constructive_indefinite_description => c' [d' [H5 H6]].
   elim constructive_indefinite_description => d'' [H7 H8].
   move: H2 H4 H6 H8; (rewrite ? Qequiv; auto) =>
-  [H2 H4 H6 H8 | /(cancellation_0_mul ℤ_order) |
-   /(cancellation_0_mul ℤ_order)]; try tauto.
+        [/(cancellation_0_mul ℤ_order) | /(cancellation_0_mul ℤ_order) |
+          H2 H4 H6 H8]; try tauto.
   ring_simplify [H2 H4 H6 H8]; rewrite -H8 H6 -? M2 -H4 H2; ring.
 Qed.
 
@@ -453,8 +453,8 @@ Proof.
   case (Qlift x) as [a [b [H <-]]], (integers.T b 0); intuition; eauto.
   exists (-a)%Z, (-b)%Z.
   rewrite -(lt_neg_0 ℤ_order b : b < 0 ↔ 0 < -b)%Z Qequiv //.
-  - split => //; ring.
   - contradict H0; ring [H0].
+  - split => //; ring.
 Qed.
 
 Theorem reduced_form : ∀ x, ∃ a b, gcd(a, b) = 1 ∧ x = a / b ∧ b ≠ 0%Z.
