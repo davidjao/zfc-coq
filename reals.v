@@ -375,86 +375,63 @@ Qed.
 
 Theorem A4 : ∀ a, a + -a = 0.
 Proof.
-  intros α.
-  unfold neg, add, zero, add_set.
-  apply set_proj_injective.
-  simpl.
-  unfold iqr_set.
-  apply Extensionality.
-  split; intros H; apply Specify_classification in H as [H H0].
-  - move: H0 => [r [p [-> [] H1]]].
-    rewrite ? Specify_classification ? despecify => [[H2 [q [H3 H4]]]].
-    assert (-p ∉ α)%Q as H0.
-    { eapply Dedekind_cut_5; eauto.
-      rewrite -> (ordered_rings.lt_shift ℚ_ring_order) in *; simpl in *.
-      now replace (-p+-(-p-q))%Q with (q+-0)%Q by ring. }
-    eapply Dedekind_cut_4 in H0; eauto.
-    split; eauto using elts_in_set.
-    rewrite -> (ordered_rings.lt_shift ℚ_ring_order) in *; simpl in *.
-    now replace (0+-(r+p))%Q with (-p+-r)%Q by ring.
-  - rewrite -> (reify H), despecify in *.
-    set (v := mkSet H : Q) in *.
+  move=> α.
+  apply set_proj_injective, Extensionality => z.
+  split => [/Specify_classification [H [r [p [-> [] H1]]]] |
+             /Specify_classification [H]].
+  - rewrite ? Specify_classification ? despecify =>
+              [[H2 [q [/[dup] H3 /(O1 (-p - q)) H4 H5]]]].
+    ring_simplify in H4.
+    (have: (-p ∉ α)%Q by eauto using Dedekind_cut_5) =>
+      /Dedekind_cut_4 => /(_ _ H1) /(O1 p) H6.
+    rewrite A4 rationals.A1 in H6.
+    eauto using elts_in_set.
+  - rewrite (reify H) despecify => H0.
+    set (v := mkSet H : Q).
     set (w := (-v * 2^-1)%Q).
-    assert (0 < 2)%Z as H1 by apply (ordered_rings.zero_lt_2 ℤ_order).
-    assert (0 < w)%Q as H2.
-    { unfold w.
-      apply rationals.O2; try now apply (lt_neg_0 ℚ_ring_order).
+    have H1: (0 < 2)%Z by apply (ordered_rings.zero_lt_2 ℤ_order).
+    have H2: (0 < w)%Q.
+    { apply rationals.O2; try now apply (lt_neg_0 ℚ_ring_order).
       now apply (O4 ℚ_order), IZQ_lt. }
-    destruct (cut_archimedean α w) as [n [H3 H4]]; auto.
+    elim: (cut_archimedean α w) => [n [H3 H4] | ] //.
     apply Specify_classification.
     split; auto.
-    exists (n*w)%Q, (-(n+2)*w)%Q.
-    repeat split; auto.
-    + unfold IQS.
-      f_equal.
-      unfold w.
+    exists (n * w)%Q, (-(n + 2) * w)%Q.
+    repeat split; auto; rewrite /IQS /w ? Specify_classification ? despecify.
+    + f_equal.
       ring_simplify.
-      rewrite <-M2, inv_l; try ring.
-      intros H5.
-      apply IZQ_eq in H5.
-      rewrite -> H5 in H1.
+      rewrite -M2 inv_l 1 ? M1 ? M3 // => /IZQ_eq H5.
       contradiction (ordered_rings.lt_irrefl ℤ_order 0%Z).
-    + rewrite Specify_classification despecify.
-      split; unfold IQS; auto using elts_in_set.
+      by rewrite -{2}H5.
+    + split; eauto using elts_in_set.
       exists w.
       repeat split; auto.
-      replace ((-(-(n+2)*w)-w))%Q with (n*w+2*w+-w)%Q by ring.
-      replace (IZQ 2) with (1/1+1/1)%Q.
-      * rewrite -> D1, M3, <-? rationals.A2, A4, (rationals.A1 w), rationals.A3.
-        now replace (n*w+w)%Q with ((n+1)*w)%Q by ring.
-      * unfold IZQ; rewrite -> add_wf, Qequiv; rewrite -> ? integers.M3;
-          auto using integers.zero_ne_1; ring.
+      have ->: (-(-(n + 2) * w) - w = n * w + 2 * w + -w)%Q by ring.
+      have ->: ((2 : Q) = 1 / 1 + 1 / 1)%Q; first rewrite add_wf;
+        auto using integers.zero_ne_1;
+        rewrite /IZQ ? Qequiv ? (integers.M1 2) ? integers.M3 ? D1 ? M3
+                -? rationals.A2 ? A4 ? (rationals.A1 w) ? rationals.A3
+                -1 ? {2}(M3 w) -? D1 //; auto using integers.zero_ne_1.
 Qed.
 
 Theorem O1 : ∀ a b c, b < c → a + b < a + c.
 Proof.
-  intros a b c H.
-  unfold lt in *.
-  destruct H as [H H0].
-  split.
-  - intros z H1.
-    unfold add in *.
-    apply Specify_classification in H1 as [H1 [r [s [H2 [H3 H4]]]]].
-    apply Specify_classification.
-    split; auto.
-    exists r, s.
-    split; auto.
-  - contradict H0.
-    f_equal.
-    apply set_proj_injective in H0.
-    assert (-a+(a+b) = -a+(a+c)) by congruence.
-    now rewrite -> ? A2, ? (A1 (-a)), ? A4, ? (A1 0), ? A3 in H1.
+  move=> a b c [H H0].
+  split => [z /Specify_classification [H1 [r [s [H2 [H3 /H H4]]]]] | ].
+  - apply Specify_classification.
+    intuition eauto.
+  - move: H0 => /[swap] /set_proj_injective /(f_equal (add (-a))).
+    rewrite ? A2 ? (A1 (-a)) ? A4 ? (A1 0) ? A3 => -> //.
 Qed.
 
 Theorem lt_irrefl : ∀ a, ¬ a < a.
 Proof.
-  now intros a [H H0].
+  move=> a [H H0] //.
 Qed.
 
 Theorem lt_antisym : ∀ a b, a < b → ¬ b < a.
 Proof.
-  intros a b H H0.
-  eapply lt_irrefl; eauto using lt_trans.
+  move=> a b /lt_trans /[apply] /lt_irrefl //.
 Qed.
 
 Definition mul_pos_set (a b : R) :=
