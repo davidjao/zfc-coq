@@ -502,7 +502,7 @@ Proof.
         H [H0 | H0]; first exact (mkSet (mul_pos_in a b H H0)); exact 0.
 Defined.
 
-Infix "·" := mul_pos (at level 40) : R_scope.
+Local Infix "·" := mul_pos (at level 40) : R_scope.
 
 Theorem M1_pos : ∀ a b, 0 < a → 0 < b → a · b = b · a.
 Proof.
@@ -517,113 +517,45 @@ Qed.
 
 Theorem O2_pos : ∀ a b, 0 < a → 0 < b → 0 < a · b.
 Proof.
-  intros a b H H0.
-  unfold mul_pos.
-  repeat destruct excluded_middle_informative; try tauto.
-  split.
-  - intros z H1.
-    unfold zero, IQR in H1.
-    apply Specify_classification in H1 as [H1 H2].
-    rewrite -> (reify H1), despecify in *.
-    apply Specify_classification.
+  rewrite /mul_pos => a b /[dup] ? /pos_nonempty
+                        [c [/[dup] ? /lt_dense [c' [? ?]] ?]] /[dup] ?
+                        /pos_nonempty [d [/[dup] ? /lt_dense [d' [? ?]] ?]].
+  repeat elim excluded_middle_informative => * //.
+  split => [z /Specify_classification [H] | H].
+  - rewrite (reify H) Specify_classification ? despecify.
     split; auto.
-    apply pos_nonempty in H as [c [H H3]].
-    apply pos_nonempty in H0 as [d [H0 H4]].
-    set (ξ := mkSet H1 : Q).
-    rewrite despecify.
     exists c, d.
-    repeat split; auto.
-    left; simpl.
+    repeat split; auto; left => /=.
     eauto using O2, rationals.lt_trans.
-  - intros H1.
-    apply pos_nonempty in H as [c [H H2]].
-    apply pos_nonempty in H0 as [d [H0 H3]].
-    apply lt_dense in H as [e [H H4]].
-    apply lt_dense in H0 as [f [H0 H5]].
-    assert ((e * f)%Q ∈ 0).
-    { rewrite -> H1.
-      apply Specify_classification.
-      split; unfold IQS; auto using elts_in_set.
-      rewrite despecify.
-      exists c, d.
-      repeat split; eauto using rationals.lt_trans.
-      left; simpl in *.
-      apply (lt_cross_mul ℚ_ring_order); auto. }
-    unfold IRS, zero, IQR in H6.
-    apply Specify_classification in H6 as [H6 H7].
-    rewrite -> despecify in *.
-    rewrite -> (lt_not_ge ℚ_ring_order) in H7; fold rationals.le in *.
-    contradict H7.
-    left; simpl; eauto using O2.
+  - (have: (c' * d')%Q ∈ 0; first rewrite H;
+     rewrite Specify_classification despecify) =>
+      [ | [] _ /(lt_not_ge ℚ_ring_order) []]; last by apply or_introl, O2.
+    split; eauto using elts_in_set.
+    exists c, d.
+    repeat split; eauto using rationals.lt_trans; left => /=.
+    by apply (lt_cross_mul ℚ_ring_order).
 Qed.
 
 Theorem M2_pos : ∀ a b c, 0 < a → 0 < b → 0 < c → a · (b · c) = (a · b) · c.
 Proof.
-  intros a b c H H0 H1.
-  assert (0 < a · b) as H2 by auto using O2_pos.
-  assert (0 < b · c) as H3 by auto using O2_pos.
-  unfold mul_pos.
+  rewrite /mul_pos => a b c /[dup] H /O2_pos H0 /[dup] /H0 {}H0 /[dup] H1
+                        /O2_pos H2 /[dup] /H2 {}H2 H3.
   repeat destruct excluded_middle_informative; try tauto;
     try (contradict n; unfold mul_pos in *;
          repeat destruct excluded_middle_informative; tauto).
-  apply set_proj_injective.
-  simpl.
-  apply Extensionality => z.
+  apply set_proj_injective, Extensionality => z.
   rewrite ? Specify_classification.
-  split => [[H4] | [H4]]; rewrite (reify H4) ? despecify /= =>
-          [[ρ [τ [H5 [H6 [H7 [H8 H9]]]]]]].
-  - move: H6.
-    rewrite Specify_classification despecify =>
-              [[H6 [s [t [H11 [H12 [H13 [H14 H15]]]]]]]].
-    split; eauto using elts_in_set.
-    exists (ρ*s)%Q, t.
-    repeat split; auto using O2.
-    + rewrite Specify_classification despecify.
-      split; eauto using elts_in_set.
-      exists ρ, s.
-      repeat split; auto.
-      now right.
-    + destruct H15 as [H15 | H15], H9 as [H9 | H9].
-      * apply (O3 ℚ_ring_order ρ) in H15; auto.
-        rewrite -> M2 in H15.
-        left; simpl in *.
-        eauto using rationals.lt_trans.
-      * subst.
-        left.
-        apply (O3 ℚ_ring_order ρ) in H15; auto.
-        by rewrite /= M2 -H9 in H15.
-      * left.
-        subst.
-        now rewrite -> M2 in H9.
-      * right.
-        subst.
-        by rewrite -M2.
-  - move: H5.
-    rewrite Specify_classification despecify =>
-              [[H5 [r [s [H11 [H12 [H13 [H14 H15]]]]]]]].
-    split; eauto using elts_in_set.
-    exists r, (s*τ)%Q.
-    repeat split; auto using O2.
-    + rewrite Specify_classification despecify.
-      split; eauto using elts_in_set.
-      exists s, τ.
-      repeat split; auto.
-      now right.
-    + destruct H15 as [H15 | H15], H9 as [H9 | H9].
-      * apply (O3 ℚ_ring_order τ) in H15; auto.
-        rewrite -> ? (M1 τ), <-M2 in H15.
-        left; simpl in *.
-        eauto using rationals.lt_trans.
-      * subst.
-        left.
-        apply (O3 ℚ_ring_order τ) in H15; auto.
-        by rewrite -> ? (M1 τ), <-M2, <-H9 in H15.
-      * left.
-        subst.
-        now rewrite <-M2 in H9.
-      * right.
-        subst.
-        now rewrite -> M2.
+  (split => [[H4] | [H4]]; rewrite (reify H4) ? despecify /= =>
+     [[ρ [τ [H5 [H6 [H7 [H8 H9]]]]]]]); [move: (H6) | move: (H5)];
+  rewrite Specify_classification despecify =>
+    [[H10 [r [s [H11 [H12 [H13 [H14 H15]]]]]]]]; split;
+    eauto using elts_in_set; [exists (ρ * r)%Q, s | exists r, (s * τ)%Q];
+    rewrite ? Specify_classification ? despecify; repeat split;
+    eauto using O2, elts_in_set; [exists ρ, r | | exists s, τ | ];
+    try (repeat split; auto; by right);
+    [apply (mul_le_l ℚ_ring_order ρ) in H15; auto; rewrite -M2 |
+      apply (mul_le_r ℚ_ring_order _ _ τ) in H15; auto; rewrite M2];
+    eapply (ordered_rings.le_trans ℚ_ring_order); eauto.
 Qed.
 
 Theorem zero_ne_1 : 1 ≠ 0.
@@ -849,7 +781,8 @@ Proof.
   - exact 0.
 Defined.
 
-Notation "a '^-1' " := (inv_pos a) (at level 30, format "a '^-1'") : R_scope.
+Local Notation "a '^-1' " :=
+  (inv_pos a) (at level 30, format "a '^-1'") : R_scope.
 
 Lemma pos_not_in_0 : ∀ x : Q, (0 < x)%Q → x ∉ 0.
 Proof.
