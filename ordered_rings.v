@@ -102,8 +102,8 @@ Section Ordered_ring_theorems.
   Theorem O3 : ∀ a b c, 0 < a → b < c → a * b < a * c.
   Proof.
     move=> a b c /lt_shift /[swap] /lt_shift /O2 /[apply].
-    (suff -> : (c+-b)*(a+-0) = (a*c+-(a*b)); last by ring) =>
-    /(iffRL (lt_shift _ _)) //.
+    (have ->: (c + -b) * (a + -0) = a * c + -(a * b) by ring) =>
+      /(iffRL (lt_shift _ _)) //.
   Qed.
 
   Theorem O3_r : ∀ a b c, 0 < a → b < c → b * a < c * a.
@@ -130,15 +130,15 @@ Section Ordered_ring_theorems.
   Theorem neg_le_0 : ∀ a, 0 ≤ a ↔ -a ≤ 0.
   Proof.
     split => [/le_shift | /le_shift].
-    - (suff -> : a+-0 = 0+--a; last by ring) => /(iffRL (le_shift _ _)) //.
-    - suff -> : 0+--a = a => //; ring.
+    - (have ->: a + -0 = 0 + --a by ring) => /(iffRL (le_shift _ _)) //.
+    - have ->: 0 + --a = a => //; ring.
   Qed.
 
   Theorem le_neg_0 : ∀ a, a ≤ 0 ↔ 0 ≤ -a.
   Proof.
     move=> a.
     rewrite neg_le_0.
-    suff -> : --a = a => //; ring.
+    have ->: --a = a => //; ring.
   Qed.
 
   Definition mul_pos_pos := O2.
@@ -146,7 +146,7 @@ Section Ordered_ring_theorems.
   Theorem mul_pos_neg : ∀ a b, 0 < a → b < 0 → a * b < 0.
   Proof.
     move=> a b /[swap] /lt_neg_0 /O2 /[apply].
-    (suff -> : -b*a = -(a*b); last by ring) => /lt_neg_0 //.
+    (have ->: -b * a = -(a * b) by ring) => /lt_neg_0 //.
   Qed.
 
   Theorem mul_neg_pos : ∀ a b, a < 0 → 0 < b → a * b < 0.
@@ -158,7 +158,7 @@ Section Ordered_ring_theorems.
   Theorem mul_neg_neg : ∀ a b, a < 0 → b < 0 → 0 < a * b.
   Proof.
     move=> a b /lt_neg_0 /[swap] /lt_neg_0 /O2 /[apply].
-    suff -> : -b*-a = a*b => //; ring.
+    have ->: -b * -a = a * b => //; ring.
   Qed.
 
   Theorem pos_mul : ∀ a b, 0 < a * b → (0 < a ∧ 0 < b) ∨ (a < 0 ∧ b < 0).
