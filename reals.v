@@ -702,39 +702,24 @@ Qed.
 
 Theorem inv_lt : ∀ a, 0 < a → 0 < a^-1.
 Proof.
-  intros a H.
-  unfold lt.
-  split.
-  - intros z H0.
-    unfold zero, IQR in H0.
-    apply Specify_classification in H0 as [H0 H1].
-    unfold inv_pos.
-    repeat destruct excluded_middle_informative; try tauto.
-    apply Specify_classification.
+  rewrite /lt /inv_pos => a /[dup] H /pos_nonempty [c [H0 H1]].
+  split => [z /Specify_classification [H2] | ].
+  - elim excluded_middle_informative => // H4.
+    rewrite Specify_classification ? (reify H2) ? despecify.
     split; auto.
-    rewrite -> (reify H0), despecify in *.
-    set (ξ := mkSet H0 : Q) in *.
     exists 2%Q.
     repeat split; auto using one_lt_2.
-    now left; left.
-  - pose proof H as H0.
-    apply pos_nonempty in H0 as [c [H0 H1]].
-    intros H2.
-    destruct (Dedekind_cut_6 a).
-    assert (0 < x)%Q as H4.
-    { destruct (rationals.T 0 x)
-        as [[H4 [H5 H6]] | [[H4 [H5 H6]] | [H4 [H5 H6]]]]; try tauto; subst;
-        contradiction H3; eauto using Dedekind_cut_2, rationals.lt_trans. }
-    apply (inv_lt ℚ_order) in H4 as H5.
-    assert (0 < 2)%Q as H6.
-    { rewrite <-IZQ_add.
+    by repeat left.
+  - elim excluded_middle_informative => // H2 H3.
+    elim: (Dedekind_cut_6 a) => x H4.
+    have /[dup] /(inv_lt ℚ_order) /= /[swap]: (0 < 2)%Q => [ | H5].
+    { rewrite -IZQ_add.
       apply (ordered_rings.zero_lt_2 ℚ_ring_order). }
-    apply (inv_lt ℚ_order) in H6 as H7.
-    assert ((x^-1 * 2^-1)%Q ∉ 0) as H8 by auto using pos_not_in_0, O2.
-    contradiction H8.
-    rewrite -> H2.
+    (have /[dup] /(inv_lt ℚ_order) /= /[swap]: (0 < x)%Q by
+      eauto using Dedekind_cut_2, Dedekind_cut_4) =>
+      H6 /O2 /[apply] /[dup] H7 /pos_not_in_0 [].
+    rewrite -> H3.
     unfold inv_pos, inv_pos_set.
-    destruct excluded_middle_informative; try tauto.
     rewrite Specify_classification despecify.
     split; eauto using elts_in_set.
     exists 2%Q.
@@ -745,44 +730,30 @@ Proof.
 Qed.
 
 Theorem pow_archimedean : ∀ (a : R) (r : Q),
-    0 < a → (1 < r)%Q → ∃ n : Z, (r^n)%Q ∈ a ∧ (r^(n+1))%Q ∉ a.
+    0 < a → (1 < r)%Q → ∃ n : Z, (r^n)%Q ∈ a ∧ (r^(n + 1))%Q ∉ a.
 Proof.
-  intros a r H H0.
-  apply pos_nonempty in H as [c [H H1]].
-  pose proof Dedekind_cut_6 a as [q H2].
-  apply (neg_pow_archimedean c r) in H0 as H3; auto.
-  apply (pos_pow_archimedean q r) in H0 as H5.
-  destruct H3 as [m [H3 H4]], H5 as [n [H5 H6]], (WOP (λ x, (r^(m+x))%Q ∉ a))
-        as [x [H7 H8]]; auto.
-  assert (0 < r)%Q as H7 by eauto using rationals.lt_trans,
-                            (ordered_rings.zero_lt_1 ℚ_ring_order : 0 < 1)%Q.
-  - intros x H8.
-    destruct (integers.T 0 x) as [[H9 _] | [[_ [H9 _]] | [_ [_ H9]]]]; auto.
-    + subst.
-      contradict H8.
-      rewrite -> integers.A1, integers.A3.
+  move=> a r /[dup] H /pos_nonempty [c [H0 H1]] /[dup]
+           /(ordered_rings.one_lt ℚ_ring_order) /= H2.
+  move: (Dedekind_cut_6 a) => [q H3] /[dup] /(neg_pow_archimedean c r H0)
+      => [[m [H4 H5]]] /[dup] H6 /(pos_pow_archimedean q r) [n [H7 H8]].
+  move: (WOP (λ x, (r^(m + x))%Q ∉ a)) => [x H9 | | x [H9 H10]].
+  - apply (lt_not_ge ℤ_order) => /= [[/= H10 | H10]].
+    + rewrite -[rationals.pow]/(fields.pow ℚ) (pow_add_r ℚ) /= in H9;
+        auto using (lt_neq ℚ_ring_order).
+      eapply H9, Dedekind_cut_2; eauto.
+      rewrite -(M3 c) (M1 1).
+      apply (lt_cross_mul ℚ_ring_order); auto; try by apply (pow_pos ℚ_order).
+      by apply (pow_lt_1 ℚ_order).
+    + rewrite H10 integers.A1 integers.A3 in H9.
       eauto using Dedekind_cut_2.
-    + rewrite -> (pow_add_r ℚ) in H8; auto using (lt_neq ℚ_ring_order);
-        simpl in *; fold pow in *.
-      contradict H8.
-      eapply Dedekind_cut_2; eauto.
-      rewrite <-(M3 c), (M1 1).
-      apply (lt_cross_mul ℚ_ring_order); auto; try now apply (pow_pos ℚ_order).
-      now apply (pow_lt_1 ℚ_order).
-  - exists (n+-m)%Z.
-    replace (m+(n+-m))%Z with n%Z by ring.
+  - exists (n + -m)%Z.
+    have ->: (m + (n + -m) = n)%Z by ring.
     eauto using Dedekind_cut_5.
-  - exists (m+(x+-1))%Z.
-    split.
-    + apply NNPP.
-      intros H9.
-      pose proof (lt_succ ℤ_order (x+-1)%Z) as H10; simpl in *.
-      replace (x+-1+1)%Z with x in H10 by ring.
-      apply H8 in H9 as [H9 | H9]; simpl in *.
-      * contradiction (ordered_rings.lt_antisym ℤ_order x (x+-1)%Z).
-      * contradiction (ordered_rings.lt_irrefl ℤ_order x).
-        now rewrite -> H9 at 1.
-    + now replace (m + (x + - 1) + 1)%Z with (m+x)%Z by ring.
+  - exists (m + (x + -1))%Z.
+    split; last by have ->: (m + (x + -1) + 1 = m + x)%Z by ring.
+    apply NNPP => /H10 /le_not_gt [] /=.
+    have {2}->: (x = x + 1 + -1)%Z by ring.
+    apply (O1_r ℤ_order), lt_succ.
 Qed.
 
 Theorem M4_pos : ∀ a, 0 < a → a^-1 · a = 1.
