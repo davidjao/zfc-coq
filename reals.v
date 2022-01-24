@@ -812,119 +812,64 @@ Qed.
 
 Theorem D1_pos : ∀ a b c, 0 < a → 0 < b → 0 < c → (a + b) · c = a · c + b · c.
 Proof.
-  intros a b c H H0 H1.
-  assert (0 < a + b) as H2.
-  { apply (O1 a) in H0.
-    rewrite -> A3 in H0.
-    eauto using lt_trans. }
-  unfold mul_pos, add_set, mul_pos_set.
+  rewrite /mul_pos /add_set /mul_pos_set => a b c H /[dup] H0 /(O1 a) /[swap].
+  move: A3 (H) -> => /lt_trans /[swap] H1 /[apply] H2.
   repeat destruct excluded_middle_informative; try tauto;
     try (contradict n; unfold mul_pos in *;
          repeat destruct excluded_middle_informative; tauto).
-  apply set_proj_injective.
-  simpl.
-  apply Extensionality.
-  split; intros H3; apply Specify_classification;
-    apply Specify_classification in H3; repeat split; try tauto.
-  - destruct H3 as [H3 H4].
-    rewrite (reify H3) despecify in H4.
-    destruct H4 as [r [s [H4 [H5 [H6 [H7 H8]]]]]].
-    apply Specify_classification in H4 as [H4 [r' [s' [H10 [H11 H12]]]]].
-    apply set_proj_injective in H10.
-    subst.
-    set (ζ := (mkSet H3 : Q)).
-    destruct (classic (0 < r')%Q) as [H9 | H9], (classic (0 < s')%Q)
-        as [H13 | H13].
-    + exists (ζ+-s'*s)%Q, (s'*s)%Q.
-      (repeat split; try (apply f_equal; ring);
-       first by rewrite {1}(reify H3) /IQS -/ζ; f_equal; ring_simplify);
-      rewrite Specify_classification despecify;
-      split; eauto using elts_in_set.
-      * exists r', s.
-        repeat split; auto.
-        destruct H8 as [H8 | H8]; simpl in *.
-        -- left; simpl.
-           apply (rationals.O1 (-s'*s)) in H8.
-           replace (-s'*s+(r'+s')*s)%Q with (r'*s)%Q in H8 by ring.
-           now rewrite -> rationals.A1 in H8.
-        -- right; rewrite /ζ H8.
-           now ring_simplify.
-      * exists s', s.
-        repeat split; try right; auto.
-    + destruct (pos_nonempty b) as [t [H14 H15]]; auto.
-      destruct (lt_dense2 t (r'+s')) as [k [H16 [H17 H18]]]; auto.
-      exists (ζ+-k*s)%Q, (k*s)%Q.
-      (repeat split; try (apply f_equal; ring);
-       first by rewrite {1}(reify H3) /IQS -/ζ; f_equal; ring_simplify);
-      repeat split; simpl; try (apply f_equal; ring);
-      rewrite Specify_classification despecify; split; eauto using elts_in_set.
-      * exists (r'+s'+-k)%Q, s.
-        repeat split; auto.
-        -- eapply Dedekind_cut_2; eauto.
-           rewrite -> (ordered_rings.lt_shift ℚ_ring_order); simpl.
-           replace (r'+-(r'+s'+-k))%Q with (k+-s')%Q by ring.
-           rewrite <-(ordered_rings.lt_shift ℚ_ring_order); simpl.
-           rewrite <-(le_not_gt ℚ_ring_order) in H13; fold rationals.le in *.
-           destruct H13 as [H13 | H13]; simpl in *.
-           ++ eauto using rationals.lt_trans.
-           ++ now subst.
-        -- now rewrite <-(ordered_rings.lt_shift ℚ_ring_order).
-        -- replace ((r'+s'+-k)*s)%Q with ((r'+s')*s+-k*s)%Q by ring.
-           now apply add_le_r.
-      * exists k, s.
-        repeat split; eauto using Dedekind_cut_2.
-        now right.
-    + destruct (pos_nonempty a) as [t [H14 H15]]; auto.
-      destruct (lt_dense2 t (r'+s')) as [k [H16 [H17 H18]]]; auto.
-      exists (k*s)%Q, (ζ+-k*s)%Q.
-      (repeat split; try (apply f_equal; ring);
-       first by rewrite {1}(reify H3) /IQS -/ζ; f_equal; ring_simplify);
-      repeat split; simpl; try (apply f_equal; ring);
-      rewrite Specify_classification despecify; split; eauto using elts_in_set.
-      * exists k, s.
-        repeat split; eauto using Dedekind_cut_2.
-        now right.
-      * exists (r'+s'+-k)%Q, s.
-        repeat split; auto.
-        -- eapply Dedekind_cut_2; eauto.
-           rewrite -> (ordered_rings.lt_shift ℚ_ring_order); simpl.
-           replace (s'+-(r'+s'+-k))%Q with (k+-r')%Q by ring.
-           rewrite <-(ordered_rings.lt_shift ℚ_ring_order); simpl.
-           rewrite <-(le_not_gt ℚ_ring_order) in H9; fold rationals.le in *.
-           destruct H9 as [H9 | H9]; simpl in *.
-           ++ eauto using rationals.lt_trans.
-           ++ now subst.
-        -- now rewrite <-(ordered_rings.lt_shift ℚ_ring_order).
-        -- replace ((r' + s' + - k) * s)%Q with ((r'+s')*s + -k*s)%Q by ring.
-           now apply add_le_r.
-    + apply (O0_opp ℚ_ring_order) in H6.
-      tauto.
-  - destruct H3 as [H3 [ac [bc [H4 [H5 H6]]]]].
-    set (ζ := mkSet H3 : Q).
-    replace z with (IQS ζ) in * by auto.
-    apply set_proj_injective in H4.
-    move: H5 H6.
-    rewrite ? Specify_classification ? despecify =>
-              [[H5 [a' [c' [H7 [H8 [H9 [H10 H11]]]]]]]]
-                [H6 [b' [c'' [H13 [H14 [H15 [H16 H17]]]]]]].
-    exists (a'+b')%Q, (ordered_rings.max ℚ_ring_order c' c'').
-    repeat split; auto using O0.
-    + apply Specify_classification.
-      split; eauto using elts_in_set.
-    + destruct (max_eq ℚ_ring_order c' c'') as [H19 | H19]; now rewrite -> H19.
-    + destruct (max_eq ℚ_ring_order c' c'') as [H19 | H19]; now rewrite -> H19.
-    + rewrite -> H4, rationals.D1.
-      destruct (max_eq ℚ_ring_order c' c'') as [H19 | H19]; rewrite -> H19.
-      * apply le_cross_add; fold rationals.le; auto.
-        eapply (ordered_rings.le_trans ℚ_ring_order); eauto.
-        apply mul_le_l; simpl; auto; fold rationals.le.
-        rewrite <-H19.
-        now apply max_le_r.
-      * apply le_cross_add; fold rationals.le; auto.
-        eapply (ordered_rings.le_trans ℚ_ring_order); eauto.
-        apply mul_le_l; simpl; auto; fold rationals.le.
-        rewrite <-H19.
-        now apply max_le_l.
+  apply set_proj_injective, Extensionality => z.
+  (split => /Specify_classification [H3];
+            rewrite ? Specify_classification ? (reify H3) ? despecify) =>
+    [[r [s [/Specify_classification
+             [H4 [r' [s' [/set_proj_injective -> [H5 H6]]]]]
+             [H7 [/[dup] H8 /(O0_opp ℚ_ring_order) H9 [H10 H11]]]]]] |
+      [ac [bc [/set_proj_injective H4 [H5 H6]]]]];
+    repeat split; auto; set (ζ := mkSet H3 : Q).
+  - move: (pos_nonempty a H) (pos_nonempty b H0) => [t [H12 ?]] [t' [H14 ?]].
+    move: (lt_dense2 t (r'+s') H12 H8) (lt_dense2 t' (r'+s') H14 H8) =>
+    [k [? [? ?]]] [k' [? [? ?]]].
+    (case: (classic (0 < r')%Q) (classic (0 < s')%Q) =>
+       [? | ?] [? | ?]; try tauto);
+    [ exists (ζ + -s' * s)%Q, (s' * s)%Q | exists (ζ + -k' * s)%Q, (k' * s)%Q |
+      exists (k * s)%Q, (ζ + -k * s)%Q ];
+    rewrite /IQS ? Specify_classification ? despecify;
+    repeat split; eauto 8 using elts_in_set, Dedekind_cut_2,
+      (le_refl ℚ_ring_order : ∀ a, a ≤ a)%Q; try (f_equal; ring).
+    + exists r', s.
+      repeat split; auto.
+      move: H11 => /(add_le_l ℚ_ring_order) /= /(_ (-s' * s)%Q).
+      rewrite -[(ordered_rings.le ℚ_ring_order)]/(rationals.le) => H11.
+      ring_simplify in H11; ring_simplify.
+      by have ->: (ζ - s' * s = - s' * s + ζ)%Q by ring.
+    + exists (r' + s' + -k')%Q, s.
+      have ->: ((r' + s' + -k')*s = (r' + s') * s + -k' * s)%Q by ring.
+      (repeat split; auto; last by apply add_le_r);
+      rewrite -? [rationals.lt]/(ordered_rings.lt ℚ_ring_order)
+              -? (ordered_rings.lt_shift ℚ_ring_order) //.
+      eapply (Dedekind_cut_2 _ r'), (lt_shift ℚ_ring_order); auto => /=.
+      have ->: (r' + -(r' + s' + -k') = k' + -s')%Q by ring.
+      eapply (lt_shift ℚ_ring_order s'), (le_lt_trans ℚ_ring_order); eauto.
+      by apply le_not_gt.
+    + exists (r' + s' + -k)%Q, s.
+      have ->: ((r' + s' + -k) * s = (r' + s') * s + -k * s)%Q by ring.
+      (repeat split; auto; last by apply add_le_r);
+      rewrite -? [rationals.lt]/(ordered_rings.lt ℚ_ring_order)
+              -? (ordered_rings.lt_shift ℚ_ring_order) //.
+      eapply (Dedekind_cut_2 _ s'), (lt_shift ℚ_ring_order); auto => /=.
+      have ->: (s' + -(r' + s' + -k) = k + -r')%Q by ring.
+      eapply (lt_shift ℚ_ring_order r'), (le_lt_trans ℚ_ring_order); eauto.
+      by apply le_not_gt.
+  - move: H6 H5 => /Specify_classification /[swap] /Specify_classification.
+    rewrite ? despecify => [[H5 [a' [c' [H6 [H7 [H8 [H9 H10]]]]]]]]
+                             [H11 [b' [c'' [H12 [H13 [H14 [H15 H16]]]]]]].
+    exists (a' + b')%Q, (ordered_rings.max ℚ_ring_order c' c'').
+    rewrite Specify_classification.
+    repeat split; eauto using O0, elts_in_set; rewrite /ζ ? H4 ? rationals.D1;
+      try by case: (max_eq ℚ_ring_order c' c'') => -> //.
+    apply le_cross_add; fold rationals.le; auto;
+      eapply (ordered_rings.le_trans ℚ_ring_order); eauto;
+      apply mul_le_l; simpl; auto; fold rationals.le;
+      [apply max_le_l | apply max_le_r].
 Qed.
 
 Definition mul : R → R → R.
