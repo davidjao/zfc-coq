@@ -874,103 +874,78 @@ Qed.
 
 Definition mul : R → R → R.
 Proof.
-  intros a b.
-  destruct (excluded_middle_informative (0 < a)),
-  (excluded_middle_informative (0 < b)).
+  move=> a b.
+  case: (excluded_middle_informative (0 < a))
+          (excluded_middle_informative (0 < b)) => [H | H] [H0 | H0].
   - exact (a·b).
-  - destruct (excluded_middle_informative (0 = b)).
+  - exact (If (0 = b) then 0 else (-(a·(-b)))).
+  - exact (If (0 = a) then 0 else (-((-a)·b))).
+  - case: (excluded_middle_informative (0 = b)) => [H1 | H1].
     + exact 0.
-    + exact (-(a·(-b))).
-  - destruct (excluded_middle_informative (0 = a)).
-    + exact 0.
-    + exact (-((-a)·b)).
-  - destruct (excluded_middle_informative (0 = b)).
-    + exact 0.
-    + destruct (excluded_middle_informative (0 = a)).
-      * exact 0.
-      * exact ((-a)·(-b)).
+    + exact (If (0 = a) then 0 else ((-a)·(-b))).
 Defined.
 
 Infix "*" := mul : R_scope.
 
 Theorem mul_0_r : ∀ a, a * 0 = 0.
 Proof.
-  intros a.
-  unfold mul.
-  repeat destruct excluded_middle_informative; try tauto;
-    contradiction (lt_irrefl 0).
+  rewrite /mul => a.
+  (repeat case excluded_middle_informative => // [ | _]) => /lt_irrefl //.
 Qed.
 
 Theorem mul_0_l : ∀ a, 0 * a = 0.
 Proof.
-  intros a.
-  unfold mul.
-  repeat destruct excluded_middle_informative; try tauto;
-    contradiction (lt_irrefl 0).
+  rewrite /mul => a.
+  (repeat case excluded_middle_informative => //) => [_ | _ _] /lt_irrefl //.
 Qed.
 
 Theorem R_mul_pos_pos : ∀ a b, 0 < a → 0 < b → a * b = a · b.
 Proof.
-  intros a b H H0.
-  unfold mul.
-  repeat destruct excluded_middle_informative; tauto.
+  rewrite /mul => a b.
+  repeat case excluded_middle_informative => //.
 Qed.
 
 Theorem R_mul_pos_neg : ∀ a b, 0 < a → b < 0 → a * b = -(a · -b).
 Proof.
-  intros a b H H0.
-  unfold mul.
-  repeat destruct excluded_middle_informative; try tauto.
-  - contradiction (lt_antisym 0 b).
-  - now subst.
+  rewrite /mul => a b.
+  (repeat case excluded_middle_informative => //) => [/lt_antisym | <-] //.
 Qed.
 
 Theorem R_mul_neg_pos : ∀ a b, a < 0 → 0 < b → a * b = -(-a · b).
 Proof.
-  intros a b H H0.
-  unfold mul.
-  repeat destruct excluded_middle_informative; try tauto.
-  - contradiction (lt_antisym 0 a).
-  - now subst.
+  rewrite /mul => a b.
+  (repeat case excluded_middle_informative => //) => [_ /lt_antisym | <-] //.
 Qed.
 
 Theorem R_mul_neg_neg : ∀ a b, a < 0 → b < 0 → a * b = (-a · -b).
 Proof.
-  intros a b H H0.
-  unfold mul.
-  repeat destruct excluded_middle_informative; try tauto;
-    subst; exfalso; eapply lt_antisym; eauto.
-  contradiction (lt_irrefl 0).
+  rewrite /mul => a b.
+  (repeat case excluded_middle_informative => //) =>
+    [/lt_antisym | <- | _ _ | <- | _ | <- | <- ] // /lt_antisym //.
 Qed.
 
 Theorem lt_shift : ∀ a b, a < b ↔ 0 < b + -a.
 Proof.
-  split; intros H.
-  - apply (O1 (-a)) in H.
-    now rewrite -> A1, A4, A1 in H.
-  - apply (O1 a) in H.
-    now rewrite -> A3, A1, <-A2, (A1 _ a), A4, A3 in H.
+  (split => [/(O1 (-a)) | /(O1 a)]);
+  rewrite -? (A1 a) ? A4 ? (A1 b) ? A3 ? (A1 b) ? A2 ? A4 -? (A1 b) ? A3 //.
 Qed.
 
 Theorem lt_neg_0 : ∀ a, a < 0 ↔ 0 < -a.
 Proof.
-  intros a.
-  now rewrite -> lt_shift, A1, A3.
+  move=> a.
+  by rewrite lt_shift A1 A3.
 Qed.
 
 Theorem neg_lt_0 : ∀ a, -a < 0 ↔ 0 < a.
 Proof.
-  intros a.
-  rewrite -> lt_shift.
-  rewrite <-(A4 a) at 2.
-  now rewrite <-A2, A4, A3.
+  move=> a.
+  by rewrite lt_shift -{2}(A4 a) -A2 A4 A3.
 Qed.
 
 Theorem neg_neg : ∀ a, - - a = a.
 Proof.
-  intros a.
-  rewrite <-(A3 a) at 2.
-  now rewrite <-(A4 (-a)), A2, A4, A1, A3.
+  move=> a.
+  by rewrite -{2}(A3 a) -(A4 (-a)) A2 A4 A1 A3.
 Qed.
 
 Theorem M1 : ∀ a b, a * b = b * a.
