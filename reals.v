@@ -950,145 +950,85 @@ Qed.
 
 Theorem M1 : ∀ a b, a * b = b * a.
 Proof.
-  intros a b.
-  destruct (T 0 a) as [[H [H0 H1]] | [[H [H0 H1]] | [H [H0 H1]]]], (T 0 b)
-      as [[H2 [H3 H4]] | [[H2 [H3 H4]] | [H2 [H3 H4]]]]; unfold mul;
-    repeat destruct excluded_middle_informative; try tauto; subst;
-      rewrite -> lt_neg_0 in *; now rewrite -> M1_pos.
+  rewrite /mul => a b.
+  move: (T 0 a) (T 0 b) => *.
+  (repeat case excluded_middle_informative => * //);
+  rewrite ? (M1_pos a) ? (M1_pos b) // 1 ? M1_pos // -lt_neg_0; tauto.
 Qed.
 
 Theorem M2 : ∀ a b c, a * (b * c) = (a * b) * c.
 Proof.
-  intros a b c.
-  destruct (T 0 a) as [[H [H0 H1]] | [[H [H0 H1]] | [H [H0 H1]]]], (T 0 b)
-      as [[H2 [H3 H4]] | [[H2 [H3 H4]] | [H2 [H3 H4]]]], (T 0 c)
-        as [[H5 [H6 H7]] | [[H5 [H6 H7]] | [H5 [H6 H7]]]]; subst;
-    try now rewrite -> ? mul_0_l, ? mul_0_r, ? mul_0_l.
-  - rewrite -> ? R_mul_pos_pos, M2_pos, ? R_mul_pos_pos; auto;
-      rewrite -> ? R_mul_pos_pos; auto using O2_pos.
-  - rewrite -> ? (R_mul_pos_neg _ c), (R_mul_pos_pos a b), (R_mul_pos_neg a),
-    neg_neg, M2_pos; auto; try now rewrite -> lt_neg_0 in *.
-    + rewrite -> lt_neg_0, neg_neg in *; auto using O2_pos.
-    + rewrite -> (R_mul_pos_pos a b); auto using O2_pos.
-  - rewrite -> ? (R_mul_pos_neg a), ? (R_mul_neg_pos _ c), ? neg_neg, M2_pos;
-      auto; try now rewrite -> lt_neg_0 in *.
-    + rewrite -> lt_neg_0, neg_neg in *; auto using O2_pos.
-    + rewrite -> R_mul_neg_pos, lt_neg_0, neg_neg in *; auto using O2_pos.
-  - rewrite -> ? (R_mul_neg_neg _ c), (R_mul_pos_neg a b), (R_mul_pos_pos a),
-    ? neg_neg, M2_pos; auto; try now rewrite -> lt_neg_0 in *.
-    + rewrite -> lt_neg_0 in *; auto using O2_pos.
-    + rewrite -> R_mul_pos_neg, lt_neg_0, neg_neg in *; auto using O2_pos.
-  - rewrite -> ? (R_mul_neg_pos a), (R_mul_pos_pos b), R_mul_neg_pos,
-    neg_neg, M2_pos; auto; try now rewrite -> lt_neg_0 in *.
-    + rewrite -> lt_neg_0, neg_neg in *; auto using O2_pos.
-    + rewrite -> R_mul_pos_pos; auto using O2_pos.
-  - rewrite -> (R_mul_pos_neg b c), (R_mul_neg_neg _ c), (R_mul_neg_pos a b),
-    (R_mul_neg_neg a), ? neg_neg, M2_pos; auto;
-      try now rewrite -> lt_neg_0 in *.
-    + rewrite -> lt_neg_0, neg_neg in *; auto using O2_pos.
-    + rewrite -> R_mul_neg_pos, lt_neg_0, neg_neg in *; auto using O2_pos.
-  - rewrite -> ? (R_mul_neg_neg a), (R_mul_neg_pos b), R_mul_pos_pos,
-    ? neg_neg, M2_pos; auto; try now rewrite -> lt_neg_0 in *.
-    + rewrite -> lt_neg_0 in *; auto using O2_pos.
-    + rewrite -> R_mul_neg_pos, lt_neg_0, neg_neg in *; auto using O2_pos.
-  - rewrite -> R_mul_neg_pos, R_mul_neg_neg, R_mul_pos_neg, R_mul_neg_neg,
-    M2_pos; auto; try (now rewrite -> lt_neg_0 in * );
-        rewrite -> R_mul_neg_neg, lt_neg_0 in *; auto using O2_pos.
+  (move=> a b c; move: O2_pos (T 0 a) (T 0 b) (T 0 c) =>
+     ? [[? _] | [[? [<- _]] | [_ [_ /[dup] ? /lt_neg_0 ?]]]]
+       [[? _] | [[? [<- _]] | [_ [_ /[dup] ? /lt_neg_0 ?]]]]
+       [[? _] | [[? [<- _]] | [_ [_ /[dup] ? /lt_neg_0 ?]]]];
+        repeat rewrite ? mul_0_l ? mul_0_r //);
+  [ rewrite ? R_mul_pos_pos |
+    rewrite ? (R_mul_pos_neg _ c) ? (R_mul_pos_pos _ b) ? R_mul_pos_neg |
+    rewrite ? (R_mul_pos_neg a) ? (R_mul_neg_pos_c) ? (R_mul_neg_pos) |
+    rewrite ? (R_mul_neg_neg _ c) ? (R_mul_pos_neg _ b) ? R_mul_pos_pos |
+    rewrite ? (R_mul_neg_pos a) ? (R_mul_pos_pos b) ? R_mul_neg_pos |
+    rewrite (R_mul_pos_neg b) ? (R_mul_neg_pos _ b) ? R_mul_neg_neg |
+    rewrite ? (R_mul_neg_neg a) ? (R_mul_neg_pos b) ? R_mul_pos_pos |
+    rewrite (R_mul_neg_pos _ (b * c)) ? (R_mul_pos_neg (a * b))
+            ? R_mul_neg_neg ]; rewrite ? lt_neg_0 ? neg_neg ? M2_pos; auto.
 Qed.
 
 Theorem M3 : ∀ a, 1 * a = a.
 Proof.
-  intros a.
-  destruct (T 0 a) as [[H [H0 H1]] | [[H [H0 H1]] | [H [H0 H1]]]].
-  - rewrite -> R_mul_pos_pos, M3_pos; auto using zero_lt_1.
-  - subst.
-    now rewrite -> mul_0_r.
-  - rewrite -> R_mul_pos_neg, lt_neg_0, M3_pos, neg_neg in *;
-      auto using zero_lt_1.
+  move: zero_lt_1 T => H /[swap] a =>
+        /(_ 0 a) [[? _] | [[? [<- _]] | [_ [_ /[dup] ? /lt_neg_0 ?]]]].
+  - rewrite R_mul_pos_pos ? M3_pos //.
+  - rewrite mul_0_r //.
+  - rewrite R_mul_pos_neg ? lt_neg_0 ? M3_pos ? neg_neg //.
 Qed.
 
 Theorem O0 : ∀ a b, 0 < a → 0 < b → 0 < a + b.
 Proof.
-  intros a b H H0.
-  apply (O1 a) in H0.
-  rewrite -> A3 in H0.
-  eauto using lt_trans.
+  move=> a b /lt_trans H /(O1 a).
+  rewrite A3 => /H //.
 Qed.
 
 Theorem neg_add : ∀ a b, - (a + b) = - a + - b.
 Proof.
-  intros a b.
-  now rewrite <-(A3 (-a+-b)), <-(A4 (a+b)), A2, (A1 a), A2, <-A2,
-  <-(A2 (-a)), (A1 _ b), A4, A3, A2, (A1 (-a)), A4, (A1 0), A3.
+  move=> a b.
+  rewrite -(A3 (-a+-b)) -(A4 (a+b)) A2 (A1 a) A2 -A2 -(A2 (-a))
+          -(A1 b) A4 A3 A2 (A1 (-a)) A4 (A1 0) A3 //.
 Qed.
 
-Lemma D1_opp : ∀ a b c, 0 < a → b < 0 → (a + b) * c = a * c + b * c.
+Local Lemma D1_opp : ∀ a b c, 0 < a → b < 0 → (a + b) * c = a * c + b * c.
 Proof.
-  intros a b c H H0.
-  destruct (T 0 c) as [[H1 [H2 H3]] | [[H1 [H2 H3]] | [H1 [H2 H3]]]].
-  - destruct (T 0 (a+b)) as [[H4 [H5 H6]] | [[H4 [H5 H6]] | [H4 [H5 H6]]]].
-    + rewrite -> R_mul_pos_pos, R_mul_pos_pos, R_mul_neg_pos, lt_neg_0 in *;
-        auto.
-      replace a with (a+b+-b) at 2.
-      rewrite -> (D1_pos (a+b)), <-A2, A4, A3; auto.
-      now rewrite <-A2, A4, A3.
-    + replace a with (a+b+-b) at 2.
-      rewrite <-H5, mul_0_l, (A1 0), A3, R_mul_pos_pos, R_mul_neg_pos, A4 in *;
-        auto.
-      * now rewrite <-lt_neg_0.
-      * now rewrite <-A2, A4, A3.
-    + rewrite -> R_mul_neg_pos, R_mul_pos_pos, R_mul_neg_pos; auto.
-      replace (-b) with (-(b+a)+a).
-      rewrite -> (D1_pos (-(b+a))), (A1 (a·c)), ? neg_add,
-      <-A2, (A1 _ (a·c)), A4, A3, A1; auto.
-      * now rewrite <-lt_neg_0, A1.
-      * now rewrite -> neg_add, <-A2, (A1 _ a), A4, A3.
-  - subst.
-    now rewrite -> ? mul_0_r, A3.
-  - destruct (T 0 (a+b)) as [[H4 [H5 H6]] | [[H4 [H5 H6]] | [H4 [H5 H6]]]].
-    + rewrite -> R_mul_pos_neg, R_mul_pos_neg, R_mul_neg_neg,
-      lt_neg_0 in *; auto.
-      replace a with (a+b+-b) at 2.
-      rewrite -> (D1_pos (a+b)), neg_add, <-A2, (A1 _ (-b·-c)), A4, A3; auto.
-      now rewrite <-A2, A4, A3.
-    + replace a with (a+b+-b) at 2.
-      rewrite <-H5, mul_0_l, (A1 0), A3, R_mul_pos_neg, R_mul_neg_neg,
-      A1, A4 in *; auto.
-      * now rewrite <-lt_neg_0.
-      * now rewrite <-A2, A4, A3.
-    + rewrite -> R_mul_neg_neg, R_mul_pos_neg, R_mul_neg_neg; auto.
-      replace (-b) with (-(b+a)+a).
-      rewrite -> (D1_pos (-(b+a))), (A1 (-(a·(-c)))), ? neg_add,
-      <-A2, A4, A3, A1; auto.
-      * now rewrite <-lt_neg_0, A1.
-      * now rewrite <-lt_neg_0.
-      * now rewrite -> neg_add, <-A2, (A1 _ a), A4, A3.
+  move=> a b c H /[dup] H0 /lt_neg_0 H1.
+  have H2: a = (a + b + -b) by rewrite -A2 A4 A3.
+  have H3: -b = -(a + b) + a by rewrite -(A1 b) neg_add -A2 -(A1 a) A4 A3 //.
+  (move: (T 0 c) => [[? _] | [[? [<- _]] | [_ [_ /[dup] ? /lt_neg_0 ?]]]];
+                    rewrite ? mul_0_r ? A3 // {2}H2);
+  move: (T 0 (a + b)) => [[? _] | [[? [<- _]] | [_ [_ /[dup] ? /lt_neg_0 ?]]]].
+  - rewrite ? (R_mul_pos_pos (a + b + -b)) ? (D1_pos (a + b))
+            -? H2 // R_mul_pos_pos // R_mul_neg_pos // -A2 A4 A3 //.
+  - rewrite mul_0_l (A1 0) A3 R_mul_pos_pos // R_mul_neg_pos // A4 //.
+  - rewrite -H2 R_mul_neg_pos // R_mul_pos_pos // R_mul_neg_pos // H3
+                D1_pos // ? neg_add -(A1 (-(a · c))) A2 A4 (A1 0) A3 //.
+  - rewrite R_mul_pos_neg // R_mul_pos_neg ? (D1_pos _ (-b))
+            -? H2 // R_mul_neg_neg // neg_add -A2 -(A1 (-b · -c)) A4 A3 //.
+  - rewrite (A1 0) A3 mul_0_l R_mul_pos_neg ? R_mul_neg_neg // A1 A4 //.
+  - rewrite -H2 R_mul_neg_neg // R_mul_pos_neg // R_mul_neg_neg // H3
+                D1_pos // (A1 (- (a · -c))) -A2 A4 A3 //.
 Qed.
 
 Theorem D1 : ∀ a b c, (a + b) * c = a * c + b * c.
 Proof.
-  intros a b c.
-  destruct (T 0 a) as [[H [H0 H1]] | [[H [H0 H1]] | [H [H0 H1]]]], (T 0 b)
-      as [[H2 [H3 H4]] | [[H2 [H3 H4]] | [H2 [H3 H4]]]], (T 0 c)
-        as [[H5 [H6 H7]] | [[H5 [H6 H7]] | [H5 [H6 H7]]]]; subst;
-    try now rewrite -> ? (A1 0), ? A3, ? mul_0_l, ? mul_0_r, ? (A1 0), ? A3.
-  - rewrite -> ? R_mul_pos_pos, D1_pos; auto using O0.
-  - rewrite -> ? R_mul_pos_neg, D1_pos, neg_add in *; auto using O0.
-    now rewrite <-lt_neg_0.
-  - auto using D1_opp.
-  - auto using D1_opp.
-  - rewrite -> A1, (A1 (a*c)).
-    auto using D1_opp.
-  - rewrite -> A1, (A1 (a*c)).
-    auto using D1_opp.
-  - rewrite -> ? R_mul_neg_pos, neg_add, D1_pos, neg_add; auto;
-      try now rewrite <-lt_neg_0.
-    rewrite -> lt_neg_0, neg_add in *.
-    auto using O0.
-  - rewrite -> ? R_mul_neg_neg, neg_add, D1_pos; auto;
-      try now rewrite <-lt_neg_0.
-    rewrite -> lt_neg_0, neg_add in *.
-    auto using O0.
+  move=> a b c.
+  (move: (T 0 a) (T 0 b) (T 0 c) =>
+        [[? _] | [[? [<- _]] | [_ [_ /[dup] ? /lt_neg_0 ?]]]]
+          [[? _] | [[? [<- _]] | [_ [_ /[dup] ? /lt_neg_0 ?]]]]
+          [[? _] | [[? [<- _]] | [_ [_ /[dup] ? /lt_neg_0 ?]]]];
+        rewrite ? (A1 0) ? A3 ? mul_0_l ? mul_0_r ? (A1 0) ? A3 //);
+  [ rewrite ? R_mul_pos_pos ? D1_pos | rewrite ? R_mul_pos_neg ? D1_pos | | |
+    rewrite A1 (A1 (a * c)) | rewrite A1 (A1 (a * c)) |
+    rewrite ? R_mul_neg_pos ? D1_pos ? lt_neg_0 ? neg_add ? D1_pos ? neg_add |
+    rewrite ? R_mul_neg_neg ? D1_pos ? lt_neg_0 ? neg_add ? D1_pos ];
+  auto using O0, neg_add, D1_opp.
 Qed.
 
 Definition sub a b := a + -b.
@@ -1101,20 +1041,8 @@ Proof.
   now rewrite -> A1, A3.
 Qed.
 
-Theorem sub_neg : ∀ a b, a - b = a + -b.
-Proof.
-  auto.
-Qed.
-
-Definition inv : R → R.
-Proof.
-  intros a.
-  destruct (excluded_middle_informative (0 < a)).
-  - exact (a^-1).
-  - destruct (excluded_middle_informative (0 = a)).
-    + exact 0.
-    + exact (-(-a)^-1).
-Defined.
+Definition inv a :=
+  If (0 < a) then (a^-1) else (If (0 = a) then 0 else (-(-a)^-1)).
 
 Notation "a '^-1' " := (inv a) (at level 30, format "a '^-1'") : R_scope.
 
@@ -1134,11 +1062,6 @@ Proof.
 Qed.
 
 Definition div a b := a * b^-1.
-
-Theorem div_inv : ∀ a b, div a b = a * b^-1.
-Proof.
-  auto.
-Qed.
 
 Theorem O2 : ∀ a b, 0 < a → 0 < b → 0 < a * b.
 Proof.
