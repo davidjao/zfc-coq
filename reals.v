@@ -1146,7 +1146,7 @@ Proof.
     apply NNPP => /[dup] H8 [].
     set (ξ := mkSet H7 : Q).
     have /[dup] /(ordered_rings.lt_neq ℚ_ring_order) /[swap] /[dup]
-         /(ordered_fields.inv_lt ℚ_order) /= : (0 < ξ)%Q => [ | ? ? ?].
+         /(ordered_fields.inv_lt ℚ_order) /=: (0 < ξ)%Q => [ | ? ? ?].
     { apply NNPP => /(le_not_gt ℚ_ring_order).
       contradict H8.
       rewrite /rationals.le /ordered_rings.le.
