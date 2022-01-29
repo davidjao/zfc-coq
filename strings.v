@@ -301,11 +301,10 @@ Qed.
 
 Theorem empty_set_realization : realization EmptySet = ∅.
 Proof.
-  apply Extensionality.
-  split; intros H.
-  - apply Specify_classification in H as [H [y [H0 H1]]].
-    inversion H1.
-  - contradiction (Empty_set_classification z).
+  apply Extensionality => z.
+  split => [/Specify_classification [H [h [H0 H1]]] |
+             /Empty_set_classification] //.
+  inversion H1.
 Qed.
 
 Theorem singleton_realization : ∀ a, realization [a] = {a,a}.
@@ -344,132 +343,96 @@ Infix "^" := pow : String_scope.
 
 Theorem concat_pow_0_r : ∀ A, A ** 0 = [ε].
 Proof.
-  intros A.
-  unfold concat_pow, iterate_with_bounds.
-  destruct excluded_middle_informative; auto.
-  - exfalso.
-    apply naturals.le_not_gt in l.
-    eauto using naturals.succ_lt.
+  rewrite /concat_pow /iterate_with_bounds => A.
+  elim excluded_middle_informative => // /[dup] /naturals.le_not_gt.
+  move: (naturals.succ_lt 0) => //.
 Qed.
 
 Theorem concat_pow_1_r : ∀ A, A ** 1 = A.
 Proof.
-  intros A.
-  unfold concat_pow.
-  now rewrite -> iterate_0.
+  rewrite /concat_pow => A.
+  by rewrite iterate_0.
 Qed.
 
 Theorem pow_0_r : ∀ A, A^0 = [ε].
 Proof.
-  intros A.
-  unfold pow, iterate_with_bounds.
-  destruct excluded_middle_informative; auto.
-  - exfalso.
-    apply naturals.le_not_gt in l.
-    eauto using naturals.succ_lt.
+  rewrite /pow /iterate_with_bounds => A.
+  elim excluded_middle_informative => // /[dup] /naturals.le_not_gt.
+  move: (naturals.succ_lt 0) => //.
 Qed.
 
 Theorem pow_1_r : ∀ A, A^1 = A.
 Proof.
-  intros A.
-  unfold pow.
-  now rewrite -> iterate_0.
+  rewrite /pow => A.
+  by rewrite iterate_0.
 Qed.
 
 Theorem append_ε_l : ∀ b, (ε ++ b)%set = b.
 Proof.
-  intros [b B].
-  unfold concat, empty_string.
-  apply set_proj_injective.
-  simpl.
-  repeat destruct constructive_indefinite_description.
-  simpl.
-  set (f := mkFunc i0).
-  replace b with (graph f) by now simpl.
-  f_equal.
-  assert (x = 0%N).
-  { apply set_proj_injective.
-    eapply domain_uniqueness; eauto.
-    split; auto using Empty_set_is_subset.
-    intros a H.
-    contradiction (Empty_set_classification a). }
-  subst; rename x0 into x.
-  apply func_ext;
-    rewrite -> ? sets.functionify_domain, ? sets.functionify_range;
-    simpl; rewrite -> ? add_0_l in *; auto.
-  intros y H.
-  replace y with ((mkSet H : (elts (0+x)%N)) : set) by auto.
-  unfold sets.functionify, concat_elements, ssr_have.
-  destruct constructive_indefinite_description.
-  destruct a as [H0 [H1 H2]].
-  rewrite H2 /=; clear H2.
-  destruct excluded_middle_informative; simpl.
-  - apply naturals.lt_not_ge in l.
-    contradict l.
-    auto using zero_le.
-  - now rewrite /f sub_0_r.
+  rewrite /concat /empty_string => [[b B]] /=.
+  apply set_proj_injective => /=.
+  (repeat elim constructive_indefinite_description => /=) => x H x0 /[dup] H0.
+  rewrite -[b]/(graph (mkFunc H)).
+  (have ->: x0 = 0%N => [ | {}H0]).
+  { eapply set_proj_injective, domain_uniqueness; eauto.
+    split; auto using Empty_set_is_subset => ? /Empty_set_classification //. }
+  apply f_equal, func_ext;
+    rewrite ? sets.functionify_domain ? sets.functionify_range /=
+            ? add_0_l // => y H1.
+  rewrite -[y]/((mkSet H1 : elts (0 + x)%N) : set) /sets.functionify
+              /concat_elements /ssr_have.
+  elim constructive_indefinite_description => f [H2 [H3 ->]] /=.
+  case excluded_middle_informative => /= [/naturals.lt_not_ge | ].
+  - move: zero_le => //.
+  - by rewrite sub_0_r.
 Qed.
 
 Theorem MStarApp_full : ∀ u v A, u =~ A → v =~ A ⃰ → (u ++ v)%set =~ A ⃰.
 Proof.
-  intros u v A H H0.
-  destruct (classic (u = ε)); auto using MStarApp.
-  now rewrite -> H1, append_ε_l.
+  move=> u v A H H0.
+  case (classic (u = ε)); auto using MStarApp => ->.
+  by rewrite append_ε_l.
 Qed.
 
 Theorem concat_ε_l : ∀ A, [ε] ++ A = A.
 Proof.
-  intros [A HA].
-  apply set_proj_injective, Extensionality.
-  simpl; split; intros H; apply Powerset_classification in HA.
-  - apply Specify_classification in H as [H [a [b [H0 [H1 H2]]]]].
-    rewrite -> singleton_realization, Singleton_classification in H0.
-    apply set_proj_injective in H0.
-    subst.
-    now rewrite -> append_ε_l.
-  - apply Specify_classification.
+  move=> [A /[dup] /Powerset_classification H HA].
+  apply set_proj_injective, Extensionality => z /=.
+  split => [/Specify_classification [H0 [a [b]]] | /[dup] H0 /H H1].
+  - rewrite singleton_realization Singleton_classification =>
+              [[/set_proj_injective ->]].
+    rewrite append_ε_l => /and_comm [->] //.
+  - rewrite Specify_classification.
     split; auto.
-    assert (z ∈ STR) as H0 by auto.
-    set (ζ := mkSet H0 : σ).
-    replace z with (ζ : set) by auto.
-    exists ε, ζ.
-    rewrite -> append_ε_l.
-    repeat split; auto.
-    now rewrite -> singleton_realization, Singleton_classification.
+    rewrite (reify H1).
+    exists ε, (mkSet H1 : σ).
+    by rewrite append_ε_l singleton_realization Singleton_classification.
 Qed.
 
 Theorem concat_pow_succ_r : (∀ n A, A ** (S n) = concat_set (A ** n) A)%set.
 Proof.
-  induction n using Induction; intros A.
-  - now rewrite -> concat_pow_0_r, concat_pow_1_r, concat_ε_l.
-  - unfold concat_pow.
-    rewrite -> iterate_succ; auto.
-    exists n.
-    rewrite <-add_1_r.
-    ring.
+  (elim/Induction => [A | n H A]);
+  rewrite ? concat_pow_0_r ? concat_pow_1_r ? concat_ε_l // /concat_pow
+          iterate_succ //; auto using one_le_succ.
 Qed.
 
 Theorem pow_succ_r : ∀ n A, (A^(S n) : Σ) = (A^n || A).
 Proof.
-  induction n using Induction; intros A.
-  - now rewrite -> pow_0_r, pow_1_r, <-concat_reg_exp, concat_ε_l.
-  - unfold pow.
-    rewrite -> iterate_succ; auto.
-    exists n.
-    rewrite <-add_1_r.
-    ring.
+  (elim/Induction => [A | n H A]);
+  rewrite ? pow_0_r ? pow_1_r -? concat_reg_exp ? concat_ε_l //
+          /pow iterate_succ ? concat_reg_exp; auto using one_le_succ.
 Qed.
 
 Theorem pow_concat_pow : ∀ n A, (A^n : Σ) = A ** n.
 Proof.
-  induction n using Induction; intros A.
-  - now rewrite -> pow_0_r, concat_pow_0_r.
-  - now rewrite -> pow_succ_r, concat_pow_succ_r, <-concat_reg_exp, IHn.
+  (elim/Induction => [A | n H A]);
+  rewrite ? pow_0_r ? concat_pow_0_r // ? pow_succ_r ? concat_pow_succ_r
+          -? concat_reg_exp ? H //.
 Qed.
 
 Theorem subsetifying_subset : ∀ A, subsetify (subset_of A) = A.
 Proof.
-  now intros a.
+  reflexivity.
 Qed.
 
 Section concat_function_construction.
@@ -478,60 +441,36 @@ Section concat_function_construction.
 
   Definition concat_function : elts (A × B) → elts (A || B).
   Proof.
-    intros [z H].
-    apply Product_classification in H.
-    destruct (constructive_indefinite_description H) as [a H0].
-    clear H.
-    destruct (constructive_indefinite_description H0) as [b [H1 [H2 H3]]].
-    clear H0.
-    subst.
-    assert (a ∈ STR) as H3 by now apply (reg_exps_are_strings A).
-    assert (b ∈ STR) as H4 by now apply (reg_exps_are_strings B).
-    set (α := mkSet H3 : σ).
-    set (β := mkSet H4 : σ).
-    assert (α ++ β ∈ A || B) as H5.
-    { rewrite <-subsetifying_subset, <-concat_reg_exp.
-      apply Specify_classification.
+    move=> [z /Product_classification /constructive_indefinite_description
+              [a /constructive_indefinite_description
+                 [b [/[dup] ? /reg_exps_are_strings H
+                      [/[dup] ? /reg_exps_are_strings H0 ?]]]]].
+    have H1: ((mkSet H) ++ (mkSet H0) ∈ A || B).
+    { rewrite -subsetifying_subset -concat_reg_exp Specify_classification.
       split; eauto using elts_in_set.
-      now exists α, β. }
-    exact (mkSet H5).
+      by exists (mkSet H), (mkSet H0). }
+    exact (mkSet H1).
   Defined.
 
-End concat_function_construction.
+  Definition concat_product := sets.functionify concat_function.
 
-Definition concat_product A B := sets.functionify (concat_function A B).
+End concat_function_construction.
 
 Theorem concat_product_action :
   ∀ (A B : reg_exp) (x : elts (A × B)) (a b : σ),
     a ∈ A → b ∈ B → (a,b) = x → concat_product A B x = (a ++ b)%set.
 Proof.
-  intros A B [x X] a b H H0 H1.
-  unfold concat_product, sets.functionify.
-  destruct constructive_indefinite_description.
-  destruct a0 as [H2 [H3 H4]].
-  rewrite -> H4.
-  unfold concat_function, sets.functionify.
-  destruct constructive_indefinite_description as [a'].
-  destruct constructive_indefinite_description as [b'].
-  repeat destruct a0.
-  simpl.
-  destruct constructive_indefinite_description as [n].
-  destruct constructive_indefinite_description as [m].
-  subst.
-  simpl in *.
-  destruct a, b.
-  apply Ordered_pair_iff in H1 as [H1 H5].
-  subst.
-  unfold concat.
-  repeat destruct constructive_indefinite_description.
-  simpl.
-  unfold setify in i1, i2.
-  simpl in i1, i2.
-  assert (x = n) as H1 by eauto using set_proj_injective, domain_uniqueness.
-  assert (x1 = m) as H5 by eauto using set_proj_injective, domain_uniqueness.
-  subst.
-  replace i1 with i3 by now apply proof_irrelevance.
-  now replace i2 with i4 by now apply proof_irrelevance.
+  rewrite /concat_product /concat_function /sets.functionify /ssr_have =>
+            A B [x X] [a ?] [b ?] ? ? H.
+  elim constructive_indefinite_description => f [? [? ->]].
+  elim constructive_indefinite_description => [a' [b' [? [? ?]]]].
+  elim constructive_indefinite_description => [b'' [? [? H0]]] /=.
+  (repeat elim constructive_indefinite_description) => [c H1] d H2 m H3 n H4.
+  rewrite /ssr_have /=; subst.
+  move: H H0 => /Ordered_pair_iff [? ?] /Ordered_pair_iff [? ?]; subst.
+  have ?: c = m; have ?: d = n;
+    eauto using set_proj_injective, domain_uniqueness; subst.
+  by rewrite (proof_irrelevance _ H1 H3) (proof_irrelevance _ H2 H4).
 Qed.
 
 Inductive unambiguous : reg_exp → Prop :=
@@ -550,20 +489,15 @@ Inductive unambiguous : reg_exp → Prop :=
 
 Theorem concat_surjective : ∀ A B, surjective (concat_product A B).
 Proof.
-  intros A B.
-  rewrite -> Surjective_classification.
-  intros y H.
-  unfold concat_product in H |-* at 1.
-  rewrite -> @sets.functionify_range, @sets.functionify_domain in *.
-  apply Specify_classification in H as [H [y' [H0 H1]]].
-  inversion H1.
-  subst.
-  assert (a ∈ A) by (apply Specify_classification; eauto using elts_in_set).
-  assert (b ∈ B) by (apply Specify_classification; eauto using elts_in_set).
-  assert ((a, b) ∈ A × B) as H3 by (apply Product_classification; eauto).
-  exists (a, b).
-  replace (a, b) with ((mkSet H3 : elts (A × B)) : set);
-    eauto using concat_product_action.
+  move=> A B.
+  rewrite Surjective_classification {1 2}/concat_product sets.functionify_range
+          sets.functionify_domain => y /Specify_classification [? [y' [? H]]].
+  inversion H as [ | | | a b | | ]; subst.
+  (have: a ∈ A; have: b ∈ B; try by rewrite ? Specify_classification;
+   eauto using elts_in_set) => ? ?.
+  have H0: (a, b) ∈ A × B by rewrite Product_classification; eauto.
+  exists (mkSet H0).
+  eauto using concat_product_action.
 Qed.
 
 Section test_generating_series.
@@ -581,13 +515,13 @@ Section test_generating_series.
 
   Goal (gen_func [0]) = power_series.x ℤ.
   Proof.
-    now simpl.
+    reflexivity.
   Qed.
 
   Goal gen_func ([0] ⌣ [1]) =
   power_series.add _ (power_series.x ℤ) (power_series.x ℤ).
   Proof.
-    now simpl.
+    reflexivity.
   Qed.
 End test_generating_series.
 
@@ -598,50 +532,31 @@ Qed.
 
 Theorem ambiguous_singletons : ∀ x, ¬ unambiguous ([x] ⌣ [x]).
 Proof.
-  intros x H.
-  inversion H.
+  move=> x H.
+  inversion H as [ | | A B H0 H1 H2 | | ].
   contradiction (Empty_set_classification x).
-  rewrite <-H4.
-  apply Pairwise_intersection_classification.
-  assert (x ∈ [x]); auto.
-  apply Specify_classification.
-  split; eauto using elts_in_set.
-  exists x.
-  split; auto using MChar.
+  rewrite -H2 Intersection_idempotent Specify_classification.
+  eauto using elts_in_set, MChar.
 Qed.
 
 Theorem ambiguous_empty_star : ¬ unambiguous ([ε] ⃰).
 Proof.
-  intros H.
-  inversion H.
-  rewrite -> Injective_classification in H3.
-  assert (0 ≠ 1)%N as H4 by apply PA4.
-  pose proof (H2 _ _ H4) as H5.
-  contradict H5.
+  move=> H.
+  inversion H as [ | | | | C H0 H1 H2 H3].
+  move: (PA4 0) => /H1.
   apply Nonempty_classification.
   exists ε.
-  apply Pairwise_intersection_classification.
-  split.
-  - now rewrite -> pow_0_r, singleton_realization, Singleton_classification.
-  - now rewrite -> pow_1_r, singleton_realization, Singleton_classification.
+  rewrite Pairwise_intersection_classification pow_0_r pow_1_r
+          singleton_realization Singleton_classification //.
 Qed.
 
 Theorem zero_ne_1 : 0 ≠ 1.
 Proof.
-  intros H.
-  assert ((0 : set) = (1 : set)) as H0 by congruence.
-  simpl in H0.
-  apply Subset_equality_iff in H0 as [H0 H1].
-  assert ((∅, ∅) = (∅, succ ∅)) as H2.
-  { rewrite <-Singleton_classification.
-    apply H0.
-    now rewrite -> Singleton_classification. }
-  apply Ordered_pair_iff in H2 as [H2 H3].
-  contradiction (Empty_set_classification ∅).
-  rewrite -> H3 at 2.
-  apply Pairwise_union_classification.
-  right.
-  now apply Singleton_classification.
+  move: (eq_refl (∅, ∅)) => /Singleton_classification /[swap] =>
+        /(f_equal elt_to_set) /= ->
+        /Singleton_classification /Ordered_pair_iff [_].
+  move: (Empty_set_classification ∅) => /[swap] {2}->.
+  auto using in_succ.
 Qed.
 
 Theorem functionify_concat_l : ∀ a b x, (x < length a)%N → (a ++ b)%set x = a x.
