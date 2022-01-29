@@ -5,77 +5,42 @@ Definition STR := (⋃ {({0%N,1%N}^n)%set | n in ω})%N.
 
 Theorem STR_classification : ∀ f, f ∈ STR ↔ ∃ n : N, is_function f n {0,1}%N.
 Proof.
-  unfold STR.
-  split; intros H.
-  - apply Union_classification in H as [x [H H0]].
-    apply replacement_classification in H as [n H].
-    subst.
-    apply Specify_classification in H0.
-    exists n.
-    intuition.
-  - destruct H as [n H].
-    apply Union_classification.
-    exists ({0%N,1%N}^n).
-    split.
-    + apply replacement_classification; eauto.
-    + apply Specify_classification.
-      split; auto.
-      destruct H as [H H0].
-      now apply Powerset_classification.
+  rewrite /STR => f.
+  split => [/Union_classification
+             [x [/replacement_classification [n ->] /Specify_classification []]]
+           | [n /[dup] H [H0 H1]]]; eauto.
+  rewrite Union_classification.
+  exists ({0%N,1%N}^n).
+  rewrite replacement_classification Specify_classification
+          Powerset_classification; eauto.
 Qed.
 
 Theorem zero_string_construction : (is_function {(0,0),(0,0)} 1 {0,1})%N.
 Proof.
-  split.
-  - intros z H.
-    apply Singleton_classification in H.
-    subst.
-    apply Product_classification.
+  split => [z /Singleton_classification -> | a].
+  - rewrite Product_classification.
     exists 0%N, 0%N.
-    rewrite <-lt_is_in.
-    repeat split; auto using zero_le, (PA4 0).
-    apply Pairing_classification; intuition.
-  - intros a H.
+    rewrite -lt_is_in Pairing_classification.
+    auto using zero_le, (naturals.lt_succ 0).
+  - rewrite /naturals.one => /Pairwise_union_classification =>
+              [[/Empty_set_classification | /Singleton_classification ->]] //.
     exists 0%N.
-    unfold naturals.one in H.
-    rewrite <-S_is_succ in H.
-    apply Pairwise_union_classification in H as [H | H];
-      try now contradiction (Empty_set_classification a).
-    apply Singleton_classification in H.
-    subst.
-    repeat split.
-    + apply Pairing_classification; intuition.
-    + now apply Singleton_classification.
-    + intros x' [H H0].
-      apply Singleton_classification, Ordered_pair_iff in H0 as [H0 H1].
-      now subst.
+    rewrite /unique Pairing_classification Singleton_classification.
+    split; auto => x' [H /Singleton_classification /Ordered_pair_iff [] //].
 Qed.
 
 Theorem one_string_construction : (is_function {(0,1),(0,1)} 1 {0,1})%N.
 Proof.
-  split.
-  - intros z H.
-    apply Singleton_classification in H.
-    subst.
-    apply Product_classification.
+  split => [z /Singleton_classification -> | a].
+  - rewrite Product_classification.
     exists 0%N, 1%N.
-    rewrite <-lt_is_in.
-    repeat split; auto using zero_le, (PA4 0).
-    apply Pairing_classification; intuition.
-  - intros a H.
+    rewrite -lt_is_in Pairing_classification.
+    auto using zero_le, (naturals.lt_succ 0).
+  - rewrite /naturals.one => /Pairwise_union_classification =>
+              [[/Empty_set_classification | /Singleton_classification ->]] //.
     exists 1%N.
-    unfold naturals.one in H.
-    rewrite <-S_is_succ in H.
-    apply Pairwise_union_classification in H as [H | H];
-      try now contradiction (Empty_set_classification a).
-    apply Singleton_classification in H.
-    subst.
-    repeat split.
-    + apply Pairing_classification; intuition.
-    + now apply Singleton_classification.
-    + intros x' [H H0].
-      apply Singleton_classification, Ordered_pair_iff in H0 as [H0 H1].
-      now subst.
+    rewrite /unique Pairing_classification Singleton_classification.
+    split; auto => x' [H /Singleton_classification /Ordered_pair_iff [] //].
 Qed.
 
 Declare Scope String_scope.
@@ -94,11 +59,9 @@ Bind Scope String_scope with σ.
 
 Definition functionify : σ → function.
 Proof.
-  intros z.
-  pose proof (elts_in_set z) as H; simpl in H.
-  rewrite -> STR_classification in H.
-  destruct (constructive_indefinite_description H) as [n H0].
-  exact (mkFunc H0).
+  move: (@elts_in_set) => /[swap] z /(_ _ z) /STR_classification =>
+        /constructive_indefinite_description [n H].
+  exact (mkFunc H).
 Defined.
 
 Coercion functionify : σ >-> function.
@@ -106,36 +69,31 @@ Coercion functionify : σ >-> function.
 Theorem functionify_injective :
   ∀ s t : σ, (s : function) = (t : function) → s = t.
 Proof.
-  intros s t H.
-  unfold functionify in H.
-  repeat destruct constructive_indefinite_description.
-  apply set_proj_injective.
-  now inversion H.
+  rewrite /functionify => s t.
+  (repeat (elim: constructive_indefinite_description => ? ?)) =>
+    [[]] _ /set_proj_injective //.
 Qed.
 
 Theorem string_range : ∀ x : σ, range x = {0,1}%N.
 Proof.
-  intros x.
-  unfold functionify.
-  now destruct constructive_indefinite_description.
+  rewrite /functionify => x.
+  elim: constructive_indefinite_description => //.
 Qed.
 
 Definition zero_string : σ.
 Proof.
-  assert ({(0,0),(0,0)} ∈ STR)%N as H.
-  { apply STR_classification.
-    exists 1%N.
-    apply zero_string_construction. }
+  have H: ({(0,0),(0,0)} ∈ STR)%N.
+  { rewrite STR_classification.
+    eauto using zero_string_construction. }
   exact (mkSet H).
 Defined.
-
 Notation "0" := zero_string : String_scope.
+
 Definition one_string : σ.
 Proof.
-  assert ({(0,1),(0,1)} ∈ STR)%N as H.
-  { apply STR_classification.
-    exists 1%N.
-    apply one_string_construction. }
+  have H: ({(0,1),(0,1)} ∈ STR)%N.
+  { rewrite STR_classification.
+    eauto using one_string_construction. }
   exact (mkSet H).
 Defined.
 Notation "1" := one_string : String_scope.
@@ -760,20 +718,23 @@ Proof.
   unfold functionify, concat in A0 |-*.
   destruct constructive_indefinite_description as [m].
   destruct constructive_indefinite_description as [a'].
+  destruct constructive_indefinite_description as [m'].
   destruct constructive_indefinite_description as [n].
   simpl in *.
+  assert (m' = m) by (eapply set_proj_injective, domain_uniqueness; eauto).
+  subst.
   assert (a' = m+n)%N as H0.
   { eapply set_proj_injective, domain_uniqueness; eauto.
     split; intros z H0.
     - apply graph_elements_are_pairs in H0.
       now rewrite -> sets.functionify_domain, sets.functionify_range in H0.
-    - destruct (func_hyp (sets.functionify (concat_elements m n a b i i1)))
+    - destruct (func_hyp (sets.functionify (concat_elements m n a b i1 i2)))
         as [H1 H2].
       rewrite -> sets.functionify_domain, sets.functionify_range in H2.
       now apply H2 in H0. }
   subst.
   set (f := mkFunc i0).
-  assert (f = (sets.functionify (concat_elements m n a b i i1))) as H0.
+  assert (f = (sets.functionify (concat_elements m n a b i1 i2))) as H0.
   { apply function_record_injective; auto.
     now rewrite -> sets.functionify_range. }
   rewrite -> H0.
@@ -789,7 +750,9 @@ Proof.
   replace (f' x) with (f' ξ) by auto.
   rewrite -> H3.
   unfold concat_elements.
-  destruct excluded_middle_informative; auto.
+  repeat destruct excluded_middle_informative; auto; simpl.
+  { repeat f_equal.
+    apply proof_irrelevance. }
   contradict n0.
   unfold ξ.
   simpl.
@@ -812,7 +775,14 @@ Proof.
   destruct constructive_indefinite_description as [m].
   destruct constructive_indefinite_description as [n].
   destruct constructive_indefinite_description as [a'].
+  destruct constructive_indefinite_description as [m'].
+  destruct constructive_indefinite_description as [n'].
   simpl in *.
+  assert (m' = m) by (eapply set_proj_injective, domain_uniqueness; eauto).
+  assert (n' = n) by (eapply set_proj_injective, domain_uniqueness; eauto).
+  subst.
+  assert (i2 = i) by apply proof_irrelevance; subst.
+  assert (i3 = i0) by apply proof_irrelevance; subst.
   apply set_proj_injective in A0.
   apply set_proj_injective in B0.
   rewrite <-? A0 in H0, H.
@@ -825,7 +795,7 @@ Proof.
     - pose proof func_hyp (sets.functionify (concat_elements m n a b i i0))
            as [H2 H3].
       rewrite -> sets.functionify_domain, sets.functionify_range in H3.
-      now apply H3 in H1. }
+      by apply H3 in H1. }
   subst a'.
   set (f := mkFunc i1).
   assert (f = (sets.functionify (concat_elements m n a b i i0))) as H1.
