@@ -759,106 +759,69 @@ Proof.
       rewrite sub_diag ? zero_action ? one_action //.
 Qed.
 
+Theorem unambiguous_length :
+  ∀ x y z w : σ, (x ++ y = z ++ w)%set → length x = length z → (x, y) = (z, w).
+Proof.
+  move=> x y z w H H0.
+  apply Ordered_pair_iff, conj.
+  - apply f_equal, functionify_injective, func_ext;
+      rewrite ? length_is_domain ? string_range ? H0 // => s /[dup] /[dup] H1.
+    have S: s ∈ ω by eauto using elements_of_naturals_are_naturals, elts_in_set.
+    rewrite (reify S) -[elt_to_set]/INS -{1}H0 => /lt_is_in H2 /lt_is_in H3.
+    erewrite <-functionify_concat_l, <-(functionify_concat_l z), H; auto.
+  - have H1: length y = length w.
+    { apply (naturals.cancellation_add (length x)).
+      rewrite {2}H0 -? concat_length H //. }
+    apply f_equal, functionify_injective, func_ext;
+      rewrite ? length_is_domain ? string_range ? H1 // => s /[dup] /[dup] H2.
+    have S: s ∈ ω by eauto using elements_of_naturals_are_naturals, elts_in_set.
+    rewrite (reify S) -{3}(sub_abba (mkSet S) (length x)) -{1}H1
+            -{4}(sub_abba (mkSet S) (length z)) => /lt_is_in H3 /lt_is_in H4.
+    erewrite <-functionify_concat_r, <-(functionify_concat_r z);
+      rewrite ? H ? H0 ? H1 //; split; rewrite ? (add_comm (length z));
+      auto using naturals.O1, le_add_l.
+Qed.
+
 Theorem unambiguous_all_strings : unambiguous (([0] ⌣ [1]) ⃰).
 Proof.
-  apply unambiguous_star.
-  - apply unambiguous_union; auto using singleton_unambiguous.
-    apply Extensionality.
-    split; intros H.
-    + apply Pairwise_intersection_classification in H as [H H0].
-      rewrite -> singleton_realization, Singleton_classification in *.
-      contradiction zero_ne_1.
-      apply set_proj_injective.
-      unfold setify in *.
-      congruence.
-    + contradiction (Empty_set_classification z).
-  - intros n m H.
-    apply NNPP.
-    contradict H.
-    apply Nonempty_classification in H as [x H].
-    apply Pairwise_intersection_classification in H as [H H0].
-    assert (x ∈ STR).
-    { pose proof (elts_in_set (([0] ⌣ [1]) ** n)%set) as H1; simpl in H1.
-      rewrite <-subsetifying_subset, pow_concat_pow in H.
-      apply Powerset_classification in H1; auto. }
-    set (ξ := (mkSet H1 : σ)).
-    replace x with (ξ : set) in * by auto.
-    rewrite -> length_of_n_string in *; congruence.
-  - apply Injective_classification.
-    intros x y H H0 H1.
-    unfold concat_product in H, H0.
-    rewrite -> @sets.functionify_domain in *.
-    set (ξ := mkSet H : elts (([0] ⌣ [1]) × ([0] ⌣ [1]) ⃰)).
-    set (γ := mkSet H0 : elts (([0] ⌣ [1]) × ([0] ⌣ [1]) ⃰)).
-    pose proof H as H2.
-    pose proof H0 as H3.
-    replace x with (ξ : set) in * by auto.
-    replace y with (γ : set) in * by auto.
-    apply Product_classification in H2 as [x1 [x2 [H4 [H5 H6]]]].
-    apply Product_classification in H3 as [y1 [y2 [H7 [H8 H9]]]].
-    assert (x1 ∈ STR) as H10 by now apply realization_is_subset in H4.
-    assert (x2 ∈ STR) as H11 by now apply realization_is_subset in H5.
-    assert (y1 ∈ STR) as H12 by now apply realization_is_subset in H7.
-    assert (y2 ∈ STR) as H13 by now apply realization_is_subset in H8.
-    set (ζ1 := (mkSet H10 : σ)).
-    set (ζ2 := (mkSet H11 : σ)).
-    set (γ1 := (mkSet H12 : σ)).
-    set (γ2 := (mkSet H13 : σ)).
-    replace x1 with (ζ1 : set) in * by auto.
-    replace x2 with (ζ2 : set) in * by auto.
-    replace y1 with (γ1 : set) in * by auto.
-    replace y2 with (γ2 : set) in * by auto.
-    erewrite -> (concat_product_action _ _ ξ ζ1 ζ2),
-    (concat_product_action _ _ γ γ1 γ2) in H1; eauto.
-    apply set_proj_injective in H1.
-    rewrite -> H6, H9.
-    assert (length ζ1 = length γ1) as H2.
-    { pose proof (length_of_n_string 1 ζ1) as [L1 L2].
-      pose proof (length_of_n_string 1 γ1) as [L3 L4].
-      rewrite -> L1, L3; auto; now rewrite -> pow_1_r. }
-    do 2 f_equal.
-    + apply functionify_injective, func_ext;
-      rewrite -> ? length_is_domain, ? string_range; try congruence.
-      intros z H3.
-      assert (z ∈ ω) as H14 by
-            eauto using elements_of_naturals_are_naturals, elts_in_set.
-      set (ζ := mkSet H14 : N).
-      replace z with (ζ : set) by auto.
-      rewrite <-(functionify_concat_l ζ1 ζ2), <-(functionify_concat_l γ1 γ2);
-        try congruence; rewrite -> lt_is_in; auto.
-      now rewrite -> H2 in H3.
-    + assert (length ζ2 = length γ2) as H3.
-      { eapply naturals.cancellation_add.
-        now rewrite <-concat_length, H1, concat_length, H2. }
-      apply functionify_injective, func_ext; auto.
-      * rewrite -> ? length_is_domain; congruence.
-      * now rewrite -> ? string_range.
-      * intros z H14.
-        assert (z ∈ ω) as H15 by eauto using string_domain.
-        set (ζ := mkSet H15 : N).
-        replace z with (ζ : set) by auto.
-        rewrite <-(sub_abba ζ (length ζ1)) at 1.
-        rewrite <-(sub_abba ζ (length γ1)) at 2.
-        assert (length γ1 ≤ ζ + length γ1 < length γ1 + length γ2)%N.
-        { split.
-          - exists ζ.
-            ring.
-          - rewrite -> (naturals.add_comm _ (length γ2)).
-            apply naturals.O1, lt_is_in.
-            rewrite -> length_is_domain, H3 in H14.
-            apply H14. }
-        rewrite <-? functionify_concat_r; congruence.
+  apply unambiguous_star => [ | n m H | ].
+  - apply unambiguous_union, Extensionality;
+      auto using singleton_unambiguous => z.
+    split => [/Pairwise_intersection_classification |
+               /Empty_set_classification //].
+    rewrite ? singleton_realization ? Singleton_classification =>
+              [[ ]] -> /set_proj_injective /zero_ne_1 //.
+  - apply NNPP => /Nonempty_classification
+                   [x /Pairwise_intersection_classification [H0 H1]].
+    move: H0 H1 H => /[dup] /realization_is_subset H.
+    rewrite (reify H) -[elt_to_set]/setify ? length_of_n_string => -> //.
+  - apply Injective_classification => x y.
+    rewrite {1 2}/concat_product sets.functionify_domain =>
+              /[dup] H /[swap] /[dup] H0 /[swap].
+    rewrite {2}(reify H) {2 3}(reify H0) =>
+              /Product_classification
+               [x1 [x2 [/[dup] H1 /realization_is_subset H2
+                         [/[dup] H3 /realization_is_subset H4 ?]]]]
+               /Product_classification
+               [y1 [y2 [/[dup] H5 /realization_is_subset H6
+                         [/[dup] H7 /realization_is_subset H8 ?]]]]; subst.
+    rewrite (reify H2) (reify H4) (reify H6) (reify H8)
+            -[elt_to_set]/setify in H1 H3 H5 H7.
+    have H9: length (mkSet H2) = length (mkSet H6).
+    { rewrite -(pow_1_r ([0] ⌣ [1])) in H1 H5.
+      apply length_of_n_string in H1, H5.
+      congruence. }
+    erewrite (concat_product_action _ _ _ (mkSet H2) (mkSet H4)),
+      (concat_product_action _ _ _ (mkSet H6) (mkSet H8)); eauto =>
+               /set_proj_injective /unambiguous_length /(_ H9) //.
 Qed.
 
 Theorem length_0_empty : ∀ u, length u = 0%N → u = ε.
 Proof.
-  intros u H.
-  apply eq_sym, functionify_injective, func_ext.
-  - now rewrite -> ? length_is_domain, length_empty, H.
-  - now rewrite -> ? string_range.
-  - intros x H0.
-    rewrite -> length_is_domain, length_empty in H0.
-    contradiction (Empty_set_classification x).
+  move=> u H.
+  apply eq_sym, functionify_injective, func_ext;
+    rewrite ? length_is_domain ? length_empty ? H ? string_range // =>
+          x /Empty_set_classification //.
 Qed.
 
 Theorem elements_of_Astar : ∀ A : reg_exp, ⋃ {A^n | n in ω} = A ⃰.
