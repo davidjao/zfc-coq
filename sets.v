@@ -304,6 +304,18 @@ Proof.
   rewrite Specify_classification; intuition; congruence.
 Qed.
 
+Lemma Pairing_left : ∀ x y, x ∈ {x,y}.
+Proof.
+  move=> x y.
+  by apply Pairing_classification, or_introl.
+Qed.
+
+Lemma Pairing_right : ∀ x y, y ∈ {x,y}.
+Proof.
+  move=> x y.
+  by apply Pairing_classification, or_intror.
+Qed.
+
 Theorem Pairing_nonempty : ∀ x y, {x,y} ≠ ∅.
 Proof.
   move: Empty_set_classification => /[swap] x /[swap] y /[swap] <- /(_ x) => H.
@@ -908,6 +920,7 @@ Proof.
 Defined.
 
 Coercion eval : function >-> Funclass.
+Coercion graph : function >-> set.
 
 Theorem function_maps_domain_to_range :
   ∀ f x, x ∈ domain f → f x ∈ range f.
@@ -1050,6 +1063,31 @@ Section Function_evaluation.
   Qed.
 
 End Function_evaluation.
+
+Section const_function.
+
+  Variable A : set.
+  Context {B x : set}.
+  Hypothesis H : x ∈ B.
+  Definition const_function := functionify (const (mkSet H) : elts A → elts B).
+
+  Theorem const_domain : domain const_function = A.
+  Proof.
+    rewrite /const_function functionify_domain //.
+  Qed.
+
+  Theorem const_range : range const_function = B.
+  Proof.
+    rewrite /const_function functionify_range //.
+  Qed.
+
+  Theorem const_action : ∀ a, a ∈ A → const_function a = x.
+  Proof.
+    rewrite /const_function => a H0.
+    rewrite (reify H0) functionify_action //.
+  Qed.
+
+End const_function.
 
 Definition universal_choice_function : set → set.
 Proof.

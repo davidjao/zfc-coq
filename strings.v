@@ -1,46 +1,34 @@
 Set Warnings "-ambiguous-paths".
 Require Export sets polynomials.
 
-Definition STR := (⋃ {({0%N,1%N}^n)%set | n in ω})%N.
+Definition STR := (⋃ {({0%N, 1%N}^n)%set | n in ω})%N.
 
-Theorem STR_classification : ∀ f, f ∈ STR ↔ ∃ n : N, is_function f n {0,1}%N.
+Theorem STR_classification : ∀ f, f ∈ STR ↔ ∃ n : N, is_function f n {0, 1}%N.
 Proof.
   rewrite /STR => f.
   split => [/Union_classification
              [x [/replacement_classification [n ->] /Specify_classification []]]
            | [n /[dup] H [H0 H1]]]; eauto.
   rewrite Union_classification.
-  exists ({0%N,1%N}^n).
+  exists ({0%N, 1%N}^n).
   rewrite replacement_classification Specify_classification
           Powerset_classification; eauto.
 Qed.
 
-Theorem zero_string_construction : (is_function {(0,0),(0,0)} 1 {0,1})%N.
+Theorem zero_string_constr : (const_function 1 (Pairing_left 0 1) ∈ STR)%N.
 Proof.
-  split => [z /Singleton_classification -> | a].
-  - rewrite Product_classification.
-    exists 0%N, 0%N.
-    rewrite -lt_is_in Pairing_classification.
-    auto using zero_le, (naturals.lt_succ 0).
-  - rewrite /naturals.one => /Pairwise_union_classification =>
-              [[/Empty_set_classification | /Singleton_classification ->]] //.
-    exists 0%N.
-    rewrite /unique Pairing_classification Singleton_classification.
-    split; auto => x' [H /Singleton_classification /Ordered_pair_iff [] //].
+  rewrite STR_classification.
+  exists 1%N.
+  move: (func_hyp (const_function 1 (Pairing_left 0 1)))%N.
+  rewrite const_domain const_range //.
 Qed.
 
-Theorem one_string_construction : (is_function {(0,1),(0,1)} 1 {0,1})%N.
+Theorem one_string_constr : (const_function 1 (Pairing_right 0 1) ∈ STR)%N.
 Proof.
-  split => [z /Singleton_classification -> | a].
-  - rewrite Product_classification.
-    exists 0%N, 1%N.
-    rewrite -lt_is_in Pairing_classification.
-    auto using zero_le, (naturals.lt_succ 0).
-  - rewrite /naturals.one => /Pairwise_union_classification =>
-              [[/Empty_set_classification | /Singleton_classification ->]] //.
-    exists 1%N.
-    rewrite /unique Pairing_classification Singleton_classification.
-    split; auto => x' [H /Singleton_classification /Ordered_pair_iff [] //].
+  rewrite STR_classification.
+  exists 1%N.
+  move: (func_hyp (const_function 1 (Pairing_right 0 1)))%N.
+  rewrite const_domain const_range //.
 Qed.
 
 Declare Scope String_scope.
@@ -81,68 +69,35 @@ Proof.
   repeat elim: constructive_indefinite_description => //.
 Qed.
 
-Theorem string_range : ∀ x : σ, range x = {0,1}%N.
+Theorem string_range : ∀ x : σ, range x = {0, 1}%N.
 Proof.
   rewrite /functionify => x.
   elim: constructive_indefinite_description => //.
 Qed.
 
-Definition zero_string : σ.
-Proof.
-  have H: ({(0,0),(0,0)} ∈ STR)%N.
-  { rewrite STR_classification.
-    eauto using zero_string_construction. }
-  exact (mkSet H).
-Defined.
+Definition zero_string := mkSet zero_string_constr : σ.
+Definition one_string := mkSet one_string_constr : σ.
 Notation "0" := zero_string : String_scope.
-
-Definition one_string : σ.
-Proof.
-  have H: ({(0,1),(0,1)} ∈ STR)%N.
-  { rewrite STR_classification.
-    eauto using one_string_construction. }
-  exact (mkSet H).
-Defined.
 Notation "1" := one_string : String_scope.
 
 Theorem zero_action : 0 0%N = 0%N.
 Proof.
-  rewrite /zero_string /ssr_have /functionify.
-  elim constructive_indefinite_description => /= y H.
-  (apply function_maps_domain_to_graph => /=);
-  rewrite ? Pairing_classification ? Singleton_classification; eauto.
-  have ->: y = 1%N; last apply in_succ.
-  eapply set_proj_injective, domain_uniqueness; eauto.
-  split => [z /Singleton_classification -> |
-             z /Pairwise_union_classification
-               [/Empty_set_classification // | /Singleton_classification ->]].
-  - rewrite Product_classification.
-    exists 0%N, 0%N.
-    rewrite Pairing_classification.
-    repeat split; first apply in_S; eauto.
-  - exists 0%N.
-    rewrite /unique Pairing_classification Singleton_classification.
-    split; auto => x [_ /Singleton_classification /Ordered_pair_iff [ ] //].
+  rewrite /zero_string /functionify.
+  elim constructive_indefinite_description => x H /=.
+  have ->: mkFunc H = (const_function 1 (Pairing_left 0 1))%N by
+    apply function_record_injective; rewrite ? const_range //.
+  rewrite const_action // -[∅]/(0%N : set) -lt_is_in.
+  auto using (naturals.succ_lt 0%N).
 Qed.
 
 Theorem one_action : 1 0%N = 1%N.
 Proof.
-  rewrite /zero_string /ssr_have /functionify.
-  elim constructive_indefinite_description => /= y H.
-  (apply function_maps_domain_to_graph => /=);
-  rewrite ? Pairing_classification ? Singleton_classification; eauto.
-  have ->: y = 1%N; last apply in_succ.
-  eapply set_proj_injective, domain_uniqueness; eauto.
-  split => [z /Singleton_classification -> |
-             z /Pairwise_union_classification
-               [/Empty_set_classification // | /Singleton_classification ->]].
-  - rewrite Product_classification.
-    exists 0%N, 1%N.
-    rewrite Pairing_classification.
-    repeat split; first apply in_S; eauto.
-  - exists 1%N.
-    rewrite /unique Pairing_classification Singleton_classification.
-    split; auto => x [_ /Singleton_classification /Ordered_pair_iff [ ] //].
+  rewrite /zero_string /functionify.
+  elim constructive_indefinite_description => x H /=.
+  have ->: mkFunc H = (const_function 1 (Pairing_right 0 1))%N by
+    apply function_record_injective; rewrite ? const_range //.
+  rewrite const_action // -[∅]/(0%N : set) -lt_is_in.
+  auto using (naturals.succ_lt 0%N).
 Qed.
 
 Definition length : σ → N.
@@ -167,16 +122,18 @@ Qed.
 
 Theorem length_zero : length 0 = 1%N.
 Proof.
-  rewrite /length /zero_string.
+  move: (func_hyp (const_function 1 (Pairing_left 0 1)))%N.
+  rewrite /length /zero_string const_domain const_range => H.
   repeat elim: constructive_indefinite_description => /= *.
-  eauto using set_proj_injective, domain_uniqueness, zero_string_construction.
+  eauto using set_proj_injective, domain_uniqueness.
 Qed.
 
 Theorem length_one : length 1 = 1%N.
 Proof.
-  rewrite /length /zero_string.
+  move: (func_hyp (const_function 1 (Pairing_right 0 1)))%N.
+  rewrite /length /zero_string const_domain const_range => H.
   repeat elim: constructive_indefinite_description => /= *.
-  eauto using set_proj_injective, domain_uniqueness, one_string_construction.
+  eauto using set_proj_injective, domain_uniqueness.
 Qed.
 
 Definition cc_singleton : σ → Σ.
@@ -190,22 +147,22 @@ Defined.
 Section concat_elements_construction.
 
   Context {n m : N} {f g : set}.
-  Hypothesis F : is_function f n {0,1}%N.
-  Hypothesis G : is_function g m {0,1}%N.
+  Hypothesis F : is_function f n {0, 1}%N.
+  Hypothesis G : is_function g m {0, 1}%N.
 
-  Definition concat_elements : elts (n+m)%N → elts {0,1}%N.
+  Definition concat_elements : elts (n + m)%N → elts {0, 1}%N.
   Proof.
     move=> x.
     have H: (x ∈ ω) by
       eauto using elements_of_naturals_are_naturals, elts_in_set.
     case (excluded_middle_informative (mkSet H < n)%N) =>
            [/lt_is_in H0 | /naturals.le_not_gt /sub_abab H0].
-    - have H1: (mkFunc F) x ∈ {0%N,1%N}.
-      { rewrite -[{0%N,1%N}]/(range (mkFunc F)).
+    - have H1: (mkFunc F) x ∈ {0%N, 1%N}.
+      { rewrite -[{0%N, 1%N}]/(range (mkFunc F)).
         auto using function_maps_domain_to_range. }
       exact (mkSet H1).
-    - have H1: (mkFunc G) (mkSet H - n)%N ∈ {0%N,1%N}.
-      { rewrite -[{0%N,1%N}]/(range (mkFunc G)).
+    - have H1: (mkFunc G) (mkSet H - n)%N ∈ {0%N, 1%N}.
+      { rewrite -[{0%N, 1%N}]/(range (mkFunc G)).
         apply function_maps_domain_to_range => /=.
         move: (elts_in_set x).
         rewrite -{1}[elt_to_set x]/(INS (mkSet H)) -? lt_is_in
@@ -223,7 +180,7 @@ Proof.
            [b /STR_classification /constructive_indefinite_description [m H0]].
   have H1: (graph (sets.functionify (concat_elements H H0)) ∈ STR).
   { rewrite STR_classification.
-    exists (n+m)%N.
+    exists (n + m)%N.
     move: (func_hyp (sets.functionify (concat_elements H H0))).
     rewrite sets.functionify_domain sets.functionify_range //. }
   exact (mkSet H1).
@@ -599,11 +556,10 @@ Qed.
 
 Theorem zero_ne_1 : 0 ≠ 1.
 Proof.
-  move: (eq_refl (∅, ∅)) => /Singleton_classification /[swap] =>
-        /(f_equal elt_to_set) /= ->
-        /Singleton_classification /Ordered_pair_iff [_].
-  move: (Empty_set_classification ∅) => /[swap] {2}->.
-  auto using in_succ.
+  move=> H.
+  contradiction (PA4 0).
+  apply set_proj_injective.
+  rewrite -[elt_to_set]/INS -zero_action -one_action H //.
 Qed.
 
 Theorem functionify_concat_l : ∀ a b x, (x < length a)%N → (a ++ b)%set x = a x.
@@ -794,7 +750,7 @@ Proof.
         first by (case excluded_middle_informative => _);
         rewrite ? length_zero ? length_one add_1_r;
         eauto using naturals.le_refl, naturals.succ_lt.
-      have /Pairing_classification: x n ∈ {0,1}%N.
+      have /Pairing_classification: x n ∈ {0, 1}%N.
       { rewrite -(string_range x).
         apply function_maps_domain_to_range.
         rewrite H0 H1.
@@ -1133,9 +1089,9 @@ Theorem finite_length_subsets :
 Proof.
   intros k A H.
   eapply subsets_of_finites_are_finite.
-  - apply (finite_powers_are_finite {0,1}%N k);
+  - apply (finite_powers_are_finite {0, 1}%N k);
       auto using naturals_are_finite.
-    replace {0,1}%N with (2%N : set); auto using naturals_are_finite.
+    replace {0, 1}%N with (2%N : set); auto using naturals_are_finite.
     apply Extensionality.
     split; intros H0.
     + rewrite -> Pairing_classification.
