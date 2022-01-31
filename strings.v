@@ -62,8 +62,7 @@ Proof.
     [[]] _ /set_proj_injective //.
 Qed.
 
-Theorem functionify_graph :
-  ∀ s : σ, graph (s : function) = s.
+Theorem functionify_graph : ∀ s : σ, graph (s : function) = s.
 Proof.
   rewrite /functionify => s.
   repeat elim: constructive_indefinite_description => //.
@@ -824,160 +823,107 @@ Proof.
           x /Empty_set_classification //.
 Qed.
 
-Theorem elements_of_Astar : ∀ A : reg_exp, ⋃ {A^n | n in ω} = A ⃰.
+Theorem star_realization : ∀ A : reg_exp, ⋃ {A^n | n in ω} = A ⃰.
 Proof.
-  intros A.
-  apply eq_sym, Extensionality.
-  split; intros H.
-  - apply Specify_classification in H as [H [y [H0 H1]]].
-    subst.
-    clear H.
-    remember (length y) as m.
-    revert m y Heqm H1.
-    induction m using Strong_Induction.
-    intros z H0 H1.
-    inversion H1; subst.
+  move=> A.
+  apply eq_sym, Extensionality => z.
+  split => [/Specify_classification [_ [y [-> H]]] |
+             /Union_classification [X [/replacement_classification [n ->] H]]].
+  - remember (length y) as m.
+    revert m y Heqm H.
+    induction m as [m H] using Strong_Induction => x H0 H1.
+    inversion H1 as [ | | | | | u v H2 H3 H4 H5 ]; subst.
     + apply Union_classification.
       exists (A^0).
-      split.
-      * apply replacement_classification.
-        eauto.
-      * now rewrite -> pow_0_r, singleton_realization, Singleton_classification.
-    + eapply H in H6; eauto.
-      * apply Union_classification in H6 as [X [H6 H7]].
-        apply replacement_classification in H6 as [n H6]; subst.
-        apply Union_classification.
-        exists (A^(n+1)%N).
-        rewrite -> replacement_classification.
+      rewrite replacement_classification {2}pow_0_r singleton_realization
+              Singleton_classification.
+      eauto.
+    + eapply H in H5; eauto.
+      * move: H5 => /Union_classification
+                     [X [/replacement_classification [n ->] H5]].
+        rewrite Union_classification.
+        exists (A^(n + 1)%N).
+        rewrite add_1_r -{2}subsetifying_subset pow_succ_r
+                -concat_reg_exp concat_sym concat_set_classification
+                                replacement_classification.
         split; eauto.
-        rewrite -> add_1_r, <-subsetifying_subset, pow_succ_r,
-        <-concat_reg_exp, concat_sym.
-        apply concat_set_classification.
         exists u, v.
-        repeat split; auto.
-        apply Specify_classification.
-        eauto using elts_in_set.
-      * rewrite -> concat_length, naturals.lt_def.
-        exists (length u).
-        split; try ring.
-        intros H0.
-        contradict H4.
-        now apply eq_sym, length_0_empty in H0.
-  - apply Union_classification in H as [X [H H0]].
-    apply replacement_classification in H as [n H].
-    subst.
-    fold N in n.
-    revert z H0.
-    induction n using Induction.
-    { intros z H0.
-      rewrite -> pow_0_r, singleton_realization, Singleton_classification in H0.
-      subst.
+        rewrite Specify_classification.
+        eauto 6 using elts_in_set.
+      * rewrite concat_length -{1}(add_0_l (length v)).
+        apply naturals.O1, nonzero_lt.
+        move: H4 => /[swap] /length_0_empty //.
+  - elim/Induction: n z H => [z | n IHn z].
+    + rewrite pow_0_r singleton_realization Singleton_classification
+              Specify_classification => ->.
+      eauto using elts_in_set, MStar0.
+    + rewrite -subsetifying_subset pow_succ_r -concat_reg_exp concat_sym =>
+                /concat_set_classification
+                 [a [b [/Specify_classification
+                         [H [x [/set_proj_injective -> H0]]]
+                         [/[dup] H1 /IHn /Specify_classification
+                           [H2 [y [/set_proj_injective -> H3]]] ->]]]].
       apply Specify_classification.
-      split; eauto using elts_in_set.
-      exists ε.
-      eauto using MStar0. }
-    intros z H0.
-    rewrite <-subsetifying_subset, pow_succ_r, <-concat_reg_exp,
-    concat_sym in H0.
-    apply concat_set_classification in H0 as [a [b [H0 [H1 H2]]]].
-    subst.
-    apply Specify_classification.
-    split; eauto using elts_in_set.
-    exists (a ++ b)%set.
-    split; auto.
-    apply MStarApp_full.
-    apply IHn in H1.
-    + apply Specify_classification in H0 as [H0 [y [H2 H3]]].
-      apply set_proj_injective in H2.
-      congruence.
-    + apply IHn, Specify_classification in H1 as [H1 [y [H2 H3]]].
-      apply set_proj_injective in H2.
-      congruence.
+      eauto using elts_in_set, MStarApp_full.
 Qed.
 
 Theorem basic_decomposition : STR = (([0] ⌣ [1]) ⃰).
 Proof.
-  apply Extensionality.
-  split; intros H; try eapply realization_is_subset; eauto.
-  rewrite <-elements_of_Astar, Union_classification.
-  set (ζ := (mkSet H : σ)).
-  replace z with (ζ : set) by auto.
-  exists (([0] ⌣ [1])^(length ζ)).
-  split.
-  - apply replacement_classification.
-    now (exists (length ζ)).
-  - now apply length_of_n_string.
+  apply Extensionality => z.
+  split => [H | /realization_is_subset //].
+  rewrite -star_realization Union_classification.
+  exists (([0] ⌣ [1])^(length (mkSet H))).
+  rewrite -{2}[z]/(setify (mkSet H)) replacement_classification
+              length_of_n_string; eauto.
 Qed.
 
 Theorem string_induction_l : ∀ P : σ → Prop,
     (P ε → (∀ x, P x → P (0 ++ x)) → (∀ x, P x → P (1 ++ x)) → ∀ x, P x)%set.
 Proof.
-  intros P H H0 H1 x.
+  move=> P ? ? ? x.
   remember (length x) as n.
-  symmetry in Heqn.
-  revert x Heqn.
-  induction n using Induction; intros x Heqn.
-  - apply length_0_empty in Heqn.
-    congruence.
-  - rewrite <-length_of_n_string, <-subsetifying_subset, pow_succ_r,
-    <-concat_reg_exp, concat_sym, concat_set_classification in *.
-    destruct Heqn as [a [b [H2 [H3 H4]]]].
-    apply set_proj_injective in H4; subst.
-    rewrite -> subsetifying_subset, length_of_n_string in H3.
-    apply IHn in H3.
-    apply Specify_classification in H2 as [H2 [y [H4 H5]]].
-    apply set_proj_injective in H4; subst.
-    inversion H5; inversion H7; subst; auto.
+  elim/Induction: n x Heqn =>
+        [x /(@eq_sym N) /length_0_empty -> // | n H x /(@eq_sym N)].
+  rewrite -length_of_n_string -subsetifying_subset pow_succ_r
+          -concat_reg_exp concat_sym concat_set_classification =>
+            [[a [b [/[swap] [[/[swap] /set_proj_injective ->]]]]]].
+  rewrite subsetifying_subset length_of_n_string =>
+            /(@eq_sym N) /H /[swap] /Specify_classification
+             [? [y [/set_proj_injective -> H0]]].
+  inversion H0 as [ | ? ? ? H1 | ? ? ? H1 | | | ]; inversion H1; subst; auto.
 Qed.
 
 Theorem string_induction_r : ∀ P : σ → Prop,
     (P ε → (∀ x, P x → P (x ++ 0)) → (∀ x, P x → P (x ++ 1)) → ∀ x, P x)%set.
 Proof.
-  intros P H H0 H1 x.
+  move=> P ? ? ? x.
   remember (length x) as n.
-  symmetry in Heqn.
-  revert x Heqn.
-  induction n using Induction; intros x Heqn.
-  - apply length_0_empty in Heqn.
-    congruence.
-  - rewrite <-length_of_n_string, <-subsetifying_subset, pow_succ_r,
-    <-concat_reg_exp, concat_set_classification in *.
-    destruct Heqn as [a [b [H2 [H3 H4]]]].
-    apply set_proj_injective in H4; subst.
-    rewrite -> subsetifying_subset, length_of_n_string in H2.
-    apply IHn in H2.
-    apply Specify_classification in H3 as [H3 [y [H4 H5]]].
-    apply set_proj_injective in H4; subst.
-    inversion H5; inversion H7; subst; auto.
+  elim/Induction: n x Heqn =>
+        [x /(@eq_sym N) /length_0_empty -> // | n H x /(@eq_sym N)].
+  rewrite -length_of_n_string -subsetifying_subset pow_succ_r
+          -concat_reg_exp concat_set_classification =>
+            [[a [b [/[swap] [[/[swap] /set_proj_injective ->]]]]]].
+  rewrite subsetifying_subset length_of_n_string =>
+            /[swap] /(@eq_sym N) /H /[swap] /Specify_classification
+             [? [y [/set_proj_injective -> H0]]].
+  inversion H0 as [ | ? ? ? H1 | ? ? ? H1 | | | ]; inversion H1; subst; auto.
 Qed.
 
 Definition regular (x : set) := ∃ A : reg_exp, x = A.
 
+Lemma union_realization : ∀ A B : reg_exp, A ∪ B = A ⌣ B.
+Proof.
+  move=> A B.
+  apply Extensionality => ?.
+  rewrite Pairwise_union_classification ? Specify_classification.
+  split => [[[? [? [-> H]]] | [? [? [-> H]]]] | [? [? [-> H]]]];
+           do 2 (eauto using MUnionL, MUnionR, elts_in_set; try inversion H).
+Qed.
+
 Theorem regular_union : ∀ A B, regular A → regular B → regular (A ∪ B).
 Proof.
-  intros A B H H0.
-  destruct H as [A' H], H0 as [B' H0].
-  subst.
-  exists (A' ⌣ B').
-  apply Extensionality.
-  split; intros H.
-  - apply Pairwise_union_classification in H as [H | H].
-    + apply Specify_classification.
-      apply Specify_classification in H as [H [ζ [H0 H1]]].
-      subst.
-      split; eauto using MUnionL.
-    + apply Specify_classification.
-      apply Specify_classification in H as [H [ζ [H0 H1]]].
-      subst.
-      split; eauto using MUnionR.
-  - apply Specify_classification in H as [H [ζ [H0 H1]]].
-    subst.
-    rewrite -> Pairwise_union_classification.
-    inversion H1; subst.
-    + left.
-      apply Specify_classification; eauto.
-    + right.
-      apply Specify_classification; eauto.
+  move=> ? ? [A ->] [B ->].
+  firstorder using union_realization.
 Qed.
 
 Theorem regular_concat :
@@ -1011,7 +957,7 @@ Proof.
   exists B.
   split; auto.
   exists (B ⃰).
-  now rewrite -> elements_of_Astar.
+  now rewrite -> star_realization.
 Qed.
 
 Theorem union_smile : ∀ A B, (A ⌣ B : set) = A ∪ B.

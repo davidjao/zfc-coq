@@ -896,7 +896,7 @@ Qed.
 Record function : Type :=
   mkFunc { domain : set;
            range : set;
-           graph : set;
+           graph :> set;
            func_hyp : is_function graph domain range }.
 Arguments mkFunc {domain} {range} {graph} func_hyp.
 
@@ -920,7 +920,6 @@ Proof.
 Defined.
 
 Coercion eval : function >-> Funclass.
-Coercion graph : function >-> set.
 
 Theorem function_maps_domain_to_range :
   ∀ f x, x ∈ domain f → f x ∈ range f.
