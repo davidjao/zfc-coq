@@ -127,14 +127,12 @@ Proof.
     - rewrite (reify H1) in H0.
       move: (Dedekind_cut_1 (mkSet H1)) => /neq_sym.
       rewrite ? Nonempty_classification => [[x H8]].
-      exists x.
-      apply Union_classification; eauto.
+      apply /ex_intro /Union_classification; eauto.
     - move: H2 H4 => /Powerset_classification /Subset_equality -> //.
       rewrite -H8 => x /Union_classification [y [/[dup] H9 /H H10]].
       move: (H7 (mkSet H10) H9) => [[] /[swap] _ /[apply] | [] ->] //.
     - apply Union_classification; eauto.
-    - exists r.
-      rewrite Union_classification; eauto. }
+    - eapply ex_intro, conj, Union_classification; eauto. }
   exists (mkSet H8).
   split => [α H9 | δ H9]; rewrite /le.
   - case (classic (α = (mkSet H8))); auto; left; split => [x H11 | ] /=.
@@ -163,23 +161,21 @@ Proof.
   move=> q.
   rewrite Specify_classification Powerset_classification
           Nonempty_classification.
-  have G: (q + 1 ∈ ℚ) by eauto using elts_in_set.
-  (((repeat split) => [z /Specify_classification [] | | H |
-                        p x /[swap] H /Specify_classification [H0] |
-                        p /Specify_classification [H]] //);
-   first exists (q - 1); rewrite -? H ? Specify_classification ? despecify)
-  => [ | | | /lt_dense [r []]]; eauto using elts_in_set, rationals.lt_trans.
+  have H: (q + 1 ∈ ℚ) by eauto using elts_in_set.
+  (((repeat split) => [z /Specify_classification [] | | H0 |
+                        p x /[swap] H0 /Specify_classification [H1] |
+                        p /Specify_classification [H0]] //);
+   first exists (q - 1); rewrite -? H0 ? Specify_classification ? despecify) =>
+    [ | | | /lt_dense [r []] ? ?]; eauto using elts_in_set, rationals.lt_trans.
   - rewrite -[rationals.lt]/(ordered_rings.lt ℚ_ring_order)
                            (ordered_rings.lt_shift ℚ_ring_order) /=.
     replace (q + -(q - 1)) with 1 by field.
     eauto using elts_in_set, (ordered_rings.zero_lt_1 ℚ_ring_order : 0 < 1)%Q.
-  - move: G.
-    rewrite -H Specify_classification despecify =>
-              [[]] _ /(lt_antisym ℚ_ring_order) [].
+  - rewrite -H0 Specify_classification despecify in H.
+    move: H => [] _ /(lt_antisym ℚ_ring_order) [].
     eauto using (lt_succ ℚ_ring_order).
-  - exists r.
-    rewrite Specify_classification despecify.
-    eauto using elts_in_set.
+  - eapply ex_intro, conj, Specify_classification, conj; rewrite ? despecify;
+      eauto using elts_in_set.
 Qed.
 
 Definition IQR (q : Q) := (mkSet (iqr_in q)) : R.
@@ -499,9 +495,7 @@ Proof.
     split.
     + move: H12 => [ | ->] // /rationals.lt_trans /(_ H13) //.
     + rewrite Specify_classification despecify /rationals.le /ordered_rings.le.
-      split; eauto using elts_in_set.
-      exists ρ, σ.
-      repeat split; eauto using rationals.lt_trans.
+      eauto 11 using elts_in_set, rationals.lt_trans.
 Qed.
 
 Local Definition mul_pos : R → R → R.

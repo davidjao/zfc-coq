@@ -929,57 +929,19 @@ Qed.
 Theorem regular_concat :
   ∀ A B : Σ, regular A → regular B → regular (A ++ B)%str.
 Proof.
-  intros A B H H0.
-  destruct H as [A' H], H0 as [B' H0]; subst.
-  exists (A' || B').
-  apply Extensionality.
-  split; intros H1.
-  - rewrite <-subsetifying_subset, <-concat_reg_exp, concat_set_classification.
-    apply Specify_classification in H1 as [H1 [a [b [H2 [H3 H4]]]]].
-    subst.
-    exists a, b.
-    repeat split; auto; simpl in *; congruence.
-  - rewrite <-subsetifying_subset, <-concat_reg_exp,
-    concat_set_classification in H1.
-    destruct H1 as [a [b [H1 [H2 H3]]]].
-    subst.
-    apply Specify_classification.
-    split; eauto using elts_in_set.
-    exists a, b.
-    repeat split; auto; simpl in *; congruence.
+  move=> ? ? [A] /[swap] [[B]].
+  rewrite -? subsetifying_subset =>
+            /set_proj_injective -> /set_proj_injective ->.
+  exists (A || B).
+  apply Extensionality => z.
+  by rewrite -subsetifying_subset -concat_reg_exp.
 Qed.
 
 Theorem regular_star :
   ∀ A, regular A → ∃ B : reg_exp, A = B ∧ regular (⋃ {B^n | n in ω}).
 Proof.
-  intros A H.
-  destruct H as [B H].
-  exists B.
-  split; auto.
-  exists (B ⃰).
-  now rewrite -> star_realization.
-Qed.
-
-Theorem union_smile : ∀ A B, (A ⌣ B : set) = A ∪ B.
-Proof.
-  intros A B.
-  apply Extensionality.
-  split; intros H.
-  - apply Specify_classification in H as [H [y [H0 H1]]].
-    apply Pairwise_union_classification.
-    inversion H1; subst.
-    + left.
-      apply Specify_classification; eauto.
-    + right.
-      apply Specify_classification; eauto.
-  - apply Specify_classification.
-    apply Pairwise_union_classification in H as [H | H];
-      split; apply reg_exps_are_strings in H as H0; auto;
-        replace z with ((mkSet H0 : σ) : set) in *; auto;
-          exists (mkSet H0 : σ); split; auto;
-            [ apply MUnionL | apply MUnionR ];
-            apply Specify_classification in H as [H [y [H1 H2]]];
-            apply set_proj_injective in H1; congruence.
+  move=> ? [? ->].
+  repeat esplit; eauto using star_realization.
 Qed.
 
 (* This theorem is too hard to prove for now. The standard proof uses DFAs,
@@ -993,246 +955,129 @@ Infix "+" := (power_series.add ℤ) : String_scope.
 Notation "- a" := (power_series.neg ℤ a) : String_scope.
 Infix "*" := (power_series.mul ℤ) : String_scope.
 
+Lemma string_length_idem : ∀ ξ : σ, ξ ∈ {0, 1}%N^(length ξ).
+Proof.
+  move: func_hyp => /[swap] ξ /(_ ξ).
+  rewrite Specify_classification length_is_domain /functionify.
+  elim: constructive_indefinite_description =>
+        /= n /[dup] H0 [/Powerset_classification H1 H2] H3.
+  have <-: n = length ξ; eauto using set_proj_injective, domain_uniqueness.
+Qed.
+
 Theorem finite_length_subsets :
   ∀ k A, (∀ x, x ∈ A → ∃ ξ : σ, x = ξ ∧ length ξ = k) → finite A.
 Proof.
-  intros k A H.
-  eapply subsets_of_finites_are_finite.
-  - apply (finite_powers_are_finite {0, 1}%N k);
-      auto using naturals_are_finite.
-    replace {0, 1}%N with (2%N : set); auto using naturals_are_finite.
-    apply Extensionality.
-    split; intros H0.
-    + rewrite -> Pairing_classification.
-      rewrite <-? S_is_succ in H0.
-      unfold naturals.one in H0.
-      rewrite <-? S_is_succ in H0.
-      apply Pairwise_union_classification in H0 as [H0 | H0].
-      * rewrite <-? S_is_succ in H0.
-        apply Pairwise_union_classification in H0 as [H0 | H0];
-          intuition.
-        -- contradiction (Empty_set_classification z).
-        -- apply Singleton_classification in H0.
-           intuition.
-      * apply Singleton_classification in H0.
-        now right.
-    + rewrite <-? S_is_succ.
-      apply Pairwise_union_classification.
-      unfold naturals.one.
-      rewrite -> Singleton_classification, <-S_is_succ.
-      apply Pairing_classification in H0 as [H0 | H0].
-      * left.
-        apply Pairwise_union_classification.
-        rewrite -> Singleton_classification.
-        intuition.
-      * now right.
-  - intros x H0.
-    apply H in H0 as [ξ [H0 H1]].
-    subst.
-    apply Specify_classification.
-    pose proof (func_hyp ξ).
-    rewrite -> length_is_domain in H0.
-    unfold functionify in H0.
-    destruct constructive_indefinite_description.
-    simpl in *.
-    split; auto.
-    destruct H0.
-    now rewrite -> Powerset_classification.
+  move=> k A H.
+  apply (subsets_of_finites_are_finite A ({0, 1}^k))%N =>
+          [ | x /H [ξ [-> <-]]]; auto using string_length_idem.
+  apply (finite_powers_are_finite {0, 1} k)%N; auto using naturals_are_finite.
+  suff ->: ({0, 1} = (2 : set))%N; auto using naturals_are_finite.
+  by rewrite /= /succ Union_comm Union_empty -Pairing_union_singleton.
 Qed.
 
 Theorem product_lemma : ∀ A B,
     unambiguous (A || B) → gen_series (A || B) = gen_series A * gen_series B.
 Proof.
-  intros A B H.
+  move=> A B H.
   apply power_series_extensionality.
   extensionality n.
-  unfold gen_series.
-  rewrite -> power_series.coefficient_mul, ? coefficient_seriesify.
-  simpl.
-  assert (∀ f g : N → N, (λ k : N, (f k : Z) * (g k : Z)) =
-                         (λ k : N, (f k * g k)%N))%Z as H1.
-  { intros f g.
-    extensionality k.
-    apply INZ_mul. }
-  rewrite -> H1.
-  replace (# {x in A || B | ∃ ξ : σ, x = ξ ∧ length ξ = n} : Z) with
-      (sum ℤ (λ k, (# {x in (A || B) | ∃ a b : σ,
-                         x = (a ++ b)%set ∧ a ∈ A ∧ b ∈ B ∧ length a = k
-                         ∧ length b = (n - k)%N}) : Z) 0 n).
-  - apply iterate_extensionality.
-    intros k H2.
-    apply INZ_eq.
-    rewrite <-finite_products_card; try eapply finite_length_subsets.
-    2: { intros x H0.
-         apply Specify_classification in H0 as [H0 H3]; eauto. }
-    2: { intros x H0.
-         apply Specify_classification in H0 as [H0 H3]; eauto. }
+  rewrite /gen_series power_series.coefficient_mul ? coefficient_seriesify /=.
+  have ->: (∀ f g : N → N, (λ k : N, (f k : Z) * (g k : Z)) =
+                             λ k : N, (f k * g k)%N)%Z by
+    move=> f g; extensionality k; apply INZ_mul.
+  suff ->: (# {x in A || B | ∃ ξ : σ, x = ξ ∧ length ξ = n} : Z) =
+              sum ℤ (λ k, (# {x in (A || B) | ∃ a b : σ,
+                                x = (a ++ b)%set ∧ a ∈ A ∧ b ∈ B ∧ length a = k
+                                ∧ length b = (n - k)%N}) : Z) 0 n.
+  - apply iterate_extensionality => k H0.
+    rewrite INZ_eq -finite_products_card; try eapply finite_length_subsets =>
+              x /Specify_classification [ ]; eauto.
     apply equinumerous_cardinality.
-    inversion H.
-    assert (bijective (concat_product A B)) as H7 by
-          (split; auto using concat_surjective).
-    unfold concat_product in H7.
-    symmetry.
-    set (f := sets.functionify (concat_function A B)) in *.
+    inversion H as [ | | | A0 B0 H1 H2 H3 [H4 H5] | ].
+    have: bijective (concat_product A B) by split; auto using concat_surjective.
+    rewrite /concat_product => H6.
+    apply cardinality_sym.
+    set (φ := sets.functionify (concat_function A B)) in *.
     apply two_sided_inverse_bijective_set.
-    exists f, (inverse f).
-    split.
-    + intros a H8.
-      apply Product_classification in H8 as [a' [b' [H8 [H9 H10]]]].
-      subst.
-      rename a' into a; rename b' into b.
-      assert ((a, b) ∈ A × B) as H3.
-      { apply Specify_classification in H8 as [H8 H10].
-        apply Specify_classification in H9 as [H9 H11].
-        apply Product_classification; eauto. }
-      replace (a, b) with ((mkSet H3 : elts (A × B)) : set);
-      eauto using concat_product_action.
-      split.
-      2: { rewrite -> left_inverse; auto.
-           unfold f.
-           now rewrite -> sets.functionify_domain. }
-      apply Specify_classification.
-      split.
-      * unfold f.
-        erewrite <-@sets.functionify_range.
-        apply function_maps_domain_to_range.
-        now rewrite -> sets.functionify_domain.
-      * apply Specify_classification in H8 as [H8 [a' [H10 H11]]].
-        apply Specify_classification in H9 as [H9 [b' [H12 H13]]].
-        subst.
-        rename a' into a; rename b' into b.
-        exists a, b.
-        repeat split; eauto using concat_product_action.
-    + intros b H8.
-      split.
-      2: { rewrite -> right_inverse; auto.
-           unfold f.
-           rewrite -> inverse_domain, sets.functionify_range; auto.
-           apply Specify_classification in H8; tauto. }
-      apply Specify_classification in H8 as
-          [H8 [a' [b' [H9 [H10 [H11 [H12 H13]]]]]]].
-      subst.
-      rename a' into a; rename b' into b.
-      apply Product_classification.
-      exists a, b.
-      repeat split; try apply Specify_classification; eauto.
-      replace (a, b) with ((inverse f) (f (a, b))).
-      2: { rewrite -> left_inverse; auto.
-           unfold f.
-           rewrite -> sets.functionify_domain.
-           apply Product_classification; eauto. }
-      f_equal.
-      unfold f.
-      symmetry.
-      assert ((a, b) ∈ A × B) as H3 by (apply Product_classification; eauto).
-      replace (a, b) with ((mkSet H3 : elts (A × B)) : set);
-        eauto using concat_product_action.
-  - erewrite -> sum_card; eauto.
-    { eapply finite_length_subsets.
-      intros x H0.
-      apply Specify_classification in H0 as [H0 H2]; eauto. }
-    + intros k H0 x H2.
-      apply Specify_classification in H2 as [H2 [a [b [H3 [H4 [H5 [H6 H7]]]]]]].
-      apply Specify_classification.
-      split; auto; subst.
-      exists (a ++ b)%set.
+    exists φ, (inverse φ).
+    split => [_ /Product_classification
+                [a [b [/Specify_classification
+                        [/[swap] [[a' [-> H7]] H8]]
+                        [/Specify_classification
+                          [/[swap] [[b' [-> H9]]] H10] ->]]]] |
+               b /Specify_classification
+                 [/[swap] [[a' [b' [-> [H7 [H8 [H9 H10]]]]]]] H11]].
+    + have H11: (a', b') ∈ A × B by rewrite Product_classification; eauto.
+      rewrite (reify H11) ? left_inverse // /φ ? sets.functionify_domain //
+              Specify_classification.
+      repeat esplit; eauto using concat_product_action.
+      erewrite <-@sets.functionify_range.
+      apply function_maps_domain_to_range.
+      by rewrite sets.functionify_domain.
+    + rewrite Product_classification right_inverse // /φ ? inverse_domain //
+              ? sets.functionify_range //.
       split; auto.
-      rewrite -> concat_length, H7.
-      destruct H0 as [H0 H3].
-      now apply sub_abab in H3.
-    + intros x.
-      split; intros H0.
-      * apply Specify_classification in H0 as [H0 [ξ [H2 H3]]].
-        subst.
-        apply Specify_classification in H0 as [H0 [x [H2 H3]]].
-        apply set_proj_injective in H2.
-        subst.
-        inversion H3.
-        subst.
-        assert (a ∈ A) as INA.
-        { apply Specify_classification; eauto using elts_in_set. }
-        assert (b ∈ B) as INB.
-        { apply Specify_classification; eauto using elts_in_set. }
-        exists (length a).
-        repeat split; auto using zero_le.
-        -- rewrite -> concat_length.
-           now (exists (length b)).
-        -- apply Specify_classification.
-           split; try (apply Specify_classification; eauto).
-           exists a, b.
-           repeat split; auto; try apply Specify_classification;
-             eauto using elts_in_set.
-           apply sub_spec.
-           now rewrite -> concat_length.
-        -- intros z [H2 H4].
-           apply Specify_classification in H4 as
-               [H4 [a' [b' [H5 [H8 [H9 [H10 H11]]]]]]].
-           inversion H.
-           unfold concat_product in H16.
-           assert ((a, b) ∈ A × B) as INAB.
-           { apply Product_classification; eauto. }
-           assert ((a', b') ∈ A × B) as INAB'.
-           { apply Product_classification; eauto. }
-           erewrite <-? concat_product_action in H5;
-             replace (a', b') with ((mkSet INAB' : elts (A × B)) : set);
-             replace (a, b) with ((mkSet INAB : elts (A × B)) : set); eauto.
-           rewrite -> Injective_classification in H16.
-           apply H16 in H5; try now rewrite -> sets.functionify_domain.
-           inversion H5.
-           apply Ordered_pair_iff in H18 as [H18 H19].
-           apply set_proj_injective in H18.
-           congruence.
-      * destruct H0 as [k [[[H0 H2] H3] _]].
-        apply Specify_classification in H3 as
-            [H3 [a [b [H4 [H5 [H6 [H7 H8]]]]]]].
-        apply Specify_classification.
-        split; auto.
-        exists (a ++ b)%set.
-        rewrite -> concat_length, H7, H8.
-        now apply sub_abab in H2.
+      exists a', b'.
+      repeat split; try apply Specify_classification; eauto.
+      have H12: (a', b') ∈ A × B by apply Product_classification; eauto.
+      have ->: (a', b') = (inverse φ) (φ (a', b')); symmetry; f_equal;
+        rewrite /φ (reify H12) ? left_inverse // ? sets.functionify_domain
+                ? Product_classification; eauto using concat_product_action.
+  - (erewrite -> sum_card; eauto; first eapply finite_length_subsets =>
+       x /Specify_classification [ ]; eauto) =>
+      [k [H0 H1] x /Specify_classification
+         [/[swap] [[a [b [-> [H2 [H3 [H4 H5]]]]]]] H6] | x];
+      rewrite Specify_classification.
+    + repeat esplit; eauto.
+      rewrite concat_length H4 H5 sub_abab //.
+    + split => [[/[swap] [[ξ [-> <-]]] /Specify_classification
+                  [/[swap] [[y [/set_proj_injective ->]]] /[swap] H0 H1]] |
+                 [y [[[[[n' H0] <-] H1]]
+                       /Specify_classification
+                       [H2 [a [b [H3 [H4 [H5 [H6 H7]]]]]]]]]]; last by
+                 (repeat esplit; eauto; rewrite concat_length H6 H7 sub_abab).
+      inversion H1 as [ | | | a b A0 B0 H3 H4 H5 [H6 H7] | | ]; subst.
+      have H2: a ∈ A by apply Specify_classification; eauto using elts_in_set.
+      have H5: b ∈ B by apply Specify_classification; eauto using elts_in_set.
+      exists (length a).
+      (repeat split) =>
+        [ | | | y [H6 /Specify_classification
+                      [H7 [a' [b' [H8 [H9 [H10 [H11 H12]]]]]]]]];
+        rewrite ? concat_length; eauto using zero_le, le_add;
+        first repeat rewrite Specify_classification; repeat esplit;
+        eauto using sub_spec.
+      inversion H as [ | | A0 B0 H13 H14 H15 [H16 H17] | | ].
+      rewrite /concat_product in H15.
+      have H18: (a, b) ∈ A × B; have H19: (a', b') ∈ A × B;
+        rewrite ? Product_classification; eauto.
+      erewrite <-? concat_product_action in H8;
+        rewrite ? (reify H18) ? (reify H19); eauto.
+      move: H15 H8.
+      rewrite Injective_classification => /[apply].
+      rewrite sets.functionify_domain /= => /(_ H18) /(_ H19) =>
+                /Ordered_pair_iff [ ] /set_proj_injective -> //.
 Qed.
 
 Theorem sum_lemma : ∀ A B,
     unambiguous (A ⌣ B) → gen_series (A ⌣ B) = gen_series A + gen_series B.
 Proof.
-  intros A B H.
+  move=> A B H.
   apply power_series_extensionality.
   extensionality n.
-  unfold gen_series.
-  rewrite -> power_series.coefficient_add, ? coefficient_seriesify.
-  simpl.
-  rewrite -> INZ_add.
-  f_equal.
-  rewrite <-finite_union_cardinality; try eapply finite_length_subsets.
-  2: { intros x H0.
-       apply Specify_classification in H0 as [H0 H3]; eauto. }
-  2: { intros x H0.
-       apply Specify_classification in H0 as [H0 H3]; eauto. }
-  - f_equal.
-    apply Extensionality.
-    split; intros H0.
-    + apply Specify_classification in H0 as [H0 [ζ [H1 H2]]].
-      subst.
-      rewrite -> union_smile in H0.
-      rewrite -> Pairwise_union_classification in *.
-      destruct H0 as [H0 | H0].
-      * left.
-        apply Specify_classification; eauto.
-      * right.
-        apply Specify_classification; eauto.
-    + apply Specify_classification.
-      rewrite -> union_smile, Pairwise_union_classification in *.
-      destruct H0 as [H0 | H0]; apply Specify_classification in H0
-        as [H0 [ζ [H1 H2]]]; subst; split; eauto.
-  - apply NNPP.
-    intros H0.
-    apply Nonempty_classification in H0 as [z H0].
-    apply Pairwise_intersection_classification in H0 as [H0 H1].
-    inversion H.
-    contradict H6.
-    apply Nonempty_classification.
-    exists z.
-    apply Pairwise_intersection_classification.
-    rewrite -> Specify_classification in *.
-    tauto.
+  rewrite /gen_series power_series.coefficient_add ? coefficient_seriesify
+          /= INZ_add -finite_union_cardinality;
+    try eapply finite_length_subsets => x /Specify_classification [ ]; eauto.
+  - apply NNPP => /Nonempty_classification [z].
+    rewrite Pairwise_intersection_classification (Specify_classification A)
+            (Specify_classification B) => [[[H0 _] [H1 _]]].
+    inversion H as [ | | A0 B0 H4 H5 H6 [H7 H8] | | ].
+    contradiction (Empty_set_classification z).
+    by rewrite -H6 Pairwise_intersection_classification.
+  - apply f_equal, f_equal, Extensionality => z.
+    rewrite Pairwise_union_classification Specify_classification.
+    split => [[/[swap] [[ξ [-> <-]]]] |
+               [/Specify_classification [/[swap] [[ζ [-> <-]]] H0] |
+                 /Specify_classification [/[swap] [[ζ [-> <-]]] H0]]];
+             (rewrite -union_realization Pairwise_union_classification; eauto)
+          => [[ | ]]; [left | right]; rewrite Specify_classification; eauto.
 Qed.

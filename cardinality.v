@@ -866,8 +866,8 @@ Proof.
       rewrite Singleton_classification //. }
     (repeat split; auto) => a' /Singleton_classification ->.
     exists a.
-    repeat split; auto; [ | intro ];
-      rewrite ? Singleton_classification // ? Ordered_pair_iff => [[]] _ [] //.
+    ((repeat split; auto) => [ | x']);
+    rewrite ? Singleton_classification // ? Ordered_pair_iff => [[]] _ [] //.
 Qed.
 
 Theorem natural_powers_are_finite : ∀ m n : N, finite (m^n).
