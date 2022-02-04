@@ -205,10 +205,10 @@ Reserved Notation "s =~ re" (at level 80).
 
 Theorem length_empty : length ε = 0%N.
 Proof.
-  rewrite /empty_string /length /ssr_have.
+  rewrite /empty_string /length /ssr_have /naturals.zero /=.
   elim constructive_indefinite_description => /= x H.
-  eapply set_proj_injective, domain_uniqueness; eauto.
-  split; auto using Empty_set_is_subset => a /Empty_set_classification //.
+  move: (function_empty_domain (mkFunc H)) => [ ] /=.
+  eauto using set_proj_injective.
 Qed.
 
 (* Lightly adapted from
@@ -368,15 +368,13 @@ Proof.
   (have ->: x0 = 0%N => [ | {}H0]).
   { eapply set_proj_injective, domain_uniqueness; eauto.
     split; auto using Empty_set_is_subset => ? /Empty_set_classification //. }
-  apply f_equal, func_ext;
-    rewrite ? sets.functionify_domain ? sets.functionify_range /=
-            ? add_0_l // => y H1.
+  (apply f_equal, func_ext; rewrite ? sets.functionify_domain);
+  rewrite ? sets.functionify_range /= ? add_0_l // => y H1.
   rewrite -[y]/((mkSet H1 : elts (0 + x)%N) : set) /sets.functionify
               /concat_elements /ssr_have.
   elim constructive_indefinite_description => f [H2 [H3 ->]] /=.
-  case excluded_middle_informative => /= [/naturals.lt_not_ge | ].
-  - move: zero_le => //.
-  - by rewrite sub_0_r.
+  (case excluded_middle_informative => /= [/naturals.lt_not_ge [ ] | ]);
+  rewrite ? sub_0_r; eauto using zero_le.
 Qed.
 
 Theorem MStarApp_full : ∀ u v A, u =~ A → v =~ A ⃰ → (u ++ v)%set =~ A ⃰.
@@ -392,11 +390,10 @@ Proof.
   apply set_proj_injective, Extensionality => z /=.
   split => [/Specify_classification [H0 [a [b]]] | /[dup] H0 /H H1].
   - rewrite singleton_realization Singleton_classification =>
-              [[/set_proj_injective ->]].
-    rewrite append_ε_l => /and_comm [->] //.
-  - rewrite Specify_classification.
+              [[/set_proj_injective ->]] [ ] /[swap] ->.
+    by rewrite append_ε_l.
+  - rewrite Specify_classification (reify H1).
     split; auto.
-    rewrite (reify H1).
     exists ε, (mkSet H1 : σ).
     by rewrite append_ε_l singleton_realization Singleton_classification.
 Qed.
