@@ -6,26 +6,25 @@ Definition STR := (⋃ {({0%N, 1%N}^n)%set | n in ω})%N.
 Theorem STR_classification : ∀ f, f ∈ STR ↔ ∃ n : N, is_function f n {0, 1}%N.
 Proof.
   rewrite /STR => f.
-  split => [/Union_classification
-             [x [/replacement_classification [n ->] /Specify_classification []]]
-           | [n /[dup] H [H0 H1]]]; eauto.
-  rewrite Union_classification.
+  (split; rewrite Union_classification) =>
+    [[x [/replacement_classification [n ->] /Specify_classification []]]
+    | [n /[dup] H [H0 H1]]]; eauto.
   exists ({0%N, 1%N}^n).
   rewrite replacement_classification Specify_classification
           Powerset_classification; eauto.
 Qed.
 
-Theorem zero_string_constr : (const_function 1 (Pairing_left 0 1) ∈ STR)%N.
+Theorem zero_string_str : graph (const_function 1 (Pairing_left 0 1))%N ∈ STR.
 Proof.
   move: (func_hyp (const_function 1 (Pairing_left 0 1)))%N.
-  rewrite STR_classification const_domain const_range //.
+  rewrite STR_classification const_domain const_range.
   eauto.
 Qed.
 
-Theorem one_string_constr : (const_function 1 (Pairing_right 0 1) ∈ STR)%N.
+Theorem one_string_str : graph (const_function 1 (Pairing_right 0 1))%N ∈ STR.
 Proof.
   move: (func_hyp (const_function 1 (Pairing_right 0 1)))%N.
-  rewrite STR_classification const_domain const_range //.
+  rewrite STR_classification const_domain const_range.
   eauto.
 Qed.
 
@@ -72,8 +71,8 @@ Proof.
   elim: constructive_indefinite_description => //.
 Qed.
 
-Definition zero_string := mkSet zero_string_constr : σ.
-Definition one_string := mkSet one_string_constr : σ.
+Definition zero_string := mkSet zero_string_str : σ.
+Definition one_string := mkSet one_string_str : σ.
 Notation "0" := zero_string : String_scope.
 Notation "1" := one_string : String_scope.
 

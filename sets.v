@@ -896,7 +896,7 @@ Qed.
 Record function : Type :=
   mkFunc { domain : set;
            range : set;
-           graph :> set;
+           graph : set;
            func_hyp : is_function graph domain range }.
 Arguments mkFunc {domain} {range} {graph} func_hyp.
 
