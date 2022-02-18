@@ -771,33 +771,28 @@ Qed.
 Theorem unique_prime_factorization :
   ∀ x, 0 < x → ∀ L1 L2 : list Z, x = ∏' L1 → x = ∏' L2 → Permutation L1 L2.
 Proof.
-  induction x as [x IH] using strong_induction =>
-  H L1 L2 [H0 H1] /[dup] H2 [H3 H4].
-  induction L1 as [ | q L1 _];
-    first by move: H0 H2 -> => /one_has_unique_factorization -> //.
-  move: H0 IH H H1 H2 H3 H4 -> => /= IH H H0 H1 H2 H3.
-  have: q｜q * (∏ L1) by eauto using (div_mul_r ℤ), (div_refl ℤ) with Z.
-  (elim (H0 q); auto => H4 H5 /[dup] /(divisors_are_factors L2 _ _ H4 H H1 H5))
-  => /(in_split q L2) => [[l1 [l2 H7]]] =>
-  /(prime_factors_in_interval _ _ H4 H H5) => [[k [H8 H9]]].
-  move: H7 IH H1 H3 (H8) prod_lemma (H9) H2 -> => IH H1 H3 <- => -> H6 H7.
-  move: (M1 k) H7 (H4) H8 (H4) H6 H9 -> =>
-  /(cancellation_mul_l ℤ_ID) /[swap] /(pos_ne_0 ℤ_order) /[swap] /[apply]
-  -> {k} /(cancellation_mul_l ℤ_ID) /[swap] /(pos_ne_0 ℤ_order)
-         /[swap] /[apply] => H6 H7 H8.
-  (apply Permutation_cons_app, (IH (∏ (l1 ++ l2))); intuition; split; auto)
-  => p /in_app_iff ?.
-  apply H3, in_app_iff.
-  intuition.
+  elim/strong_induction => x IH H L1 L2 [H0 H1] /[dup] H2 [H3 H4].
+  elim: L1 H0 H1 => [H0 H1 | q L1 H0 H1 /= H5]; subst; first move: H0 H2 ->
+      => /one_has_unique_factorization -> //.
+  move: H1 IH H H0 H2 (div_mul_r ℤ q q (∏ L1) (div_refl ℤ q)) =>
+        /= /[dup] H0 -> => /= IH H H1 H2.
+  (elim: (H5 q); auto => /[dup] H3 /(pos_ne_0 ℤ_order) /= H6 H7) =>
+    /[dup] /(divisors_are_factors L2 _ _ H3 H H2 H7) => /(in_split q L2) =>
+      [[l1 [l2 H8]]] /(prime_factors_in_interval _ _ H3 H H7) [k [H9 H10]].
+  move: H8 IH H2 H4 (H9) prod_lemma (H10) H0 -> => IH H0 H2 <- -> H4 H8.
+  move: (M1 k) H8 H9 H4 H10 -> => /(cancellation_mul_l ℤ_ID) =>
+        /(_ H6) <- /(cancellation_mul_l ℤ_ID) => /(_ H6) *.
+  apply Permutation_cons_app, (IH (∏ (l1 ++ l2))); intuition; split; auto
+        => p /in_app_iff [ | ] *; apply H2; intuition.
 Qed.
 
 Theorem WOP : ∀ S : Z → Prop,
     (∀ x, S x → 0 < x) → (∃ x, S x) → ∃ s, S s ∧ ∀ t, S t → s ≤ t.
 Proof.
   move=> S H [s H0].
-  apply NNPP => H2.
+  apply NNPP => H1.
   elim/strong_induction: s H0 => s IHs H0.
-  move: H2 => [].
+  contradict H1.
   (repeat esplit; eauto) => t /[dup] /H /[dup] H1 /[swap] /IHs =>
   /Decidable.not_and_iff /[apply] /(le_not_gt ℤ_order) //.
 Qed.
@@ -805,28 +800,28 @@ Qed.
 Theorem common_factor_N : ∀ a b, 0 < a → 0 < b → ∃ d, 0 < d ∧ gcd(a,b) = d.
 Proof.
   move=> a b H H0.
-  elim (WOP (λ z, 0 < z ∧ ∃ x y, z = a*x + b*y)) =>
+  elim (WOP (λ z, 0 < z ∧ ∃ x y, z = a * x + b * y)) =>
   [d [[/[swap] [[x [y -> {d}]]] H1] H2] | | ]; try tauto;
     last by (exists b; repeat split; auto; exists 0, 1; ring).
   have: ∀ a b x y,
-      (∀ t : Z, 0 < t ∧ (∃ x y : Z, t = a*x + b*y) → a*x + b*y ≤ t) →
-      0 < a → 0 < b → 0 < a*x + b*y → a*x + b*y｜a =>
-  [{b x y H H0 H1 H2} a b x y H H0 H1 H2 | H3].
+      (∀ t : Z, 0 < t ∧ (∃ x y : Z, t = a * x + b * y) → a * x + b* y ≤ t) →
+      0 < a → 0 < b → 0 < a * x + b * y → a * x + b * y｜a =>
+        [{b x y H H0 H1 H2} a b x y H H0 H1 H2 | H3].
   - elim (division_algorithm a (a*x+b*y)) =>
-    [q [r [/[swap] [[[H3 | <- _ {2}<-] ]]]] | ]; auto;
-      last by (exists q => /=; ring_simplify).
-    (suff {3}-> : a = (a*x+b*y)*q + (a - (a*x+b*y)*q); last by ring) =>
-    /[swap] /(cancellation_add ℤ) /[dup] H4.
-    (elim (H r); auto) => [H6 _ /(lt_antisym ℤ_order (a*x+b*y) r) |
-                           -> _ /(lt_irrefl ℤ_order r) | ] //.
+           [q [r [/[swap] [[[H3 | <- _ {2}<-] ]]]] | ]; auto;
+           last by (exists q => /=; ring_simplify).
+    (suff {3}-> : a = (a * x + b * y) * q + (a - (a * x + b * y) * q);
+     last by ring) => /[swap] /(cancellation_add ℤ) /[dup] H4.
+    (elim (H r); auto) => [H6 _ /(lt_antisym ℤ_order (a * x + b * y) r) |
+                            -> _ /(lt_irrefl ℤ_order r) | ] //.
     split => //.
-    exists (1-x*q), (-y*q).
+    exists (1 - x * q), (-y * q).
     rewrite H4.
     ring.
-  - exists (a*x + b*y).
+  - exists (a * x + b * y).
     (repeat split; auto) => [ | z H4 H5]; last by apply div_mul_add.
     move: H1 H2.
-    (suff -> : (a*x + b*y = b*y + a*x); last by ring) => H1 H2.
+    (suff -> : (a * x + b * y = b * y + a * x); last by ring) => H1 H2.
     (apply H3; auto) => t [/[swap] [[x' [y' ->]] H4]].
     eapply H2, conj, ex_intro, ex_intro, A1 => //.
 Qed.

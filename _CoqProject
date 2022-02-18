@@ -11,6 +11,7 @@ power_series.v
 integral_domains.v
 ordered_rings.v
 integers.v
+groups.v
 integer_powers.v
 fields.v
 ordered_fields.v
