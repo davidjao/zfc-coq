@@ -39,31 +39,31 @@ Section Pretty_picture_lemmas.
   Proof.
     move=> n.
     set (f := sets.functionify (λ x : N, x + 1)).
-    have /injection_restriction ->: n ⊂ domain f.
+    have /injection_restriction ->: n ⊂ domain f;
+      try (rewrite Injective_classification /f @sets.functionify_domain =>
+             x y H0 H1; rewrite (reify H0) (reify H1) ? functionify_action
+                                ? (integers.A1 _ 1)
+             => /set_proj_injective /(cancellation_add ℤ) /INZ_eq -> //).
     { rewrite /f sets.functionify_domain => x H.
       eauto using elements_of_naturals_are_naturals, elts_in_set. }
-    - rewrite Injective_classification /f @sets.functionify_domain =>
-      x y H0 H1.
-      rewrite (reify H0) (reify H1) ? functionify_action ? (integers.A1 _ 1)
-      => /set_proj_injective /(cancellation_add ℤ) /INZ_eq -> //.
-    - apply cardinality_eq, Extensionality => z.
-      split => [/Specify_classification [H0] |
-                /Specify_classification
-                 [H0 [c [/Pairwise_intersection_classification [H1 H2]]]]].
-      + rewrite (reify H0) despecify Specify_classification /integers.one =>
-        [[/le_def [c H1] H2]].
-        split; rewrite /f ? sets.functionify_range // H1 integers.A1
-                       INZ_add add_1_r in H2 |-*.
-        apply INZ_le, lt_le_succ, lt_is_in in H2.
-        exists c.
-        rewrite Pairwise_intersection_classification sets.functionify_domain
-                functionify_action -add_1_r -INZ_add.
-        eauto using elts_in_set.
-      + rewrite /f sets.functionify_domain sets.functionify_range
-                Specify_classification in H0 H2 |-*.
-        rewrite (reify H2) functionify_action => <-.
-        repeat split; auto; rewrite ? despecify /integers.one INZ_add add_1_r
-                                    ? INZ_le -? lt_le_succ ? (lt_is_in _ n);
+    apply cardinality_eq, Extensionality => z.
+    split => [/Specify_classification [H0] |
+               /Specify_classification
+                [H0 [c [/Pairwise_intersection_classification [H1 H2]]]]].
+    - rewrite (reify H0) despecify Specify_classification /integers.one =>
+                [[/le_def [c H1] H2]].
+      split; rewrite /f ? sets.functionify_range // H1 integers.A1
+                     INZ_add add_1_r in H2 |-*.
+      apply INZ_le, lt_le_succ, lt_is_in in H2.
+      exists c.
+      rewrite Pairwise_intersection_classification sets.functionify_domain
+              functionify_action -add_1_r -INZ_add.
+      eauto using elts_in_set.
+    - rewrite /f sets.functionify_domain sets.functionify_range
+              Specify_classification in H0 H2 |-*.
+      rewrite (reify H2) functionify_action => <-.
+      repeat split; auto; rewrite ? despecify /integers.one INZ_add add_1_r
+                                  ? INZ_le -? lt_le_succ ? (lt_is_in _ n);
         eauto using elts_in_set, naturals.lt_succ.
   Qed.
 
@@ -319,33 +319,33 @@ Section Quadratic_reciprocity.
     have ->: lower_triangle q p =
     domain (restriction (swap_function ℤ ℤ) (lower_triangle q p)) by
         rewrite restriction_domain swap_domain.
-    rewrite injective_into_image ? Injective_classification => [x y | ].
-    - rewrite ? restriction_domain ? swap_domain -? H =>
-      /[dup] ? /Specify_classification ? /[dup] ? /Specify_classification ?.
-      rewrite -? restriction_action ? swap_domain -? H //.
-      move: (swap_bijective ℤ ℤ) => [/Injective_classification].
-      rewrite swap_domain; intuition.
-    - apply cardinality_eq, Extensionality => z.
-      split => [/Specify_classification |
-                /Specify_classification
-                 [/[swap] [[x [y [-> [H0 [H1 H2]]]]]]] H3].
-      + rewrite restriction_domain swap_domain -H =>
-        [[H0 [z' /[dup] [[H1 H2]] []]]].
-        (rewrite -restriction_action ? swap_domain; try congruence) =>
+    rewrite injective_into_image ? Injective_classification;
+      try (move=> ? ?; rewrite ? restriction_domain ? swap_domain -? H =>
+             /[dup] ? /Specify_classification ? /[dup] ? /Specify_classification
+              ?; rewrite -? restriction_action ? swap_domain -? H //;
+              move: (swap_bijective ℤ ℤ) => [/Injective_classification];
+                                            rewrite swap_domain; intuition).
+    apply cardinality_eq, Extensionality => z.
+    split => [/Specify_classification |
+               /Specify_classification
+                [/[swap] [[x [y [-> [H0 [H1 H2]]]]]]] H3].
+    - rewrite restriction_domain swap_domain -H =>
+                [[H0 [z' /[dup] [[H1 H2]] []]]].
+      (rewrite -restriction_action ? swap_domain; try congruence) =>
         /Specify_classification [H3 [x [y [H4 [H5 [H6 H7]]]]]]; subst.
-        move: H3 => /Product_classification =>
-        [[x' [y' [H2 [H3 /Ordered_pair_iff []]]]]]; intuition; subst.
-        rewrite Specify_classification
-        -restriction_action ? swap_domain -? H // swap_action //
-                            Product_classification; split; eauto 8.
-      + rewrite Specify_classification restriction_range swap_range
-                restriction_domain swap_domain -H.
-        split; auto.
-        exists (y, x).
-        have H4: (y, x) ∈ lower_triangle q p;
-          [ rewrite Specify_classification Product_classification |
-            rewrite -restriction_action ? swap_action ? swap_domain -? H];
-          repeat split; eauto 8 using elts_in_set.
+      move: H3 => /Product_classification =>
+            [[x' [y' [H2 [H3 /Ordered_pair_iff []]]]]]; intuition; subst.
+      rewrite Specify_classification
+              -restriction_action ? swap_domain -? H // swap_action //
+                                  Product_classification; split; eauto 8.
+    - rewrite Specify_classification restriction_range swap_range
+              restriction_domain swap_domain -H.
+      split; auto.
+      exists (y, x).
+      have H4: (y, x) ∈ lower_triangle q p;
+        [ rewrite Specify_classification Product_classification |
+          rewrite -restriction_action ? swap_action ? swap_domain -? H];
+        repeat split; eauto 8 using elts_in_set.
   Qed.
 
   Theorem sum_upper_triangle :
