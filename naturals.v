@@ -25,9 +25,9 @@ Proof.
   rewrite /ω.
   elim constructive_indefinite_description => X [H H0] /=.
   rewrite Intersection_classification ? Specify_classification
-          ? Union_classification => [ | _ /Specify_classification [_ []]] //.
-  eapply Nonempty_classification, ex_intro, Specify_classification.
-  eauto using Set_in_powerset.
+          ? Union_classification ? Nonempty_classification;
+    (try (esplit; rewrite Specify_classification; eauto using Set_in_powerset))
+          => ?; rewrite ? Specify_classification; tauto.
 Qed.
 
 Theorem PA2_ω : Inductive ω.
