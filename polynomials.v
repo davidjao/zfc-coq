@@ -310,7 +310,7 @@ Section Polynomial_theorems.
   Theorem degree_zero : degree 0 = 0%N.
   Proof.
     rewrite /degree.
-    case excluded_middle_informative => *; auto; exfalso; auto.
+    by case excluded_middle_informative.
   Qed.
 
   Theorem degree_spec : ∀ f m,
@@ -325,26 +325,24 @@ Section Polynomial_theorems.
 
   Lemma coeffs_of_x : ∀ n : N, n ≠ 1%N → coefficient x n = 0%R.
   Proof.
-    rewrite /IPS /x /ISR /ISS => /= n H.
+    rewrite /IPS /x /ISR /ISS /coefficient => /= n H.
     have -> : 0%R = power_series.coefficient _ (power_series.x ring) n.
     - rewrite /power_series.x /shift /power_series.one /IRS /power_series.IRS
               ? coefficient_seriesify sub_1_r.
       (repeat case excluded_middle_informative; auto) => /[swap] /succ_0 [m H0].
       move: H0 H pred_succ -> => /[swap] -> /[swap] -> //.
-    - rewrite /coefficient.
-      f_equal.
+    - f_equal.
       eauto using set_proj_injective.
   Qed.
 
   Lemma x_coeff_of_x : coefficient x 1 = 1%R.
   Proof.
-    rewrite /IPS /x /ISR /ISS /=.
+    rewrite /IPS /x /ISR /ISS /coefficient /=.
     have -> : 1%R = power_series.coefficient _ (power_series.x ring) 1.
     - rewrite /power_series.x /shift /power_series.one /IRS /power_series.IRS
               ? coefficient_seriesify sub_diag.
       repeat case excluded_middle_informative; auto => // /(@eq_sym N) /PA4 //.
-    - rewrite /coefficient.
-      f_equal.
+    - f_equal.
       eauto using set_proj_injective.
   Qed.
 
@@ -363,7 +361,7 @@ Section Polynomial_theorems.
     { rewrite rings.pow_0_r /coefficient /IPS /=
       -sub_one_is_one /= /power_series.one /IRS /power_series.IRS
                       /coefficient coefficient_seriesify.
-      case excluded_middle_informative; tauto. }
+      by case excluded_middle_informative. }
     rewrite /coefficient pow_succ_r -IPS_mul -IPS_pow /= => IH m H.
     rewrite /power_series.mul coefficient_seriesify -(sum_of_0 _ m).
     apply iterate_extensionality => k [H0 [c H1]].
@@ -392,7 +390,7 @@ Section Polynomial_theorems.
     - rewrite /coefficient /IPS /=
       -sub_zero_is_zero /= /power_series.zero /IRS /power_series.IRS
                         coefficient_seriesify.
-      case excluded_middle_informative; tauto.
+      by case excluded_middle_informative.
     - elim constructive_indefinite_description => [d [H0 H1]] /H1 //.
   Qed.
 
