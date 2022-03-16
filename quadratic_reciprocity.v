@@ -23,16 +23,13 @@ Section Pretty_picture_lemmas.
     eapply (le_lt_trans ℚ_ring_order); eauto; simpl.
     rewrite -[1%Q]/(1%Z : Q) IZQ_add IZQ_mul -IZQ_lt.
     apply (O3_iff ℤ_order 2) =>
-    /=; eauto using (ordered_rings.zero_lt_2 ℤ_order : 0 < 2).
+            /=; eauto using (ordered_rings.zero_lt_2 ℤ_order : 0 < 2).
     have -> : 2 * (p * (# QR q)) = p * (2 * # QR q) by ring.
     have -> : 2 * (q * (# QR p + 1)) = q * (2 * (# QR p) + 2) by ring.
     rewrite -? size_of_QR_in_Z; auto.
-    have -> : p * (q - 1) = p * q + -p by ring.
-    have -> : q * (p - 1 + 2) = p * q + q by ring.
+    ring_simplify.
     apply integers.O1, (integers.lt_trans _ 0); auto using odd_prime_positive.
-    rewrite -[integers.lt]/(ordered_rings.lt ℤ_order).
-    rewrite (ordered_rings.lt_shift ℤ_order) (neg_neg ℤ) /= integers.A3;
-      now apply odd_prime_positive.
+    by apply (neg_lt_0 ℤ_order (p : Z)), odd_prime_positive.
   Qed.
 
   Lemma rectangle_slice_equiv : ∀ n : N, ({x of type ℤ | 1 ≤ x ≤ n} ~ n)%set.
@@ -81,15 +78,14 @@ Section Pretty_picture_lemmas.
   Proof.
     move=> x y H.
     apply (lt_not_ge ℚ_ring_order) => H0.
-    rewrite ? inv_div /= in H, H0;
-      try now apply (pos_ne_0 ℤ_order), odd_prime_positive.
-    move: H (odd_prime_positive _ odd_p) (odd_prime_positive _ (odd_q)) =>
-    /(O3 ℚ_ring_order (q : Q)) /(O3_r ℚ_ring_order (p^-1 : Q)) /=.
-    rewrite ? IZQ_lt => /[swap] /(inv_lt ℚ_order) /[swap] /[apply] /[apply].
-    rewrite -IZQ_mul (IZQ_mul q y).
-    have -> : (q * (p * x * q^-1) * p^-1)%Q = (x : Q) => [ | ?].
-    { field_simplify_eq; repeat split; auto =>
-      /IZQ_eq /(pos_ne_0 ℤ_order) /= []; auto using odd_prime_positive. }
+    move: (odd_prime_positive _ odd_p) (odd_prime_positive _ (odd_q)) =>
+          /[dup] H1 /(pos_ne_0 ℤ_order) /= ? /[dup] H2 /(pos_ne_0 ℤ_order) /= ?.
+    rewrite ? inv_div /= // in H, H0.
+    move: H H1 H2 => /(O3 ℚ_ring_order (q : Q)) /(O3_r ℚ_ring_order (p^-1)) /=.
+    rewrite ? IZQ_lt -IZQ_mul (IZQ_mul q y) =>
+              /[swap] /(inv_lt ℚ_order) /[swap] /[apply] /[apply].
+    (have ->: (q * (p * x * q^-1) * p^-1)%Q = (x : Q);
+     first by field_simplify_eq; split; auto => /IZQ_eq //) => ?.
     eapply (lt_irrefl ℚ_ring_order (x : Q)), (lt_le_trans ℚ_ring_order); eauto.
   Qed.
 
@@ -198,13 +194,12 @@ Section Pretty_picture_lemmas.
     (rewrite ? inv_div; try now apply (pos_ne_0 ℤ_order), odd_prime_positive)
     => /(O3 ℚ_ring_order (p : Q)) /(O3_r ℚ_ring_order (q^-1 : Q)).
     move: (odd_prime_positive _ odd_q) (inv_lt ℚ_order (q : Q)) =>
-    /IZQ_lt /[swap] /[apply] /[swap] /[apply].
-    move: (odd_prime_positive _ odd_p) => /IZQ_lt /[swap] /[apply] /=.
+          /[dup] ? /IZQ_lt /[swap] /[apply] /[swap] /[apply].
+    move: (odd_prime_positive _ odd_p) => /[dup] ? /IZQ_lt /[swap] /[apply] /=.
     rewrite -? IZQ_mul.
-    have ->: (p * (q * y1 * p^-1) * q^-1 = (y1 : Q))%Q => [ | ? ?].
-    { field_simplify_eq; repeat split; auto =>
-      /IZQ_eq /(pos_ne_0 ℤ_order) /= []; auto using odd_prime_positive. }
-    contradiction (lt_antisym ℚ_ring_order (y1 : Q) (p * x1 * q^-1)%Q).
+    have ->: (p * (q * y1 * p^-1) * q^-1 = (y1 : Q))%Q =>
+           [ | /(lt_antisym ℚ_ring_order)? ?] //.
+    field_simplify_eq; split => /IZQ_eq /(pos_ne_0 ℤ_order) //.
   Qed.
 
   Theorem rectangle_union : lower_triangle ∪ upper_triangle = rectangle.
@@ -247,13 +242,13 @@ Section Pretty_picture_lemmas.
     - apply iterate_extensionality => k H.
       rewrite /QR_ε_exp /sig_rect.
       (repeat case excluded_middle_informative) =>
-      [H0 H1 | [] | []]; try apply integers.O2; auto using odd_prime_positive.
+        [H0 H1 | [] | []]; try apply integers.O2; auto using odd_prime_positive.
       2: { apply lt_0_le_1, INZ_le; intuition. }
       elim constructive_indefinite_description => x.
       rewrite integers.A3 => H2.
       apply INZ_eq, eq_sym, equivalence_to_card, cardinality_sym.
       have H3: ∀ y, (k : Z, y+1) ∈ ℤ × ℤ =>
-      [y | ]; rewrite ? Product_classification; eauto using elts_in_set.
+             [y | ]; rewrite ? Product_classification; eauto using elts_in_set.
       set (f := sets.functionify (λ y : N, mkSet (H3 y))).
       have /injection_restriction: x ⊂ domain f.
       { rewrite /f sets.functionify_domain => z H4.
