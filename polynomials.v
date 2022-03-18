@@ -963,45 +963,41 @@ Section Polynomial_theorems.
     - rewrite const_coeff_mul H0 rings.M1 rings.M3 //.
   Qed.
 
-  Lemma monic_division_algorithm_helper : ∀ a b n,
-      monic b → (0 < degree b)%N → (degree a ≤ n)%N →
-      ∃ q r, a = b * q + r ∧ (degree r < degree b)%N.
-  Proof.
-    case (classic (1%R = 0%R)) => [H | H a b n H0 H1 H2].
-    { exists 0, 0.
-      split; try apply zero_ring_degeneracy;
-        rewrite ? IRP_1 ? IRP_0 ? H ? degree_const //. }
-    elim/Induction: n a H2 => [a /naturals.le_lt_trans /(_ H1) |
-                               n IHn a /le_lt_or_eq [/le_lt_succ /IHn // | H2]].
-    { exists 0, a.
-      split; rewrite ? mul_0_r ? rings.A3 //. }
-    case (classic (degree a < degree b)%N) => [H3 | /naturals.le_not_gt [c H3]].
-    { exists 0, a.
-      split; auto; ring. }
-    have H4 : (1 ≤ degree a)%N by rewrite H2; apply one_le_succ.
-    elim (IHn (a - (leading_coefficient a) * x^c * b)) => [q [r [H5 H6]] | ].
-    - exists (q + (leading_coefficient a) * x^c), r.
-      split; auto.
-      ring_simplify [H5]; rewrite -rings.A2 -H5; ring.
-    - apply degree_bound => m /lt_le_succ /le_lt_or_eq.
-      rewrite rings.sub_is_neg coefficient_add coefficient_neg => [[H5 | H5]].
-      + rewrite ? coeffs_above_degree ? rings.A4 ? H2 //.
-        eapply naturals.le_lt_trans; eauto.
-        rewrite -H2 -H3 add_comm.
-        eapply naturals.le_trans, O1_le, naturals.le_trans;
-          eauto using mul_degree.
-        rewrite degree_const degree_x_to_n ? add_0_l;
-          auto using naturals.le_refl.
-      + rewrite -H5 /leading_coefficient /monic -H2
-        -rings.M2 const_coeff_mul (rings.M1 PR) coeff_of_x_mul
-        -H3 ? sub_abba ? H0 ? M3_r ? rings.A4 //; auto using le_add_l.
-  Qed.
-
   Theorem monic_division_algorithm : ∀ a b,
       monic b → (0 < degree b)%N → ∃ q r,
           a = b * q + r ∧ (degree r < degree b)%N.
   Proof.
-    eauto using monic_division_algorithm_helper, naturals.le_refl.
+    case (classic (1%R = 0%R)) => [H | H a].
+    { exists 0, 0.
+      split; try apply zero_ring_degeneracy;
+        rewrite ? IRP_1 ? IRP_0 ? H ? degree_const //. }
+    remember (degree a) as n.
+    revert a Heqn.
+    elim/Strong_Induction: n => n H0 a ? b H1 H2; subst.
+    case (classic (degree a < degree b)%N) => [H3 | /naturals.le_not_gt [c H3]].
+    { exists 0, a.
+      split; auto; ring. }
+    have [d] : (1 ≤ degree a)%N by rewrite -H3;
+      eapply naturals.lt_0_le_1, naturals.lt_le_trans; eauto using le_add.
+    rewrite add_comm add_1_r => H4.
+    have H5: (degree (a - (leading_coefficient a) * x^c * b)%poly < degree a)%N.
+    - eapply naturals.le_lt_trans; rewrite -? H4; eauto using naturals.succ_lt.
+      apply degree_bound => m /lt_le_succ /le_lt_or_eq.
+      rewrite rings.sub_is_neg coefficient_add coefficient_neg => [[H5 | H5]].
+      + rewrite ? coeffs_above_degree ? rings.A4 -? H4 //.
+        eapply naturals.le_lt_trans; eauto.
+        rewrite H4 -H3 add_comm.
+        eapply naturals.le_trans, O1_le, naturals.le_trans;
+          eauto using mul_degree.
+        rewrite degree_const degree_x_to_n ? add_0_l;
+          auto using naturals.le_refl.
+      + rewrite -H5 /leading_coefficient /monic H4
+        -rings.M2 const_coeff_mul (rings.M1 PR) coeff_of_x_mul
+                -H3 ? sub_abba ? H1 ? M3_r ? rings.A4 //; auto using le_add_l.
+    - elim (H0 _ H5 _ eq_refl b) => // q [r [H6]].
+      exists (q + (leading_coefficient a) * x^c), r.
+      split; auto.
+      ring_simplify [H6]; rewrite -rings.A2 -H6; ring.
   Qed.
 
   Definition const f := degree f = 0%N.
