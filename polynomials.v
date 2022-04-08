@@ -1154,9 +1154,8 @@ Section Polynomial_theorems.
       move: H2 H prod_root Heqd IHd -> => /cancellation_ne0 [H0 H2] -> ->.
       rewrite nonzero_prod_degree // monic_linear_degree {1}add_1_r => H.
       eapply naturals.le_trans; eauto using finite_union_card_bound.
-      apply naturals.le_cross_add; auto using naturals.succ_lt.
       rewrite monic_linear_root singleton_card.
-      auto using naturals.le_refl.
+      auto using naturals.le_cross_add, naturals.succ_lt, naturals.le_refl.
     Qed.
 
     Theorem cyclotomic_leading_coeff : ∀ (d : N) (a : R),
