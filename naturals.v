@@ -555,18 +555,14 @@ Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level)
 
 Theorem le_is_subset : ∀ a b, a ≤ b ↔ a ⊂ b.
 Proof.
-  split => [[c H] | H].
-  - elim/Induction: c b H => [b <- | b H c <-].
-    + rewrite add_0_r.
-      auto using Set_is_subset.
-    + eapply Subset_transitive; eauto.
-      rewrite add_succ_r.
-      apply subset_S.
+  split => [[c] | H].
+  - (elim/Induction: c b => [b <- | b H c <-]); rewrite ? add_0_r ? add_succ_r;
+    eauto using Set_is_subset, Subset_transitive, subset_S.
   - elim/Induction: b H => [H | b].
     + eapply ex_intro, set_proj_injective, Subset_equality_iff, conj;
         auto using Empty_set_is_subset.
       erewrite add_0_r => //.
-    + elim (classic (b ∈ a)) => [| ? H H0].
+    + case (classic (b ∈ a)) => [ | ? H H0].
       * exists 0.
         rewrite add_0_r.
         apply set_proj_injective, Subset_equality_iff, conj; auto =>
@@ -574,9 +570,8 @@ Proof.
           [H2 | /Singleton_classification ->] //.
         eapply elements_of_naturals_are_subsets; eauto using elts_in_set.
       * elim H => [x <- | x /[dup] /H0 /in_S_succ /Pairwise_union_classification
-                             [? | /Singleton_classification ->]] //.
-        exists (S x).
-        rewrite add_succ_r //.
+                            [? | /Singleton_classification ->]] //.
+        esplit; eauto using add_succ_r.
 Qed.
 
 Theorem lt_is_in : ∀ a b, a < b ↔ a ∈ b.
