@@ -11,3 +11,4 @@ Makefile*
 *.bat
 *.swp
 .coq-native
+.cvsignore
