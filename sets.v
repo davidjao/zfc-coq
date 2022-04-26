@@ -1558,18 +1558,16 @@ Qed.
 Theorem no_quines : ∀ x, ¬ x ∈ x.
 Proof.
   move: Regularity => /[swap] x /(_ {x,x}) H H0.
-  elim H => [y [/Singleton_classification -> H2] | ].
-  - eapply H2, ex_intro, conj; eauto.
-    rewrite Singleton_classification //.
-  - eapply ex_intro, Singleton_classification => //.
+  elim H => [y [/Singleton_classification -> []] | ];
+            eauto using (iffRL (Singleton_classification x x)).
 Qed.
 
 Theorem no_loops : ∀ x y, ¬ (x ∈ y ∧ y ∈ x).
 Proof.
   move: Regularity => /[swap] x /[swap] y /(_ {x,y}) H [H0 H1].
-  elim H => [z [/Pairing_classification [H2 | H2] H3] {H} | ];
-              try contradict H3; subst; [exists y | exists x | exists x];
-                rewrite Pairing_classification; auto.
+  elim H => [z [/Pairing_classification [-> | ->] []] {H} | ];
+            eauto using (iffRL (Pairing_classification x y x)),
+              (iffRL (Pairing_classification x y y)).
 Qed.
 
 Lemma disjoint_succ : ∀ s, s ∩ {s,s} = ∅.
