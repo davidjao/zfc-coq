@@ -59,7 +59,7 @@ Notation "∅" := empty_set : set_scope.
 Theorem Empty_set_classification : ∀ w, w ∉ ∅.
 Proof.
   rewrite /empty_set.
-    by elim: constructive_indefinite_description.
+  by elim: constructive_indefinite_description.
 Qed.
 
 Theorem Nonempty_classification : ∀ y, y ≠ ∅ ↔ ∃ x, x ∈ y.
@@ -98,7 +98,7 @@ Defined.
 Definition specify_lift (A : set) (p : elts A → Prop) : set → Prop.
 Proof.
   move=> a.
-  elim (excluded_middle_informative (a ∈ A)) => H.
+  case (excluded_middle_informative (a ∈ A)) => H.
   - exact (p (mkSet H)).
   - exact False.
 Defined.
@@ -113,9 +113,8 @@ Theorem despecify :
   ∀ A (p : elts A → Prop) (x : elts A), specify_lift A p x = p x.
 Proof.
   rewrite /specify_lift => A p x.
-  elim excluded_middle_informative => a /=.
-  - by apply /f_equal /set_proj_injective.
-  - exfalso; eauto using elts_in_set.
+  case excluded_middle_informative => [a | []] /=; eauto using elts_in_set.
+  by apply /f_equal /set_proj_injective.
 Qed.
 
 Notation "{ x 'in' A | P }" := (specify A (λ x, P)) : set_scope.
@@ -135,7 +134,7 @@ Proof.
     split => [[_] [_ [s [H0 _]]] | [[s H0]] H1]; eauto using elts_in_set.
   - exists (f (mkSet H)).
     split; eauto => _ [s [<- H1]].
-      by apply /f_equal /set_proj_injective.
+    by apply /f_equal /set_proj_injective.
 Qed.
 
 Definition replacement (S : set) (f : elts S → set) : set.
@@ -153,12 +152,8 @@ Proof.
   x i /=; rewrite i; move => [s]; eauto.
 Qed.
 
-Definition P : set → set.
-Proof.
-  move=> x.
-  elim (constructive_indefinite_description (Powerset x)) => [y H].
-  exact ({s in y | s ⊂ x}).
-Defined.
+Definition P x := let (y, H) := (constructive_indefinite_description
+                                   (Powerset x)) in {s in y | s ⊂ x}.
 
 Theorem Empty_set_is_subset : ∀ X, ∅ ⊂ X.
 Proof.
@@ -243,12 +238,9 @@ Proof.
               split; intuition; subst; by contradiction (Powerset_nonempty ∅).
 Qed.
 
-Definition pair : set → set → set.
-Proof.
-  move=> x y.
-  elim (constructive_indefinite_description (Pairing x y)) => z H.
-  exact ({t in z | t = x ∨ t = y}).
-Defined.
+Definition pair x y :=
+  let (z, H) := (constructive_indefinite_description (Pairing x y))
+  in {t in z | t = x ∨ t = y}.
 
 Notation " { x , y } " := (pair x y) : set_scope.
 Notation " { x } " := (pair x x) : set_scope.
@@ -614,7 +606,7 @@ Proof.
          ? Complement_classification; tauto.
 Qed.
 
-Definition ordered_pair x y := {{x,x},{x,y}}.
+Definition ordered_pair x y := {{x, x}, {x, y}}.
 
 Notation " ( x , y ) " := (ordered_pair x y) : set_scope.
 
@@ -662,20 +654,20 @@ Qed.
 Definition proj1 : set → set → set → set.
 Proof.
   move=> A B x.
-  elim (excluded_middle_informative (x ∈ A × B)) => H.
-  - move: H => /Product_classification /constructive_indefinite_description
-                [a] /constructive_indefinite_description [b] H0.
-    exact a.
+  case (excluded_middle_informative (x ∈ A × B)) =>
+         [/Product_classification /constructive_indefinite_description
+                [a] /constructive_indefinite_description [b] H | _].
+  - exact a.
   - exact ∅.
 Defined.
 
 Definition proj2 : set → set → set → set.
 Proof.
   move=> A B x.
-  elim (excluded_middle_informative (x ∈ A × B)) => H.
-  - move: H => /Product_classification /constructive_indefinite_description
-                [a] /constructive_indefinite_description [b] H0.
-    exact b.
+  case (excluded_middle_informative (x ∈ A × B)) =>
+         [/Product_classification /constructive_indefinite_description
+                [a] /constructive_indefinite_description [b] H | _].
+  - exact b.
   - exact ∅.
 Defined.
 
@@ -1176,7 +1168,7 @@ Section inverse_functions.
   Proof.
     move: H => /[swap] b /function_empty_domain /Nonempty_classification
                 /constructive_indefinite_description [x H0].
-    elim (excluded_middle_informative (∃ a, a ∈ A ∧ f a = b)) =>
+    case (excluded_middle_informative (∃ a, a ∈ A ∧ f a = b)) =>
     [/constructive_indefinite_description [a H1] | H1]; eauto.
   Defined.
 
@@ -1268,7 +1260,7 @@ Defined.
 Definition inverse : function → function.
 Proof.
   move=> f.
-  elim (excluded_middle_informative (bijective f)) =>
+  case (excluded_middle_informative (bijective f)) =>
   [[H /right_inverse_iff_surjective /constructive_indefinite_description
       [g [H0 [H1 H2]]]] | H].
   - exact g.
