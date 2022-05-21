@@ -245,12 +245,9 @@ Definition pair x y :=
 Notation " { x , y } " := (pair x y) : set_scope.
 Notation " { x } " := (pair x x) : set_scope.
 
-Definition union : set → set.
-Proof.
-  move=> F.
-  elim (constructive_indefinite_description (Union F)) => A H.
-  exact ({x in A | ∃ y, (x ∈ y ∧ y ∈ F)}).
-Defined.
+Definition union F :=
+  let (A, H) := (constructive_indefinite_description (Union F))
+  in {x in A | ∃ y, (x ∈ y ∧ y ∈ F)}.
 
 Notation "⋃ x" := (union x) (at level 60) : set_scope.
 
@@ -1097,7 +1094,7 @@ Proof.
     by elim constructive_indefinite_description.
 Qed.
 
-(* Axiom of choice is a theorem since we assume indefinite description. *)
+(* Axiom of Choice is a consequence of Coq's indefinite description axiom. *)
 Theorem Choice : ∀ X,
     ∅ ∉ X → ∃ f, domain f = X ∧ range f = ⋃ X ∧ ∀ x, x ∈ X → f x ∈ x.
 Proof.
