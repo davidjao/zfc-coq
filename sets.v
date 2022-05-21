@@ -49,10 +49,8 @@ Proof.
   eauto.
 Qed.
 
-Definition empty_set : set.
-Proof.
-  elim: (constructive_indefinite_description Empty_Set) => [w] //.
-Defined.
+Definition empty_set :=
+  let (w, _) := (constructive_indefinite_description Empty_Set) in w.
 
 Notation "∅" := empty_set : set_scope.
 
@@ -103,11 +101,9 @@ Proof.
   - exact False.
 Defined.
 
-Definition specify_type (A : set) (p : elts A → Prop) : set.
-Proof.
-  elim (constructive_indefinite_description
-          (Specification A (specify_lift A p))) => [S] //.
-Defined.
+Definition specify_type (A : set) (p : elts A → Prop) :=
+  let (S, _) := (constructive_indefinite_description
+                   (Specification A (specify_lift A p))) in S.
 
 Theorem despecify :
   ∀ A (p : elts A → Prop) (x : elts A), specify_lift A p x = p x.
@@ -901,7 +897,7 @@ Qed.
 Definition eval : function → set → set.
 Proof.
   move=> f x.
-  elim (excluded_middle_informative (x ∈ domain f)) => [ | H].
+  case (excluded_middle_informative (x ∈ domain f)) => [ | H].
   - move: (func_hyp f) => [] _ /[apply] /constructive_indefinite_description =>
     [[y] [[H H0] H1]].
     exact y.
@@ -990,9 +986,8 @@ Section Function_evaluation.
   Definition lambdaify : elts (domain f) → elts (range f).
   Proof.
     move=> [x H].
-    have H0: f x ∈ range f.
-      by auto using function_maps_domain_to_range.
-      exact (mkSet H0).
+    have H0: f x ∈ range f by auto using function_maps_domain_to_range.
+    exact (mkSet H0).
   Defined.
 
   Definition functionify : (elts A → elts B) → function.

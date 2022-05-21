@@ -32,7 +32,7 @@ Section Polynomials_construction.
 
   Theorem polynomials_are_subset : polynomial_set ⊂ power_series_ring ring.
   Proof.
-    eauto using Specify_subset.
+    apply Specify_subset.
   Qed.
 
   Theorem polynomials_are_subring :
