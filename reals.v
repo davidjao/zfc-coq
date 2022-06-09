@@ -90,10 +90,9 @@ Proof.
   (case (classic (a < b)); case (classic (a = b)); auto) => H H0.
   have [p [/[dup] /Dedekind_cut_0 H1 H2 H3]]: ∃ p, p ∈ a ∧ p ∉ b
       by eauto using not_proper_subset_inhab, set_proj_injective.
-  (apply or_intror, or_intror, conj) =>
-    [q /[dup] /Dedekind_cut_0 H4 | ]; eauto using set_proj_injective.
-  rewrite (reify H1) (reify H4) in H2 H3 |-*.
-  eauto using Dedekind_cut_2, Dedekind_cut_4.
+  (apply or_intror, or_intror, conj => [q /[dup] /Dedekind_cut_0 H4 | ]);
+  rewrite (reify H1) ? (reify H4) in H2 H3 |-*;
+  eauto using Dedekind_cut_2, Dedekind_cut_4, set_proj_injective.
 Qed.
 
 Theorem T : ∀ a b : R, a < b ∧ a ≠ b ∧ ¬ b < a
