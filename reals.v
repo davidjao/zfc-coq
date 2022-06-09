@@ -91,9 +91,8 @@ Proof.
   have [p [/[dup] /Dedekind_cut_0 H1 H2 H3]]: ∃ p, p ∈ a ∧ p ∉ b
       by eauto using not_proper_subset_inhab, set_proj_injective.
   (apply or_intror, or_intror, conj) =>
-  [q /[dup] /Dedekind_cut_0 H4 H5 | ]; eauto using set_proj_injective.
-  move: H2 H3 H5.
-  rewrite (reify H1) (reify H4).
+    [q /[dup] /Dedekind_cut_0 H4 | ]; eauto using set_proj_injective.
+  rewrite (reify H1) (reify H4) in H2 H3 |-*.
   eauto using Dedekind_cut_2, Dedekind_cut_4.
 Qed.
 
