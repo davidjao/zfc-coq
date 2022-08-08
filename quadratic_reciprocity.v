@@ -356,12 +356,11 @@ Section Quadratic_reciprocity.
     legendre_symbol (p mod q) * legendre_symbol (q mod p) =
     (-1)^((# QR p) * (# QR q)).
   Proof.
-    rewrite -> ? Gauss's_Lemma_a, <-(rings.pow_add_r ℤ), <-sum_lower_triangle,
+    (rewrite -> ? Gauss's_Lemma_a, <-(rings.pow_add_r ℤ), <-sum_lower_triangle,
     <-sum_upper_triangle, <-rectangle_card, <-rectangle_union,
-    <-finite_union_cardinality;
-      eauto using p_odd, q_ndiv_p, odd_prime_positive, disjoint_triangles,
-      subsets_of_finites_are_finite, lower_subset, upper_subset,
-      rectangle_finite.
+      <-finite_union_cardinality; eauto using p_odd, q_ndiv_p);
+    eauto using odd_prime_positive, disjoint_triangles, lower_subset,
+      upper_subset, subsets_of_finites_are_finite, rectangle_finite.
   Qed.
 
 End Quadratic_reciprocity.

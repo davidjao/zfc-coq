@@ -1684,10 +1684,9 @@ Section Modular_arithmetic.
                                 (prod ℤ_ (λ n : N, QR_r n : Z_) 1 (# QR)));
         rewrite -{1}Gauss_Lemma_helper /=.
       - apply (integral_domains.unit_nonzero (ℤ_ID prime_modulus)),
-        unit_prod_closure => i [H /INZ_le H0].
-        apply nonzero_unit; auto => /IZn_eq /(eqm_div_n p i) /div_le.
-        rewrite lt_0_le_1 INZ_le => /(_ H) H1.
-        eapply QR_lt_p, (ordered_rings.le_trans ℤ_order); eauto.
+          unit_prod_closure => i [/[dup] H /INZ_le /lt_0_le_1 H0 /INZ_le H1].
+        apply nonzero_unit; auto => /IZn_eq /(eqm_div_n p i) /div_le
+              => /(_ H0) /ordered_rings.le_trans /(_ H1) /QR_lt_p //.
       - rewrite -Euler's_Criterion -{1}(sub_abab 1 (# QR)) 1 ? add_comm;
           rewrite ? add_1_r -? [mul]/(rings.mul ℤ_) ? {1}(prod_mul ℤ_);
           auto using size_QR_ge_1; simpl.
