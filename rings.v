@@ -915,7 +915,51 @@ Section Ring_theorems.
     split => [/add_move_l <- | /add_move_l ->]; ring.
   Qed.
 
+  Section Ideals.
+
+    Variable I : set.
+    Hypothesis subset : I ⊂ Ring.
+    Definition is_ideal I := (∀ a b : R, a ∈ I → b ∈ I → a + b ∈ I) ∧
+                               (∀ a b : R, b ∈ I → a * b ∈ I).
+    Hypothesis IR : is_ideal I.
+    Definition Ideal := elts I.
+
+  End Ideals.
+
 End Ring_theorems.
 
 Arguments assoc {Ring}.
 Arguments unit {Ring}.
+
+Section Homomorphisms.
+
+  Local Reserved Notation " a ⊕ b " (at level 50, left associativity).
+  Local Reserved Notation " a ⊗ b " (at level 40, left associativity).
+  Local Reserved Notation " a ⊞ b " (at level 50, left associativity).
+  Local Reserved Notation " a ⊠ b " (at level 40, left associativity).
+
+  Record ringHom :=
+    mkRingHom {
+        dom : ring where "a ⊕ b" := (add dom a b) and "a ⊗ b" := (mul dom a b);
+        ran : ring where "a ⊞ b" := (add ran a b) and "a ⊠ b" := (mul ran a b);
+        func :> (elts dom) → (elts ran);
+        add_hom : ∀ x y : elts dom, func (x ⊕ y) = func x ⊞ func y;
+        mul_hom : ∀ x y : elts dom, func (x ⊗ y) = func x ⊠ func y;
+        one_hom : func (one dom) = (one ran);
+      }.
+
+  Variable f : ringHom.
+
+  Definition ker f := {r of type dom f | (func f) r = (zero (ran f))}.
+
+  Theorem ker_is_ideal : is_ideal (dom f) (ker f).
+  Proof.
+    (((split => a b; rewrite ? Specify_classification /specify_lift) =>
+        [[] ? /[swap] [[]] ? | [] ?]; repeat elim excluded_middle_informative
+        => // /=; auto using elts_in_set) => [? ? H H0 H1 | ? ? H]);
+    [ rewrite -(A3 _ (zero _)) -{1}H1 -H0 -add_hom |
+      rewrite -(mul_0_r _ (f a)) -H -mul_hom ];
+    intuition repeat (repeat f_equal; apply set_proj_injective => /=).
+  Qed.
+
+End Homomorphisms.
