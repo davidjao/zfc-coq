@@ -269,7 +269,7 @@ Qed.
 
 Theorem succ_0 : ∀ n : N, n ≠ 0 ↔ ∃ m, n = S m.
 Proof.
-  (elim/Induction; split; try now intuition eauto) => [[x /PA4] | H0] //.
+  (elim/Induction; split; try by intuition eauto) => [[x /PA4] | H0] //.
   apply /neq_sym /PA4.
 Qed.
 
@@ -384,10 +384,8 @@ Qed.
 
 Theorem add_comm : ∀ a b, a + b = b + a.
 Proof.
-  induction a using Induction; induction b using Induction; auto.
-  - rewrite add_0_r add_succ_r IHb add_0_r //.
-  - rewrite add_0_r add_succ_r -IHa add_0_r //.
-  - rewrite ? add_succ_r IHb -? IHa ? add_succ_r IHa //.
+  induction a using Induction; induction b using Induction; auto;
+    rewrite ? add_succ_r ? IHb -? IHa ? add_0_r // ? add_succ_r IHa //.
 Qed.
 
 Theorem add_succ_l : ∀ x y, S x + y = S (x + y).
@@ -398,9 +396,7 @@ Qed.
 
 Theorem add_assoc : ∀ a b c, a + (b + c) = (a + b) + c.
 Proof.
-  induction c using Induction.
-  - rewrite ? add_0_r //.
-  - rewrite ? add_succ_r IHc //.
+  induction c using Induction; rewrite ? add_0_r // ? add_succ_r IHc //.
 Qed.
 
 Theorem add_0_l : ∀ x, 0 + x = x.
@@ -411,10 +407,9 @@ Qed.
 
 Theorem cancellation_add : ∀ a b c, a + b = a + c → b = c.
 Proof.
-  induction a using Induction => [b c | b c H].
-  - rewrite ? add_0_l //.
-  - apply IHa, PA5.
-    rewrite ? (add_comm a) -? add_succ_r -? (add_comm (S a)) //.
+  induction a using Induction => [b c | b c H]; rewrite ? add_0_l //.
+  apply IHa, PA5.
+  rewrite ? (add_comm a) -? add_succ_r -? (add_comm (S a)) //.
 Qed.
 
 Theorem cancellation_0 : ∀ a b, a + b = a → b = 0.
