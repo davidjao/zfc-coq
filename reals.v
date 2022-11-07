@@ -122,8 +122,7 @@ Proof.
                [H9 [H10 [H11 [H12 H13]]]] /H13 [r [H14 H15]]]]].
     - apply Powerset_classification => x /Union_classification [a [/H H8]].
       by apply (Dedekind_cut_0 (mkSet H8)).
-    - rewrite (reify H1) in H0.
-      move: (Dedekind_cut_1 (mkSet H1)) => /neq_sym.
+    - move: (Dedekind_cut_1 (mkSet H1)) => /neq_sym.
       rewrite ? Nonempty_classification => [[x H8]].
       apply /ex_intro /Union_classification; eauto.
     - move: H2 H4 => /Powerset_classification /Subset_equality -> //.
