@@ -25,6 +25,6 @@ Example Gauss_Q : ∀ n, (sum ℚ (λ x, x : Q) 1 n) = n * (n + 1) / 2.
 Proof.
   move: (ordered_rings.zero_ne_2 ℤ_order) => /= /[dup] H /[swap] n.
   rewrite inv_div // -IZQ_eq => {}H.
-  apply (cancellation_mul_r (integral_domain_from_field ℚ) (2 : Q)) => // /=.
+  apply (cancellation_mul_r (integral_domain_from_field ℚ) (2 : Q)) => //=.
   by rewrite -M2 inv_l // -(M1 1) M3 M1 IZQ_sum IZQ_mul Gauss.
 Qed.

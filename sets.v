@@ -668,7 +668,7 @@ Theorem proj1_eval : ∀ A B a b, a ∈ A → b ∈ B → proj1 A B (a,b) = a.
 Proof.
   move=> A B a b H H0.
   rewrite /proj1.
-  elim excluded_middle_informative => /= // => H1.
+  elim excluded_middle_informative => //= => H1.
   - repeat (elim constructive_indefinite_description => >).
     rewrite Ordered_pair_iff; intuition congruence.
   - contradict H1; apply Product_classification; eauto.
@@ -678,7 +678,7 @@ Theorem proj2_eval : ∀ A B a b, a ∈ A → b ∈ B → proj2 A B (a,b) = b.
 Proof.
   move=> A B a b H H0.
   rewrite /proj2.
-  elim excluded_middle_informative => /= // => H1.
+  elim excluded_middle_informative => //= => H1.
   - repeat (elim constructive_indefinite_description => >).
     rewrite Ordered_pair_iff; intuition congruence.
   - contradict H1; apply Product_classification; eauto.
@@ -1174,11 +1174,11 @@ Section inverse_functions.
       + repeat esplit; eauto => x /[dup] H4 /function_maps_domain_to_range /H3.
         rewrite /partial_left_inverse.
         case excluded_middle_informative => [H5 | H5].
-        * (repeat elim constructive_indefinite_description => ? /= //)
+        * (repeat elim constructive_indefinite_description => ? //=)
           => [[H6]] /H0 -> //.
         * contradict H5; eauto.
       + rewrite /partial_left_inverse; case excluded_middle_informative =>
-        x; repeat elim constructive_indefinite_description => /= //; tauto.
+        x; repeat elim constructive_indefinite_description => //=; tauto.
     - apply Injective_classification => x y /H2 /[swap] /H2 {2}<- {2}<- -> //.
   Qed.
 
@@ -1263,7 +1263,7 @@ Theorem left_inverse :
   ∀ f, bijective f → ∀ x, x ∈ domain f → inverse f (f x) = x.
 Proof.
   rewrite /inverse => f H x H0.
-  case excluded_middle_informative => /= // =>
+  case excluded_middle_informative => //= =>
   [[/Injective_classification H1 H2]].
   elim constructive_indefinite_description => [g [H3 [H4 H5]]].
   move: function_maps_domain_to_range (H0) (H0) H4 H1 =>
@@ -1275,7 +1275,7 @@ Qed.
 Theorem inverse_domain : ∀ f, bijective f → domain (inverse f) = range f.
 Proof.
   rewrite /inverse => f H.
-  case excluded_middle_informative => /= // => [[H1 H2]].
+  case excluded_middle_informative => //= => [[H1 H2]].
   elim constructive_indefinite_description => [g [H3 [H4 H5]]] //.
 Qed.
 
@@ -1283,7 +1283,7 @@ Theorem right_inverse :
   ∀ f, bijective f → ∀ x, x ∈ domain (inverse f) → f (inverse f x) = x.
 Proof.
   rewrite {2}/inverse => f H x H0.
-  case excluded_middle_informative => /= // => [[H1 H2]].
+  case excluded_middle_informative => //= => [[H1 H2]].
   elim constructive_indefinite_description => [g [H3 [H4 H5]]].
   move: inverse_domain H0 H5 -> => // /[swap] /[apply] //.
 Qed.
@@ -1291,7 +1291,7 @@ Qed.
 Theorem inverse_range : ∀ f, bijective f → range (inverse f) = domain f.
 Proof.
   rewrite /inverse => f H.
-  case excluded_middle_informative => /= // => [[H1 H2]].
+  case excluded_middle_informative => //= => [[H1 H2]].
   elim constructive_indefinite_description => [g [H3 [H4 H5]]] //.
 Qed.
 
@@ -1817,7 +1817,7 @@ Proof.
   rewrite /swap_function /swap_product (reify H1) functionify_action.
   elim constructive_indefinite_description => a [b [H2 [H3 H4]]].
   elim constructive_indefinite_description =>
-  c [H5 [H6 /Ordered_pair_iff [-> ->]]] => /= //.
+  c [H5 [H6 /Ordered_pair_iff [-> ->]]] => //=.
 Qed.
 
 Theorem swap_bijective : ∀ S T, bijective (swap_function S T).

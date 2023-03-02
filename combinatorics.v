@@ -816,7 +816,7 @@ Proof.
                             ((S m * m!)%N *(S (n' - m) * (n' - m)!))).
   { contradict H2.
     rewrite -IZQ_eq -? IZQ_mul -? INZ_mul INZ_mul -IZQ_mul H2 //. }
-  rewrite inv_div // /= -M2 ? IZQ_mul ? INZ_mul inv_l
+  rewrite inv_div //= -M2 ? IZQ_mul ? INZ_mul inv_l
   -INZ_mul ? IZQ_eq // D1 ? inv_div -? IZQ_mul -? INZ_mul -? IZQ_mul;
     repeat apply (ne0_cancellation ℤ_ID);
     rewrite ? INZ_eq; auto using eq_sym, PA4, factorial_ne_0.

@@ -80,7 +80,7 @@ Section Pretty_picture_lemmas.
     apply (lt_not_ge ℚ_ring_order) => H0.
     move: (odd_prime_positive _ odd_p) (odd_prime_positive _ (odd_q)) =>
           /[dup] H1 /(pos_ne_0 ℤ_order) /= ? /[dup] H2 /(pos_ne_0 ℤ_order) /= ?.
-    rewrite ? inv_div /= // in H, H0.
+    rewrite ? inv_div //= in H, H0.
     move: H H1 H2 => /(O3 ℚ_ring_order (q : Q)) /(O3_r ℚ_ring_order (p^-1)) /=.
     rewrite ? IZQ_lt -IZQ_mul (IZQ_mul q y) =>
               /[swap] /(inv_lt ℚ_order) /[swap] /[apply] /[apply].

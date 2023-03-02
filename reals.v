@@ -792,7 +792,7 @@ Proof.
     + have ->: (-(n + 2) + n = -2%Z)%Z by ring.
       rewrite -/pow (neg_pow r 2%Z) -(inv_inv (mkSet H1)).
       apply or_introl, (lt_cross_inv ℚ_order (r^2)%Q); auto;
-        rewrite /pow /fields.pow INZ_add add_1_r pow_nonneg pow_2_r // /=.
+        rewrite /pow /fields.pow INZ_add add_1_r pow_nonneg pow_2_r //=.
       by apply O2.
 Qed.
 

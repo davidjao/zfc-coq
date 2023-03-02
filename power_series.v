@@ -37,7 +37,7 @@ Section Power_series_construction.
     apply set_proj_injective => /=.
     suff -> : f = graph (mkFunc i0); auto.
     suff -> : g = graph (mkFunc i2); auto.
-    apply f_equal, func_ext => /= //.
+    apply f_equal, func_ext => //=.
     congruence.
   Qed.
 
@@ -52,7 +52,7 @@ Section Power_series_construction.
     have H0: series_functionify (mkSet H) = functionify f.
     { rewrite /series_functionify.
       repeat destruct iffLR => /=.
-      apply function_record_injective => /= //.
+      apply function_record_injective => //=.
       rewrite functionify_range //. }
     split; auto => x'.
       by rewrite -{1}H0 => /series_functionify_injective.

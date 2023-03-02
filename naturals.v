@@ -328,7 +328,7 @@ Section Iterated_op_construction.
   Theorem iterated_op_0 : iterated_op 0 = start.
   Proof.
     rewrite /iterated_op.
-    elim constructive_indefinite_description => x [H H0] /= //.
+    elim constructive_indefinite_description => x [H H0] //=.
   Qed.
 
   Theorem iterated_op_succ : ∀ n, iterated_op (S n) = (iterated_op n) · (f n).

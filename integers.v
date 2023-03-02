@@ -504,7 +504,7 @@ Proof.
   - exists c.
     split; try ring.
     exists d => /=.
-    apply (cancellation_mul_r ℤ_ID b) => /= //.
+    apply (cancellation_mul_r ℤ_ID b) => //=.
     rewrite {1}H1 M3 M2 (M1 c) //.
 Qed.
 
@@ -625,7 +625,7 @@ Proof.
   { elim (trichotomy ℤ_order b 0) =>
     [/(lt_neg_0 ℤ_order) /H /[swap] /gcd_neg /[swap] /[apply] [[x [y]]] -> |
      [-> /gcd_0_r [[x]] -> | /H /[apply]]]
-      /= //; [exists x, (-y) | exists x, 0]; ring. }
+      //=; [exists x, (-y) | exists x, 0]; ring. }
   wlog: a / 0 < a => [H0 | H0].
   { elim (trichotomy ℤ_order a 0) =>
     [/(lt_neg_0 ℤ_order) /[swap] /is_gcd_sym /gcd_neg /is_gcd_sym /H0 /[apply]
@@ -710,7 +710,7 @@ Proof.
   repeat esplit; eauto.
   move: H0 H1 H4 =>
   [/[swap] _ /(O3 ℤ_order k) /[apply] | <- /(_ (one_unit ℤ))] //.
-  rewrite rings.M3_r /= //.
+  rewrite rings.M3_r //=.
 Qed.
 
 Theorem exists_prime_factorization : ∀ n, 0 < n → ∃ L : list Z, n = ∏' L.

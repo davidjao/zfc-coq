@@ -82,7 +82,7 @@ Proof.
   elim constructive_indefinite_description => x H /=.
   have ->: mkFunc H = (const_function 1 (Pairing_left 0 1))%N by
     apply function_record_injective; rewrite ? const_range //.
-  rewrite const_action // /= /succ Union_comm
+  rewrite const_action //= /succ Union_comm
           Union_empty Singleton_classification //.
 Qed.
 
@@ -92,7 +92,7 @@ Proof.
   elim constructive_indefinite_description => x H /=.
   have ->: mkFunc H = (const_function 1 (Pairing_right 0 1))%N by
     apply function_record_injective; rewrite ? const_range //.
-  rewrite const_action // /= /succ Union_comm
+  rewrite const_action //= /succ Union_comm
           Union_empty Singleton_classification //.
 Qed.
 
@@ -722,7 +722,7 @@ Proof.
     + have H6: s ∈ ω by
         eauto using (elements_of_naturals_are_naturals n), elts_in_set.
       rewrite (reify H6) -[elt_to_set]/INS functionify_concat_l ? H4;
-        rewrite ? lt_is_in // /=; erewrite (restriction_action _ n).
+        rewrite ? lt_is_in //=; erewrite (restriction_action _ n).
       * f_equal.
         apply function_record_injective;
           rewrite ? restriction_range ? string_range //

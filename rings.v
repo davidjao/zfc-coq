@@ -956,7 +956,7 @@ Section Homomorphisms.
   Proof.
     (((split => a b; rewrite ? Specify_classification /specify_lift) =>
         [[] ? /[swap] [[]] ? | [] ?]; repeat elim excluded_middle_informative
-        => // /=; auto using elts_in_set) => [? ? H H0 H1 | ? ? H]);
+        => //=; auto using elts_in_set) => [? ? H H0 H1 | ? ? H]);
     [ rewrite -(A3 _ (zero _)) -{1}H1 -H0 -add_hom |
       rewrite -(mul_0_r _ (f a)) -H -mul_hom ];
     intuition repeat (repeat f_equal; apply set_proj_injective => /=).

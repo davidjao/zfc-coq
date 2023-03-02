@@ -321,7 +321,7 @@ Proof.
                                      /[swap] /= <- /[swap] <- -> // {b0 H2 H3}].
   { rewrite (mul_0_r ℤ b' : b' * 0 = 0)%Z (mul_0_r ℤ b0 : b0 * 0 = 0)%Z
             (mul_0_l ℤ b : 0 * b = 0)%Z =>
-    /(integral_domains.cancellation ℤ_ID) => [[-> | ]] /= //.
+    /(integral_domains.cancellation ℤ_ID) => [[-> | ]] //=.
     rewrite (mul_0_l ℤ b0 : 0 * b0 = 0)%Z //. }
   ((suff: (∀ x y z w, y ≠ 0 → w ≠ 0 → x * w = y * z → 0 < x * y → 0 < z * w)%Z
     => [H2 | ]; first by split; apply H2; eauto; ring [H1]) =>
@@ -821,7 +821,7 @@ Proof.
   /= [ | /(O3 ℚ_ring_order (1+x) _ _ H5) | H7].
   - have {2}-> : (n = n+(-1)+1)%Z by ring.
     apply (ordered_rings.lt_succ ℤ_order).
-  - rewrite -{2}(fields.pow_1_r ℚ (1+x)) -(fields.pow_add_r ℚ) // /=.
+  - rewrite -{2}(fields.pow_1_r ℚ (1+x)) -(fields.pow_add_r ℚ) //=.
     (have -> : (1+(n+-1) = n)%Z by ring) => *.
     eapply or_introl, lt_trans; eauto.
     rewrite D1 M3 (M1 x) D1 A2 -(A2 1) -D1 -IZQ_add -IZQ_neg
@@ -863,7 +863,7 @@ Proof.
            [n [/[dup] ? /(neg_lt_0 ℤ_order) /= ? ?]] /(one_lt ℚ_ring_order) /=.
   exists (-n)%Z.
   split; auto.
-  apply (lt_cross_inv ℚ_order) => /= //.
+  apply (lt_cross_inv ℚ_order) => //=.
   + by apply (pow_pos ℚ_order).
   + rewrite neg_pow inv_inv //.
 Qed.
@@ -911,7 +911,7 @@ Proof.
       { rewrite -? IZQ_add /r -? A2 -(A1 1) -[IZQ 1]/one
         -{6}(inv_l 3) ? IZQ_eq // -(M1 (3^-1)).
         repeat apply O1.
-        apply (O3 ℚ_ring_order) => // /=.
+        apply (O3 ℚ_ring_order) => //=.
         have: 2 < 4.
         { rewrite -? IZQ_add -{2}(A3 1%Z) (A1 0) -? A2.
           repeat apply O1.
@@ -953,7 +953,7 @@ Proof.
         auto using (ne0_cancellation (integral_domain_from_field ℚ)).
       have -> : (2 * b^-1)^-1 = b / 2 by
           rewrite inv_div -? IZQ_eq //; field => //.
-      apply /O1 /(O3_r ℚ_ring_order) => /= //.
+      apply /O1 /(O3_r ℚ_ring_order) => //=.
       apply /O2 => //.
     + apply /floor_upper.
       rewrite inv_div -? IZQ_mul -? M2 // -(IZQ_add _ r)
