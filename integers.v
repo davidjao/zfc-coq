@@ -1963,6 +1963,40 @@ Section Valuations.
     erewrite <-val_lcm_r_gcd; eauto using is_gcd_gcd.
   Qed.
 
+  Theorem val_abs : ∀ n, v p (|n|) = v p n.
+  Proof.
+    move=> n.
+    case (classic (n = 0)) => /[dup] [/abs_zero -> -> | H /abs_zero H0 ] //.
+    (apply naturals.le_antisymm; auto; apply val_lower_bound; auto;
+      rewrite /abs; elim excluded_middle_informative; auto using val_div);
+    [rewrite /divide (div_sign_r ℤ) | rewrite /divide -(div_sign_r ℤ)]
+    => ?; apply val_div.
+  Qed.
+
+  Theorem val_add : ∀ a b, a + b ≠ 0 →
+                           (v p (a + b) ≥ naturals.min (v p a) (v p b))%N.
+  Proof.
+    move=> a b H.
+    wlog: a b H / (v p a ≤ v p b)%N => H0.
+    - case (naturals.le_trichotomy (v p a) (v p b)); auto => /H0.
+      rewrite A1 min_sym; auto.
+    - apply naturals.le_not_gt => /[dup] /naturals.lt_le_trans =>
+              /(_ _ (naturals.min_le_l _ _)) /(val_upper_bound _ _ H) [].
+      case (classic (b = 0)) => [-> | H1]; rewrite A1 ? A3; auto using val_div.
+      apply div_add; try apply val_div; try apply val_lower_bound; auto.
+  Qed.
+
+  Theorem val_trans_mod : ∀ x y z,
+      x ≠ z → (v p (|x - z|) ≥ naturals.min (v p (|x - y|)) (v p (|y - z|)))%N.
+  Proof.
+    move=> x y z H.
+    rewrite ? val_abs.
+    have: (x - y) + (y - z) ≠ 0 =>
+          [ | /val_add]; ring_simplify (x - y + (y - z)); auto.
+    contradict H.
+    rewrite -(A3 z) -H; ring.
+  Qed.
+
 End Valuations.
 
 Theorem inv_div_l : ∀ a b c, b｜a → b ≠ 0 → a / b｜c ↔ a｜b * c.

@@ -1105,6 +1105,12 @@ Proof.
   rewrite min_sym min_0_l //.
 Qed.
 
+Theorem min_le : ∀ i j k, min i j ≤ k ↔ i ≤ k ∨ j ≤ k.
+Proof.
+  split => [ | [H | H]]; eauto using le_trans, min_le_l, min_le_r.
+  case (min_eq i j) => ->; tauto.
+Qed.
+
 Theorem max_le_l : ∀ a b, a ≤ max a b.
 Proof.
   rewrite /max => a b.
@@ -1144,6 +1150,12 @@ Theorem max_0_r : ∀ a, max a 0 = a.
 Proof.
   move=> a.
   rewrite max_sym max_0_l //.
+Qed.
+
+Theorem max_le : ∀ i j k, k ≤ max i j ↔ k ≤ i ∨ k ≤ j.
+Proof.
+  split => [ | [H | H]]; eauto using le_trans, max_le_l, max_le_r.
+  case (max_eq i j) => ->; tauto.
 Qed.
 
 Theorem lub : ∀ P, (∃ n : N, P n) → (∃ m : N, ∀ n : N, P n → n ≤ m)
