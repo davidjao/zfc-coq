@@ -1973,8 +1973,8 @@ Section Valuations.
     => ?; apply val_div.
   Qed.
 
-  Theorem val_add : ∀ a b, a + b ≠ 0 →
-                           (v p (a + b) ≥ naturals.min (v p a) (v p b))%N.
+  Theorem val_add : ∀ a b,
+      a + b ≠ 0 → (v p (a + b) ≥ naturals.min (v p a) (v p b))%N.
   Proof.
     move=> a b H.
     wlog: a b H / (v p a ≤ v p b)%N => H0.
@@ -1990,11 +1990,10 @@ Section Valuations.
       x ≠ z → (v p (|x - z|) ≥ naturals.min (v p (|x - y|)) (v p (|y - z|)))%N.
   Proof.
     move=> x y z H.
+    (have /[dup] {2}<-: (x - y) + (y - z) = x - z by ring) => H0.
     rewrite ? val_abs.
-    have: (x - y) + (y - z) ≠ 0 =>
-          [ | /val_add]; ring_simplify (x - y + (y - z)); auto.
-    contradict H.
-    rewrite -(A3 z) -H; ring.
+    apply val_add.
+    move: H0 H (A3 z) -> => /[swap] {1}<- /[swap] <- []; ring.
   Qed.
 
 End Valuations.

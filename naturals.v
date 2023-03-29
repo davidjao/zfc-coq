@@ -1107,7 +1107,7 @@ Qed.
 
 Theorem min_le : ∀ i j k, min i j ≤ k ↔ i ≤ k ∨ j ≤ k.
 Proof.
-  split => [ | [H | H]]; eauto using le_trans, min_le_l, min_le_r.
+  split => [ | [ | ]]; eauto using le_trans, min_le_l, min_le_r.
   case (min_eq i j) => ->; tauto.
 Qed.
 
@@ -1154,7 +1154,7 @@ Qed.
 
 Theorem max_le : ∀ i j k, k ≤ max i j ↔ k ≤ i ∨ k ≤ j.
 Proof.
-  split => [ | [H | H]]; eauto using le_trans, max_le_l, max_le_r.
+  split => [ | [ | ]]; eauto using le_trans, max_le_l, max_le_r.
   case (max_eq i j) => ->; tauto.
 Qed.
 
