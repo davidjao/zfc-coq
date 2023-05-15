@@ -15,13 +15,13 @@ Notation "a ∉ b" := (¬ a ∈ b) (at level 75) : set_scope.
 (* Axiom list from https://math.stackexchange.com/questions/916072/ *)
 
 Axiom Extensionality : ∀ x y, (∀ z, z ∈ x ↔ z ∈ y) → x = y.
-Axiom Regularity : ∀ x, (∃ a, a ∈ x) → ∃ y, y ∈ x ∧ ¬ ∃ z, (z ∈ y ∧ z ∈ x).
+Axiom Regularity : ∀ x, (∃ a, a ∈ x) → ∃ y, y ∈ x ∧ ¬ ∃ z, z ∈ y ∧ z ∈ x.
 Axiom Replacement : ∀ A R, (∀ x, x ∈ A → exists ! y, R x y) →
                            ∃ B, ∀ y, y ∈ B ↔ ∃ x, x ∈ A ∧ R x y.
-Axiom Union : ∀ F, ∃ A, ∀ x y, (x ∈ y ∧ y ∈ F) → x ∈ A.
+Axiom Union : ∀ F, ∃ A, ∀ x y, x ∈ y ∧ y ∈ F → x ∈ A.
 Axiom Powerset : ∀ x, ∃ y, ∀ z, (∀ u, u ∈ z → u ∈ x) → z ∈ y.
 Axiom Infinity : ∃ X, (∃ y, (∀ z, z ∉ y) ∧ y ∈ X) ∧ ∀ x,
-      x ∈ X → ∃ y, y ∈ X ∧ ∀ z, (z ∈ y ↔ z ∈ x ∨ z = x).
+      x ∈ X → ∃ y, y ∈ X ∧ ∀ z, z ∈ y ↔ z ∈ x ∨ z = x.
 
 (* End of axioms. *)
 
@@ -71,7 +71,7 @@ Proof.
 Qed.
 
 (* The axiom of specification is a theorem in ZFC under classical logic. *)
-Theorem Specification : ∀ z p, ∃ y, ∀ x, (x ∈ y ↔ (x ∈ z ∧ (p x))).
+Theorem Specification : ∀ z p, ∃ y, ∀ x, x ∈ y ↔ x ∈ z ∧ p x.
 Proof.
   move=> z p.
   elim (classic (∃ x, x ∈ z ∧ p x)) => [[e [H H0]] | H].
@@ -195,7 +195,7 @@ Proof.
   apply /Extensionality; intuition.
 Qed.
 
-Theorem Subset_equality_iff : ∀ A B, (A ⊂ B ∧ B ⊂ A) ↔ A = B.
+Theorem Subset_equality_iff : ∀ A B, A ⊂ B ∧ B ⊂ A ↔ A = B.
 Proof.
   split => H; subst; firstorder using Subset_equality, Set_is_subset.
 Qed.
@@ -224,7 +224,7 @@ Proof.
 Qed.
 
 (* The axiom of pairing is a theorem in ZFC under classical logic. *)
-Theorem Pairing : ∀ x y, ∃ z, ((x ∈ z) ∧ (y ∈ z)).
+Theorem Pairing : ∀ x y, ∃ z, x ∈ z ∧ y ∈ z.
 Proof.
   move=> x y.
   elim (Replacement (P (P ∅)) (λ a b, ∅ = a ∧ x = b ∨ P ∅ = a ∧ y = b)) => z.
@@ -282,7 +282,7 @@ Proof.
   now move=> A P x /Specify_classification.
 Qed.
 
-Lemma Pairing_classification : ∀ x y z, z ∈ {x,y} ↔ (z = x ∨ z = y).
+Lemma Pairing_classification : ∀ x y z, z ∈ {x,y} ↔ z = x ∨ z = y.
 Proof.
   rewrite /pair => x y z.
   repeat elim constructive_indefinite_description => ? /=.
