@@ -79,10 +79,9 @@ Proof.
   - rewrite integers.A3 in H1; subst.
     apply H3; rewrite /unit /rings.unit => /=.
     have -> : 1 = c! + 1 + (-c!) by ring.
-    have H1: 0 < p by apply lt_def; eexists; rewrite integers.A3; eauto.
-    apply div_add; auto.
-    rewrite -div_sign_r -[rings.divide ℤ (INZ p) (INZ (c!))]/(p｜c!).
-    apply fact_div, H, Primes_classification; auto.
+    have H1: 0 < p by apply INZ_lt, nonzero_lt, neq_sym => /INZ_eq //.
+    apply div_add, (div_sign_r ℤ _ (c! : Z)), fact_div, H,
+      Primes_classification; auto.
   - eapply lt_def.
     exists (c!).
     by move: integers.A1 (factorial_ne_0 c) => -> /neq_sym /INZ_eq.
