@@ -17,6 +17,7 @@ fields.v
 ordered_fields.v
 rationals.v
 combinatorics.v
+euclid.v
 polynomials.v
 binomial.v
 integers_mod_n.v

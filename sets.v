@@ -1627,6 +1627,14 @@ Proof.
   move=> E F x /Complement_classification [H] //.
 Qed.
 
+Theorem complement_union : ∀ E F, F ⊂ E → E = F ∪ E \ F.
+Proof.
+  move=> E F H.
+  apply Extensionality => z.
+  rewrite Pairwise_union_classification Complement_classification.
+  move: (classic (z ∈ F)); intuition.
+Qed.
+
 Theorem Intersection_left : ∀ E F, E ∩ F ⊂ E.
 Proof.
   move=> E F x /Pairwise_intersection_classification [H H0] //.

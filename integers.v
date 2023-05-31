@@ -2004,3 +2004,14 @@ Proof.
              [ | apply (cancellation_mul_l ℤ_ID b); auto ] =>
   /=; rewrite H1 (M1 b) -M2 div_inv_r; auto.
 Qed.
+
+Theorem le_lt_1 : ∀ a b, a ≤ b ↔ a < b + 1.
+Proof.
+  (split => [[ | ?] | ]; subst) => [/(succ_lt ℤ_order) | | ] //;
+                                     first apply (lt_succ ℤ_order).
+  (rewrite /le; move: (trichotomy ℤ_order a b) => [ | [ | ]] /=);
+  (rewrite /ordered_rings.le -[ordered_rings.lt ℤ_order]/lt; try tauto) => H H0.
+  contradiction (lt_0_1 (a - b)).
+  - apply (ordered_rings.lt_shift ℤ_order b a); auto.
+  - by apply (O1 (-b)) in H0; ring_simplify in H0; rewrite A1 in H0.
+Qed.
