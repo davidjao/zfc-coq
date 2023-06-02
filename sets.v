@@ -63,28 +63,20 @@ Qed.
 Theorem Nonempty_classification : ∀ y, y ≠ ∅ ↔ ∃ x, x ∈ y.
 Proof.
   split => [H | [x] /[swap] -> /Empty_set_classification] //.
-  apply NNPP => H0.
-  apply /H /Extensionality => z.
-  split => [H1 | /Empty_set_classification] //.
-  contradict H0.
-  eauto.
+  apply NNPP => H0; apply H, Extensionality => z.
+  split => [H1 | /Empty_set_classification] //; contradict H0; eauto.
 Qed.
 
 (* The axiom of specification is a theorem in ZFC under classical logic. *)
 Theorem Specification : ∀ z p, ∃ y, ∀ x, x ∈ y ↔ x ∈ z ∧ p x.
 Proof.
-  move=> z p.
-  elim (classic (∃ x, x ∈ z ∧ p x)) => [[e [H H0]] | H].
+  move=> z p; case (classic (∃ x, x ∈ z ∧ p x)) => [[e [H H0]] | H].
   - elim (Replacement z (λ x y, p x ∧ x = y ∨ ¬ p x ∧ e = y)) => x H1.
-    + exists x => x0.
-      split => [ /H1 [w [H2 [ [H3 <-] | [H3 <-] ]]] | ] //.
-      rewrite H1.
-      intuition eauto.
-    + elim (classic (p x)); [ exists x | exists e ]; split; intuition tauto.
-  - exists ∅ => x.
-    split => [/Empty_set_classification | H0] //.
-    contradict H.
-    eauto.
+    + exists x; split => [ /H1 [w [H2 [ [H3 <-] | [H3 <-] ]]] | ] //.
+      rewrite H1; intuition eauto.
+    + case (classic (p x)); [ exists x | exists e ]; split; intuition tauto.
+  - exists ∅; split => [/Empty_set_classification | H0] //.
+    contradict H; eauto.
 Qed.
 
 Definition specify : set → (set → Prop) → set.
@@ -211,16 +203,12 @@ Qed.
 
 Lemma Subset_of_subsets_of_emptyset : ∀ a, a ∈ P (P ∅) → a = ∅ ∨ a = P ∅.
 Proof.
-  move=> a.
-  (elim (classic (a = ∅)); try tauto) => H /Powerset_classification => H0.
-  apply or_intror, Subset_equality_iff, conj;
-    auto => z /Powerset_classification H1.
-  suff -> : z = ∅.
-  - move: H H0 => /Nonempty_classification => [[x H]].
-    move: (H) => /[swap] /[apply] /Powerset_classification => H0.
-    suff -> : ∅ = x => //.
-    apply Subset_equality_iff, conj; auto using Empty_set_is_subset.
-  - apply Subset_equality_iff, conj; auto using Empty_set_is_subset.
+  (move: classic => /[swap] a /(_ (a = ∅)) [ | ]; try tauto) =>
+    H /Powerset_classification H0.
+  (apply or_intror, Subset_equality_iff, conj; auto => z) =>
+    /Powerset_classification /Subset_equality /(_ (Empty_set_is_subset _)) ->.
+  (move: H H0 => /Nonempty_classification => [[x /[dup] H]] /[swap] /[apply]) =>
+    /Powerset_classification /Subset_equality <- //; apply Empty_set_is_subset.
 Qed.
 
 (* The axiom of pairing is a theorem in ZFC under classical logic. *)
@@ -228,8 +216,7 @@ Theorem Pairing : ∀ x y, ∃ z, x ∈ z ∧ y ∈ z.
 Proof.
   move=> x y.
   elim (Replacement (P (P ∅)) (λ a b, ∅ = a ∧ x = b ∨ P ∅ = a ∧ y = b)) => z.
-  - exists z; split; apply /H;
-      eauto using Empty_set_in_powerset, Set_in_powerset.
+  - eexists; split; apply H; eauto using Empty_set_in_powerset, Set_in_powerset.
   - move => /Subset_of_subsets_of_emptyset; elim; [ exists x | exists y ];
               split; intuition; subst; by contradiction (Powerset_nonempty ∅).
 Qed.
@@ -334,7 +321,7 @@ Proof.
   move=> x y H H0.
   apply NNPP => H1.
   apply H, conj; auto => z H2.
-  apply NNPP => H3.
+  apply NNPP.
   eauto.
 Qed.
 
@@ -343,7 +330,7 @@ Proof.
   move=> A B C H [H0 H1].
   split => [a /H /H0 | ] //.
   move: H => /[swap] -> H.
-    by apply /H1 /Subset_equality_iff.
+  by apply /H1 /Subset_equality_iff.
 Qed.
 
 Theorem subsetneq_subset_trans : ∀ A B C, A ⊊ B → B ⊂ C → A ⊊ C.
@@ -351,7 +338,7 @@ Proof.
   move=> A B C [H H0] H1.
   split => [a /H /H1 | ] //.
   move: H1 => /[swap] <- H1.
-    by apply /H0 /Subset_equality_iff.
+  by apply /H0 /Subset_equality_iff.
 Qed.
 
 Lemma proper_subset_inhab : ∀ x y, x ⊊ y → ∃ z, z ∈ y ∧ z ∉ x.
@@ -360,7 +347,7 @@ Proof.
   apply NNPP => H1.
   apply /H0 /Subset_equality_iff.
   split; auto => z H2.
-  apply NNPP => H3.
+  apply NNPP.
   eauto.
 Qed.
 
@@ -496,7 +483,7 @@ Proof.
   repeat (elim constructive_indefinite_description => /=) => x H.
   apply /Extensionality => z.
   rewrite H Empty_union.
-  split => [[/Empty_set_classification] | /Empty_set_classification] //.
+  split => [[] | ] /Empty_set_classification //.
 Qed.
 
 Theorem Intersection_empty : ∀ A, A ∩ ∅ = ∅.
@@ -571,7 +558,7 @@ Theorem Complement_classification : ∀ A B x, x ∈ A \ B ↔ x ∈ A ∧ x ∉
 Proof.
   move=> A B x.
   rewrite /complement /specify.
-    by repeat elim constructive_indefinite_description => /=.
+  by repeat elim constructive_indefinite_description => /=.
 Qed.
 
 Theorem Complement_subset : ∀ A B, A ⊂ B ↔ A \ B = ∅.
