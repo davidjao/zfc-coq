@@ -9,9 +9,8 @@ Lemma Primes_classification : ∀ x : Z, x ∈ Primes ↔ 0 < x ∧ prime x.
 Proof.
   move=> x.
   rewrite Specify_classification /specify_lift.
-  case excluded_middle_informative => // [H0 | ].
-  - (have -> : (mkSet H0) = x by apply set_proj_injective); tauto.
-  - by move: (elts_in_set x).
+  case excluded_middle_informative => // [H | /(_ (elts_in_set x))] //.
+  move: (reify H) => /set_proj_injective <-; tauto.
 Qed.
 
 Lemma fact_succ : (∀ n : N, (S n)! = n! * (S n))%N.
