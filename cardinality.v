@@ -780,7 +780,7 @@ Proof.
     rewrite ? H2 // => /Ordered_pair_iff [H7 H8].
     apply Extensionality.
     move=> z; wlog: u v z H3 H4 H5 H6 H7 H8 / z ∈ u.
-    { split => *; [ apply (x u v z) | apply (x v u z) ]; auto. }
+    { split => *; [ apply (H0 u v z) | apply (H0 v u z) ]; auto. }
     (split; try tauto) =>
     /H4 /Product_classification
      [y [x [/Pairwise_union_classification H9 [H10 H11]]]] =>
@@ -802,12 +802,12 @@ Proof.
       { rewrite Product_union_distr_l Pairwise_union_classification.
         intuition eauto. }
       repeat split; auto => a /Pairwise_union_classification H10.
-      clear Z f H0 H2 H3 H6 H9.
-      wlog: A B C a u v H H4 H5 H7 H8 H10 x / a ∈ B =>
+      clear Z f H0 H2 H3 H6 H9 H1.
+      wlog: A B C a u v H H4 H5 H7 H8 H10 y / a ∈ B =>
       [ | {H10} /[dup] H10 /H5 [z [[H0 /[dup] /H4 /Product_in_left
                                        H1 /(Union_left _ v) H2] H3]]].
       { elim H10; [ | rewrite ? (Union_comm B C) ? (Union_comm u v)
-                              1 ? Intersection_comm in H x |-* ]; eauto. }
+                              1 ? Intersection_comm in H y |-* ]; eauto. }
       exists z.
       repeat split; auto =>
       x' [H6 /Pairwise_union_classification [H9 | /H7 /Product_in_left H9]];
@@ -915,7 +915,7 @@ Proof.
        /Specify_classification [_ [H9 H10]] -> // -> // H11.
       apply Extensionality => z {A B C D H0 H2 h H3 H4 H8}.
       wlog: x y z H H1 H6 H7 H9 H10 H11 / z ∈ x.
-      * split => *; [ apply (x0 x y z) | apply (x0 y x z) ]; auto.
+      * split => *; [ apply (H0 x y z) | apply (H0 y x z) ]; auto.
       * split => [/[dup] /[swap] /H6 /Product_classification
                    [a [b [H2 [H3 ->]]] H4 {z H0}] | H2] //.
         have: (g a, f b) ∈ {z in range g × range f | ∃ x0 : set,
@@ -1056,9 +1056,9 @@ Proof.
                    auto using inverse_bijective. }
       split; auto.
       rewrite H1 /inverse_function_out /sumbool_rect -H3 -H4; try congruence.
-      (elim excluded_middle_informative; try tauto) => H7.
+      (elim excluded_middle_informative; try tauto) => H8.
       destruct iffLR as [_].
-      elim constructive_indefinite_description => z [H8 [H9 [H10 [H11 H12]]]].
+      elim constructive_indefinite_description => z [H9 [H10 [H11 [H12 H13]]]].
       rewrite -H5 -(function_inv_inv g) //.
       apply f_equal, f_equal, function_record_injective;
         rewrite ? inverse_range //.

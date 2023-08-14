@@ -916,11 +916,11 @@ Proof.
     (repeat split; try congruence; eauto) =>
     [| y [H1]]; rewrite Specify_classification ? proj1_eval ? proj2_eval
                         ? Product_classification; intuition; exists x; eauto. }
-  exists (mkFunc H0); repeat split; auto => a H1.
+  exists (mkFunc H0); repeat split; auto => a H2.
   rewrite /eval /sumbool_rect.
-  case excluded_middle_informative => /= {}H1 //.
+  case excluded_middle_informative => /= {}H2 //.
   destruct H0.
-  elim constructive_indefinite_description => y [[H2 /Specify_classification]].
+  elim constructive_indefinite_description => y [[H3 /Specify_classification]].
   rewrite proj2_eval // proj1_eval // => [[]] //.
 Qed.
 
@@ -1323,7 +1323,7 @@ Theorem Composition_classification :
          domain (f ∘ g) = domain g ∧ range (f ∘ g) = range f ∧
          ∀ x, x ∈ domain g → (f ∘ g) x = f (g x).
 Proof.
-  rewrite /composition /ssr_have => f g H.
+  rewrite /composition ? /ssr_have => f g H.
   case excluded_middle_informative => // => {}H /=.
   elim constructive_indefinite_description => //.
 Qed.
@@ -1722,7 +1722,7 @@ Proof.
   move=> f A1 A2 B [H H0] [H1 H2].
   apply Extensionality => z.
   wlog: f A1 A2 B H H0 H1 H2 / z ∈ A1.
-  - split => H3; [ apply (x f A1 A2 B) | apply (x f A2 A1 B) ]; auto.
+  - split => H4; [ apply (H3 f A1 A2 B) | apply (H3 f A2 A1 B) ]; auto.
   - (split => H4; try tauto) => {H4}; move: H0 H3 =>
     /[apply] [[y [[_ /H1 /Specify_classification
                      [_ [a [b [_ [_ /Ordered_pair_iff [-> ->]]]]]]]]]] //.

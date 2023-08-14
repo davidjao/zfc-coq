@@ -183,7 +183,7 @@ Infix "++" := concat : set_scope.
 
 Theorem concat_length : ∀ a b, length (a ++ b) = (length a + length b)%N.
 Proof.
-  rewrite /concat /length /ssr_have => [[a A]] [b B].
+  rewrite /concat /length ? /ssr_have => [[a A]] [b B].
   (repeat elim constructive_indefinite_description => /=) => x H x0 H0 x1 H1.
   move: (func_hyp (sets.functionify (concat_elements H0 H))).
   rewrite sets.functionify_domain sets.functionify_range // =>
@@ -204,7 +204,7 @@ Reserved Notation "s =~ re" (at level 80).
 
 Theorem length_empty : length ε = 0%N.
 Proof.
-  rewrite /empty_string /length /ssr_have /naturals.zero /=.
+  rewrite /empty_string /length ? /ssr_have /naturals.zero /=.
   elim constructive_indefinite_description => /= x H.
   move: (function_empty_domain (mkFunc H)) => [ ] /=.
   eauto using set_proj_injective.
@@ -370,7 +370,7 @@ Proof.
   (apply f_equal, func_ext; rewrite ? sets.functionify_domain);
   rewrite ? sets.functionify_range /= ? add_0_l // => y H1.
   rewrite -[y]/((mkSet H1 : elts (0 + x)%N) : set) /sets.functionify
-              /concat_elements /ssr_have.
+              /concat_elements ? /ssr_have.
   elim constructive_indefinite_description => f [H2 [H3 ->]] /=.
   (case excluded_middle_informative => /= [/naturals.lt_not_ge [ ] | ]);
   rewrite ? sub_0_r; eauto using zero_le.
@@ -447,13 +447,13 @@ Theorem concat_product_action :
   ∀ (A B : reg_exp) (x : elts (A × B)) (a b : σ),
     a ∈ A → b ∈ B → (a,b) = x → concat_product A B x = (a ++ b)%set.
 Proof.
-  rewrite /concat_product /concat_function /sets.functionify /ssr_have =>
+  rewrite /concat_product /concat_function /sets.functionify ? /ssr_have =>
             A B [x X] [a ?] [b ?] ? ? H.
   elim constructive_indefinite_description => f [? [? ->]].
   elim constructive_indefinite_description => [a' [b' [? [? ?]]]].
   elim constructive_indefinite_description => [b'' [? [? H0]]] /=.
   (repeat elim constructive_indefinite_description) => [c H1] d H2 m H3 n H4.
-  rewrite /ssr_have /=; subst.
+  rewrite ? /ssr_have /=; subst.
   move: H H0 => /Ordered_pair_iff [? ?] /Ordered_pair_iff [? ?]; subst.
   have ?: c = m; have ?: d = n;
     eauto using set_proj_injective, domain_uniqueness; subst.
@@ -549,7 +549,7 @@ Theorem functionify_concat_l : ∀ a b x, (x < length a)%N → (a ++ b)%set x = 
 Proof.
   move: length_is_domain => /[swap] a /(_ a) /[swap] b /[swap] x /[swap] H.
   destruct a as [a A], b as [b B], x as [x X].
-  rewrite /functionify /concat /ssr_have.
+  rewrite /functionify /concat ? /ssr_have.
   (repeat elim constructive_indefinite_description => /=) =>
     n H0 m H1 a' H2 m' H3 /set_proj_injective H4.
   have ?: m = m'; subst; eauto using set_proj_injective, domain_uniqueness.
@@ -563,7 +563,7 @@ Proof.
   elim constructive_indefinite_description => [f [H3 [H4 H5]]].
   have H6: (x ∈ m + n)%N by
     move: H (le_add m n) => /lt_is_in /[swap] /le_is_subset /[apply] //.
-  rewrite -{1}[x]/(mkSet H6 : set) H5 /concat_elements /ssr_have /=.
+  rewrite -{1}[x]/(mkSet H6 : set) H5 /concat_elements ? /ssr_have /=.
   rewrite (proof_irrelevance _ (elements_of_naturals_are_naturals _ _ _ H6)).
   by case excluded_middle_informative.
 Qed.
@@ -575,7 +575,7 @@ Proof.
         x [/[dup] H /naturals.le_not_gt H0 /[dup] H1 /lt_is_in H2].
   move: A0 B0.
   destruct a as [a A], b as [b B], x as [x X].
-  rewrite /functionify /concat /ssr_have.
+  rewrite /functionify /concat ? /ssr_have.
   (repeat elim constructive_indefinite_description => /=) =>
     n H3 m H4 a' H5 n' H6 m' H7 /set_proj_injective H8 /set_proj_injective H9.
   have ?: m = m'; have ?: n = n'; subst;
@@ -589,7 +589,7 @@ Proof.
     auto using function_record_injective, sets.functionify_range.
   rewrite /sets.functionify.
   elim constructive_indefinite_description => [f [H6 [H7 H8]]].
-  rewrite -[x]/(mkSet H2 : set) H8 /concat_elements /ssr_have /=.
+  rewrite -[x]/(mkSet H2 : set) H8 /concat_elements ? /ssr_have /=.
   rewrite (proof_irrelevance _ (elements_of_naturals_are_naturals _ _ _ H2)).
   by case excluded_middle_informative.
 Qed.

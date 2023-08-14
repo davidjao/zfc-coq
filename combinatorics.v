@@ -543,7 +543,7 @@ Proof.
   - rewrite Specify_classification Powerset_classification Empty_product_left.
     split; auto using Set_is_subset.
     exists empty_function.
-    rewrite /empty_function /ssr_have /naturals.zero /=.
+    rewrite /empty_function ? /ssr_have /naturals.zero /=.
     elim constructive_indefinite_description => f [H [H0 H1]].
     rewrite function_empty_domain /bijective Injective_classification
             Surjective_classification H H0.

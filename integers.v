@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-uniform-inheritance".
-Set Warnings "-fragile-hint-constr,-ambiguous-paths".
+Set Warnings "-fragile-hint-constr,-ambiguous-paths,-intuition-auto-with-star".
 Require Export naturals rings ordered_rings List Permutation Setoid.
 
 Definition integer_relation :=
@@ -61,7 +61,7 @@ Proof.
   move=> [a A] [b B] [c C] [d D].
   have H: (a, b) ∈ ω × ω by apply Product_classification; eauto.
   have H0: (c, d) ∈ ω × ω by apply Product_classification; eauto.
-  rewrite /embed /ssr_have.
+  rewrite /embed ? /ssr_have.
   (split; rewrite ? quotient_equiv /=; auto using integer_equivalence) =>
   [ /Specify_classification [H1] | H1].
   - rewrite (reify H1) despecify ? π1_action ? π2_action ? π1_action //.
