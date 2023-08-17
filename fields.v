@@ -1,6 +1,6 @@
 Set Warnings "-notation-overridden,-notation-bound-to-variable".
 Set Warnings "-ambiguous-paths".
-Require Export integer_powers Field.
+Require Export ssreflect ssrbool ssrfun integer_powers Field.
 
 Record field :=
   mkField {

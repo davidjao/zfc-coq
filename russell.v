@@ -1,4 +1,4 @@
-Require Export sets.
+Require Export ssreflect ssrbool ssrfun sets.
 
 (* Short proof of Russell's paradox. *)
 

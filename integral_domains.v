@@ -1,5 +1,5 @@
 Set Warnings "-ambiguous-paths".
-Require Export rings.
+Require Export ssreflect ssrbool ssrfun rings.
 
 Record integral_domain :=
   mkID {

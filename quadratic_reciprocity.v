@@ -1,5 +1,5 @@
 Set Warnings "-ambiguous-paths".
-Require Export integers_mod_n.
+Require Export ssreflect ssrbool ssrfun integers_mod_n.
 
 Section Pretty_picture_lemmas.
 

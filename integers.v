@@ -1,6 +1,6 @@
 Set Warnings "-notation-overridden,-uniform-inheritance".
 Set Warnings "-fragile-hint-constr,-ambiguous-paths,-intuition-auto-with-star".
-Require Export naturals rings ordered_rings List Permutation Setoid.
+Require Export ssreflect ssrbool ssrfun ordered_rings List Permutation Setoid.
 
 Definition integer_relation :=
   {z of type (ω × ω) × (ω × ω) | π1 (π1 z) + π2 (π2 z) = π2 (π1 z) + π1 (π2 z)}.

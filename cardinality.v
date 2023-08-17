@@ -1,4 +1,4 @@
-Require Export naturals Setoid.
+Require Export ssreflect ssrbool ssrfun naturals Setoid.
 Set Warnings "-notation-overridden".
 
 Open Scope set_scope.

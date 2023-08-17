@@ -1,5 +1,5 @@
 Set Warnings "-ambiguous-paths".
-Require Export sets polynomials.
+Require Export ssreflect ssrbool ssrfun sets polynomials.
 
 Definition STR := (⋃ {({0%N, 1%N}^n)%set | n in ω})%N.
 

@@ -1,6 +1,6 @@
 Set Warnings "-notation-bound-to-variable,-notation-overridden".
 Set Warnings "-ambiguous-paths,-uniform-inheritance".
-Require Export iterated_ops integers.
+Require Export ssreflect ssrbool ssrfun iterated_ops integers.
 
 Record group :=
   mkGroup {

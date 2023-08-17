@@ -1,4 +1,4 @@
-Require Export sets Ring.
+Require Export ssreflect ssrbool ssrfun sets Ring.
 
 Theorem Infinity_ω : ∃ X, ∅ ∈ X ∧ Inductive X.
 Proof.

@@ -1,4 +1,4 @@
-Require Export logic_axioms Basics.
+Require Export ssreflect ssrbool ssrfun logic_axioms Basics.
 
 (* Beginning of axioms. *)
 

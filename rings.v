@@ -1,4 +1,4 @@
-Require Export iterated_ops Ring.
+Require Export ssreflect ssrbool ssrfun iterated_ops Ring.
 Set Warnings "-notation-bound-to-variable,-notation-overridden".
 Set Warnings "-ambiguous-paths,-uniform-inheritance".
 

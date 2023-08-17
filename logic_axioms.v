@@ -1,5 +1,5 @@
-Require Export Utf8 IndefiniteDescription FunctionalExtensionality
-        PropExtensionality ChoiceFacts ssrfun ssreflect ssrbool.
+Require Export ssreflect ssrbool ssrfun Utf8 ChoiceFacts IndefiniteDescription
+  FunctionalExtensionality PropExtensionality.
 
 (* See https://github.com/coq/coq/wiki/CoqAndAxioms for explanations. *)
 

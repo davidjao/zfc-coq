@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-uniform-inheritance,-ambiguous-paths".
-Require Export sets power_series combinatorics.
+Require Export ssreflect ssrbool ssrfun sets power_series combinatorics.
 
 Section Polynomials_construction.
 

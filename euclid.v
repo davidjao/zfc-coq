@@ -1,5 +1,5 @@
 Set Warnings "-ambiguous-paths,-typechecker".
-Require Export integers combinatorics.
+Require Export ssreflect ssrbool ssrfun integers combinatorics.
 
 Open Scope Z_scope.
 
