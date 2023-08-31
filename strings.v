@@ -1,7 +1,7 @@
 Set Warnings "-ambiguous-paths".
 Require Export ssreflect ssrbool ssrfun sets polynomials.
 
-Definition STR := (⋃ {({0%N, 1%N}^n)%set | n in ω})%N.
+Definition STR := (⋃ {({0%N, 1%N} ^ n)%set | n in ω})%N.
 
 Theorem STR_classification : ∀ f, f ∈ STR ↔ ∃ n : N, is_function f n {0, 1}%N.
 Proof.
@@ -9,7 +9,7 @@ Proof.
   (split; rewrite Union_classification) =>
     [[x [/replacement_classification [n ->] /Specify_classification []]]
     | [n /[dup] H [H0 H1]]]; eauto.
-  exists ({0%N, 1%N}^n).
+  exists ({0%N, 1%N} ^ n).
   rewrite replacement_classification Specify_classification
           Powerset_classification; eauto.
 Qed.
@@ -345,14 +345,14 @@ Proof.
   by rewrite iterate_0.
 Qed.
 
-Theorem pow_0_r : ∀ A, A^0 = [ε].
+Theorem pow_0_r : ∀ A, A ^ 0 = [ε].
 Proof.
   rewrite /pow /iterate_with_bounds => A.
   elim excluded_middle_informative =>
          // /naturals.le_not_gt /(_ (naturals.succ_lt 0%N)) //.
 Qed.
 
-Theorem pow_1_r : ∀ A, A^1 = A.
+Theorem pow_1_r : ∀ A, A ^ 1 = A.
 Proof.
   rewrite /pow => A.
   by rewrite iterate_0.
@@ -470,7 +470,7 @@ Inductive unambiguous : reg_exp → Prop :=
     unambiguous (A || B)
 | unambiguous_star A :
     unambiguous A →
-    (∀ n m : N, n ≠ m → (A^n)%str ∩ (A^m)%str = ∅) →
+    (∀ n m : N, n ≠ m → (A ^ n)%str ∩ (A ^ m)%str = ∅) →
     injective (concat_product A (A ⃰)) →
     unambiguous (A ⃰).
 
@@ -618,8 +618,7 @@ Proof.
       by rewrite naturals.add_assoc sub_abab.
 Qed.
 
-Theorem concat_assoc :
-  ∀ A B C, A ++ (B ++ C) = (A ++ B) ++ C.
+Theorem concat_assoc : ∀ A B C : reg_exp, A ++ (B ++ C) = (A ++ B) ++ C.
 Proof.
   move=> A B C.
   apply set_proj_injective, Extensionality => ?.
@@ -656,14 +655,14 @@ Proof.
                    singleton_realization Singleton_classification.
 Qed.
 
-Lemma concat_sym : ∀ n A, A^n ++ A = A ++ A^n.
+Lemma concat_sym : ∀ n A, A ^ n ++ A = A ++ A ^ n.
 Proof.
   (elim/Induction => [A | n H A]);
   rewrite ? pow_0_r ? concat_ε_l ? concat_ε_r // ? pow_succ_r
           -? concat_reg_exp {1}H concat_assoc //.
 Qed.
 
-Theorem pow_add_r : ∀ n m A, (A^(n+m)%N : Σ) = A^n || A^m.
+Theorem pow_add_r : ∀ n m A, (A ^ (n + m)%N : Σ) = A ^ n || A ^ m.
 Proof.
   (elim/Induction => [m A | n H m A]);
   rewrite ? pow_0_r ? add_0_l -? concat_reg_exp ? concat_ε_l //
@@ -672,7 +671,7 @@ Proof.
 Qed.
 
 Theorem length_of_n_string :
-  ∀ (n : N) (x : σ), x ∈ (([0] ⌣ [1])^n)%str ↔ length x = n.
+  ∀ (n : N) (x : σ), x ∈ (([0] ⌣ [1]) ^ n)%str ↔ length x = n.
 Proof.
   ((elim/Induction => [x | n H x]; split); move: (length_is_domain x);
    rewrite ? pow_0_r ? singleton_realization ? Singleton_classification) =>
@@ -922,7 +921,7 @@ Proof.
 Qed.
 
 Theorem regular_star :
-  ∀ A, regular A → ∃ B : reg_exp, A = B ∧ regular (⋃ {B^n | n in ω}).
+  ∀ A, regular A → ∃ B : reg_exp, A = B ∧ regular (⋃ {B ^ n | n in ω}).
 Proof.
   move=> ? [? ->].
   repeat esplit; eauto using star_realization.
@@ -939,7 +938,7 @@ Infix "+" := (power_series.add ℤ) : String_scope.
 Notation "- a" := (power_series.neg ℤ a) : String_scope.
 Infix "*" := (power_series.mul ℤ) : String_scope.
 
-Lemma string_length_idem : ∀ ξ : σ, ξ ∈ {0, 1}%N^(length ξ).
+Lemma string_length_idem : ∀ ξ : σ, ξ ∈ {0, 1}%N ^ (length ξ).
 Proof.
   move: func_hyp => /[swap] ξ /(_ ξ).
   rewrite Specify_classification length_is_domain /functionify.
