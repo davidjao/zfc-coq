@@ -19,11 +19,9 @@ Proof.
     rewrite add_comm //.
   - have H4: (x, z) ∈ (ω × ω) × (ω × ω) by apply Product_classification; eauto.
     rewrite Specify_classification (reify H3) ? (reify H2) (reify H4)
-            ? despecify ? π1_action ? π2_action // => H5 H6.
-    split; auto.
-    apply (naturals.cancellation_add (π2 (mkSet H0))).
-    ring_simplify [H5 H6].
-    rewrite H6; ring_simplify [H5]; rewrite -H5 //.
+      ? despecify ? π1_action ? π2_action // => H5 H6.
+    apply conj, (naturals.cancellation_add (π2 (mkSet H0))); auto.
+    ring_simplify [H5 H6]; rewrite H6 -add_assoc H5; ring [H5].
 Qed.
 
 Definition Z := elts ((ω × ω) / integer_relation).
@@ -122,8 +120,7 @@ Proof.
   (repeat elim constructive_indefinite_description) => e /Zequiv H1 f /Zequiv.
   move: H H0 => /Zequiv H /Zequiv H0 H2.
   rewrite Zequiv.
-  ring_simplify [H H1].
-  rewrite -H1 -? add_assoc H2 //.
+  ring_simplify [H H1]; rewrite -H1 -? add_assoc H2 //.
 Qed.
 
 Theorem INZ_add : ∀ a b : N, a + b = (a + b)%N.
@@ -132,8 +129,7 @@ Proof.
   (repeat elim constructive_indefinite_description) => x [y H] z [w H0].
   (repeat elim constructive_indefinite_description) => c H1 d H2.
   move: H H0 H1 H2.
-  rewrite ? Zequiv ? add_0_r => -> -> -> ->.
-  ring.
+  rewrite ? Zequiv ? add_0_r => -> -> -> ->; ring.
 Qed.
 
 Theorem INZ_mul : ∀ a b : N, a * b = (a * b)%N.
@@ -142,8 +138,7 @@ Proof.
   (repeat elim constructive_indefinite_description) => x [y H] z [w H0].
   (repeat elim constructive_indefinite_description) => c H1 d H2.
   move: H H0 H1 H2.
-  rewrite ? Zequiv ? add_0_r => -> -> -> ->.
-  ring.
+  rewrite ? Zequiv ? add_0_r => -> -> -> ->; ring.
 Qed.
 
 Theorem INZ_eq : ∀ a b : N, (a : Z) = (b : Z) ↔ a = b.
@@ -204,7 +199,7 @@ Proof.
   rewrite ? Zequiv ? (add_comm _ c) ? (add_comm _ a) => /[dup] H =>
   -> /[dup] H0 -> /naturals.cancellation_add <- /naturals.cancellation_add <-.
   apply (naturals.cancellation_add (a*x)).
-  suff -> : (a*x+(z*x+w*y+(b*c+a*d)) = b*c+a*(x+d)+w*y+x*z)%N; last by ring.
+  have ->: (a*x+(z*x+w*y+(b*c+a*d)) = b*c+a*(x+d)+w*y+x*z)%N by ring.
   rewrite H; ring_simplify [H0]; rewrite -? add_assoc -? mul_distr_r -? H0.
   ring_simplify [H0]; f_equal; rewrite -? add_assoc -? mul_distr_l -? H //.
 Qed.
