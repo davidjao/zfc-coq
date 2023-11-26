@@ -1183,10 +1183,8 @@ Proof.
     repeat split; auto => y H0.
     rewrite (reify H0) functionify_action.
     elim constructive_indefinite_description => [[x X] <-] //.
-  - rewrite /surjective => [[y /[dup] /H1 H2 /[dup]]].
-    move: H H0 => {1}<- /[swap] /function_maps_domain_to_range /[swap] -> H Y.
-    exists (mkSet H).
-    exact: set_proj_injective.
+  - rewrite Surjective_classification => y /[dup].
+    rewrite -{1}H -H0 => /function_maps_domain_to_range; eauto.
 Qed.
 
 Definition image (f : function) := {y in range f | ∃ x, x ∈ domain f ∧ f x = y}.
