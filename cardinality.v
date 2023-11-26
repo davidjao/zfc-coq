@@ -1321,7 +1321,7 @@ Proof.
   move=> ? ? /injective_into_image ->.
   auto using finite_subsets, image_subset_range.
 Qed.
- 
+
 Theorem surjective_card :
   ∀ f, finite (domain f) → surjective f → # range f ≤ # domain f.
 Proof.
