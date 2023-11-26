@@ -1318,16 +1318,14 @@ Qed.
 Theorem injective_card :
   ∀ f, finite (range f) → injective f → # domain f ≤ # range f.
 Proof.
-  move=> f H /injective_into_image ->.
+  move=> ? ? /injective_into_image ->.
   auto using finite_subsets, image_subset_range.
 Qed.
   
 Theorem surjective_card :
   ∀ f, finite (domain f) → surjective f → # range f ≤ # domain f.
 Proof.
-  move=> f H /right_inverse_iff_surjective [g [H0 [H1 H2]]].
-  have /injective_into_image H3: injective g;
-    first (rewrite Injective_classification => x y H3 H4 /(f_equal f));
-    rewrite ? H2 -? H0 ? H3 -? H1;
-    last apply finite_subsets, image_subset_range; congruence.
+  move=> f ? /right_inverse_iff_surjective [g [H [H0 H1]]].
+  (have /injective_card: injective g; rewrite ? Injective_classification) =>
+    [? ? ? ? /(f_equal f) | ]; rewrite ? H1 -? H ? H0; intuition.
 Qed.
