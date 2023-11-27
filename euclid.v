@@ -64,7 +64,7 @@ Proof.
     auto using card_equiv.
 Qed.
 
-Theorem Euclid's_theorem : ¬ finite Primes.
+Theorem Euclid's_theorem : infinite Primes.
 Proof.
   move=> /finite_max [x /Specify_classification [H] | m H] //.
   have /le_def [c] : 0 ≤ m.

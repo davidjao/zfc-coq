@@ -470,6 +470,11 @@ Proof.
   apply /ex_intro /H0.
 Qed.
 
+Theorem infinite_subset : ∀ E F, infinite E → E ⊂ F → infinite F.
+Proof.
+  move=> E F H /subsets_of_finites_are_finite /[apply] //.
+Qed.
+
 Theorem finite_subsets : ∀ E F, finite F → E ⊂ F → # E ≤ # F.
 Proof.
   move=> E F /[swap] /finite_subsets_precursor /[apply]
@@ -734,6 +739,12 @@ Proof.
     repeat esplit; eauto using function_maps_domain_to_range.
 Qed.
 
+Theorem product_card_comm : ∀ E F, E × F ~ F × E.
+Proof.
+  move=> E F.
+  eexists; auto using swap_domain, swap_range, swap_bijective.
+Qed.
+
 Theorem finite_products_are_finite :
   ∀ E F, finite E → finite F → finite (E × F).
 Proof.
@@ -741,11 +752,41 @@ Proof.
   auto using natural_products_are_finite.
 Qed.
 
-Theorem finite_products_card :
-  ∀ E F, finite E → finite F → # (E × F) = (# E) * (# F).
+Theorem infinite_products_are_infinite :
+  ∀ E F, E ≠ ∅ → infinite F →infinite (E × F).
 Proof.
-  move=> E F [n ->] [m ->].
-  auto using natural_prod_card.
+  move=> E F /Nonempty_classification [e] /mkSet {}e H.
+  have /injective_into_image H0: injective (functionify (embed E F e)).
+  { rewrite Injective_classification functionify_domain => ? ? H0 H1.
+    rewrite (reify H0) (reify H1) ? functionify_action /= =>
+              /Ordered_pair_iff [] //. }
+  rewrite -(functionify_range (embed E F e)).
+  eapply infinite_subset, image_subset_range.
+  rewrite /infinite -H0 functionify_domain //.
+Qed.
+
+Theorem infinite_products_card_right :
+  ∀ E F, infinite F → # (E × F) = (# E) * (# F).
+Proof.
+  move=> E F H.
+  (case (classic (E = ∅)) => [-> | /infinite_products_are_infinite /(_ H)]);
+  rewrite ? Empty_product_left ? card_empty ? {1 3}/finite_cardinality;
+  repeat case excluded_middle_informative => //= *; ring.
+Qed.
+
+Theorem infinite_products_card_left :
+  ∀ E F, infinite E → # (E × F) = (# E) * (# F).
+Proof.
+  move=> E F H.
+  rewrite product_card_comm infinite_products_card_right; intuition ring.
+Qed.
+
+Theorem products_card : ∀ E F, # (E × F) = (# E) * (# F).
+Proof.
+  move=> E F.
+  case (classic (finite F)) => [ | /infinite_products_card_right] //.
+  case (classic (finite E)) => [[n ->] [m ->] | /infinite_products_card_left];
+                               auto using natural_prod_card.
 Qed.
 
 Theorem power_union_r : ∀ A B C, B ∩ C = ∅ → A ^ (B ∪ C) ~ A ^ B × A ^ C.
@@ -887,7 +928,7 @@ Proof.
   - rewrite
     -S_is_succ /succ power_union_r ? disjoint_succ // finite_union_cardinality
                ? disjoint_succ // ? singleton_card ? pow_add_r ? pow_1_r
-               ? power_1_r ? finite_products_card ? IH //;
+               ? power_1_r ? products_card ? IH //;
                auto using naturals_are_finite, singletons_are_finite,
     natural_powers_are_finite.
 Qed.

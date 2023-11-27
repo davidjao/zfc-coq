@@ -592,7 +592,7 @@ Proof.
   - rewrite /factorial /permutations prod_N_neg
             ? size_of_bijections_of_empty_set //; apply naturals.lt_succ.
   - (rewrite /factorial /permutations ? prod_N_succ ? IHn /size_of_bijections
-             ? permutation_succ ? finite_products_card ? card_of_natural 1
+             ? permutation_succ ? products_card ? card_of_natural 1
              ? mul_comm; auto using one_le_succ, permutations_are_finite,
                          naturals_are_finite) => <- //.
 Qed.

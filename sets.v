@@ -1782,10 +1782,9 @@ Qed.
 
 Definition swap_product (S T : set) : elts (S × T) → elts (T × S).
 Proof.
-  move=> [z /Product_classification /constructive_indefinite_description
-            [x /constructive_indefinite_description [y [H [H0 H1]]]]].
-  have H2: (y, x) ∈ T × S by apply Product_classification; eauto.
-  exact (mkSet H2).
+  move=> x.
+  have /mkSet: (π2 x, π1 x) ∈ T × S; try apply Product_classification;
+    eauto using elts_in_set.
 Defined.
 
 Definition swap_function S T := functionify (swap_product S T).
@@ -1807,10 +1806,8 @@ Theorem swap_action : ∀ S T x y,
 Proof.
   move=> S T x y H H0.
   have H1: (x, y) ∈ S × T by apply Product_classification; eauto.
-  rewrite /swap_function /swap_product (reify H1) functionify_action.
-  elim constructive_indefinite_description => a [b [H2 [H3 H4]]].
-  elim constructive_indefinite_description =>
-  c [H5 [H6 /Ordered_pair_iff [-> ->]]] => //=.
+  rewrite /swap_function /swap_product (reify H1) functionify_action /=
+    ? π1_action ? π2_action //=.
 Qed.
 
 Theorem swap_bijective : ∀ S T, bijective (swap_function S T).
@@ -1824,3 +1821,9 @@ Proof.
   - exists (y, x).
     rewrite Product_classification swap_action; intuition eauto.
 Qed.
+
+Definition embed (E F : set) (e : elts E) (f : elts F) : elts (E × F).
+Proof.
+  have /mkSet: (e, f) ∈ E × F; try apply Product_classification;
+    eauto using elts_in_set.
+Defined.
