@@ -1,6 +1,7 @@
 build-job:
   stage: build
   script:
+    - coq_makefile -f _CoqProject -o Makefile
     - make clean
     - make
 
