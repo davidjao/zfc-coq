@@ -1,6 +1,6 @@
 build-job:
   stage: build
-  tags: linux
+  tags: [linux]
   script:
     - grep -rn '[[:blank:]]$' *.v && exit 1
     - grep -rn '.\{81\}' *.v && exit 1
