@@ -21,6 +21,8 @@ build-job:
 check-axioms:
   stage: test
   tags: [linux]
+  variables:
+    GIT_CHECKOUT: "false"
   script:
     - q=`coqchk -silent -o -Q . ZFC *.vo 2>&1` &&
       echo "$q" &&
