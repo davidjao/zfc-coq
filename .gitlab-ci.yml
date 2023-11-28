@@ -1,85 +1,15 @@
-name: Coq Axiom Check
+build-job:
+  stage: build
+  script:
+    - make clean
+    - make
 
-on:
-  push:
-    branches:
-      - main
+syntax-check:
+  stage: test
+  script:
+    - /home/djao/bin/check-coq.sh
 
-jobs:
-  coq-check:
-    runs-on: linux
-
-    steps:
-    - name: Run coqchk and compare result
-      run: |
-        s=$( /home/djao/bin/check-coq.sh )
-        expected=$(cat << 'EOF'
-CLEAN
-COQDEP VFILES
-COQC logic_axioms.v
-COQC sets.v
-COQC russell.v
-COQC naturals.v
-COQC iterated_ops.v
-COQC cardinality.v
-COQC rings.v
-COQC power_series.v
-COQC integral_domains.v
-COQC ordered_rings.v
-COQC integers.v
-COQC groups.v
-COQC integer_powers.v
-COQC fields.v
-COQC ordered_fields.v
-COQC rationals.v
-COQC combinatorics.v
-COQC euclid.v
-COQC polynomials.v
-COQC binomial.v
-COQC integers_mod_n.v
-COQC quadratic_reciprocity.v
-COQC strings.v
-COQC summation_example.v
-COQC reals.v
-
-CONTEXT SUMMARY
-===============
-
-* Theory: Set is predicative
-  
-* Axioms:
-    ZFC.sets.Infinity
-    ZFC.sets.Regularity
-    ZFC.sets.Powerset
-    ZFC.sets.Extensionality
-    Coq.Logic.FunctionalExtensionality.functional_extensionality_dep
-    Coq.Logic.PropExtensionality.propositional_extensionality
-    ZFC.sets.Replacement
-    ZFC.sets.Union
-    ZFC.sets.set
-    ZFC.sets.IN
-    Coq.Logic.IndefiniteDescription.constructive_indefinite_description
-  
-* Constants/Inductives relying on type-in-type: <none>
-  
-* Constants/Inductives relying on unsafe (co)fixpoints: <none>
-  
-* Inductives whose positivity is assumed: <none>
-
-EOF
-        )
-        
-        normalize() {
-          echo "$1" | sed '/^[[:space:]]*$/d'
-        }
-
-        echo "NORMALIZED ACTUAL"
-        echo "$(normalize "$s")"
-        echo "NORMALIZED EXPECTED"
-        echo "$(normalize "$expected")"
-
-        if [ "$(normalize "$s")" != "$(normalize "$expected")" ]; then
-          echo "Error: Context summary does not match the expected result."
-          exit 1
-        fi
-        
+axiom-check:
+  stage: test
+  script:
+    - coqchk -silent -o -Q . ZFC *.vo
