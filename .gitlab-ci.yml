@@ -6,4 +6,4 @@ build-job:
     - make
     - grep -rn '[[:blank:]]$' ~/TeX/waterloo/zfc-coq/*.v && exit 1
     - grep -rn '.\{81\}'  ~/TeX/waterloo/zfc-coq/*.v && exit 1
-    - coqchk -silent -o -Q . ZFC *.vo
+    - q=`coqchk -silent -o -Q . ZFC *.vo 2>&1`; echo "$q" && r=`echo "$q" | grep ZFC | sort | cut -f 3 -d . | paste -sd \ ` && [[ "$r" == "Extensionality IN Infinity Powerset Regularity Replacement Union set" ]] || exit 1
