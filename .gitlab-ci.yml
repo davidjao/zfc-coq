@@ -1,10 +1,27 @@
-build-job:
-  stage: build
+stages:
+  - build
+  - test
+
+syntax-check:
+  stage: .pre
   tags: [linux]
   script:
     - grep -rn '[[:blank:]]$' *.v && exit 1
     - grep -rn '.\{81\}' *.v && exit 1
+
+build-job:
+  stage: build
+  tags: [linux]
+  script:
     - coq_makefile -f _CoqProject -o Makefile
     - make clean
     - make
-    - q=`coqchk -silent -o -Q . ZFC *.vo 2>&1` && echo "$q" && r=`echo "$q" | grep -P '(ZFC\.|Coq\.)' | sort | cut -f 3 -d . | paste -sd \ ` && [[ "$r" == "FunctionalExtensionality IndefiniteDescription PropExtensionality Extensionality IN Infinity Powerset Regularity Replacement set Union" ]] || exit 1
+
+check-axioms:
+  stage: test
+  tags: [linux]
+  script:
+    - q=`coqchk -silent -o -Q . ZFC *.vo 2>&1`
+    - echo "$q"
+    - r=`echo "$q" | grep -P '(ZFC\.|Coq\.)' | sort | cut -f 3 -d . | paste -sd \ `
+    - [[ "$r" == "FunctionalExtensionality IndefiniteDescription PropExtensionality Extensionality IN Infinity Powerset Regularity Replacement set Union" ]] || exit 1
