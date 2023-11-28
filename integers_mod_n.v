@@ -1198,7 +1198,7 @@ Section Modular_arithmetic.
               ? INZ_eq //; auto using odd_prime_positive.
       apply equivalence_to_card.
       rewrite add_1_r -(card_of_natural 2) mul_comm
-      -products_card -? card_equiv ? Euler_Phi_unit;
+      -product_card -? card_equiv ? Euler_Phi_unit;
         auto using finite_products_are_finite, naturals_are_finite,
         finite_QR, odd_prime_positive.
       rewrite -domain_usf -image_usf.

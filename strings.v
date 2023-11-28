@@ -973,7 +973,7 @@ Proof.
                                 x = (a ++ b)%set ∧ a ∈ A ∧ b ∈ B ∧ length a = k
                                 ∧ length b = (n - k)%N}) : Z) 0 n.
   - apply iterate_extensionality => k H0.
-    rewrite INZ_eq -products_card; try eapply finite_length_subsets =>
+    rewrite INZ_eq -product_card; try eapply finite_length_subsets =>
               x /Specify_classification [ ]; eauto.
     apply equinumerous_cardinality.
     inversion H as [ | | | A0 B0 H1 H2 H3 [H4 H5] | ].

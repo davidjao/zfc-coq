@@ -765,7 +765,7 @@ Proof.
   rewrite /infinite -H0 functionify_domain //.
 Qed.
 
-Theorem infinite_products_card_right :
+Theorem infinite_product_card_right :
   ∀ E F, infinite F → # (E × F) = (# E) * (# F).
 Proof.
   move=> E F H.
@@ -774,18 +774,18 @@ Proof.
   repeat case excluded_middle_informative => //= *; ring.
 Qed.
 
-Theorem infinite_products_card_left :
+Theorem infinite_product_card_left :
   ∀ E F, infinite E → # (E × F) = (# E) * (# F).
 Proof.
   move=> E F H.
-  rewrite product_card_comm infinite_products_card_right; intuition ring.
+  rewrite product_card_comm infinite_product_card_right; intuition ring.
 Qed.
 
-Theorem products_card : ∀ E F, # (E × F) = (# E) * (# F).
+Theorem product_card : ∀ E F, # (E × F) = (# E) * (# F).
 Proof.
   move=> E F.
-  case (classic (finite F)) => [ | /infinite_products_card_right] //.
-  case (classic (finite E)) => [[n ->] [m ->] | /infinite_products_card_left];
+  case (classic (finite F)) => [ | /infinite_product_card_right] //.
+  case (classic (finite E)) => [[n ->] [m ->] | /infinite_product_card_left];
                                auto using natural_prod_card.
 Qed.
 
@@ -928,7 +928,7 @@ Proof.
   - rewrite
     -S_is_succ /succ power_union_r ? disjoint_succ // finite_union_cardinality
                ? disjoint_succ // ? singleton_card ? pow_add_r ? pow_1_r
-               ? power_1_r ? products_card ? IH //;
+               ? power_1_r ? product_card ? IH //;
                auto using naturals_are_finite, singletons_are_finite,
     natural_powers_are_finite.
 Qed.

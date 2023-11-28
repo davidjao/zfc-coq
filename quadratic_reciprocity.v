@@ -163,7 +163,7 @@ Section Pretty_picture_lemmas.
 
   Lemma rectangle_card : (# rectangle = (# QR p) * (# QR q))%N.
   Proof.
-    rewrite rectangle_prod products_card ? rectangle_slice_card
+    rewrite rectangle_prod product_card ? rectangle_slice_card
             1 ? mul_comm; auto using rectangle_slice_finite.
   Qed.
 
