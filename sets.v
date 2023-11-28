@@ -1719,7 +1719,7 @@ Theorem domain_uniqueness : ∀ f A1 A2 B,
 Proof.
   move=> f A1 A2 B [H H0] [H1 H2].
   apply Extensionality => z.
-  wlog: f A1 A2 B H H0 H1 H2 / z ∈ A1.
+  wlog: f A1 A2 B H H0 H1 H2 / z ∈ A1 => [H3 | ].
   - split => H4; [ apply (H3 f A1 A2 B) | apply (H3 f A2 A1 B) ]; auto.
   - (split => H4; try tauto) => {H4}; move: H0 H3 =>
     /[apply] [[y [[_ /H1 /Specify_classification

@@ -8,7 +8,8 @@ build-job:
 syntax-check:
   stage: test
   script:
-    - /home/djao/bin/check-coq.sh
+    - grep -rn '[[:blank:]]$' ~/TeX/waterloo/zfc-coq/*.v && exit 1
+    - grep -rn '.\{81\}'  ~/TeX/waterloo/zfc-coq/*.v && exit 1
 
 axiom-check:
   stage: test

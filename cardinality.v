@@ -820,7 +820,7 @@ Proof.
                                                [/Powerset_classification H6 _].
     rewrite ? H2 // => /Ordered_pair_iff [H7 H8].
     apply Extensionality.
-    move=> z; wlog: u v z H3 H4 H5 H6 H7 H8 / z ∈ u.
+    move=> z; wlog: u v z H3 H4 H5 H6 H7 H8 / z ∈ u => [H0 | ].
     { split => *; [ apply (H0 u v z) | apply (H0 v u z) ]; auto. }
     (split; try tauto) =>
     /H4 /Product_classification
@@ -839,7 +839,7 @@ Proof.
     exists (u ∪ v).
     have: u ∪ v ∈ A ^ (B ∪ C).
     { rewrite Specify_classification Powerset_classification.
-      have: u ∪ v ⊂ (B ∪ C) × A => [z /Pairwise_union_classification H10 | ].
+      have: u ∪ v ⊂ (B ∪ C) × A => [z /Pairwise_union_classification H10 | H1].
       { rewrite Product_union_distr_l Pairwise_union_classification.
         intuition eauto. }
       repeat split; auto => a /Pairwise_union_classification H10.
@@ -955,7 +955,7 @@ Proof.
       /[dup] H3 /Specify_classification [_ [H6 H7]] /[dup] H8
        /Specify_classification [_ [H9 H10]] -> // -> // H11.
       apply Extensionality => z {A B C D H0 H2 h H3 H4 H8}.
-      wlog: x y z H H1 H6 H7 H9 H10 H11 / z ∈ x.
+      wlog: x y z H H1 H6 H7 H9 H10 H11 / z ∈ x => [H0 | ].
       * split => *; [ apply (H0 x y z) | apply (H0 y x z) ]; auto.
       * split => [/[dup] /[swap] /H6 /Product_classification
                    [a [b [H2 [H3 ->]]] H4 {z H0}] | H2] //.
