@@ -6,4 +6,4 @@ build-job:
     - coq_makefile -f _CoqProject -o Makefile
     - make clean
     - make
-    - q=`coqchk -silent -o -Q . ZFC *.vo 2>&1`; echo "$q" && r=`echo "$q" | grep -P '(ZFC\.|Coq\.)' | sort | cut -f 3 -d . | paste -sd \ ` && [[ "$r" == "FunctionalExtensionality IndefiniteDescription PropExtensionality Extensionality IN Infinity Powerset Regularity Replacement Union set" ]] || exit 1
+    - q=`coqchk -silent -o -Q . ZFC *.vo 2>&1` && echo "$q" && r=`echo "$q" | grep -P '(ZFC\.|Coq\.)' | sort | cut -f 3 -d . | paste -sd \ ` && echo "$r" && if [[ "$r" == "FunctionalExtensionality IndefiniteDescription PropExtensionality Extensionality IN Infinity Powerset Regularity Replacement Union set" ]]; then exit 0; else exit 1; fi
