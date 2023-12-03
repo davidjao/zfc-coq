@@ -419,13 +419,7 @@ Section Ordered_ring_theorems.
     apply /O1 /zero_lt_1.
   Qed.
 
-  Definition min : R → R → R.
-  Proof.
-    move: excluded_middle_informative =>
-    /[swap] a /[swap] b /(_ (a < b)) [H | H].
-    - exact a.
-    - exact b.
-  Defined.
+  Definition min (a b : R) := If (a < b) then a else b.
 
   Theorem min_le_l : ∀ a b, min a b ≤ a.
   Proof.
@@ -445,13 +439,7 @@ Section Ordered_ring_theorems.
     case excluded_middle_informative; intuition.
   Qed.
 
-  Definition max : R → R → R.
-  Proof.
-    move: excluded_middle_informative =>
-    /[swap] a /[swap] b /(_ (a < b)) [H | H].
-    - exact b.
-    - exact a.
-  Defined.
+  Definition max (a b : R) := If (a < b) then b else a.
 
   Theorem max_le_l : ∀ a b, a ≤ max a b.
   Proof.

@@ -49,9 +49,8 @@ Section Iterated_op_construction.
   Infix "*" := op.
   Hypothesis M2 : ∀ x y z, x * (y * z) = (x * y) * z.
 
-  Definition iterate_with_bounds : N → N → R.
+  Definition iterate_with_bounds (a b : N) : R.
   Proof.
-    move=> a b.
     elim (excluded_middle_informative (a ≤ b)) =>
     [/constructive_indefinite_description [c H] | H].
     - exact (iterated_op op (f a) (λ x, f (a + x + 1)%N) c).

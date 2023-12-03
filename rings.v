@@ -581,27 +581,24 @@ Section Ring_theorems.
 
     Global Coercion ISR : sub_R >-> R.
 
-    Definition sub_add : sub_R → sub_R → sub_R.
+    Definition sub_add (a b : sub_R) : sub_R.
     Proof.
-      move=> a b.
       have H: a + b ∈ S.
       { elim SR => [H [H0 [H1 H2]]].
         apply H; apply (@elts_in_set S). }
       exact (mkSet H).
     Defined.
 
-    Definition sub_mul : sub_R → sub_R → sub_R.
+    Definition sub_mul (a b : sub_R) : sub_R.
     Proof.
-      move=> a b.
       have H: a * b ∈ S.
       { elim SR => [H [H0 [H1 H2]]].
         apply H0; apply (@elts_in_set S). }
       exact (mkSet H).
     Defined.
 
-    Definition sub_neg : sub_R → sub_R.
+    Definition sub_neg (a : sub_R) : sub_R.
     Proof.
-      move=> a.
       have H: -a ∈ S.
       { elim SR => [H [H0 [H1 H2]]].
         apply H1; apply (@elts_in_set S). }

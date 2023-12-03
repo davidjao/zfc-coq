@@ -20,11 +20,11 @@ Section Integer_powers.
 
   Add Ring generic_ring : (ringify Ring).
 
-  Definition inv : R → R.
+  Definition inv (a : R) : R.
   Proof.
-    move: excluded_middle_informative => /[swap] a /(_ (rings.unit a)) =>
-    [[/constructive_indefinite_description [x H] | H]].
-    - exact x.
+    case (excluded_middle_informative (rings.unit a)) =>
+           [/constructive_indefinite_description [x H] | H].
+    - exact (x : R).
     - exact 0.
   Defined.
 
@@ -43,17 +43,15 @@ Section Integer_powers.
   Theorem inv_1 : inv 1 = 1.
   Proof.
     rewrite /inv.
-    elim excluded_middle_informative =>
-    [H | []];
-      [elim constructive_indefinite_description => x -> | exists 1]; ring.
+    (case excluded_middle_informative => [H | []]);
+    [elim constructive_indefinite_description => x -> | exists 1]; ring.
   Qed.
 
   Theorem inv_neg_1 : inv (-1) = -1.
   Proof.
     rewrite /inv.
-    elim excluded_middle_informative =>
-    [H | []];
-      [elim constructive_indefinite_description => x -> | exists (-1)]; ring.
+    (case excluded_middle_informative => [H | []]);
+    [elim constructive_indefinite_description => x -> | exists (-1)]; ring.
   Qed.
 
   Theorem inv_inv : ∀ a, rings.unit a → inv (inv a) = a.
@@ -70,13 +68,12 @@ Section Integer_powers.
 
   Theorem unit_inv : ∀ a, rings.unit a → rings.unit (inv a).
   Proof.
-    move=> a H.
-    exists a.
-    rewrite inv_r //.
+    eexists.
+    by erewrite inv_r.
   Qed.
 
   Theorem inv_mul :
-    ∀ a b, rings.unit a → rings.unit b → inv (a*b) = inv a * inv b.
+    ∀ a b, rings.unit a → rings.unit b → inv (a * b) = inv a * inv b.
   Proof.
     rewrite /inv => a b H H0.
     ((repeat elim excluded_middle_informative) =>
@@ -97,11 +94,11 @@ Section Integer_powers.
       rewrite -H rings.M1 //.
   Qed.
 
-  Definition pow : R → Z → R.
+  Definition pow (a : R) (n : Z) : R.
   Proof.
-    move: excluded_middle_informative => /[swap] a /[swap] n /(_ (0 ≤ n)) =>
-    [[/le_def /constructive_indefinite_description [c H] | ]].
-    - exact (a**c).
+    case (excluded_middle_informative (0 ≤ n)) =>
+           [/le_def /constructive_indefinite_description [c H] | ].
+    - exact (a ** c).
     - case (excluded_middle_informative (rings.unit a)) =>
       [H /lt_not_ge /lt_shift | H H0] /=.
       + rewrite A3 => /lt_def /constructive_indefinite_description [c H0].
@@ -111,7 +108,7 @@ Section Integer_powers.
 
   Infix "^" := pow : Ring_scope.
 
-  Theorem pow_nonneg : ∀ (a : R) (n : N), a^n = a**n.
+  Theorem pow_nonneg : ∀ (a : R) (n : N), a ^ n = a ** n.
   Proof.
     rewrite /pow => a n.
     case excluded_middle_informative => [H | []].
@@ -120,13 +117,13 @@ Section Integer_powers.
     - apply /INZ_le /zero_le.
   Qed.
 
-  Theorem pow_0_r : ∀ a, a^0 = 1.
+  Theorem pow_0_r : ∀ a, a ^ 0 = 1.
   Proof.
     rewrite /zero => a.
     rewrite pow_nonneg pow_0_r //.
   Qed.
 
-  Theorem pow_0_l : ∀ a : Z, a ≠ 0%Z → 0^a = 0.
+  Theorem pow_0_l : ∀ a : Z, a ≠ 0%Z → 0 ^ a = 0.
   Proof.
     move: classic => /[swap] a /(_ (0 ≤ a)) =>
     [[[/lt_def [c [/[swap] ->]] | ->] | H H0]] //.
@@ -138,13 +135,13 @@ Section Integer_powers.
       rewrite H1 mul_0_r //.
   Qed.
 
-  Theorem pow_1_r : ∀ a, a^1 = a.
+  Theorem pow_1_r : ∀ a, a ^ 1 = a.
   Proof.
     rewrite /one => a.
     rewrite pow_nonneg pow_1_r //.
   Qed.
 
-  Theorem pow_1_l : ∀ a, 1^a = 1.
+  Theorem pow_1_l : ∀ a, 1 ^ a = 1.
   Proof.
     rewrite /pow /eq_rect_r /eq_rect /eq_sym => a.
     (case excluded_middle_informative; auto) => H.
@@ -156,7 +153,7 @@ Section Integer_powers.
       rewrite inv_1 pow_1_l //.
    Qed.
 
-  Theorem pow_neg : ∀ a b, rings.unit a → a^(-b) = (inv a)^b.
+  Theorem pow_neg : ∀ a b, rings.unit a → a ^ (-b) = (inv a) ^ b.
   Proof.
     rewrite /pow /eq_rect_r /eq_rect /eq_sym => a b H.
     ((((repeat case excluded_middle_informative; try tauto) => H0 H1) =>
@@ -174,12 +171,12 @@ Section Integer_powers.
       move: H1 => /lt_not_ge /lt_neg_0 /or_introl => /(_ (0 = -b))%Z //.
   Qed.
 
-  Theorem inv_pow : ∀ a, rings.unit a → a^(-1) = inv a.
+  Theorem inv_pow : ∀ a, rings.unit a → a ^ (-1) = inv a.
   Proof.
     move: pow_1_r => /[swap] a /[swap] /pow_neg -> -> //.
   Qed.
 
-  Theorem unit_pow : ∀ a b, rings.unit a → rings.unit (a^b).
+  Theorem unit_pow : ∀ a b, rings.unit a → rings.unit (a ^ b).
   Proof.
     rewrite /pow /eq_rect_r /eq_rect /eq_sym => a b H.
     repeat (case excluded_middle_informative)
@@ -188,7 +185,7 @@ Section Integer_powers.
   Qed.
 
   Theorem pow_mul_l :
-    ∀ a b c, rings.unit a → rings.unit b → (a*b)^c = a^c * b^c.
+    ∀ a b c, rings.unit a → rings.unit b → (a * b) ^ c = a ^ c * b ^ c.
   Proof.
     move=> a b c H H0.
     case (classic (0 ≤ c)) =>
@@ -199,7 +196,7 @@ Section Integer_powers.
               auto using unit_closure, unit_inv.
   Qed.
 
-  Theorem neg_pow : ∀ a b, rings.unit a → a^(-b) = inv (a^b).
+  Theorem neg_pow : ∀ a b, rings.unit a → a ^ (-b) = inv (a ^ b).
   Proof.
     move: classic => /[swap] a /[swap] b /(_ (b = 0%Z)) => [[-> | H]] H0.
     - rewrite -(neg_0 ℤ: 0 = -0)%Z pow_0_r inv_1 //.
@@ -207,7 +204,7 @@ Section Integer_powers.
       rewrite pow_neg -? pow_mul_l ? inv_r ? pow_1_l; auto using unit_inv.
   Qed.
 
-  Theorem pow_mul_r : ∀ a b c, rings.unit a → a^(b*c) = (a^b)^c.
+  Theorem pow_mul_r : ∀ a b c, rings.unit a → a ^ (b * c) = (a ^ b) ^ c.
   Proof.
     move=> a b c H.
     wlog: a c H / (0 ≤ c)%Z => [pow_mul_r_pos | H0].
@@ -231,7 +228,7 @@ Section Integer_powers.
   Qed.
 
   Theorem pow_div_distr : ∀ a b c,
-      rings.unit a → rings.unit b → (a*(inv b))^c = a^c * inv (b^c).
+      rings.unit a → rings.unit b → (a * (inv b)) ^ c = a ^ c * inv (b ^ c).
   Proof.
     move=> a b c H H0.
     rewrite pow_mul_l -? neg_pow ? pow_neg; auto using unit_inv.
@@ -244,7 +241,7 @@ Section Integer_powers.
       auto using unit_pow, unit_inv.
   Qed.
 
-  Theorem pow_add_r : ∀ a b c, rings.unit a → a^(b+c) = a^b * a^c.
+  Theorem pow_add_r : ∀ a b c, rings.unit a → a ^ (b + c) = a ^ b * a ^ c.
   Proof.
     move=> a b c H.
     wlog: a b c H / 0 ≤ b => [pow_add_r_pos | ].

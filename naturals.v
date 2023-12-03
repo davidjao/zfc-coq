@@ -317,9 +317,8 @@ Section Iterated_op_construction.
           [/H0 | /Singleton_classification /set_proj_injective ->]] //.
   Qed.
 
-  Definition iterated_op : N → X.
+  Definition iterated_op (n : N) : X.
   Proof.
-    move=> n.
     elim (constructive_indefinite_description (iterated_op_construction n))
     => [i H].
     exact (i n).

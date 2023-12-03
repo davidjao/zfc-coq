@@ -60,9 +60,9 @@ Proof.
   => /set_proj_injective /H => //.
 Qed.
 
-Definition embed : Z → Z → Q.
+Definition embed (a b : Z) : Q.
 Proof.
-  move: excluded_middle_informative => /[swap] a /[swap] b /(_ (b = 0)) [H | H].
+  case (excluded_middle_informative (b = 0)) => [H | H].
   - exact (quotient_map rational_relation (mkSet embed_zero)).
   - exact (quotient_map rational_relation (mkSet (embed_nonzero a b H))).
 Defined.
@@ -110,9 +110,8 @@ Definition one := 1 / 1.
 Notation "0" := zero : Q_scope.
 Notation "1" := one : Q_scope.
 
-Definition add : Q → Q → Q.
+Definition add (x y : Q) : Q.
 Proof.
-  move=> x y.
   elim (constructive_indefinite_description (Qlift x)) =>
   [a /constructive_indefinite_description [b [e e0]]].
   elim (constructive_indefinite_description (Qlift y)) =>
@@ -120,9 +119,8 @@ Proof.
   exact ((a * d + c * b) / (b * d)).
 Defined.
 
-Definition mul : Q → Q → Q.
+Definition mul (x y : Q) : Q.
 Proof.
-  move=> x y.
   elim (constructive_indefinite_description (Qlift x)) =>
   [a /constructive_indefinite_description [b [e e0]]].
   elim (constructive_indefinite_description (Qlift y)) =>
@@ -130,17 +128,15 @@ Proof.
   exact ((a * c) / (b * d)).
 Defined.
 
-Definition neg : Q → Q.
+Definition neg (x : Q) : Q.
 Proof.
-  move=> x.
   elim (constructive_indefinite_description (Qlift x)) =>
   [a /constructive_indefinite_description [b [e e0]]].
   exact (-a / b).
 Defined.
 
-Definition inv : Q → Q.
+Definition inv (x : Q) : Q.
 Proof.
-  move=> x.
   elim (constructive_indefinite_description (Qlift x)) =>
   [a /constructive_indefinite_description [b [e e0]]].
   exact (b / a).
@@ -303,9 +299,8 @@ Add Field rational_field_raw : (fieldify ℚ).
 Add Field rational_field :
   (fieldify ℚ : field_theory 0 1 add mul sub neg div inv eq).
 
-Definition positive : Q → Prop.
+Definition positive (x : Q) : Prop.
 Proof.
-  move=> x.
   elim (constructive_indefinite_description (Qlift x)) =>
   [a /constructive_indefinite_description [b [e e0]]].
   exact (a * b > 0).
@@ -622,8 +617,7 @@ Qed.
 
 Definition floor (x : Q) : Z.
 Proof.
-  elim (constructive_indefinite_description (Z_archimedean x)) => [z H].
-  exact z.
+  elim (constructive_indefinite_description (Z_archimedean x)) => [z H]; auto.
 Defined.
 
 Notation "'⌊' x '⌋'" := (floor x) (format "'⌊' x '⌋'").
@@ -738,9 +732,9 @@ Qed.
 Definition pow := pow ℚ : Q → Z → Q.
 Infix "^" := pow : Q_scope.
 
-Definition pow_0_r := pow_0_r ℚ : ∀ a, a^0 = 1.
+Definition pow_0_r := pow_0_r ℚ : ∀ a, a ^ 0 = 1.
 
-Theorem pow_0_l : ∀ a : Z, a ≠ 0%Z → 0^a = 0.
+Theorem pow_0_l : ∀ a : Z, a ≠ 0%Z → 0 ^ a = 0.
 Proof.
   move: classic => /[swap] a /(_ (a < 0)%Z) [H H0 | H /(pow_0_l ℚ)] //.
   (rewrite /pow /fields.pow /integer_powers.pow;
@@ -748,7 +742,7 @@ Proof.
   [/[dup] /(le_not_gt ℤ_order) H1 | /unit_nonzero H1] //.
 Qed.
 
-Theorem pow_neg : ∀ a b, a^(-b) = (a^-1)^b.
+Theorem pow_neg : ∀ a b, a ^ (-b) = (a^-1) ^ b.
 Proof.
   move: classic =>
   /[swap] a /[swap] b /[dup] /(_ (a = 0)) /[swap] /(_ (b = 0%Z)) [-> | H]
@@ -759,7 +753,7 @@ Proof.
     ring [H].
 Qed.
 
-Theorem inv_pow : ∀ a, a^(-1) = a^-1.
+Theorem inv_pow : ∀ a, a ^ (-1) = a^-1.
 Proof.
   move: classic => /[swap] a /(_ (a = 0)) [-> | H].
   - rewrite pow_neg inv_zero (pow_1_r ℚ : ∀ a, a^1 = a) //.
@@ -767,7 +761,7 @@ Proof.
     rewrite pow_neg (pow_1_r ℚ : ∀ a, a^1 = a) inv_r //.
 Qed.
 
-Theorem pow_mul_l : ∀ a b c, (a*b)^c = a^c * b^c.
+Theorem pow_mul_l : ∀ a b c, (a * b) ^ c = a ^ c * b ^ c.
 Proof.
   move: classic =>
   /[swap] a /[swap] b /[swap] c /[dup] /(_ (a = 0)) /[swap]
@@ -776,7 +770,7 @@ Proof.
                   ? pow_0_r ? pow_0_l //; try (by apply (pow_mul_l ℚ)); ring.
 Qed.
 
-Theorem neg_pow : ∀ a b, a^(-b) = (a^b)^-1.
+Theorem neg_pow : ∀ a b, a ^ (-b) = (a ^ b)^-1.
 Proof.
   move: classic => /[swap] a /(_ (a = 0)) [-> | ?] b;
                      last by apply (fields.neg_pow ℚ).
@@ -788,7 +782,7 @@ Proof.
     ring [H].
 Qed.
 
-Theorem pow_mul_r : ∀ a b c, a^(b*c) = (a^b)^c.
+Theorem pow_mul_r : ∀ a b c, a ^ (b * c) = (a ^ b) ^ c.
 Proof.
   move: classic => /[swap] a /[dup] /(_ (a = 0)) [-> | H] /[swap] b /[swap] c
   => [/(_ (b*c = 0)%Z)
@@ -798,13 +792,13 @@ Proof.
     by apply /(fields.pow_mul_r ℚ).
 Qed.
 
-Theorem pow_div_distr : ∀ a b c, (a*b^-1)^c = a^c * (b^c)^-1.
+Theorem pow_div_distr : ∀ a b c, (a * b^-1) ^ c = a ^ c * (b ^ c)^-1.
 Proof.
   move=> a b c.
   rewrite pow_mul_l -neg_pow pow_neg //.
 Qed.
 
-Lemma a_g_pow_ineq : ∀ (x : Q) (n : Z), 0 < x → (0 < n)%Z → 1 + n*x ≤ (1 + x)^n.
+Lemma a_g_pow_ineq : ∀ x n, 0 < x → (0 < n)%Z → 1 + n * x ≤ (1 + x) ^ n.
 Proof.
   move=> x n H H0.
   induction n using strong_induction.
@@ -830,12 +824,12 @@ Proof.
   - have {2}-> : n = (n+(-1)+1)%Z by ring.
     rewrite /pow (pow_add_r ℚ) // -/pow -H7 /pow (pow_1_r ℚ)
     -IZQ_add /= ? D1 M3 -IZQ_neg -[IZQ 1%Z]/one -(A3 (1+n*x)) (A1 0).
-    replace (1+x+(n*x*(1+x)+-1*x*(1+x))) with (1+n*x+x*x*(n+-1)) by ring.
+    have ->: 1+x+(n*x*(1+x)+-1*x*(1+x)) = 1+n*x+x*x*(n+-1) by ring.
     rewrite IZQ_neg IZQ_add /le /ordered_rings.le /=.
     auto using O1, O2.
 Qed.
 
-Theorem pos_pow_archimedean : ∀ a r, 1 < r → ∃ n, (0 < n)%Z ∧ a < r^n.
+Theorem pos_pow_archimedean : ∀ a r, 1 < r → ∃ n, (0 < n)%Z ∧ a < r ^ n.
 Proof.
   move: classic =>
   /[swap] a /(_ (1 < a))
@@ -857,7 +851,7 @@ Proof.
     split; eauto using integers.zero_lt_1, le_lt_trans.
 Qed.
 
-Theorem neg_pow_archimedean : ∀ a r, 0 < a → 1 < r → ∃ n, (n < 0)%Z ∧ r^n < a.
+Theorem neg_pow_archimedean : ∀ a r, 0 < a → 1 < r → ∃ n, (n < 0)%Z ∧ r ^ n < a.
 Proof.
   move=> a r H /[dup] /(pos_pow_archimedean (a^-1) r)
            [n [/[dup] ? /(neg_lt_0 ℤ_order) /= ? ?]] /(one_lt ℚ_ring_order) /=.
@@ -1029,10 +1023,11 @@ Proof.
       -IZQ_mul -pow_wf -IHn pow_wf //.
 Qed.
 
-Definition QR_ε (a b : Z) := ((-1)^(QR_ε_exp a b) : Z)%Z.
+Definition QR_ε (a b : Z) := ((-1) ^ (QR_ε_exp a b) : Z)%Z.
 
 Theorem division_QR : ∀ a b : Z,
-    (0 < a → 0 < b → ∃ q r : Z, 0 ≤ r ≤ ⌊b / 2⌋ ∧ b*q + QR_ε (2*a) b * r = a)%Z.
+    (0 < a → 0 < b →
+     ∃ q r : Z, 0 ≤ r ≤ ⌊b / 2⌋ ∧ b * q + QR_ε (2 * a) b * r = a)%Z.
 Proof.
   rewrite /QR_ε /QR_ε_exp /sig_rect => a b H /[dup] H0 /division_signed =>
   /(_ a) [q [r [[/[dup] H1 /IZQ_le H2 /[dup] H3 /floor_upper /IZQ_le H4] H5]]].
@@ -1045,7 +1040,7 @@ Proof.
   rewrite -IZQ_eq -H5 H7 integers.A3 -IZQ_add -? IZQ_mul -IZQ_pow -IZQ_neg //.
 Qed.
 
-Theorem IZQ_div : ∀ a b : Z, b ≠ 0%Z → b｜a → a/b = (a/b)%Z.
+Theorem IZQ_div : ∀ a b : Z, b ≠ 0%Z → b｜a → a / b = (a / b)%Z.
 Proof.
   move=> a b H H0.
   apply Qequiv; auto using integers.zero_ne_1.

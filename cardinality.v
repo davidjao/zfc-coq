@@ -331,9 +331,8 @@ Proof.
          cardinality_trans, cardinality_sym.
 Qed.
 
-Definition finite_cardinality : set → N.
+Definition finite_cardinality (S : set) : N.
 Proof.
-  move=> S.
   elim (excluded_middle_informative (finite S)) =>
   [/finite_cardinality_uniqueness
     /constructive_definite_description [n H] | H].
@@ -1059,9 +1058,8 @@ Proof.
   now move=> A B /card_equiv {2}-> /card_equiv {2}-> ->.
 Qed.
 
-Definition inverse_function_out : set → set → set → set.
+Definition inverse_function_out (A B f : set) : set.
 Proof.
-  move=> A B f.
   elim (excluded_middle_informative (f ∈ bijection_set A B)) =>
   [/Specify_classification [H /constructive_indefinite_description
                               [f' [H0 [H1 [H2 H3]]]]] | ?].

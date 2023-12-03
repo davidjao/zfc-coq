@@ -182,9 +182,8 @@ Section Modular_arithmetic.
 
   Global Coercion Z_to_Z_n : Z >-> Z_.
 
-  Definition Z_n_to_Z : Z_ → Z.
+  Definition Z_n_to_Z (x : Z_) : Z.
   Proof.
-    move=> x.
     elim (constructive_indefinite_description (quotient_lift x)) => [z H].
     exact z.
   Defined.
@@ -379,9 +378,8 @@ Section Modular_arithmetic.
       ring.
     Qed.
 
-    Definition map_to_N : elts modulus_in_N → N.
+    Definition map_to_N (x : elts modulus_in_N) : N.
     Proof.
-      move=> x.
       move: (elts_in_set x) => /elements_of_naturals_are_naturals =>
       /(_ (elts_in_set modulus_in_N)) H.
       exact (mkSet H).
@@ -1477,19 +1475,18 @@ Section Modular_arithmetic.
       auto using integers.zero_lt_1.
     Qed.
 
-    Definition QR_r_N : N → N.
+    Definition QR_r_N (l : N) : N.
     Proof.
-      move: QR_r_bound =>
-      /[swap] l /(_ l) [/le_def /constructive_indefinite_description [r H] H0].
+      elim (QR_r_bound l) => /le_def /constructive_indefinite_description [r] *.
       exact r.
     Defined.
 
     Lemma QR_r_N_action : ∀ l, QR_r l = QR_r_N l.
     Proof.
-      rewrite /QR_r_N => l.
+      rewrite /QR_r_N /and_rect => l.
       destruct QR_r_bound.
       elim constructive_indefinite_description => ?.
-        by rewrite integers.A3.
+      by rewrite integers.A3.
     Qed.
 
     Definition QR_r_function := sets.functionify QR_r_N.
@@ -1529,8 +1526,8 @@ Section Modular_arithmetic.
               Pairwise_intersection_classification =>
       [[[]]] /[dup] H /Specify_classification [] H0 /[swap] H1.
       rewrite -restriction_action ? Pairwise_intersection_classification //
-                                  (reify H0) despecify /QR_r_function /QR_r_N
-                                  sets.functionify_range functionify_action.
+                 (reify H0) despecify /QR_r_function /QR_r_N
+                 sets.functionify_range functionify_action /and_rect.
       destruct QR_r_bound.
       elim constructive_indefinite_description => z'.
       rewrite integers.A3 Specify_classification => H2 H3 <- H4.
@@ -1607,8 +1604,8 @@ Section Modular_arithmetic.
       /Specify_classification [{}H H2] /Specify_classification [{}H0 H3].
       rewrite /QR_r_function /QR_r_N => H1 {H' H0'}.
       move: Q H1 H2 H3.
-      rewrite (reify H) (reify H0) ? despecify ? sets.functionify_action =>
-      Q /set_proj_injective H1 H2 H3.
+      rewrite (reify H) (reify H0) ? despecify ? sets.functionify_action
+        /and_rect => Q /set_proj_injective H1 H2 H3.
       repeat destruct QR_r_bound, constructive_indefinite_description.
       rewrite -> integers.A3 in e, e0.
       have [/(cancellation_mul_l (ℤ_ID prime_modulus)) /range_constraint H4 | ]:

@@ -72,19 +72,16 @@ Section Power_series_construction.
       by destruct iffLR.
   Qed.
 
-  Definition coefficient : power_series → N → R.
+  Definition coefficient (f : power_series) : N → R.
   Proof.
-    move=> f.
     rewrite /N -(series_functionify_domain f) -(series_functionify_range f).
     exact (lambdaify (series_functionify f)).
   Defined.
 
-  Definition seriesify : (N → R) → power_series.
+  Definition seriesify (f : (N → R)) : power_series.
   Proof.
-    move=> f.
-    elim (constructive_definite_description _ (series_functionify_inv f))
-    => [x H].
-    exact x.
+    elim (constructive_definite_description _ (series_functionify_inv f)) =>
+           [x ?]; auto.
   Defined.
 
   Theorem seriesify_coefficient : ∀ f, seriesify (coefficient f) = f.
@@ -95,9 +92,9 @@ Section Power_series_construction.
     elim constructive_indefinite_description => f' [H [H0 H1]] H2.
     apply series_functionify_injective.
     rewrite H2.
-    apply func_ext => // x' H3.
-    rewrite H in H3.
-      by rewrite (reify H3) H1.
+    apply func_ext => // x'.
+    rewrite H => H3.
+    by rewrite (reify H3) H1.
   Qed.
 
   Theorem seriesify_injective : ∀ f g, seriesify f = seriesify g → f = g.
@@ -123,11 +120,8 @@ Section Power_series_construction.
       by rewrite -(seriesify_coefficient f) -(seriesify_coefficient g) H.
   Qed.
 
-  Definition add : power_series → power_series → power_series.
-  Proof.
-    move=> a b.
-    exact (seriesify (λ n, add _ (coefficient a n) (coefficient b n))).
-  Defined.
+  Definition add a b :=
+    seriesify (λ n, add _ (coefficient a n) (coefficient b n)).
 
   Declare Scope Series_scope.
   Delimit Scope Series_scope with series.
@@ -195,14 +189,9 @@ Section Power_series_construction.
     ring.
   Qed.
 
-  Definition mul : power_series → power_series → power_series.
-  Proof.
-    move=> a b.
-    exact
-      (seriesify
-         (λ n,
-          sum _ (λ k, mul _ (coefficient a k) (coefficient b (n-k))) 0 n)).
-  Defined.
+  Definition mul a b :=
+    seriesify
+      (λ n, sum _ (λ k, mul _ (coefficient a k) (coefficient b (n - k))) 0 n).
 
   Lemma mul_comm_coeff :
     ∀ n f g, (sum _ (λ k, (f k) * (g (n-k))) 0 n) =

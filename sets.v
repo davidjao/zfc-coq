@@ -18,7 +18,7 @@ Axiom Extensionality : ∀ x y, (∀ z, z ∈ x ↔ z ∈ y) → x = y.
 Axiom Regularity : ∀ x, (∃ a, a ∈ x) → ∃ y, y ∈ x ∧ ¬ ∃ z, z ∈ y ∧ z ∈ x.
 Axiom Replacement : ∀ A R, (∀ x, x ∈ A → exists ! y, R x y) →
                            ∃ B, ∀ y, y ∈ B ↔ ∃ x, x ∈ A ∧ R x y.
-Axiom Union : ∀ F, ∃ A, ∀ x y, x ∈ y ∧ y ∈ F → x ∈ A.
+Axiom Union : ∀ F, ∃ A, ∀ x y, x ∈ y → y ∈ F → x ∈ A.
 Axiom Powerset : ∀ x, ∃ y, ∀ z, (∀ u, u ∈ z → u ∈ x) → z ∈ y.
 Axiom Infinity : ∃ X, (∃ y, (∀ z, z ∉ y) ∧ y ∈ X) ∧ ∀ x,
       x ∈ X → ∃ y, y ∈ X ∧ ∀ z, z ∈ y ↔ z ∈ x ∨ z = x.
@@ -79,15 +79,13 @@ Proof.
     contradict H; eauto.
 Qed.
 
-Definition specify : set → (set → Prop) → set.
+Definition specify (A : set) (p : set → Prop) : set.
 Proof.
-  move=> A p.
   elim (constructive_indefinite_description (Specification A p)) => [S] //.
 Defined.
 
-Definition specify_lift (A : set) (p : elts A → Prop) : set → Prop.
+Definition specify_lift (A : set) (p : elts A → Prop) (a : set) : Prop.
 Proof.
-  move=> a.
   case (excluded_middle_informative (a ∈ A)) => H.
   - exact (p (mkSet H)).
   - exact False.
@@ -230,7 +228,7 @@ Notation " { x } " := (pair x x) : set_scope.
 
 Definition union F :=
   let (A, H) := (constructive_indefinite_description (Union F))
-  in {x in A | ∃ y, (x ∈ y ∧ y ∈ F)}.
+  in {x in A | ∃ y, x ∈ y ∧ y ∈ F}.
 
 Notation "⋃ x" := (union x) (at level 60) : set_scope.
 
@@ -631,9 +629,8 @@ Proof.
   z /Pairing_classification [->|->]; apply Pairwise_union_classification; tauto.
 Qed.
 
-Definition proj1 : set → set → set → set.
+Definition proj1 (A B x : set) : set.
 Proof.
-  move=> A B x.
   case (excluded_middle_informative (x ∈ A × B)) =>
          [/Product_classification /constructive_indefinite_description
                 [a] /constructive_indefinite_description [b] H | _].
@@ -641,9 +638,8 @@ Proof.
   - exact ∅.
 Defined.
 
-Definition proj2 : set → set → set → set.
+Definition proj2 (A B x : set) : set.
 Proof.
-  move=> A B x.
   case (excluded_middle_informative (x ∈ A × B)) =>
          [/Product_classification /constructive_indefinite_description
                 [a] /constructive_indefinite_description [b] H | _].
@@ -675,18 +671,16 @@ Section Projections.
 
   Context {A B : set}.
 
-  Definition π1 : elts (A × B) → elts A.
+  Definition π1 (z : elts (A × B)) : elts A.
   Proof.
-    move=> z.
     move: (elts_in_set z) => /Product_classification
     => /constructive_indefinite_description [a] =>
     /constructive_indefinite_description [b] [H0 [H1 H2]].
     exact (mkSet H0).
   Defined.
 
-  Definition π2 : elts (A × B) → elts B.
+  Definition π2 (z : elts (A × B)) : elts B.
   Proof.
-    move=> z.
     move: (elts_in_set z) => /Product_classification
     => /constructive_indefinite_description [a] =>
     /constructive_indefinite_description [b] [H0 [H1 H2]].
@@ -881,9 +875,8 @@ Proof.
     auto; move=> /[dup] /Specify_classification => [[_ H0] H1] //.
 Qed.
 
-Definition eval : function → set → set.
+Definition eval (f : function) (x : set) : set.
 Proof.
-  move=> f x.
   case (excluded_middle_informative (x ∈ domain f)) => [ | H].
   - move: (func_hyp f) => [] _ /[apply] /constructive_indefinite_description =>
     [[y] [[H H0] H1]].
@@ -1059,9 +1052,8 @@ Section const_function.
 
 End const_function.
 
-Definition universal_choice_function : set → set.
+Definition universal_choice_function (x : set) : set.
 Proof.
-  move=> x.
   case (excluded_middle_informative (x = ∅)) =>
   [H | /Nonempty_classification /constructive_indefinite_description [y H]].
   - exact ∅.
@@ -1234,9 +1226,8 @@ Proof.
   exact f.
 Defined.
 
-Definition inverse : function → function.
+Definition inverse (f : function) : function.
 Proof.
-  move=> f.
   case (excluded_middle_informative (bijective f)) =>
   [[H /right_inverse_iff_surjective /constructive_indefinite_description
       [g [H0 [H1 H2]]]] | H].
@@ -1302,9 +1293,8 @@ Proof.
     rewrite left_inverse; repeat split; auto.
 Qed.
 
-Definition composition : function → function → function.
+Definition composition (f g : function) : function.
 Proof.
-  move=> f g.
   case (excluded_middle_informative (domain f = range g)) => [H | H].
   - have: ∀ x, x ∈ domain g → (λ x, f (g x)) x ∈ range f by
         move: H => /[swap] x /[swap] /function_maps_domain_to_range /[swap]
@@ -1780,9 +1770,8 @@ Proof.
   /complement_disjoint_union {2}<- /complement_disjoint_union {2}<- -> //.
 Qed.
 
-Definition swap_product (S T : set) : elts (S × T) → elts (T × S).
+Definition swap_product S T (x : elts (S × T)) : elts (T × S).
 Proof.
-  move=> x.
   have /mkSet: (π2 x, π1 x) ∈ T × S; try apply Product_classification;
     eauto using elts_in_set.
 Defined.
@@ -1822,7 +1811,7 @@ Proof.
     rewrite Product_classification swap_action; intuition eauto.
 Qed.
 
-Definition embed (E F : set) (e : elts E) (f : elts F) : elts (E × F).
+Definition embed E F (e : elts E) (f : elts F) : elts (E × F).
 Proof.
   have /mkSet: (e, f) ∈ E × F; try apply Product_classification;
     eauto using elts_in_set.

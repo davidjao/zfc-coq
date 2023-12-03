@@ -146,9 +146,8 @@ Section concat_elements_construction.
   Hypothesis F : is_function f n {0, 1}%N.
   Hypothesis G : is_function g m {0, 1}%N.
 
-  Definition concat_elements : elts (n + m)%N → elts {0, 1}%N.
+  Definition concat_elements (x : elts (n + m)%N) : elts {0, 1}%N.
   Proof.
-    move=> x.
     have H: (x ∈ ω) by
       eauto using elements_of_naturals_are_naturals, elts_in_set.
     case (excluded_middle_informative (mkSet H < n)%N) =>

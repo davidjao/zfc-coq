@@ -298,9 +298,8 @@ Section Polynomial_theorems.
       eauto using set_proj_injective.
   Qed.
 
-  Definition degree : poly → N.
+  Definition degree (f : poly) : N.
   Proof.
-    move=> f.
     case (excluded_middle_informative (f = 0)) =>
     [H | /degree_construction /constructive_indefinite_description [d H]].
     - exact 0%N.

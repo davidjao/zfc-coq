@@ -72,9 +72,8 @@ Qed.
 Definition INZ a := (a - 0)%set.
 Coercion INZ : N >-> Z.
 
-Definition add : Z → Z → Z.
+Definition add (x y : Z) : Z.
 Proof.
-  move=> x y.
   elim (constructive_indefinite_description (Zlift x)) =>
   [a /constructive_indefinite_description [b H]].
   elim (constructive_indefinite_description (Zlift y)) =>
@@ -82,9 +81,8 @@ Proof.
   exact ((a + c) - (b + d))%set.
 Defined.
 
-Definition mul : Z → Z → Z.
+Definition mul (x y : Z) : Z.
 Proof.
-  move=> x y.
   elim (constructive_indefinite_description (Zlift x)) =>
   [m /constructive_indefinite_description [n H]].
   elim (constructive_indefinite_description (Zlift y)) =>
@@ -92,9 +90,8 @@ Proof.
   exact ((m * p + n * q) - (n * p + m * q))%set.
 Defined.
 
-Definition neg : Z → Z.
+Definition neg (x : Z) : Z.
 Proof.
-  move=> x.
   elim (constructive_indefinite_description (Zlift x)) =>
   [a /constructive_indefinite_description [b H]].
   exact (b - a)%set.
@@ -238,9 +235,8 @@ Proof.
   ring.
 Qed.
 
-Definition lt : Z → Z → Prop.
+Definition lt (x y : Z) : Prop.
 Proof.
-  move=> x y.
   elim (constructive_indefinite_description (Zlift x)) =>
   [a /constructive_indefinite_description [b H]].
   elim (constructive_indefinite_description (Zlift y)) =>
@@ -906,9 +902,8 @@ Section IZR.
   Notation "- a" := (rings.neg Ring a).
   Notation "- 1" := (rings.neg Ring 1).
 
-  Definition IZR : Z → R.
+  Definition IZR (x : Z) : R.
   Proof.
-    move=> x.
     elim (constructive_indefinite_description (Zlift x)) =>
     [a /constructive_indefinite_description [b H]].
     exact (rings.add _ (INR _ a) (rings.neg _ (INR _ b))).
@@ -1037,9 +1032,8 @@ Proof.
   (suff -> : (k+l+1)*2 = 2*k+1+(2*l+1); last by ring) => //.
 Qed.
 
-Definition div : Z → Z → Z.
+Definition div (a b : Z) : Z.
 Proof.
-  move=> a b.
   case (excluded_middle_informative (b｜a)) =>
   [/constructive_indefinite_description [k H] | H].
   - exact k.
@@ -1166,9 +1160,8 @@ Proof.
   elim excluded_middle_informative; split => // => [H | H]; ring [H].
 Qed.
 
-Definition gcd : Z → Z → Z.
+Definition gcd (a b : Z) : Z.
 Proof.
-  move=> a b.
   elim (constructive_indefinite_description (pos_gcd_exists a b)) => [d H].
   exact d.
 Defined.
@@ -1455,9 +1448,8 @@ Proof.
   intuition.
 Qed.
 
-Definition lcm : Z → Z → Z.
+Definition lcm (a b : Z) : Z.
 Proof.
-  move=> a b.
   elim (constructive_indefinite_description (pos_lcm_exists a b)) => [m H].
   exact m.
 Defined.
@@ -1607,7 +1599,7 @@ Proof.
 Qed.
 
 Lemma prime_quotients :
-  ∀ p x, 0 < p → 0 < x → prime p → p｜x → 0 < x/p < x.
+  ∀ p x, 0 < p → 0 < x → prime p → p｜x → 0 < x / p < x.
 Proof.
   rewrite /div => p x H H0 H1 H2.
   (elim excluded_middle_informative; try tauto) => /[dup] /[swap] => {}H2.
@@ -1618,7 +1610,7 @@ Proof.
 Qed.
 
 Theorem valuation_construction :
-  ∀ p m, prime p → m ≠ 0 → exists ! k : N, p^k｜m ∧ ¬ p^(k+1)｜m.
+  ∀ p m, prime p → m ≠ 0 → exists ! k : N, p ^ k｜m ∧ ¬ p ^ (k + 1)｜m.
 Proof.
   move=> p m.
   wlog: p m / 0 < p => [x | ].
@@ -1671,9 +1663,8 @@ Proof.
       rewrite ? pow_succ_r; auto using div_mul_l, div_mul_r, div_refl with Z.
 Qed.
 
-Definition v : Z → Z → N.
+Definition v (p m : Z) : N.
 Proof.
-  move=> p m.
   elim (excluded_middle_informative (prime p)) => H.
   - elim (excluded_middle_informative (m = 0)) => H0.
     + exact 0%N.

@@ -23,9 +23,8 @@ Section orbit_stabilizer_cardinality_theorem.
   Hypothesis Y_subset : image f ⊂ Y.
   Hypothesis Y_inv : ∀ y, y ∈ Y → inverse_image_of_element f y ~ x.
 
-  Definition oschf : set → function.
+  Definition oschf (z : set) : function.
   Proof.
-    move=> z.
     case (excluded_middle_informative (z ~ x)) =>
     [/constructive_indefinite_description [g [H [H0 H1]]] | H].
     - exact g.
@@ -152,9 +151,8 @@ Section permutation_succ_helper_functions.
 
   End functionify_construction.
 
-  Definition permutation_succ_helper : set → set.
+  Definition permutation_succ_helper (x : set) : set.
   Proof.
-    move=> x.
     case (excluded_middle_informative (x ∈ (bijection_set (S n) (S n)))) =>
     [/Specify_classification [H /constructive_indefinite_description
                                 [f [H0 [H1 [H2 H3]]]]] | H].
@@ -266,11 +264,10 @@ Section permutation_succ_helper_functions.
       + auto using in_S.
   Qed.
 
-  Definition permutation_succ_left_helper :
-    elts (inverse_image_of_element permutation_succ_proj y) →
-    elts n → elts (S n \ {y, y}).
+  Definition permutation_succ_left_helper
+    (f : elts (inverse_image_of_element permutation_succ_proj y))
+    (x : elts n) : elts (S n \ {y, y}).
   Proof.
-    move=> f x.
     exact (mkSet (permutation_succ_left_helper_lemma f x)).
   Defined.
 
@@ -326,11 +323,10 @@ Section permutation_succ_helper_functions.
       tauto.
   Qed.
 
-  Definition permutation_succ_left :
-    elts (inverse_image_of_element permutation_succ_proj y) →
+  Definition permutation_succ_left
+    (f : elts (inverse_image_of_element permutation_succ_proj y)) :
     elts (bijection_set n (S n \ {y, y})).
   Proof.
-    move=> f.
     exact (mkSet (permutation_succ_left_construction f)).
   Defined.
 
@@ -346,10 +342,9 @@ Section permutation_succ_helper_functions.
     /Pairwise_union_classification [ | ] // /Singleton_classification //.
   Qed.
 
-  Definition permutation_succ_right_helper :
-    elts (bijection_set n (S n \ {y, y})) → elts (S n) → elts (S n).
+  Definition permutation_succ_right_helper
+    (f : elts (bijection_set n (S n \ {y, y}))) (x : elts (S n)) : elts (S n).
   Proof.
-    move=> f x.
     case (excluded_middle_informative ((x : set) = n)) =>
     [H | /(permutation_succ_right_helper_lemma f)
           /Complement_classification [H H0]].
@@ -427,11 +422,10 @@ Section permutation_succ_helper_functions.
       rewrite sets.functionify_range -(psrh_n f) -(functionify_action) => <- //.
   Qed.
 
-  Definition permutation_succ_right :
-    elts (bijection_set n (S n \ {y, y})) →
+  Definition permutation_succ_right
+    (f : elts (bijection_set n (S n \ {y, y}))) :
     elts (inverse_image_of_element permutation_succ_proj y).
   Proof.
-    move=> f.
     exact (mkSet (permutation_succ_right_construction f)).
   Defined.
 
@@ -912,14 +906,14 @@ Proof.
     [k [H2 H3] | x]; first by apply H0, conj;
       rewrite ? (add_comm a); auto using le_add_l, O1_le.
     split => [/H1 [y [[[H2 H3] H4] H5]] | [y [[[H2 H3] H4] H5]]].
-    + exists (y-a)%N.
+    + exists (y - a)%N.
       (repeat split; try apply zero_le) => [ | | x' [[H6 H7] H8]].
       * apply (O1_le_iff a).
         rewrite (add_comm c) (add_comm (y-a)) sub_abab //.
       * rewrite add_comm sub_abab; auto using naturals.le_refl.
-      * move: (H5 (x'+a))%N ->; rewrite ? sub_abba ? (add_comm a c) //.
+      * move: (H5 (x' + a))%N ->; rewrite ? sub_abba ? (add_comm a c) //.
         eauto using le_add_l, O1_le.
-    + apply (H0 (y+a)%N); auto.
+    + apply (H0 (y + a)%N); auto.
       rewrite (add_comm a c).
       eauto using le_add_l, O1_le.
   - rewrite sum_neg //.

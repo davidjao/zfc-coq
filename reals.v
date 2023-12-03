@@ -493,9 +493,8 @@ Proof.
       eauto 11 using elts_in_set, rationals.lt_trans.
 Qed.
 
-Local Definition mul_pos : R → R → R.
+Local Definition mul_pos (a b : R) : R.
 Proof.
-  move=> a b.
   case: (excluded_middle_informative (0 < a))
           (excluded_middle_informative (0 < b)) =>
         H [H0 | H0]; first exact (mkSet (mul_pos_in a b H H0)); exact 0.
@@ -674,9 +673,8 @@ Proof.
         auto 6 using O2.
 Qed.
 
-Definition inv_pos : R → R.
+Definition inv_pos (a : R) : R.
 Proof.
-  move=> a.
   case (excluded_middle_informative (0 < a)) => [H | H].
   - exact (mkSet (inv_pos_in _ H)).
   - exact 0.
@@ -859,17 +857,14 @@ Proof.
       [apply max_le_l | apply max_le_r].
 Qed.
 
-Definition mul : R → R → R.
+Definition mul (a b : R) : R.
 Proof.
-  move=> a b.
-  case: (excluded_middle_informative (0 < a))
-          (excluded_middle_informative (0 < b)) => [H | H] [H0 | H0].
-  - exact (a·b).
-  - exact (If (0 = b) then 0 else (-(a·(-b)))).
-  - exact (If (0 = a) then 0 else (-((-a)·b))).
-  - case: (excluded_middle_informative (0 = b)) => [H1 | H1].
-    + exact 0.
-    + exact (If (0 = a) then 0 else ((-a)·(-b))).
+  case (excluded_middle_informative (0 < a)),
+    (excluded_middle_informative (0 < b)).
+  - exact (a · b).
+  - exact (If (0 = b) then 0 else (-(a · (-b)))).
+  - exact (If (0 = a) then 0 else (-((-a) · b))).
+  - exact (If (0 = b) then 0 else If (0 = a) then 0 else ((-a) · (-b))).
 Defined.
 
 Infix "*" := mul : R_scope.
