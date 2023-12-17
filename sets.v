@@ -825,6 +825,14 @@ Definition is_partition X C :=
 Definition is_equivalence X R :=
   (reflexive X R) ∧ (symmetric X R) ∧ (transitive X R).
 
+Theorem equivalence_intersection: ∀ X1 R1 X2 R2,
+    is_equivalence X1 R1 → is_equivalence X2 R2 →
+    is_equivalence (X1 ∩ X2) (R1 ∩ R2).
+Proof.
+  rewrite /is_equivalence /reflexive /symmetric /transitive; repeat split;
+    intros *; rewrite ? Pairwise_intersection_classification; intuition eauto.
+Qed.
+
 Theorem Equivalence_classes_are_partitions : ∀ X R,
     is_equivalence X R → is_partition X (X/R).
 Proof.
