@@ -27,4 +27,4 @@ check-axioms:
     - q=`coqchk -silent -o -Q . ZFC *.vo 2>&1` &&
       echo "$q" &&
       r=`echo "$q" | grep -P '(ZFC\.|Coq\.)' | sort | cut -f 3 -d . | paste -sd \ ` &&
-      [[ "$r" == "FunctionalExtensionality IndefiniteDescription PropExtensionality Extensionality IN Infinity Powerset Regularity Replacement set Union" ]] || exit 1
+      [[ "$r" == "FunctionalExtensionality IndefiniteDescription PropExtensionality Extensionality IN Infinity Powerset Regularity Replacement Union set" ]] || exit 1
