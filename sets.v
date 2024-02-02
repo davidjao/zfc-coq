@@ -45,8 +45,7 @@ Qed.
 
 Theorem Empty_Set : ∃ w, ∀ x, x ∉ w.
 Proof.
-  move: Infinity => [x [[w [H _]] _]].
-  eauto.
+  move: Infinity => [_ [[w [/(ex_intro (λ t, _) w)]]]] //.
 Qed.
 
 Definition empty_set :=
@@ -515,13 +514,9 @@ Qed.
 
 Theorem Intersection_subset : ∀ A B, A ⊂ B ↔ A ∩ B = A.
 Proof.
-  move=> A B.
-  rewrite -Subset_equality_iff.
-  (repeat split) => [z | z | [H H0] z];
-                      rewrite ? Pairwise_intersection_classification;
-                      auto; try tauto.
-  move: Pairwise_intersection_classification =>
-  /[swap] /H0 /[swap] /[apply] [[H1 H2]] //.
+  move: Subset_equality_iff => /[swap] A /[swap] B <-.
+  (repeat split) => [? | ? | /[swap] z [H] /(_ z)];
+                    rewrite ? Pairwise_intersection_classification; intuition.
 Qed.
 
 Theorem Intersection_union : ∀ A B C, A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C).
