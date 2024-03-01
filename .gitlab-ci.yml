@@ -21,10 +21,12 @@ compile:
 check-axioms:
   stage: test
   tags: [linux]
-  variables:
-    GIT_CHECKOUT: "false"
+    #  variables:
+    #GIT_CHECKOUT: "false"
   script:
-    - q=`coqchk -silent -o -Q . ZFC *.vo 2>&1` &&
-      echo "$q" &&
-      r=`echo "$q" | grep -P '(ZFC\.|Coq\.)' | sort | cut -f 3 -d . | paste -sd \ ` &&
-      [[ "$r" == "FunctionalExtensionality IndefiniteDescription PropExtensionality Extensionality IN Infinity Powerset Regularity Replacement set Union" ]] || exit 1
+    - coq_makefile -f _CoqProject -o Makefile
+    - make clean
+    - make
+    - q=`coqchk -silent -o -Q . ZFC *.vo 2>&1`
+    - r=`echo "$q" | grep -P '(ZFC\.|Coq\.)' | sort | cut -f 3 -d . | paste -sd \ `
+    - [[ "$r" == "FunctionalExtensionality IndefiniteDescription PropExtensionality Extensionality IN Infinity Powerset Regularity Replacement set Union" ]] || exit 1
