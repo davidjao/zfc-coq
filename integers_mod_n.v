@@ -1339,14 +1339,14 @@ Section Modular_arithmetic.
     Qed.
 
     Theorem Euler_Criterion_QNR :
-      ∀ a : Z_, a ∈ QNR → a^(# QR) = ((-1%Z) : Z_)%Z.
+      ∀ a : Z_, a ∈ QNR → a^(# QR) = ((-1) : Z_)%Z.
     Proof.
       move=> a.
       rewrite -roots_QNR => /Specify_classification [H].
       rewrite (reify H) despecify eval_add IRP_1 eval_const eval_x_to_n /=
-              (A1 _ 1) -(A4 1) -IZn_neg => /(rings.cancellation_add ℤ_) <-.
+        (A1 _ 1) -(A4 1) -IZn_neg => /(rings.cancellation_add ℤ_) <-.
       f_equal.
-      now apply set_proj_injective.
+      by apply set_proj_injective.
     Qed.
 
     Theorem Euler's_Criterion : ∀ a : Z_, a^(# QR) = ((legendre_symbol a) : Z_).
@@ -1571,7 +1571,7 @@ Section Modular_arithmetic.
     Proof.
       move=> i j [H H0] [H1 H2] H3.
       have /IZn_eq /injective_mod_n_on_interval H4:
-        (i+j : Z_)%Z = (0 : Z_)%Z by rewrite -IZn_add H3 A1 A4.
+        (((i + j)%Z : Z_) = 0)%Z by rewrite -IZn_add H3 A1 A4.
       contradiction (ordered_rings.lt_irrefl ℤ_order 0).
       rewrite -{2}H4.
       - split.
