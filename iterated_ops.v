@@ -1,4 +1,4 @@
-Require Export ssreflect ssrbool ssrfun naturals.
+Require Export naturals.
 
 Definition swap {X Y} (a b : X) (f : X → Y) : X → Y.
 Proof.

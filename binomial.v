@@ -1,5 +1,5 @@
 Set Warnings "-ambiguous-paths,-type-checker".
-Require Export ssreflect ssrbool ssrfun polynomials integers.
+Require Export polynomials integers.
 
 Theorem binomial :
   ∀ (n : N) (x : Z), (1 + x)^n = sum ℤ (λ k, binomial n k * x^k) 0 n.

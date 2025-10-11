@@ -1,5 +1,5 @@
-Set Warnings "-ambiguous-paths".
-Require Export ssreflect ssrbool ssrfun ordered_fields Field.
+Set Warnings "-ambiguous-paths,-non-reference-hint-using".
+Require Export ordered_fields.
 
 Definition ℤ0 := {z in ℤ × ℤ | (proj2 ℤ ℤ z) ≠ 0}.
 

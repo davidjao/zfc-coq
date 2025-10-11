@@ -1,5 +1,5 @@
-Require Export ssreflect ssrbool ssrfun naturals Setoid.
-Set Warnings "-notation-overridden".
+Set Warnings "-notation-overridden -non-reference-hint-using".
+Require Export naturals.
 
 Open Scope set_scope.
 
@@ -1256,8 +1256,8 @@ Section Powerset_powers.
   Definition powerset_bijection_helper : elts (2^X) → elts (P X).
   Proof.
     move=> [x /Specify_classification [H H0]].
-    have H1: {x in X | (mkFunc H0) x = 1} ∈ P X.
-    { apply Powerset_classification => z /Specify_classification [] //. }
+    assert ({x in X | (mkFunc H0) x = 1} ∈ P X) as H1 by
+        (by apply Powerset_classification => z /Specify_classification []).
     exact (mkSet H1).
   Defined.
 

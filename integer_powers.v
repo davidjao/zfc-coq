@@ -1,5 +1,5 @@
 Set Warnings "-ambiguous-paths".
-Require Export ssreflect ssrbool ssrfun rings integers.
+Require Export rings integers.
 
 Section Integer_powers.
 

@@ -1,5 +1,5 @@
-Set Warnings "-notation-overridden,-ambiguous-paths".
-Require Export ssreflect ssrbool ssrfun integral_domains.
+Set Warnings "-notation-overridden,-ambiguous-paths,-non-reference-hint-using".
+Require Export integral_domains.
 
 Record ordered_ring :=
   mkOR {

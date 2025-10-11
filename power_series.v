@@ -1,5 +1,5 @@
 Set Warnings "-uniform-inheritance,-ambiguous-paths".
-Require Export ssreflect ssrbool ssrfun rings.
+Require Export rings.
 
 Section Power_series_construction.
 

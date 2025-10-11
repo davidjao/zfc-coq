@@ -16,6 +16,7 @@ integer_powers.v
 fields.v
 ordered_fields.v
 rationals.v
+rationals_example.v
 combinatorics.v
 euclid.v
 polynomials.v

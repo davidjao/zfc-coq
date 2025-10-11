@@ -1,5 +1,7 @@
-Require Export ssreflect ssrbool ssrfun Utf8 ChoiceFacts IndefiniteDescription
-  FunctionalExtensionality PropExtensionality.
+Set Warnings "-deprecated-from-Coq".
+From Coq Require Export ssreflect ssrbool ssrfun Utf8 ChoiceFacts
+  IndefiniteDescription FunctionalExtensionality PropExtensionality
+  Basics Ring Field Setoid List Permutation.
 
 (* See https://github.com/coq/coq/wiki/CoqAndAxioms for explanations. *)
 

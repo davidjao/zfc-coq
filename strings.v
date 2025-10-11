@@ -1,5 +1,5 @@
-Set Warnings "-ambiguous-paths".
-Require Export ssreflect ssrbool ssrfun sets polynomials.
+Set Warnings "-ambiguous-paths,-non-reference-hint-using".
+Require Export sets polynomials.
 
 Definition STR := (⋃ {({0%N, 1%N} ^ n)%set | n in ω})%N.
 
@@ -135,7 +135,7 @@ Qed.
 Definition cc_singleton : σ → Σ.
 Proof.
   move=> [x H].
-  have H0: ({x,x} ∈ P STR) by
+  assert ({x,x} ∈ P STR) as H0 by
     apply Powerset_classification => z /Singleton_classification -> //.
   exact (mkSet H0).
 Defined.
@@ -148,14 +148,15 @@ Section concat_elements_construction.
 
   Definition concat_elements (x : elts (n + m)%N) : elts {0, 1}%N.
   Proof.
-    have H: (x ∈ ω) by
+    assert (x ∈ ω) as H by
       eauto using elements_of_naturals_are_naturals, elts_in_set.
     case (excluded_middle_informative (mkSet H < n)%N) =>
            [/lt_is_in H0 | /naturals.le_not_gt /sub_abab H0].
-    - have H1: (mkFunc F) x ∈ {0%N, 1%N}; last exact (mkSet H1).
+    - assert ((mkFunc F) x ∈ {0%N, 1%N}) as H1; last exact (mkSet H1).
       rewrite -[{0%N, 1%N}]/(range (mkFunc F)).
       auto using function_maps_domain_to_range.
-    - have H1: (mkFunc G) (mkSet H - n)%N ∈ {0%N, 1%N}; last exact (mkSet H1).
+    - assert ((mkFunc G) (mkSet H - n)%N ∈ {0%N, 1%N}) as H1;
+        last exact (mkSet H1).
       rewrite -[{0%N, 1%N}]/(range (mkFunc G)).
       apply function_maps_domain_to_range => /=.
       move: (elts_in_set x).
@@ -171,7 +172,7 @@ Definition concat : σ → σ → σ.
 Proof.
   move=> [a /STR_classification /constructive_indefinite_description [n H]]
            [b /STR_classification /constructive_indefinite_description [m H0]].
-  have H1: (graph (sets.functionify (concat_elements H H0)) ∈ STR);
+  assert (graph (sets.functionify (concat_elements H H0)) ∈ STR) as H1;
     last exact (mkSet H1).
   move: (func_hyp (sets.functionify (concat_elements H H0))).
   rewrite STR_classification sets.functionify_domain sets.functionify_range //.
@@ -191,7 +192,7 @@ Qed.
 
 Definition empty_string : σ.
 Proof.
-  have H: (∅ ∈ STR); last exact (mkSet H).
+  assert (∅ ∈ STR) as H; last exact (mkSet H).
   rewrite STR_classification.
   exists 0%N.
   split; auto using Empty_set_is_subset => a /Empty_set_classification //.
@@ -258,8 +259,8 @@ Coercion subset_of : reg_exp >-> Σ.
 
 Definition concat_set (A : Σ) (B : Σ) : Σ.
 Proof.
-  have H: ({z in STR | ∃ a b : σ, a ∈ A ∧ b ∈ B ∧ z = a ++ b} ∈ P STR) by
-    rewrite Powerset_classification => x /Specify_classification [?] //.
+  assert ({z in STR | ∃ a b : σ, a ∈ A ∧ b ∈ B ∧ z = a ++ b} ∈ P STR) as H by
+      rewrite Powerset_classification => x /Specify_classification [?] //.
   exact (mkSet H).
 Defined.
 
@@ -429,13 +430,12 @@ Section concat_function_construction.
   Definition concat_function : elts (A × B) → elts (A || B).
   Proof.
     move=> [z /Product_classification /constructive_indefinite_description
-              [a /constructive_indefinite_description
-                 [b [/[dup] ? /reg_exps_are_strings H
-                      [/[dup] ? /reg_exps_are_strings H0 ?]]]]].
-    have H1: ((mkSet H) ++ (mkSet H0) ∈ A || B); last by exact (mkSet H1).
+              [a /constructive_indefinite_description [b [H [H0 H1]]]]].
+    move: (H) (H0) => /reg_exps_are_strings H2 /reg_exps_are_strings H3.
+    assert ((mkSet H2) ++ (mkSet H3) ∈ A || B) as H4; last by exact (mkSet H4).
     rewrite -subsetifying_subset -concat_reg_exp Specify_classification.
     split; eauto using elts_in_set.
-    by exists (mkSet H), (mkSet H0).
+    by exists (mkSet H2), (mkSet H3).
   Defined.
 
   Definition concat_product := sets.functionify concat_function.

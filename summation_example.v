@@ -1,5 +1,5 @@
 Set Warnings "-ambiguous-paths".
-Require Export ssreflect ssrbool ssrfun rationals.
+Require Export rationals.
 
 Example Gauss : ∀ n, (2 * (sum ℤ (λ k, k : Z) 1 n) = n * (n + 1))%Z.
 Proof.

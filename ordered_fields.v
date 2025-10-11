@@ -1,5 +1,5 @@
-Set Warnings "-notation-overridden,-ambiguous-paths".
-Require Export ssreflect ssrbool ssrfun ordered_rings fields.
+Set Warnings "-notation-overridden,-ambiguous-paths,-non-reference-hint-using".
+Require Export ordered_rings fields.
 
 Record ordered_field :=
   mkOF {

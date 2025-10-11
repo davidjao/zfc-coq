@@ -1,6 +1,7 @@
-Set Warnings "-notation-overridden,-uniform-inheritance".
-Set Warnings "-fragile-hint-constr,-ambiguous-paths,-intuition-auto-with-star".
-Require Export ssreflect ssrbool ssrfun ordered_rings List Permutation Setoid.
+Set Warnings "-notation-overridden, -uniform-inheritance".
+Set Warnings "-non-reference-hint-using, -fragile-hint-constr".
+Set Warnings "-ambiguous-paths, -intuition-auto-with-star".
+Require Export ordered_rings.
 
 Definition integer_relation :=
   {z of type (ω × ω) × (ω × ω) | π1 (π1 z) + π2 (π2 z) = π2 (π1 z) + π1 (π2 z)}.
@@ -37,7 +38,7 @@ Coercion IZS : Z >-> set.
 Definition embed : N → N → Z.
 Proof.
   move=> [a A] [b B].
-  have H: (a, b) ∈ ω × ω  by apply Product_classification; eauto.
+  assert ((a, b) ∈ ω × ω) as H by (apply Product_classification; eauto).
   exact (quotient_map _ (mkSet H)).
 Defined.
 
@@ -435,7 +436,7 @@ Infix "~" := assoc (at level 70) : Z_scope.
 Definition unit := @unit ℤ : Z → Prop.
 
 Definition pm a b := (a = b ∨ a = -b).
-Notation " a = ± b " := (pm a b) (at level 60) : Z_scope.
+Notation " a = ± b " := (pm a b) (at level 70) : Z_scope.
 Global Hint Unfold assoc unit pm : Z.
 
 Theorem pm_refl : ∀ a, a = ± a.
@@ -650,12 +651,12 @@ Fixpoint product L :=
     | p :: L => p * product L
   end.
 
-Notation "∏ L" := (product L) (at level 50) : Z_scope.
+Notation "∏ L" := (product L) (at level 70) : Z_scope.
 
 Definition prime_factorization n L :=
-  n = ∏ L ∧ (∀ p, List.In p L → 0 < p ∧ prime p).
+  (n = ∏ L) ∧ (∀ p, List.In p L → 0 < p ∧ prime p).
 
-Notation "n = ∏' L" := (prime_factorization n L) (at level 50) : Z_scope.
+Notation "n = ∏' L" := (prime_factorization n L) (at level 70) : Z_scope.
 
 Lemma prod_lemma : ∀ t1 t2 p,
     ∏ (t1 ++ p :: t2) = p * (∏ (t1 ++ t2)).

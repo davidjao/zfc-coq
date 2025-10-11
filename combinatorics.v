@@ -1,5 +1,5 @@
 Set Warnings "-ambiguous-paths".
-Require Export ssreflect ssrbool ssrfun cardinality rationals.
+Require Export cardinality rationals.
 
 Definition permutations (n : N) := size_of_bijections n n.
 

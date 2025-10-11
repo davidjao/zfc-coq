@@ -1,4 +1,5 @@
-Require Export ssreflect ssrbool ssrfun logic_axioms Basics.
+Set Warnings "-non-reference-hint-using".
+Require Export logic_axioms.
 
 (* Beginning of axioms. *)
 
@@ -969,7 +970,7 @@ Section Function_evaluation.
   Definition lambdaify : elts (domain f) → elts (range f).
   Proof.
     move=> [x H].
-    have H0: f x ∈ range f by auto using function_maps_domain_to_range.
+    assert (f x ∈ range f) as H0 by by apply function_maps_domain_to_range.
     exact (mkSet H0).
   Defined.
 
@@ -1224,8 +1225,8 @@ Qed.
 
 Definition empty_function : function.
 Proof.
-  (have: ∀ a : set, a ∈ ∅ → a ∈ ∅ by auto) =>
-  /function_construction /constructive_indefinite_description => [[f H]].
+  assert (∀ a : set, a ∈ ∅ → a ∈ ∅) as H by auto.
+  move: H => /function_construction /constructive_indefinite_description [f ?].
   exact f.
 Defined.
 
@@ -1299,10 +1300,11 @@ Qed.
 Definition composition (f g : function) : function.
 Proof.
   case (excluded_middle_informative (domain f = range g)) => [H | H].
-  - have: ∀ x, x ∈ domain g → (λ x, f (g x)) x ∈ range f by
+  - assert (∀ x, x ∈ domain g → (λ x, f (g x)) x ∈ range f) as H0 by
         move: H => /[swap] x /[swap] /function_maps_domain_to_range /[swap]
                    <- /function_maps_domain_to_range //.
-    move /function_construction /constructive_indefinite_description => [h H0].
+    move: H0 => /function_construction /constructive_indefinite_description
+                  [h ?].
     exact h.
   - exact empty_function.
 Defined.
@@ -1476,7 +1478,7 @@ Section Quotient_maps.
   Definition quotient_map : elts X → elts (X / R).
   Proof.
     move=> [x H].
-    have H0: {z in X | (x, z) ∈ R} ∈ X / R.
+    assert ({z in X | (x, z) ∈ R} ∈ X / R) as H0.
     { apply quotient_classification, conj =>
       [y /Specify_classification [H0 H1] | ] //.
       exists x.
@@ -1775,8 +1777,9 @@ Qed.
 
 Definition swap_product S T (x : elts (S × T)) : elts (T × S).
 Proof.
-  have /mkSet: (π2 x, π1 x) ∈ T × S; try apply Product_classification;
-    eauto using elts_in_set.
+  assert ((π2 x, π1 x) ∈ T × S) as H by
+      (apply Product_classification; eauto using elts_in_set).
+  exact (mkSet H).
 Defined.
 
 Definition swap_function S T := functionify (swap_product S T).
@@ -1816,6 +1819,7 @@ Qed.
 
 Definition embed E F (e : elts E) (f : elts F) : elts (E × F).
 Proof.
-  have /mkSet: (e, f) ∈ E × F; try apply Product_classification;
-    eauto using elts_in_set.
+  assert ((e, f) ∈ E × F) as H by
+    (apply Product_classification; eauto using elts_in_set).
+  exact (mkSet H).
 Defined.

@@ -1,5 +1,5 @@
-Set Warnings "-notation-overridden,-ambiguous-paths".
-Require Export ssreflect ssrbool ssrfun rationals.
+Set Warnings "-notation-overridden,-ambiguous-paths,-non-reference-hint-using".
+Require Export rationals.
 
 Definition 𝐑 :=
   {α in P ℚ | α ≠ ∅ ∧ α ≠ ℚ ∧ (∀ p q : Q, p ∈ α → q < p → q ∈ α) ∧

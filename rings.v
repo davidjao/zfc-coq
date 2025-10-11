@@ -1,6 +1,6 @@
-Require Export ssreflect ssrbool ssrfun iterated_ops Ring.
 Set Warnings "-notation-bound-to-variable,-notation-overridden".
 Set Warnings "-ambiguous-paths,-uniform-inheritance".
+Require Export iterated_ops.
 
 Record ring :=
   mkRing {
@@ -583,7 +583,7 @@ Section Ring_theorems.
 
     Definition sub_add (a b : sub_R) : sub_R.
     Proof.
-      have H: a + b ∈ S.
+      assert (a + b ∈ S) as H.
       { elim SR => [H [H0 [H1 H2]]].
         apply H; apply (@elts_in_set S). }
       exact (mkSet H).
@@ -591,7 +591,7 @@ Section Ring_theorems.
 
     Definition sub_mul (a b : sub_R) : sub_R.
     Proof.
-      have H: a * b ∈ S.
+      assert (a * b ∈ S) as H.
       { elim SR => [H [H0 [H1 H2]]].
         apply H0; apply (@elts_in_set S). }
       exact (mkSet H).
@@ -599,7 +599,7 @@ Section Ring_theorems.
 
     Definition sub_neg (a : sub_R) : sub_R.
     Proof.
-      have H: -a ∈ S.
+      assert (-a ∈ S) as H.
       { elim SR => [H [H0 [H1 H2]]].
         apply H1; apply (@elts_in_set S). }
       exact (mkSet H).

@@ -1,5 +1,5 @@
-Set Warnings "-ambiguous-paths,-notation-overridden".
-Require Export ssreflect ssrbool ssrfun polynomials Setoid.
+Set Warnings "-ambiguous-paths,-notation-overridden,-non-reference-hint-using".
+Require Export polynomials.
 
 Open Scope Z_scope.
 

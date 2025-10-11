@@ -1,5 +1,5 @@
-Set Warnings "-ambiguous-paths".
-Require Export ssreflect ssrbool ssrfun rings.
+Set Warnings "-ambiguous-paths, -non-reference-hint-using".
+Require Export rings.
 
 Record integral_domain :=
   mkID {
