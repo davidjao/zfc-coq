@@ -25,8 +25,8 @@ Qed.
 
 Theorem excluded_middle_informative : ∀ P, {P} + {¬ P}.
 Proof.
-  firstorder using constructive_definite_descr_excluded_middle,
-  classic, constructive_definite_description.
+  apply constructive_definite_descr_excluded_middle, classic.
+  exact constructive_definite_description.
 Qed.
 
 (* not not P implies P. Requires law of the excluded middle. *)

@@ -372,8 +372,9 @@ Proof.
   [[[H1 H2] | [H1 H2]]] [[H3 H4] | [H3 H4]];
     [ | have -> : ((a*d+c*b)*(b*d) = (a*-d+-c*b)*(b*-d))%Z
       | have -> : ((a*d+c*b)*(b*d) = (-a*d+c*-b)*(-b*d))%Z
-      | have -> : ((a*d+c*b)*(b*d) = (-a*-d+-c*-b)*(-b*-d))%Z ];
-    eauto 6 using (mul_pos_pos ℤ_order), (O0 ℤ_order) with Z; ring.
+    | have -> : ((a*d+c*b)*(b*d) = (-a*-d+-c*-b)*(-b*-d))%Z ]; try ring;
+  apply (mul_pos_pos ℤ_order); try (by apply mul_pos_pos; auto);
+  apply (O0 ℤ_order); apply mul_pos_pos; auto.
 Qed.
 
 Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
@@ -418,15 +419,15 @@ Proof.
   move=> x y H.
   case (Qlift x) as [a [b [H0 <-]]], (Qlift y) as [c [d [H1 <-]]].
   have H2: (2 ≠ 0)%Z by apply (ordered_rings.zero_ne_2 ℤ_order).
-  exists ((b*c + a*d)/(2*b*d)); split; move: H;
-    rewrite /lt /sub ? neg_wf ? add_wf ? pos_wf //;
-            auto using (ne0_cancellation (integral_domain ℤ_order));
-  [ suff -> : (((b*c+a*d)*b+-a*(2*b*d))*(2*b*d*b) =
-               2*(b*b)*((c*b+-a*d)*(d*b)))%Z |
-    suff -> : ((c*(2*b*d)+-(b*c+a*d)*d)*(d*(2*b*d)) =
-               2*(d*d)*((c*b+-a*d)*(d*b)))%Z ];
-    eauto using (mul_pos_pos ℤ_order), (ordered_rings.O0 ℤ_order),
-    (square_ne0 ℤ_order), (ordered_rings.zero_lt_1 ℤ_order) with Z; ring.
+  ((exists ((b*c + a*d)/(2*b*d)); split; move: H;
+           rewrite /lt /sub ? neg_wf ? add_wf ? pos_wf //;
+             auto using (ne0_cancellation (integral_domain ℤ_order));
+           [ suff -> : (((b*c+a*d)*b+-a*(2*b*d))*(2*b*d*b) =
+                          2*(b*b)*((c*b+-a*d)*(d*b)))%Z |
+             suff -> : ((c*(2*b*d)+-(b*c+a*d)*d)*(d*(2*b*d)) =
+                          2*(d*d)*((c*b+-a*d)*(d*b)))%Z ]; try ring) => ?);
+  do 2 (apply (mul_pos_pos ℤ_order); auto); try apply zero_lt_2;
+      by apply square_ne0.
 Qed.
 
 Theorem lt_dense2 : ∀ a b, 0 < a → 0 < b → ∃ c, 0 < c ∧ c < a ∧ c < b.
@@ -455,14 +456,14 @@ Proof.
   move=> x.
   case (Qlift x) => [a [b /and_comm [<- /[dup] H]]].
   case (common_factor a b) => // [d [H0 [[m ->] [[n ->] /= H1]]]]
-                                 /[dup] H2 /(cancellation_ne0 ℤ) [H3 H4].
+                                /[dup] H2 /(cancellation_ne0 ℤ) [H3 H4].
   exists m, n.
   rewrite Qequiv //.
-  (repeat split; auto using (div_1_l ℤ) with Z; try ring) => z [k H5] [l H6].
+  (repeat split; try apply div_1_l; auto; try ring) => z [k H5] [l H6].
   move: H5 H6 H1 -> => -> /= /(_ (z*d)%Z).
   elim => [c | | ]; rewrite -? integers.M2 ? rings.M2;
-            try (rewrite -{1}(integers.M3 d) => /(cancellation_mul_r ℤ_ID) =>
-                 /(_ H4) ->); auto using (div_mul_l ℤ), (div_refl ℤ) with Z.
+          try (rewrite -{1}(integers.M3 d) => /(cancellation_mul_r ℤ_ID) =>
+                   /(_ H4) ->); apply div_mul_l, div_refl.
 Qed.
 
 Theorem Rudin_1_1 : ¬ ∃ p : Q, p * p = 2.
@@ -528,7 +529,7 @@ Proof.
   repeat split; eapply FTA; eauto using is_gcd_sym;
     [ rewrite -? H1 | rewrite 1 ? integers.M1 ? H1 |
       rewrite ? H1 | rewrite 1 ? integers.M1 -? H1 ];
-    auto using (div_mul_l ℤ), (div_mul_r ℤ), (div_refl ℤ) with Z.
+    try (by apply div_mul_l, div_refl); apply div_mul_r, div_refl.
 Qed.
 
 Theorem canonical_form : ∀ x, exists ! a b, gcd(a, b) = 1 ∧ x = a / b ∧ b > 0%Z.
@@ -540,8 +541,8 @@ Proof.
     split => [ | x' [y [[H1 [/[swap] /IZQ_lt /[dup] H2 /(pos_ne_0 ℤ_order)]]
                           H3 /Qequiv ]] /(_ H0) /(_ H3)].
     + exists 1%Z.
-      (repeat split; auto using zero_lt_1, (div_0_r ℤ), (div_refl ℤ) with Z)
-      => [ | | x' [H1 [H2 H3]]].
+      (repeat split; try apply div_0_r; try apply div_refl;
+       auto using zero_lt_1) => [ | | x' [H1 [H2 H3]]].
       * rewrite Qequiv; auto using integers.zero_ne_1; ring.
       * apply IZQ_lt, zero_lt_1.
       * move: H1 H3 => /gcd_0_l /assoc_pm [-> | ->] // /IZQ_lt.

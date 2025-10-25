@@ -29,7 +29,7 @@ Qed.
 Theorem eqm_gcd : ∀ n a b, a ≡ b (mod n) → gcd(a, n) = 1 → gcd(b, n) = 1.
 Proof.
   move=> n a b [k /= H] H0.
-  repeat split; auto using div_1_l with Z => x H1 H2.
+  repeat split; try apply div_1_l; auto => x H1 H2.
   apply H0; auto.
   have -> : a = (1*b + -(b-a)) by ring.
   rewrite H /divide -[integers.add]/(rings.add ℤ) -[integers.mul]/(rings.mul ℤ)
@@ -954,7 +954,7 @@ Section Modular_arithmetic.
                 Singleton_classification => [[_ [_ H2]]].
         (split; auto) => /set_proj_injective H3.
         contradict H0.
-        apply H2; eauto using (divide_refl ℤ) with Z.
+        apply H2; try apply div_refl.
         now rewrite eqm_div_n H3 -Zlift_equiv.
       - rewrite (reify H) Singleton_classification
                 Specify_classification despecify => H2.
