@@ -25,4 +25,4 @@ check-axioms:
     #GIT_CHECKOUT: "false"
   script:
     - coq_makefile -f _CoqProject -o Makefile
-    - q=`make validate` && echo "$q" && r=`echo "$q" | grep -P '(ZFC\.|Logic\.)' | sort -f | cut -f 3 -d . | paste -sd \ ` && echo "$r" && [[ "$r" == "FunctionalExtensionality IndefiniteDescription PropExtensionality Extensionality IN Infinity Powerset Regularity Replacement set Union" ]] || exit 1
+    - q=`make validate 2>&1` && echo "$q" && r=`echo "$q" | grep -P '(ZFC\.|Logic\.)' | sort -f | cut -f 3 -d . | paste -sd \ ` && echo "$r" && [[ "$r" == "FunctionalExtensionality IndefiniteDescription PropExtensionality Extensionality IN Infinity Powerset Regularity Replacement set Union" ]] || exit 1
