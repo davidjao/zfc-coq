@@ -613,12 +613,11 @@ Proof.
     [/(lt_neg_0 ℤ_order) /[swap] /is_gcd_sym /gcd_neg /is_gcd_sym /H0 /[apply]
       [[x [y]]] -> | [-> /gcd_0_l [[x]] /= -> _ | /[swap] /H0 /[apply]]]
       //; [exists (-x), y | exists 0, x]; ring. }
-  revert b H.
-  induction a as [a IHa] using strong_induction => b H [H1 [H2]].
+  elim/strong_induction: a b H H0 => a IHa b H H0 [H1 [H2]].
   elim (division_algorithm b a) => [q [r [<- [[/= H3 | <-] ]]] | ] //
   => [H4 H5 | /lt_def [c [_] ->]].
-  - (elim (IHa r (conj H3 H4) H3 a) => [x [y ->] | | ] //; repeat split; auto;
-                                       try apply div_1_l) => [ | x H6 H7].
+  - (elim (IHa r (conj H3 H4) a H0 H3) => [x [y ->] | ] //; repeat split; auto;
+                                          try apply div_1_l) => [ | x H6 H7].
     + exists (y + - (q * x)), x; ring.
     + apply H5; try apply div_add; auto; apply div_mul_r; auto.
   - rewrite A3 A1 A3 /one /divide.
