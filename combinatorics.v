@@ -925,7 +925,7 @@ Proof.
     eauto using naturals.le_trans.
 Qed.
 
-Theorem binomial_sum : ∀ n, sum_N (λ k, binomial n k) 0 n = (2^n)%N.
+Theorem binomial_sum : ∀ n, sum_N (λ k, binomial n k) 0 n = (2 ^ n)%N.
 Proof.
   move=> n.
   rewrite -INZ_eq -INZ_sum -{3}(card_of_natural n) -powerset_card;
@@ -938,7 +938,7 @@ Proof.
   move=> /(_ (naturals_are_finite n)) [k] [] /equivalence_to_card.
   rewrite card_of_natural => ??.
   exists k.
-  (repeat split; auto using zero_le) => [ | k' [] _ /Specify_classification []].
-  - rewrite /set_of_combinations Specify_classification //.
-  - congruence.
+  (repeat split; auto using zero_le) => [ | k' [] _ /Specify_classification []];
+                                        last congruence.
+  by rewrite /set_of_combinations Specify_classification.
 Qed.
