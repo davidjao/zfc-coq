@@ -932,11 +932,11 @@ Proof.
     auto using naturals_are_finite.
   ((erewrite <-sum_card; first reflexivity;
     auto using powerset_finite, naturals_are_finite) =>
-     [k H | ]; first apply Specify_subset) => x.
+     [k ? | ]; first apply Specify_subset).
   split => [/[dup] ? /Powerset_classification /finite_subsets_precursor |
              [k] [] [] _ /Specify_classification [] //].
   move=> /(_ (naturals_are_finite n)) [k] [] /equivalence_to_card.
   (rewrite card_of_natural; exists k; repeat split; auto using zero_le) =>
-    [ | k' [] _ /Specify_classification []]; last congruence.
+    [ | ? [] _ /Specify_classification []]; last congruence.
   by rewrite /set_of_combinations Specify_classification.
 Qed.
