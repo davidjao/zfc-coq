@@ -930,13 +930,12 @@ Proof.
   move=> n.
   rewrite -INZ_eq -INZ_sum -{3}(card_of_natural n) -powerset_card;
     auto using naturals_are_finite.
-  ((erewrite <-sum_card; first reflexivity;
-    auto using powerset_finite, naturals_are_finite) =>
-     [k ? | ]; first apply Specify_subset).
-  split => [/[dup] ? /Powerset_classification /finite_subsets_precursor |
-             [k] [] [] _ /Specify_classification [] //].
-  move=> /(_ (naturals_are_finite n)) [k] [] /equivalence_to_card.
-  (rewrite card_of_natural; exists k; repeat split; auto using zero_le) =>
-    [ | ? [] _ /Specify_classification []]; last congruence.
-  by rewrite /set_of_combinations Specify_classification.
+  (erewrite <-sum_card; first reflexivity;
+   auto using powerset_finite, naturals_are_finite) =>
+    [k ? | ]; first by apply Specify_subset.
+  (split => [/[dup] ? /Powerset_classification /finite_subsets_precursor |
+              [k [[_ /Specify_classification [//]]]]]) =>
+    /(_ (naturals_are_finite n)) [k [/equivalence_to_card <-]].
+  (rewrite card_of_natural; exists (# x); repeat split; auto using zero_le;
+   first by apply Specify_classification) => ? [_ /Specify_classification [//]].
 Qed.
