@@ -925,17 +925,14 @@ Proof.
     eauto using naturals.le_trans.
 Qed.
 
-Theorem binomial_sum : ∀ n, sum_N (λ k, binomial n k) 0 n = (2 ^ n)%N.
+Theorem binomial_sum (n : N) : sum_N (λ k, binomial n k) 0 n = (2 ^ n)%N.
 Proof.
-  move=> n.
-  rewrite -INZ_eq -INZ_sum -{3}(card_of_natural n) -powerset_card;
-    auto using naturals_are_finite.
-  (erewrite <-sum_card; first reflexivity;
-   auto using powerset_finite, naturals_are_finite) =>
-    [k ? | ]; first by apply Specify_subset.
-  (split => [/[dup] ? /Powerset_classification /finite_subsets_precursor |
-              [k [[_ /Specify_classification [//]]]]]) =>
-    /(_ (naturals_are_finite n)) [k [/equivalence_to_card <-]].
-  (rewrite card_of_natural; exists (# x); repeat split; auto using zero_le;
-   first by apply Specify_classification) => ? [_ /Specify_classification [//]].
+  ((rewrite -INZ_eq -INZ_sum -{3}(card_of_natural n) -powerset_card;
+    erewrite <-? sum_card; try reflexivity) => [ | | * | x]);
+  auto using naturals_are_finite, powerset_finite; first apply Specify_subset.
+  split => [/[dup] ? /Powerset_classification /finite_subsets_precursor |
+             [k [[_ /Specify_classification [//]]]]]
+             /(_ (naturals_are_finite n)) [k [/equivalence_to_card <-]].
+  (rewrite card_of_natural; exists (# x); repeat split; auto using zero_le) =>
+    [ | ?]; rewrite /set_of_combinations ? Specify_classification; tauto.
 Qed.
