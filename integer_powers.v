@@ -1,4 +1,4 @@
-Set Warnings "-ambiguous-paths".
+Set Warnings "-ambiguous-paths, -notation-for-abbreviation".
 Require Export rings integers.
 
 Section Integer_powers.

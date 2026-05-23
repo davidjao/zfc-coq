@@ -1,4 +1,5 @@
 Set Warnings "-ambiguous-paths, -non-reference-hint-using".
+Set Warnings "-notation-for-abbreviation".
 Require Export rings.
 
 Record integral_domain :=

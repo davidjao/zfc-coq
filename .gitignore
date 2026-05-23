@@ -12,3 +12,4 @@ Makefile*
 *.swp
 .coq-native
 .cvsignore
+*.txt

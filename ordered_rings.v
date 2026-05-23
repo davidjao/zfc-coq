@@ -1,4 +1,5 @@
 Set Warnings "-notation-overridden,-ambiguous-paths,-non-reference-hint-using".
+Set Warnings "-notation-for-abbreviation,-level-tolerance".
 Require Export integral_domains.
 
 Record ordered_ring :=

@@ -1,5 +1,6 @@
 Set Warnings "-notation-bound-to-variable,-notation-overridden".
-Set Warnings "-ambiguous-paths,-uniform-inheritance".
+Set Warnings "-ambiguous-paths,-uniform-inheritance,-level-tolerance".
+Set Warnings "-notation-for-abbreviation".
 Require Export iterated_ops integers.
 
 Record group :=

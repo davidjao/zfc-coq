@@ -1,4 +1,5 @@
 Set Warnings "-notation-overridden,-ambiguous-paths,-non-reference-hint-using".
+Set Warnings "-notation-for-abbreviation".
 Require Export ordered_rings fields.
 
 Record ordered_field :=
@@ -46,7 +47,7 @@ Section Ordered_field_theorems.
   Notation "a ≤ b < c" := (a ≤ b ∧ b < c) (at level 70, b at next level).
   Notation "a < b ≤ c" := (a < b ∧ b ≤ c) (at level 70, b at next level).
   Notation "a ≤ b ≤ c" := (a ≤ b ∧ b ≤ c) (at level 70, b at next level).
-  Notation "a '^-1' " := (inv (field OF) a) (at level 30, format "a '^-1'").
+  Notation "a '^-1' " := (inv (field OF) a) (at level 1, format "a '^-1'").
 
   Add Field generic_ordered_field : (fieldify Field).
 

@@ -224,7 +224,7 @@ Notation "[]" := EmptySet : String_scope.
 Notation "[ x ]" := (Char x) : String_scope.
 Infix "⌣" := Or (at level 60) : String_scope.
 Infix "||" := Concat : String_scope.
-Notation "A '⃰' " := (Star A) (at level 30) : String_scope.
+Notation "A '⃰' " := (Star A) (at level 1) : String_scope.
 
 (* Note bug in upstream definition: MStarApp needs the additional condition
    (u ≠ ε) in order for induction on Star to terminate. The original statement

@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-uniform-inheritance,-ambiguous-paths".
-Set Warnings "-non-reference-hint-using".
+Set Warnings "-non-reference-hint-using,-notation-for-abbreviation".
 Require Export sets power_series combinatorics.
 
 Section Polynomials_construction.

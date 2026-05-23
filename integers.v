@@ -1,6 +1,7 @@
-Set Warnings "-notation-overridden, -uniform-inheritance".
-Set Warnings "-non-reference-hint-using, -fragile-hint-constr".
-Set Warnings "-ambiguous-paths, -intuition-auto-with-star".
+Set Warnings "-non-reference-hint-using, -uniform-inheritance -level-tolerance".
+Set Warnings "-fragile-hint-constr, -implicit-create-hint-db, -ambiguous-paths".
+Set Warnings "-notation-overridden, -intuition-auto-with-star".
+Set Warnings "-notation-for-abbreviation,-closed-notation-not-level-0".
 Require Export ordered_rings.
 
 Definition integer_relation :=
@@ -242,7 +243,7 @@ Proof.
   [a /constructive_indefinite_description [b H]].
   elim (constructive_indefinite_description (Zlift y)) =>
   [c /constructive_indefinite_description [d H0]].
-  exact (a+d < b+c).
+  exact (a + d < b + c).
 Defined.
 
 Infix "<" := lt : Z_scope.
@@ -255,7 +256,7 @@ Proof.
   move: H H0 H1 H2.
   rewrite ? Zequiv ? (add_comm _ c) ? (add_comm _ a) => /[dup] H =>
   -> /[dup] H0 -> /naturals.cancellation_add <- /naturals.cancellation_add <-.
-  split => [/(naturals.O1_iff (b+c)) | /(naturals.O1_iff (w+x))].
+  split => [/(naturals.O1_iff (b + c)) | /(naturals.O1_iff (w + x))].
   - rewrite -add_assoc (add_comm y) ? add_assoc H0 -add_assoc -H
     -(add_assoc a) (add_assoc w) (add_assoc a) (add_comm a) -? (add_assoc (w+x))
     -naturals.O1_l_iff (add_comm b) //.
@@ -298,7 +299,7 @@ Theorem lt_trans : ∀ a b c, a < b → b < c → a < c.
 Proof.
   move=> a b c.
   rewrite ? lt_def => [[x [/neq_sym /INZ_eq ? ->]] [y [/neq_sym /INZ_eq ? ->]]].
-  exists (x+y)%N.
+  exists (x + y)%N.
   rewrite -{2} INZ_add A2.
   (split; try ring) => /(@eq_sym Z) /INZ_eq /naturals.cancellation_0_add [*] //.
 Qed.
@@ -315,7 +316,7 @@ Proof.
   move=> a b.
   case (Zlift a) as [a1 [a2 <-]], (Zlift b) as [b1 [b2 <-]].
   rewrite mul_wf ? lt_wf ? add_0_l ? naturals.lt_def => [[x [? <-]] [y [? <-]]].
-  exists (x*y)%N.
+  exists (x * y)%N.
   split => [/(@eq_sym N) /naturals.cancellation_0_mul
              [/(@eq_sym N) | /(@eq_sym N)] | ] //; ring.
 Qed.
@@ -453,7 +454,7 @@ Qed.
 
 Theorem pm_trans : ∀ a b c, a = ± b → b = ± c → a = ± c.
 Proof.
-  move=> a b c [<- | ->] [<- | ->]; intuition.
+  rewrite /pm => a b c [<- | ->] [<- | ->]; intuition.
   left; ring.
 Qed.
 
@@ -476,7 +477,7 @@ Qed.
 
 Add Morphism neg with signature pm ==> pm as pm_neg.
 Proof.
-  move=> x y [-> | ->]; intuition.
+  rewrite /pm => x y [-> | ->]; intuition.
 Qed.
 
 Theorem assoc_N : ∀ a b : N, a ~ b → a = b.
@@ -529,7 +530,7 @@ Proof.
     + rewrite (lt_neg_0 ℤ_order) /= => /x =>
       /(_ H) [q [r [] /[swap] [[[H0 | <-] H1] /(f_equal (mul (-1))) H2]]];
       ring_simplify in H2; move: H2 <-.
-      * exists (-q-1), (b+-r).
+      * exists (-q - 1), (b + -r).
         rewrite ((lt_shift ℤ_order) : ∀ a b, a < b ↔ 0 < b + -a)
                 /le -(le_shift ℤ_order) /ordered_rings.le.
         repeat split; try refine (eq_rect _ _ H0 _ _); intuition ring.
@@ -543,10 +544,10 @@ Proof.
       try now repeat split; try ring; rewrite /le /ordered_rings.le; intuition.
     rewrite lt_shift => /= /[dup] H1 /IHa.
     elim => [q [r [H2 H3]] | ].
-    + exists (q+1), r.
+    + exists (q + 1), r.
       rewrite -M1 D1 (M1 _ b) -A2 (A1 _ r) A2 H2.
       intuition ring.
-    + rewrite ((lt_shift ℤ_order (a+-b) a) : a+-b < a ↔ 0 < a + -(a+-b)).
+    + rewrite ((lt_shift ℤ_order (a + -b) a) : a + -b < a ↔ 0 < a + -(a + -b)).
       suff <- : b =  a + -(a + - b); intuition ring.
 Qed.
 
@@ -629,7 +630,7 @@ Theorem FTA : ∀ a b c, gcd(a, b) = 1 → a｜b * c → a｜c.
 Proof.
   move=> a b c H [d] /= H0.
   elim (Euclidean_algorithm a b H) => [x [y H1]].
-  exists (c*x + d*y) => /=.
+  exists (c * x + d * y) => /=.
   rewrite -{1}(M3 c) H1 D1 (M1 b) -? M2 H0; by ring_simplify.
 Qed.
 
@@ -738,7 +739,7 @@ Proof.
   [p x ? ? [-> ?] [H ?] /H | p x H /[swap] [[-> H0]] H1 /[dup] ? [? ?] ?] //.
   elim (H0 a (in_eq a L)) => [H2 [? H3]].
   (case (Euclid's_lemma a (∏ L) p); repeat split; auto) =>
-  [/H3 [? | /assoc_pm [-> | ]] | ?] //; try by intuition.
+  [/H3 [? | /assoc_pm [-> | ]] | ?] //=; try by intuition.
   - move: H => /[swap] -> => /(lt_neg_0 ℤ_order) /lt_antisym //.
   - move: H1 => /(pos_div_l ℤ_order a (∏ L)) => /(_ H2) /(IHL _ _ H) H4.
     apply /in_cons /H4; try split; eauto using in_cons.
@@ -747,10 +748,10 @@ Qed.
 Lemma one_has_unique_factorization : ∀ L, 1 = ∏' L → L = nil.
 Proof.
   (induction L as [| a L IHL]; auto) => [[H /(_ a)]].
-  elim => [? [H0] | ]; try now intuition.
+  elim => [? [H0] | ] /=; try now intuition.
   contradict H0.
   esplit => /=.
-  rewrite M1 H //.
+  by rewrite M1 H.
 Qed.
 
 Theorem unique_prime_factorization :
@@ -768,7 +769,7 @@ Proof.
   move: (M1 k) H8 H9 H4 H10 -> => /(cancellation_mul_l ℤ_ID) =>
         /(_ H6) <- /(cancellation_mul_l ℤ_ID) => /(_ H6) *.
   apply Permutation_cons_app, (IH (∏ (l1 ++ l2))); intuition; split; auto
-        => p /in_app_iff [ | ] *; apply H2; intuition.
+        => p /in_app_iff [ | ] *; apply /H2 /in_app_iff => /=; intuition.
 Qed.
 
 Theorem WOP : ∀ S : Z → Prop,
@@ -1070,7 +1071,7 @@ Theorem mul_div : ∀ a b d, d｜b → d ≠ 0 → a * (b / d) = (a * b) / d.
 Proof.
   move=> a b d /[dup] [[k ->]] H H0.
   apply /eq_sym /div_spec; auto.
-  - exists (k*a) => /=.
+  - exists (k * a) => /=.
     now ring_simplify.
   - rewrite -M2 div_inv_r //.
 Qed.
@@ -1128,7 +1129,7 @@ Proof.
       (repeat split; auto) => [ | x H1 H8].
       * move: H6 H5 => /(div_mul_r ℤ _ _ q) /div_add /[apply] //.
       * apply H7; auto.
-        suff -> : r = (a*q+r) + a*(-q); last by ring.
+        suff -> : r = (a * q + r) + a * (-q); last by ring.
         move: H1 H8 => /(div_mul_r ℤ _ _ (-q)) /[swap] /div_add /[apply] //.
     + exists a; repeat split => *; try ring_simplify; auto;
                                 try apply div_mul_r; apply div_refl.
@@ -1409,7 +1410,7 @@ Proof.
   [x /H1 /[apply] /div_sign_l_neg | x /H1 /[apply] /div_sign_neg_l] //.
 Qed.
 
-Theorem lcm_gcd_ident : ∀ a b, a ≠ 0 → b ≠ 0 → lcm(a, b) = (a*b) / gcd a b.
+Theorem lcm_gcd_ident : ∀ a b, a ≠ 0 → b ≠ 0 → lcm(a, b) = (a * b) / gcd a b.
 Proof.
   rewrite /div => a b H H0.
   have: gcd a b ≠ 0 by move: (gcd_l_div a b) => /[swap] -> /div_0_l //.

@@ -1,4 +1,4 @@
-Set Warnings "-non-reference-hint-using".
+Set Warnings "-non-reference-hint-using -notation-for-abbreviation".
 Require Export logic_axioms.
 
 (* Beginning of axioms. *)
