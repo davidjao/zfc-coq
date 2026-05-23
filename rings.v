@@ -1,5 +1,5 @@
 Set Warnings "-notation-bound-to-variable,-notation-overridden".
-Set Warnings "-ambiguous-paths,-uniform-inheritance".
+Set Warnings "-ambiguous-paths,-uniform-inheritance,-notation-for-abbreviation".
 Require Export iterated_ops.
 
 Record ring :=

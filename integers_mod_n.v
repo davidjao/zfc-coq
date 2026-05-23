@@ -1,11 +1,12 @@
 Set Warnings "-ambiguous-paths,-notation-overridden,-non-reference-hint-using".
+Set Warnings "-notation-for-abbreviation,-level-tolerance".
 Require Export polynomials.
 
 Open Scope Z_scope.
 
 Definition eqm n a b := n｜b - a.
 
-Notation "a ≡ b (mod  n )" := (eqm n a b) (at level 70) : Z_scope.
+Notation "a ≡ b (mod  n )" := (eqm n a b) (at level 1) : Z_scope.
 
 Theorem eqm_refl : ∀ n a : Z, a ≡ a (mod n).
 Proof.
@@ -146,7 +147,7 @@ Section Modular_arithmetic.
     -[integers.mul]/(rings.mul ℤ) mul_0_l rings.A3.
   Qed.
 
-  Definition relation_mod := {z of type ℤ × ℤ | π1 z ≡ π2 z (mod n)}.
+  Definition relation_mod := {z of type ℤ × ℤ | (π1 z) ≡ (π2 z) (mod n)}.
 
   Theorem equivalence_mod : is_equivalence ℤ relation_mod.
   Proof.

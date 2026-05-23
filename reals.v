@@ -681,7 +681,7 @@ Proof.
 Defined.
 
 Local Notation "a '^-1' " :=
-  (inv_pos a) (at level 30, format "a '^-1'") : R_scope.
+  (inv_pos a) (at level 1, format "a '^-1'") : R_scope.
 
 Lemma pos_not_in_0 : ∀ x : Q, (0 < x)%Q → x ∉ 0.
 Proof.
@@ -1022,7 +1022,7 @@ Infix "-" := sub : R_scope.
 Definition inv a :=
   If (0 < a) then (a^-1) else (If (0 = a) then 0 else (-(-a)^-1)).
 
-Notation "a '^-1' " := (inv a) (at level 30, format "a '^-1'") : R_scope.
+Notation "a '^-1' " := (inv a) (at level 1, format "a '^-1'") : R_scope.
 
 Theorem inv_l : ∀ a, a ≠ 0 → a^-1 * a = 1.
 Proof.

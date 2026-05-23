@@ -1,4 +1,4 @@
-Set Warnings "-ambiguous-paths,-non-reference-hint-using".
+Set Warnings "-ambiguous-paths,-non-reference-hint-using,-level-tolerance".
 Require Export integers_mod_n.
 
 Section Pretty_picture_lemmas.

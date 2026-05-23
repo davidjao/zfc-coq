@@ -1,4 +1,4 @@
-Set Warnings "-uniform-inheritance,-ambiguous-paths".
+Set Warnings "-uniform-inheritance,-ambiguous-paths,-notation-for-abbreviation".
 Require Export rings.
 
 Section Power_series_construction.

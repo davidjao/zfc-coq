@@ -5,7 +5,7 @@ Definition permutations (n : N) := size_of_bijections n n.
 
 Definition factorial n := (prod_N id 1 n).
 
-Notation "n !" := (factorial n) (at level 35, format "n '!'") : N_scope.
+Notation "n !" := (factorial n) (at level 1, format "n '!'") : N_scope.
 
 Definition set_of_combinations (n k : N) := {x in P n | # x = k}.
 
@@ -770,7 +770,7 @@ Proof.
     /naturals.cancellation_0_mul => [[ | /(@eq_sym N) /PA4]] //.
 Qed.
 
-Theorem factorial_succ : ∀ n, S n! = (S n * n!)%N.
+Theorem factorial_succ : ∀ n, (S n)! = (S n * n!)%N.
 Proof.
   rewrite /factorial => n.
   rewrite prod_N_succ; auto using one_le_succ; ring.
@@ -814,13 +814,13 @@ Proof.
   -INZ_mul ? IZQ_eq // D1 ? inv_div -? IZQ_mul -? INZ_mul -? IZQ_mul;
     repeat apply (ne0_cancellation ℤ_ID);
     rewrite ? INZ_eq; auto using eq_sym, PA4, factorial_ne_0.
-  have -> : S n'! * (S m * m! * (n' - m)!)^-1 *
+  have -> : (S n')! * (S m * m! * (n' - m)!)^-1 *
             (S m * m! * (S (n' - m) * (n' - m)!))
-            = S n'! * S (n' - m) * ((S m * m! * (n' - m)!)^-1 *
+            = (S n')! * S (n' - m) * ((S m * m! * (n' - m)!)^-1 *
                                     (S m * m! * (n' - m)!)) by ring.
-  have -> : S n'! * (m! * (S (n' - m) * (n' - m)!))^-1 *
+  have -> : (S n')! * (m! * (S (n' - m) * (n' - m)!))^-1 *
             (S m * m! * (S (n' - m) * (n' - m)!))
-            = S n'! * S m * ((m! * (S (n' - m) * (n' - m)!))^-1 *
+            = (S n')! * S m * ((m! * (S (n' - m) * (n' - m)!))^-1 *
                              (m! * (S (n' - m) * (n' - m)!))) by ring.
   rewrite ? inv_l; try by rewrite ? IZQ_mul IZQ_eq;
     repeat apply (ne0_cancellation ℤ_ID);

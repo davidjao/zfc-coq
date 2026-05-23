@@ -1,4 +1,4 @@
-Set Warnings "-ambiguous-paths,-non-reference-hint-using".
+Set Warnings "-ambiguous-paths,-non-reference-hint-using,-level-tolerance".
 Require Export ordered_fields.
 
 Definition ℤ0 := {z in ℤ × ℤ | (proj2 ℤ ℤ z) ≠ 0}.
@@ -146,7 +146,7 @@ Infix "+" := add : Q_scope.
 Infix "*" := mul : Q_scope.
 Notation "- a" := (neg a) : Q_scope.
 Notation "- 1" := (neg one) : Q_scope.
-Notation "a '^-1' " := (inv a) (at level 30, format "a '^-1'") : Q_scope.
+Notation "a '^-1' " := (inv a) (at level 1, format "a '^-1'") : Q_scope.
 
 Definition sub a b := a + -b.
 Definition div a b := a * b^-1.

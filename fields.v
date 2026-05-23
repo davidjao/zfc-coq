@@ -1,5 +1,5 @@
-Set Warnings "-notation-overridden,-notation-bound-to-variable".
-Set Warnings "-ambiguous-paths".
+Set Warnings "-notation-overridden, -notation-bound-to-variable".
+Set Warnings "-ambiguous-paths, -level-tolerance, -notation-for-abbreviation".
 Require Export integer_powers.
 
 Record field :=
@@ -26,7 +26,7 @@ Section Field_theorems.
   Infix "*" := (rings.mul (ring Field)).
   Notation "- a" := (rings.neg (ring Field) a).
   Notation "- 1" := (rings.neg (ring Field) 1).
-  Notation "a '^-1' " := (inv Field a) (at level 30, format "a '^-1'").
+  Notation "a '^-1' " := (inv Field a) (at level 1, format "a '^-1'").
 
   Definition inv_l := (M4 Field).
 

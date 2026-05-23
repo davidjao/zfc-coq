@@ -1,4 +1,4 @@
-Set Warnings "-ambiguous-paths,-typechecker".
+Set Warnings "-ambiguous-paths,-typechecker,-level-tolerance".
 Require Export integers combinatorics.
 
 Open Scope Z_scope.

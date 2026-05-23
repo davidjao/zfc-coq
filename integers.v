@@ -1,6 +1,7 @@
-Set Warnings "-notation-overridden, -uniform-inheritance".
-Set Warnings "-non-reference-hint-using, -fragile-hint-constr".
-Set Warnings "-ambiguous-paths, -intuition-auto-with-star".
+Set Warnings "-non-reference-hint-using, -uniform-inheritance -level-tolerance".
+Set Warnings "-fragile-hint-constr, -implicit-create-hint-db, -ambiguous-paths".
+Set Warnings "-notation-overridden, -intuition-auto-with-star".
+Set Warnings "-notation-for-abbreviation,-closed-notation-not-level-0".
 Require Export ordered_rings.
 
 Definition integer_relation :=
@@ -453,7 +454,7 @@ Qed.
 
 Theorem pm_trans : ∀ a b c, a = ± b → b = ± c → a = ± c.
 Proof.
-  move=> a b c [<- | ->] [<- | ->]; intuition.
+  rewrite /pm => a b c [<- | ->] [<- | ->]; intuition.
   left; ring.
 Qed.
 
@@ -476,7 +477,7 @@ Qed.
 
 Add Morphism neg with signature pm ==> pm as pm_neg.
 Proof.
-  move=> x y [-> | ->]; intuition.
+  rewrite /pm => x y [-> | ->]; intuition.
 Qed.
 
 Theorem assoc_N : ∀ a b : N, a ~ b → a = b.
@@ -738,7 +739,7 @@ Proof.
   [p x ? ? [-> ?] [H ?] /H | p x H /[swap] [[-> H0]] H1 /[dup] ? [? ?] ?] //.
   elim (H0 a (in_eq a L)) => [H2 [? H3]].
   (case (Euclid's_lemma a (∏ L) p); repeat split; auto) =>
-  [/H3 [? | /assoc_pm [-> | ]] | ?] //; try by intuition.
+  [/H3 [? | /assoc_pm [-> | ]] | ?] //=; try by intuition.
   - move: H => /[swap] -> => /(lt_neg_0 ℤ_order) /lt_antisym //.
   - move: H1 => /(pos_div_l ℤ_order a (∏ L)) => /(_ H2) /(IHL _ _ H) H4.
     apply /in_cons /H4; try split; eauto using in_cons.
@@ -747,10 +748,10 @@ Qed.
 Lemma one_has_unique_factorization : ∀ L, 1 = ∏' L → L = nil.
 Proof.
   (induction L as [| a L IHL]; auto) => [[H /(_ a)]].
-  elim => [? [H0] | ]; try now intuition.
+  elim => [? [H0] | ] /=; try now intuition.
   contradict H0.
   esplit => /=.
-  rewrite M1 H //.
+  by rewrite M1 H.
 Qed.
 
 Theorem unique_prime_factorization :
@@ -768,7 +769,7 @@ Proof.
   move: (M1 k) H8 H9 H4 H10 -> => /(cancellation_mul_l ℤ_ID) =>
         /(_ H6) <- /(cancellation_mul_l ℤ_ID) => /(_ H6) *.
   apply Permutation_cons_app, (IH (∏ (l1 ++ l2))); intuition; split; auto
-        => p /in_app_iff [ | ] *; apply H2; intuition.
+        => p /in_app_iff [ | ] *; apply /H2 /in_app_iff => /=; intuition.
 Qed.
 
 Theorem WOP : ∀ S : Z → Prop,
